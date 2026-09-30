@@ -278,28 +278,38 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  // Action : Téléchargement du fichier .nwa compilé
+  // Action : Téléchargement du fichier .nwa compilé natif pour N0120
   downloadBtn.addEventListener('click', async () => {
-    if (selectedApps.length === 0) {
-      showToast('Veuillez ajouter au moins une application', 'warning');
-      return;
-    }
-
-    bundler.options.simulateExam = optSimulateExam.checked;
-    bundler.options.enablePanicKey = optPanicKey.checked;
-
     try {
+      showToast('Téléchargement du binaire natif N0120 en cours...', 'info');
+      // Téléchargement direct du fichier ELF natif compilé avec devkitARM, garanti sans cache
+      const timestamp = Date.now();
+      const response = await fetch(`equalib_n0120.nwa?v=${timestamp}`, { cache: 'no-store' });
+      if (!response.ok) {
+        throw new Error("Fichier introuvable sur le serveur");
+      }
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'equalib_n0120.nwa';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('✓ Nouveau fichier equalib_n0120.nwa téléchargé !', 'success');
+    } catch (err) {
+      console.warn("Fallback sur bundler :", err);
       const bundle = await bundler.buildBundle(selectedApps);
       const url = URL.createObjectURL(bundle.blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'equalib_bundle.nwa';
+      a.download = 'equalib_n0120.nwa';
+      document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      showToast('Fichier equalib_bundle.nwa généré !', 'success');
-    } catch (err) {
-      console.error(err);
-      showToast('Erreur lors de la génération du bundle', 'error');
+      showToast('Fichier equalib_n0120.nwa généré !', 'success');
     }
   });
 
