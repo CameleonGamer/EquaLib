@@ -1,0 +1,62 @@
+[
+  {
+    "id": "khicas",
+    "name": "KhiCAS",
+    "author": "Bernard Parisse",
+    "version": "1.8.2",
+    "size_kb": 1420,
+    "category": "Maths & CAS",
+    "description": "Système complet de calcul formel (dérivées, intégrales, factorisation, algèbre linéaire).",
+    "icon_initial": "K",
+    "color": "#6366F1",
+    "recommended": true
+  },
+  {
+    "id": "periodique",
+    "name": "Tableau Périodique",
+    "author": "NumWorks Community",
+    "version": "2.1",
+    "size_kb": 180,
+    "category": "Sciences",
+    "description": "Tableau complet des éléments chimiques avec masses molaires, configurations et propriétés.",
+    "icon_initial": "P",
+    "color": "#10B981",
+    "recommended": true
+  },
+  {
+    "id": "text_viewer",
+    "name": "Lecteur de Fiches",
+    "author": "EquaLib Team",
+    "version": "1.0",
+    "size_kb": 95,
+    "category": "Utilitaires",
+    "description": "Visionneuse de synthèses de cours, formules et fiches textuelles directement accessibles.",
+    "icon_initial": "F",
+    "color": "#F59E0B",
+    "recommended": true
+  },
+  {
+    "id": "peanut_gb",
+    "name": "Peanut-GB",
+    "author": "Dhole",
+    "version": "1.3",
+    "size_kb": 320,
+    "category": "Jeux / Rétro",
+    "description": "Émulateur GameBoy classique fluide optimisé pour le processeur Cortex-M7 de la N0120.",
+    "icon_initial": "G",
+    "color": "#8B5CF6",
+    "recommended": false
+  },
+  {
+    "id": "chip8",
+    "name": "CHIP-8 Runner",
+    "author": "Zardam",
+    "version": "1.1",
+    "size_kb": 65,
+    "category": "Jeux / Rétro",
+    "description": "Machine virtuelle CHIP-8 ultra-légère permettant d'exécuter des dizaines de jeux rétro.",
+    "icon_initial": "C",
+    "color": "#EC4899",
+    "recommended": false
+  }
+]
