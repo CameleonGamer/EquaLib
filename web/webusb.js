@@ -47,20 +47,27 @@ class NumWorksWebUSB {
 
       this.isConnected = true;
       
-      // Détection sommaire du modèle
+      // Détection du mode et du modèle
+      const prodId = this.device.productId;
+      const isDFU = (prodId === 0xDF11);
+
       const prodName = this.device.productName || '';
-      if (prodName.includes('N0120') || prodName.includes('H7')) {
-        this.model = 'NumWorks N0120 (STM32H725)';
-      } else if (prodName.includes('N0110') || prodName.includes('F7')) {
-        this.model = 'NumWorks N0110 (STM32F730)';
+      let modelLabel = 'NumWorks N0120';
+      if (prodName.includes('N0110') || prodName.includes('F7')) {
+        modelLabel = 'NumWorks N0110';
+      }
+
+      if (isDFU) {
+        this.model = `${modelLabel} (Mode DFU détecté)`;
       } else {
-        this.model = 'NumWorks Calculator (' + prodName + ')';
+        this.model = `${modelLabel} (Mode OS standard)`;
       }
 
       console.log(`[WebUSB] Connecté à ${this.model}`);
       return {
         success: true,
         model: this.model,
+        isDFU: isDFU,
         device: this.device
       };
     } catch (err) {
@@ -90,6 +97,10 @@ class NumWorksWebUSB {
   async flashBundle(bundleData, onProgress = () => {}) {
     if (!this.isConnected || !this.device) {
       throw new Error("Calculatrice non connectée. Branchez-la et cliquez sur 'Connecter'.");
+    }
+
+    if (this.device.productId !== 0xDF11) {
+      throw new Error("Pour flasher en direct via WebUSB, la calculatrice doit être en mode DFU (maintenez la touche 6 enfoncée et appuyez sur RESET au dos). Sinon, cliquez sur 'Télécharger mon application .nwa' et glissez-la sur my.numworks.com/apps !");
     }
 
     console.log(`[WebUSB] Début du téléversement (${bundleData.byteLength} octets)...`);

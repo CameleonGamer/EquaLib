@@ -186,13 +186,13 @@
 
           <!-- Boutons d'Action -->
           <div class="space-y-2.5 pt-2">
-            <button id="flash-btn" class="w-full py-3.5 px-4 rounded-xl nw-yellow hover:brightness-105 active:scale-[0.99] text-black font-extrabold text-sm tracking-wide transition-all shadow-md flex items-center justify-center gap-2">
-              <span>⚡</span> Installer sur ma NumWorks (WebUSB)
+            <button id="download-btn" class="w-full py-3.5 px-4 rounded-xl nw-yellow hover:brightness-105 active:scale-[0.99] text-black font-extrabold text-sm tracking-wide transition-all shadow-md flex items-center justify-center gap-2">
+              <span>💾</span> Télécharger mon application .nwa (Recommandé)
             </button>
 
             <div class="grid grid-cols-2 gap-2">
-              <button id="download-btn" class="py-2.5 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold text-xs transition-all flex items-center justify-center gap-1.5 border border-slate-200">
-                <span>💾</span> Télécharger .nwa
+              <button id="flash-btn" class="py-2.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs transition-all flex items-center justify-center gap-1.5 shadow-sm">
+                <span>⚡</span> Flasher en direct (WebUSB)
               </button>
               <button id="download-nws-btn" class="py-2.5 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold text-xs transition-all flex items-center justify-center gap-1.5 border border-slate-200">
                 <span>📦</span> Exporter .nws
@@ -202,10 +202,22 @@
 
         </div>
 
-        <!-- Astuce d'installation manuelle -->
-        <div class="p-4 rounded-xl bg-slate-100 border border-slate-200 text-xs text-slate-600 space-y-1">
-          <p class="font-bold text-slate-700">ℹ️ Méthode d'installation alternative :</p>
-          <p>Si vous préférez l'outil officiel, téléchargez le fichier <span class="font-mono font-semibold">.nwa</span> puis glissez-le sur <a href="https://my.numworks.com/apps" target="_blank" class="text-amber-700 underline font-semibold">my.numworks.com/apps</a>.</p>
+        <!-- Guide d'installation sur my.numworks.com/apps -->
+        <div class="p-5 rounded-2xl bg-emerald-50 border border-emerald-200 text-xs text-slate-700 space-y-2">
+          <div class="flex items-center gap-2 font-bold text-emerald-800 text-sm">
+            <span>✅</span> Installation en 2 étapes sur N0120 :
+          </div>
+          <ol class="list-decimal list-inside space-y-1.5 text-slate-600 pl-1">
+            <li>Cliquez sur <strong>Télécharger mon application .nwa</strong> ci-dessus.</li>
+            <li>Rendez-vous sur <a href="https://my.numworks.com/apps" target="_blank" class="text-emerald-700 underline font-bold hover:text-emerald-900">my.numworks.com/apps</a> et glissez le fichier téléchargé.</li>
+            <li>Le site affiche <strong>EquaLib</strong> (taille reconnue sans erreur NaN) : cliquez sur <strong>Installer</strong> !</li>
+          </ol>
+        </div>
+
+        <!-- Note technique WebUSB / Mode DFU -->
+        <div class="p-4 rounded-xl bg-slate-100 border border-slate-200 text-xs text-slate-500 space-y-1">
+          <p class="font-semibold text-slate-700">⚡ Pour le flash direct WebUSB :</p>
+          <p>La calculatrice doit être en mode DFU : maintenez la touche <kbd class="px-1.5 py-0.5 bg-white border rounded font-mono font-bold">6</kbd> enfoncée et appuyez sur le bouton <kbd class="px-1.5 py-0.5 bg-white border rounded font-mono font-bold">RESET</kbd> au dos (l'écran reste éteint et la LED s'allume en rouge).</p>
         </div>
 
       </div>
