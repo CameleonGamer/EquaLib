@@ -1,6 +1,6 @@
 /**
  * EquaLib Web App Controller
- * Orchestre l'interface utilisateur, le catalogue, les imports et les actions de flash
+ * Orchestre l'interface utilisateur, le catalogue, les filtres, le simulateur et les actions de téléchargement/flash
  */
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // État de l'application
   let catalogApps = [];
   let selectedApps = [];
+  let activeCategory = 'ALL';
   const usb = new NumWorksWebUSB();
   const bundler = new EquaLibBundler();
 
@@ -21,10 +22,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   const memoryProgressBar = document.getElementById('memory-progress-bar');
   const memoryText = document.getElementById('memory-text');
   const memoryPercent = document.getElementById('memory-percent');
+  const catalogCountLabel = document.getElementById('catalog-count-label');
 
   // Boutons et contrôles
   const connectBtn = document.getElementById('connect-btn');
-  const connectionBadge = document.getElementById('connection-badge');
   const connectionDot = document.getElementById('connection-dot');
   const connectionText = document.getElementById('connection-text');
   const modelText = document.getElementById('model-text');
@@ -44,13 +45,79 @@ document.addEventListener('DOMContentLoaded', async () => {
   const dropZone = document.getElementById('drop-zone');
   const fileInput = document.getElementById('file-input');
 
+  // Éléments du simulateur virtuel
+  const simLed = document.getElementById('sim-led');
+  const simExamTag = document.getElementById('sim-exam-tag');
+  const simTopBar = document.getElementById('sim-topbar');
+  const simTitle = document.getElementById('sim-title');
+  const simMenu = document.getElementById('sim-menu');
+  const simPanicView = document.getElementById('sim-panic-view');
+  const simBtnExam = document.getElementById('sim-btn-exam');
+  const simBtnPanic = document.getElementById('sim-btn-panic');
+  let simExamActive = false;
+  let simPanicActive = false;
+
+  // Configuration du simulateur virtuel
+  if (simBtnExam) {
+    simBtnExam.addEventListener('click', () => {
+      simExamActive = !simExamActive;
+      if (simExamActive) {
+        simLed.classList.add('animate-led');
+        simLed.classList.remove('bg-red-600/20');
+        simLed.classList.add('bg-red-500');
+        simExamTag.classList.remove('hidden');
+        simBtnExam.classList.add('bg-red-500/20', 'text-red-300', 'border-red-500/40');
+        showToast('LED Mode Examen active (clignotement 1 Hz)', 'info');
+      } else {
+        simLed.classList.remove('animate-led');
+        simLed.classList.remove('bg-red-500');
+        simLed.classList.add('bg-red-600/20');
+        simExamTag.classList.add('hidden');
+        simBtnExam.classList.remove('bg-red-500/20', 'text-red-300', 'border-red-500/40');
+      }
+    });
+  }
+
+  if (simBtnPanic) {
+    simBtnPanic.addEventListener('click', () => {
+      simPanicActive = !simPanicActive;
+      if (simPanicActive) {
+        simMenu.classList.add('hidden');
+        simPanicView.classList.remove('hidden');
+        simTitle.textContent = 'Calculs [EXAMEN]';
+        simBtnPanic.classList.add('bg-amber-500/20', 'text-amber-300', 'border-amber-500/40');
+        showToast('Mode Panique active : affichage de la fausse calculatrice officielle', 'warning');
+      } else {
+        simMenu.classList.remove('hidden');
+        simPanicView.classList.add('hidden');
+        simTitle.textContent = 'EquaLib - Hub N0120';
+        simBtnPanic.classList.remove('bg-amber-500/20', 'text-amber-300', 'border-amber-500/40');
+      }
+    });
+  }
+
+  // Filtres par catégorie
+  const catPills = document.querySelectorAll('.cat-pill');
+  catPills.forEach(pill => {
+    pill.addEventListener('click', () => {
+      catPills.forEach(p => {
+        p.classList.remove('bg-nw-yellow', 'text-black');
+        p.classList.add('bg-slate-800', 'text-slate-300');
+      });
+      pill.classList.remove('bg-slate-800', 'text-slate-300');
+      pill.classList.add('bg-nw-yellow', 'text-black');
+      activeCategory = pill.getAttribute('data-category');
+      renderCatalog();
+    });
+  });
+
   // Chargement du catalogue
   try {
     const res = await fetch('catalog.json');
     catalogApps = await res.json();
     renderCatalog();
 
-    // Présélection par défaut (KhiCAS + Tableau Périodique + Lecteur de Fiches)
+    // Présélection par défaut (Mario Kart + Tableau Périodique + Fiches de Cours + Solveur + Mode Panique)
     const defaults = catalogApps.filter(a => a.recommended);
     defaults.forEach(a => addAppToSelection(a));
   } catch (err) {
@@ -58,36 +125,53 @@ document.addEventListener('DOMContentLoaded', async () => {
     showToast('Erreur lors du chargement du catalogue', 'error');
   }
 
-  // Rendu du catalogue
+  // Rendu du catalogue avec filtre de catégorie
   function renderCatalog() {
     catalogList.innerHTML = '';
-    catalogApps.forEach(app => {
+    
+    const filtered = (activeCategory === 'ALL')
+      ? catalogApps
+      : catalogApps.filter(a => a.category.toLowerCase().includes(activeCategory.toLowerCase()));
+
+    if (catalogCountLabel) {
+      catalogCountLabel.textContent = `${filtered.length} application${filtered.length > 1 ? 's' : ''} disponible${filtered.length > 1 ? 's' : ''}`;
+    }
+
+    filtered.forEach(app => {
       const isSelected = selectedApps.some(s => s.id === app.id);
       const card = document.createElement('div');
-      card.className = `p-4 rounded-xl border transition-all flex items-center justify-between ${
-        isSelected ? 'bg-amber-50/50 border-amber-200' : 'bg-white border-slate-200 hover:border-amber-300'
+      card.className = `p-4 rounded-2xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+        isSelected 
+          ? 'bg-amber-500/5 border-amber-500/30' 
+          : 'bg-slate-900 border-slate-800 hover:border-slate-700'
       }`;
 
       card.innerHTML = `
-        <div class="flex items-center gap-3">
-          <div class="w-12 h-12 rounded-lg flex items-center justify-center font-bold text-lg text-white shadow-sm" style="background-color: ${app.color || '#6366F1'}">
-            ${app.icon_initial || app.name[0]}
+        <div class="flex items-center gap-3.5">
+          <div class="w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl text-white shadow-md shrink-0" style="background-color: ${app.color || '#F59E0B'}">
+            ${app.icon_initial || '📦'}
           </div>
-          <div>
-            <div class="flex items-center gap-2">
-              <h4 class="font-semibold text-slate-800">${app.name}</h4>
-              <span class="text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-medium">${app.category}</span>
+          <div class="space-y-0.5">
+            <div class="flex items-center gap-2 flex-wrap">
+              <h4 class="font-bold text-slate-100 text-sm">${app.name}</h4>
+              <span class="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 border border-slate-700 text-slate-300 font-semibold">${app.category}</span>
             </div>
-            <p class="text-xs text-slate-500 mt-0.5 line-clamp-1">${app.description}</p>
-            <div class="text-xs text-slate-400 mt-1 font-mono">${app.size_kb} Ko • v${app.version}</div>
+            <p class="text-xs text-slate-400 line-clamp-1 leading-normal">${app.description}</p>
+            <div class="text-[11px] text-slate-500 font-mono flex items-center gap-2">
+              <span>${app.size_kb} Ko</span>
+              <span>•</span>
+              <span>v${app.version}</span>
+              <span>•</span>
+              <span class="text-slate-400">${app.author}</span>
+            </div>
           </div>
         </div>
-        <button class="add-btn px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+        <button class="add-btn px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 ${
           isSelected 
-            ? 'bg-emerald-100 text-emerald-700 cursor-default' 
-            : 'bg-slate-900 text-white hover:bg-amber-500 hover:text-black shadow-sm'
+            ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 cursor-default' 
+            : 'bg-nw-yellow hover:bg-nw-yellowHover text-black shadow-md shadow-amber-500/10 active:scale-95'
         }">
-          ${isSelected ? '✓ Ajouté' : '+ Ajouter'}
+          ${isSelected ? '✓ Inclus' : '+ Ajouter'}
         </button>
       `;
 
@@ -128,22 +212,22 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       selectedApps.forEach((app, idx) => {
         const item = document.createElement('div');
-        item.className = 'p-3 bg-white rounded-lg border border-slate-200 flex items-center justify-between shadow-sm';
+        item.className = 'p-3 bg-slate-950/60 rounded-xl border border-slate-800 hover:border-slate-700 flex items-center justify-between shadow-sm transition-all';
         item.innerHTML = `
-          <div class="flex items-center gap-3">
-            <span class="font-mono text-xs text-slate-400 font-bold w-4">${idx + 1}.</span>
-            <div class="w-8 h-8 rounded-md flex items-center justify-center font-bold text-xs text-white" style="background-color: ${app.color || '#475569'}">
-              ${app.icon_initial || app.name[0]}
+          <div class="flex items-center gap-3 min-w-0">
+            <span class="font-mono text-xs text-amber-500 font-extrabold w-4">${idx + 1}.</span>
+            <div class="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm text-white shrink-0" style="background-color: ${app.color || '#475569'}">
+              ${app.icon_initial || '📦'}
             </div>
-            <div>
-              <p class="text-sm font-semibold text-slate-800 leading-tight">${app.name}</p>
-              <p class="text-xs font-mono text-slate-400">${app.size_kb} Ko</p>
+            <div class="min-w-0">
+              <p class="text-xs font-bold text-slate-200 truncate">${app.name}</p>
+              <p class="text-[10px] font-mono text-slate-500">${app.size_kb} Ko • ${app.category}</p>
             </div>
           </div>
-          <div class="flex items-center gap-1">
-            <button class="up-btn p-1.5 hover:bg-slate-100 rounded text-slate-500 hover:text-slate-900" title="Monter" ${idx === 0 ? 'disabled style="opacity:0.3"' : ''}>▲</button>
-            <button class="down-btn p-1.5 hover:bg-slate-100 rounded text-slate-500 hover:text-slate-900" title="Descendre" ${idx === selectedApps.length - 1 ? 'disabled style="opacity:0.3"' : ''}>▼</button>
-            <button class="del-btn p-1.5 hover:bg-red-50 rounded text-red-500 hover:text-red-700 ml-1" title="Supprimer">✕</button>
+          <div class="flex items-center gap-1 shrink-0 ml-2">
+            <button class="up-btn p-1.5 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-slate-200 text-xs" title="Monter" ${idx === 0 ? 'disabled style="opacity:0.2"' : ''}>▲</button>
+            <button class="down-btn p-1.5 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-slate-200 text-xs" title="Descendre" ${idx === selectedApps.length - 1 ? 'disabled style="opacity:0.2"' : ''}>▼</button>
+            <button class="del-btn p-1.5 hover:bg-red-500/20 rounded-lg text-red-400 hover:text-red-300 ml-1 text-xs" title="Supprimer">✕</button>
           </div>
         `;
 
@@ -174,19 +258,52 @@ document.addEventListener('DOMContentLoaded', async () => {
         selectedList.appendChild(item);
       });
     }
+
+    // Mise à jour de l'affichage du simulateur virtuel
+    updateSimulatorPreview();
   }
 
-  // Mise à jour de la mémoire et des badges
-  function updateMemoryUsage() {
-    let totalBytes = 24 * 1024; // Launcher de base
-    selectedApps.forEach(a => {
-      totalBytes += a.data ? a.data.byteLength : (a.size_kb * 1024);
+  // Met à jour la liste des apps affichées sur le simulateur virtuel NumWorks
+  function updateSimulatorPreview() {
+    if (!simMenu) return;
+    simMenu.innerHTML = '';
+
+    if (selectedApps.length === 0) {
+      simMenu.innerHTML = '<div class="text-[9px] text-slate-400 p-2 text-center">Aucune app selectionnee</div>';
+      return;
+    }
+
+    selectedApps.slice(0, 5).forEach((app, i) => {
+      const row = document.createElement('div');
+      const isFirst = (i === 0);
+      row.className = isFirst
+        ? 'p-1 rounded bg-amber-200 border-l-4 border-amber-600 text-[10px] font-bold text-slate-900 flex justify-between'
+        : 'p-1 rounded bg-white text-[10px] text-slate-700 flex justify-between border border-slate-200';
+      row.innerHTML = `
+        <span class="truncate pr-1">${i + 1}. ${app.name}</span>
+        <span class="text-[9px] ${isFirst ? 'text-slate-600' : 'text-slate-400'} shrink-0">${app.category.split('/')[0]}</span>
+      `;
+      simMenu.appendChild(row);
     });
 
+    if (selectedApps.length > 5) {
+      const more = document.createElement('div');
+      more.className = 'text-[8px] text-slate-400 text-center';
+      more.textContent = `+ ${selectedApps.length - 5} autre(s) application(s)...`;
+      simMenu.appendChild(more);
+    }
+  }
+
+  // Mise à jour de la mémoire et des jauges
+  function updateMemoryUsage() {
+    const totalBytes = selectedApps.reduce((acc, app) => acc + (app.size_kb * 1024), 0);
+    const mbUsed = (totalBytes / (1024 * 1024)).toFixed(2);
+    const mbTotal = (MAX_FLASH_BYTES / (1024 * 1024)).toFixed(2);
     const percent = Math.min(100, Math.round((totalBytes / MAX_FLASH_BYTES) * 100));
-    memoryProgressBar.style.width = `${percent}%`;
+
+    memoryText.textContent = `${mbUsed} Mo / ${mbTotal} Mo`;
     memoryPercent.textContent = `${percent}%`;
-    memoryText.textContent = `${(totalBytes / (1024 * 1024)).toFixed(2)} Mo / 4.00 Mo`;
+    memoryProgressBar.style.width = `${percent}%`;
 
     if (percent > 90) {
       memoryProgressBar.className = 'h-full transition-all rounded-full bg-red-500';
@@ -206,16 +323,16 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Gestion du Drag & Drop pour fichiers .nwa et .nws personnalisés
   dropZone.addEventListener('dragover', (e) => {
     e.preventDefault();
-    dropZone.classList.add('border-amber-400', 'bg-amber-50/50');
+    dropZone.classList.add('border-amber-400', 'bg-amber-500/10');
   });
 
   dropZone.addEventListener('dragleave', () => {
-    dropZone.classList.remove('border-amber-400', 'bg-amber-50/50');
+    dropZone.classList.remove('border-amber-400', 'bg-amber-500/10');
   });
 
   dropZone.addEventListener('drop', (e) => {
     e.preventDefault();
-    dropZone.classList.remove('border-amber-400', 'bg-amber-50/50');
+    dropZone.classList.remove('border-amber-400', 'bg-amber-500/10');
     if (e.dataTransfer.files.length > 0) {
       handleCustomFiles(e.dataTransfer.files);
     }
@@ -242,10 +359,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         name: file.name.replace(/\.[^/.]+$/, ""),
         author: "Fichier importé",
         version: "Custom",
-        size_kb: Math.round(buffer.byteLength / 1024),
+        size_kb: Math.max(1, Math.round(buffer.byteLength / 1024)),
         category: ext.toUpperCase(),
         description: `Application importée manuellement (${file.name})`,
-        icon_initial: file.name[0].toUpperCase(),
+        icon_initial: '📁',
         color: "#0284C7",
         data: new Uint8Array(buffer)
       };
@@ -259,18 +376,18 @@ document.addEventListener('DOMContentLoaded', async () => {
   connectBtn.addEventListener('click', async () => {
     if (usb.isConnected) {
       await usb.disconnect();
-      connectionDot.className = 'w-2 h-2 rounded-full bg-slate-400';
+      connectionDot.className = 'w-2.5 h-2.5 rounded-full bg-slate-500';
       connectionText.textContent = 'Non connectée';
-      modelText.textContent = 'Modèle cible : N0120';
-      connectBtn.textContent = 'Connecter ma NumWorks';
+      modelText.textContent = 'Cible : N0120';
+      connectBtn.innerHTML = '<span>🔌</span> <span class="hidden sm:inline">Connecter</span>';
       showToast('Calculatrice déconnectée', 'info');
     } else {
       try {
         const res = await usb.connect();
-        connectionDot.className = 'w-2 h-2 rounded-full bg-emerald-500 animate-pulse';
+        connectionDot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse';
         connectionText.textContent = 'Connectée';
         modelText.textContent = res.model;
-        connectBtn.textContent = 'Déconnecter';
+        connectBtn.innerHTML = '<span>✕</span> <span class="hidden sm:inline">Déconnecter</span>';
         showToast('NumWorks détectée avec succès !', 'success');
       } catch (err) {
         showToast(err.message || 'Échec de connexion USB', 'error');
@@ -282,7 +399,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   downloadBtn.addEventListener('click', async () => {
     try {
       showToast('Téléchargement du binaire natif N0120 en cours...', 'info');
-      // Téléchargement direct du fichier ELF natif compilé avec devkitARM, garanti sans cache
       const timestamp = Date.now();
       const response = await fetch(`equalib_n0120.nwa?v=${timestamp}`, { cache: 'no-store' });
       if (!response.ok) {
@@ -320,16 +436,15 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
 
-    bundler.options.simulateExam = optSimulateExam.checked;
-    bundler.options.enablePanicKey = optPanicKey.checked;
-
     try {
       const bundle = await bundler.buildBundle(selectedApps);
       const url = URL.createObjectURL(bundle.blob);
       const a = document.createElement('a');
       a.href = url;
       a.download = 'equalib_backup.nws';
+      document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
       URL.revokeObjectURL(url);
       showToast('Sauvegarde equalib_backup.nws téléchargée !', 'success');
     } catch (err) {
@@ -353,9 +468,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     }
 
-    bundler.options.simulateExam = optSimulateExam.checked;
-    bundler.options.enablePanicKey = optPanicKey.checked;
-
     try {
       flashBtn.disabled = true;
       progressContainer.classList.remove('hidden');
@@ -377,27 +489,38 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  // Système de notifications Toast
+  // Système de notifications Toast moderne
   function showToast(message, type = 'info') {
     const container = document.getElementById('toast-container');
     const toast = document.createElement('div');
     
-    let bg = 'bg-slate-900 text-white';
-    if (type === 'success') bg = 'bg-emerald-600 text-white';
-    if (type === 'error') bg = 'bg-red-600 text-white';
-    if (type === 'warning') bg = 'bg-amber-500 text-black';
+    let bg = 'bg-slate-900 border-slate-700 text-white';
+    let icon = 'ℹ️';
+    if (type === 'success') {
+      bg = 'bg-emerald-950/90 border-emerald-500/50 text-emerald-200';
+      icon = '✓';
+    } else if (type === 'error') {
+      bg = 'bg-red-950/90 border-red-500/50 text-red-200';
+      icon = '❌';
+    } else if (type === 'warning') {
+      bg = 'bg-amber-950/90 border-amber-500/50 text-amber-200';
+      icon = '⚠️';
+    }
 
-    toast.className = `${bg} px-4 py-3 rounded-xl shadow-lg text-sm font-medium transition-all transform translate-y-2 opacity-0 flex items-center gap-2`;
-    toast.textContent = message;
+    toast.className = `${bg} border backdrop-blur-md px-4 py-3 rounded-2xl shadow-2xl text-xs font-semibold transition-all duration-300 transform translate-y-3 opacity-0 flex items-center gap-2.5 pointer-events-auto`;
+    toast.innerHTML = `
+      <span class="w-5 h-5 rounded-full bg-white/10 flex items-center justify-center font-bold text-xs shrink-0">${icon}</span>
+      <span>${message}</span>
+    `;
 
     container.appendChild(toast);
     requestAnimationFrame(() => {
-      toast.classList.remove('translate-y-2', 'opacity-0');
+      toast.classList.remove('translate-y-3', 'opacity-0');
     });
 
     setTimeout(() => {
-      toast.classList.add('opacity-0', 'translate-y-2');
-      setTimeout(() => toast.remove(), 300);
+      toast.classList.add('opacity-0', 'translate-y-3');
+      setTimeout(() => toast.remove(), 350);
     }, 4000);
   }
 });

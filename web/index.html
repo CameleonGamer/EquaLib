@@ -1,109 +1,291 @@
 <!DOCTYPE html>
-<html lang="fr" class="h-full bg-slate-50">
+<html lang="fr" class="h-full bg-slate-950 text-slate-100">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>EquaLib - Bibliothèque Multi-Apps pour NumWorks (N0120 & N0110)</title>
+  <title>EquaLib Studio - Bibliothèque Multi-Applications pour NumWorks N0120</title>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            nw: {
+              yellow: '#FFBB00',
+              yellowHover: '#E5A800',
+              dark: '#111827',
+              card: '#1F2937',
+              border: '#374151',
+              accent: '#F59E0B'
+            }
+          }
+        }
+      }
+    }
+  </script>
   <style>
     body { font-family: 'Plus Jakarta Sans', sans-serif; }
     code, .font-mono { font-family: 'JetBrains Mono', monospace; }
-    .nw-yellow { background-color: #FFBB00; }
-    .nw-yellow-text { color: #D99B00; }
+    
+    /* Animation du clignotement de la LED examen */
+    @keyframes led-blink {
+      0%, 100% { opacity: 0.15; transform: scale(0.9); }
+      12% { opacity: 1; transform: scale(1.15); filter: drop-shadow(0 0 8px #ef4444); }
+      20% { opacity: 0.15; transform: scale(0.9); }
+    }
+    .animate-led {
+      animation: led-blink 1s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+
+    /* Effets de lueur et dégradés */
+    .glow-yellow {
+      box-shadow: 0 0 35px -5px rgba(255, 187, 0, 0.25);
+    }
+    .glow-card {
+      box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+    }
+    
+    /* Écran NumWorks rétro */
+    .nw-screen {
+      background-color: #F7BE20;
+      box-shadow: inset 0 2px 10px rgba(0,0,0,0.3);
+    }
   </style>
 </head>
-<body class="min-h-full flex flex-col text-slate-900 antialiased selection:bg-amber-200">
+<body class="min-h-full flex flex-col antialiased selection:bg-amber-400 selection:text-black">
 
-  <!-- En-tête / Barre de navigation -->
-  <header class="bg-white border-b border-slate-200 sticky top-0 z-40">
+  <!-- ==================== BARRE DE NAVIGATION ==================== -->
+  <header class="bg-slate-900/80 backdrop-blur-md border-b border-slate-800 sticky top-0 z-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
       
-      <!-- Logo et Titre -->
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl nw-yellow flex items-center justify-center font-extrabold text-black text-xl shadow-sm">
+      <!-- Logo et Identité -->
+      <div class="flex items-center gap-3.5">
+        <div class="w-10 h-10 rounded-xl bg-nw-yellow flex items-center justify-center font-extrabold text-black text-xl shadow-lg shadow-amber-500/20">
           EQ
         </div>
         <div>
           <div class="flex items-center gap-2">
-            <h1 class="font-extrabold text-xl tracking-tight text-slate-900">EquaLib</h1>
-            <span class="text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">N0120 Ready</span>
+            <h1 class="font-extrabold text-lg tracking-tight text-white">EquaLib <span class="text-nw-yellow font-mono text-sm">Studio</span></h1>
+            <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-500/10 text-nw-yellow border border-amber-500/20">
+              N0120 Cortex-M7
+            </span>
           </div>
-          <p class="text-xs text-slate-500 font-medium">Bibliothèque Multi-Applications pour NumWorks</p>
+          <p class="text-xs text-slate-400 font-medium">Hub Multi-Applications & Outils pour NumWorks</p>
         </div>
       </div>
 
-      <!-- Statut de Connexion & Bouton USB -->
+      <!-- Navigation & Statut USB -->
       <div class="flex items-center gap-3">
-        <div id="connection-badge" class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100 border border-slate-200 text-xs font-semibold text-slate-600">
-          <span id="connection-dot" class="w-2 h-2 rounded-full bg-slate-400"></span>
+        <a href="https://github.com/CameleonGamer/EquaLib" target="_blank" class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition-all border border-slate-700">
+          <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+          <span>GitHub</span>
+        </a>
+
+        <div id="connection-badge" class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-800/80 border border-slate-700/80 text-xs font-semibold text-slate-300">
+          <span id="connection-dot" class="w-2.5 h-2.5 rounded-full bg-slate-500"></span>
           <span id="connection-text">Non connectée</span>
-          <span class="text-slate-300">|</span>
-          <span id="model-text" class="text-slate-500 font-mono">Modèle cible : N0120</span>
+          <span class="text-slate-600 hidden sm:inline">|</span>
+          <span id="model-text" class="text-slate-400 font-mono text-[11px] hidden sm:inline">Cible : N0120</span>
         </div>
 
-        <button id="connect-btn" class="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs tracking-wide transition-all shadow-sm flex items-center gap-2">
-          <span>🔌</span> Connecter ma NumWorks
+        <button id="connect-btn" class="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-white font-semibold text-xs transition-all border border-slate-700 flex items-center gap-2 shadow-sm">
+          <span>🔌</span> <span class="hidden sm:inline">Connecter</span>
         </button>
       </div>
 
     </div>
   </header>
 
-  <!-- Contenu Principal -->
-  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <!-- ==================== BANNIÈRE HERO ==================== -->
+  <section class="relative overflow-hidden border-b border-slate-800/80 bg-gradient-to-b from-slate-900 via-slate-950 to-slate-950 py-10">
+    <div class="absolute inset-0 bg-[radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-amber-500/10 via-transparent to-transparent pointer-events-none"></div>
 
-    <!-- Bannière explicative N0120 -->
-    <div class="mb-8 p-5 rounded-2xl bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border border-amber-200/80 flex flex-col md:flex-row md:items-center justify-between gap-4">
-      <div class="flex items-start gap-4">
-        <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-700 flex items-center justify-center font-bold text-xl shrink-0">
-          💡
-        </div>
-        <div>
-          <h2 class="font-bold text-slate-900 text-sm">Dépassez la limite d'une seule application externe</h2>
-          <p class="text-xs text-slate-600 mt-1 leading-relaxed">
-            Sur la NumWorks N0120 (STM32H725), le système officiel Epsilon n'autorise qu'un seul emplacement d'application externe. 
-            <strong>EquaLib installe un lanceur tout-en-un</strong> qui encapsule toutes vos applications préférées (KhiCAS, fiches de cours, jeux) dans un unique paquet.
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+        
+        <!-- Texte de présentation -->
+        <div class="lg:col-span-7 space-y-4">
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-nw-yellow text-xs font-semibold">
+            <span>✨</span> Débloquez le véritable potentiel de votre NumWorks
+          </div>
+          <h2 class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight leading-tight">
+            Toutes vos applications préférées réunies dans <span class="text-transparent bg-clip-text bg-gradient-to-r from-nw-yellow via-amber-400 to-amber-200">un seul fichier</span>.
+          </h2>
+          <p class="text-sm sm:text-base text-slate-400 leading-relaxed max-w-2xl">
+            Sur la NumWorks N0120, le système Epsilon n'autorise qu'un seul emplacement pour application externe. 
+            <strong>EquaLib contourne cette limitation</strong> en installant un lanceur natif autonome tout-en-un avec jeux 3D, formulaires, tableau périodique et mode examen simulé.
           </p>
+
+          <!-- Badges des points forts -->
+          <div class="pt-2 flex flex-wrap gap-2.5">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-900 border border-slate-800 text-xs font-medium text-slate-300">
+              🏎️ <strong>Super Mario Kart 3D</strong>
+            </span>
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-900 border border-slate-800 text-xs font-medium text-slate-300">
+              🧪 <strong>Tableau Périodique (118 élém.)</strong>
+            </span>
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-900 border border-slate-800 text-xs font-medium text-slate-300">
+              📚 <strong>Fiches de Révision Maths/Sc.</strong>
+            </span>
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-900 border border-slate-800 text-xs font-medium text-slate-300">
+              🚨 <strong>LED Clignotante 1 Hz</strong>
+            </span>
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-900 border border-slate-800 text-xs font-medium text-slate-300">
+              🛡️ <strong>Mode Furtif Panique</strong>
+            </span>
+          </div>
         </div>
-      </div>
-      <div class="shrink-0 flex items-center gap-2">
-        <span class="text-xs font-medium text-amber-800 bg-amber-100/80 px-3 py-1.5 rounded-lg border border-amber-200">
-          Simulation Mode Examen & LED 1 Hz incluse
-        </span>
+
+        <!-- Aperçu Interactif de la Calculatrice NumWorks N0120 -->
+        <div class="lg:col-span-5 flex justify-center">
+          <div class="w-full max-w-[340px] bg-slate-900 border-2 border-slate-700/80 rounded-3xl p-4 shadow-2xl glow-card relative">
+            
+            <!-- Coque Calculatrice Blanche NumWorks -->
+            <div class="bg-neutral-100 rounded-2xl p-3 border border-slate-300 shadow-inner">
+              
+              <!-- Écran LCD 320x240 simulé -->
+              <div id="sim-screen" class="w-full aspect-[4/3] bg-slate-100 rounded-lg overflow-hidden border-2 border-neutral-800 flex flex-col text-slate-900 font-mono text-[11px] shadow-inner select-none transition-all">
+                
+                <!-- Barre supérieure officielle -->
+                <div id="sim-topbar" class="h-6 bg-[#FFBB00] px-2 flex items-center justify-between font-bold text-[10px] text-black shrink-0 transition-colors">
+                  <span id="sim-title">EquaLib - Hub N0120</span>
+                  <div class="flex items-center gap-1.5">
+                    <span id="sim-exam-tag" class="text-[9px] uppercase font-bold text-red-600 hidden">EXAMEN</span>
+                    <span id="sim-led" class="w-2.5 h-2.5 rounded-full bg-red-600/20 border border-red-700/30"></span>
+                  </div>
+                </div>
+
+                <!-- Contenu de l'écran du simulateur -->
+                <div id="sim-content" class="flex-1 p-2 bg-slate-100 flex flex-col justify-between overflow-hidden">
+                  
+                  <!-- Menu d'applications -->
+                  <div id="sim-menu" class="space-y-1">
+                    <div id="sim-app-0" class="p-1 rounded bg-amber-200 border-l-4 border-amber-600 text-[10px] font-bold text-slate-900 flex justify-between">
+                      <span>1. Mario Kart</span>
+                      <span class="text-[9px] text-slate-600">Arcade</span>
+                    </div>
+                    <div id="sim-app-1" class="p-1 rounded bg-white text-[10px] text-slate-700 flex justify-between border border-slate-200">
+                      <span>2. Tableau Periodique</span>
+                      <span class="text-[9px] text-slate-400">Chimie</span>
+                    </div>
+                    <div id="sim-app-2" class="p-1 rounded bg-white text-[10px] text-slate-700 flex justify-between border border-slate-200">
+                      <span>3. Fiches de Cours</span>
+                      <span class="text-[9px] text-slate-400">Revision</span>
+                    </div>
+                    <div id="sim-app-3" class="p-1 rounded bg-white text-[10px] text-slate-700 flex justify-between border border-slate-200">
+                      <span>4. Solveur de Maths</span>
+                      <span class="text-[9px] text-slate-400">Algebre</span>
+                    </div>
+                    <div id="sim-app-4" class="p-1 rounded bg-white text-[10px] text-slate-700 flex justify-between border border-slate-200">
+                      <span>5. Mode Furtif Panique</span>
+                      <span class="text-[9px] text-slate-400">Securite</span>
+                    </div>
+                  </div>
+
+                  <!-- Écran alternatif calculatrice furtive -->
+                  <div id="sim-panic-view" class="hidden space-y-1.5 flex-1">
+                    <div class="bg-slate-200 p-1.5 rounded text-[10px]">
+                      <div class="text-slate-500">cos(pi/3) + ln(e^2)</div>
+                      <div class="text-right font-bold text-black text-xs">2.5</div>
+                    </div>
+                    <div class="bg-slate-200 p-1.5 rounded text-[10px]">
+                      <div class="text-slate-800">> 12 * 8_</div>
+                      <div class="text-right font-bold text-blue-700 text-xs">96</div>
+                    </div>
+                    <div class="text-[8px] text-slate-400 text-center pt-1">
+                      [Examen Actif] • Mode Normal
+                    </div>
+                  </div>
+
+                  <!-- Pied d'écran -->
+                  <div class="text-[8px] text-slate-500 bg-white p-0.5 rounded border border-slate-200 text-center truncate">
+                    OK: Lancer | Toolbox: LED | Backx2: Furtif
+                  </div>
+
+                </div>
+
+              </div>
+
+              <!-- Commandes interactives du simulateur -->
+              <div class="mt-3 flex gap-2">
+                <button id="sim-btn-exam" class="flex-1 py-1.5 px-2 rounded-lg bg-neutral-200 hover:bg-neutral-300 text-neutral-800 text-[11px] font-bold transition-all border border-neutral-300 flex items-center justify-center gap-1">
+                  <span>🚨</span> Tester LED 1Hz
+                </button>
+                <button id="sim-btn-panic" class="flex-1 py-1.5 px-2 rounded-lg bg-neutral-200 hover:bg-neutral-300 text-neutral-800 text-[11px] font-bold transition-all border border-neutral-300 flex items-center justify-center gap-1">
+                  <span>🛡️</span> Double Back
+                </button>
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+
       </div>
     </div>
+  </section>
 
-    <!-- Grille Principale (2 Colonnes) -->
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+  <!-- ==================== STUDIO PRINCIPAL ==================== -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
 
-      <!-- Colonne Gauche : Catalogue & Import (7 cols) -->
-      <div class="lg:col-span-7 space-y-6">
+    <!-- Grille de travail (2 colonnes principales) -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+
+      <!-- ==================== COLONNE GAUCHE : CATALOGUE & RECHERCHE (7 COLS) ==================== -->
+      <div class="lg:col-span-7 space-y-5">
         
         <!-- En-tête Catalogue -->
-        <div class="flex items-center justify-between">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-900/60 p-4 rounded-2xl border border-slate-800">
           <div>
-            <h3 class="font-bold text-lg text-slate-900">1. Choisissez vos applications</h3>
-            <p class="text-xs text-slate-500">Ajoutez des applications du store ou importez vos propres fichiers .nwa / .nws</p>
+            <h3 class="font-extrabold text-base text-white flex items-center gap-2">
+              <span>📦</span> Catalogue des Applications
+            </h3>
+            <p class="text-xs text-slate-400">Applications optimisées et testées pour l'architecture N0120</p>
+          </div>
+
+          <!-- Filtres par catégorie -->
+          <div class="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0" id="category-filters">
+            <button class="cat-pill active px-2.5 py-1 rounded-lg text-xs font-semibold bg-nw-yellow text-black transition-all" data-category="ALL">
+              Toutes
+            </button>
+            <button class="cat-pill px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 transition-all" data-category="Jeux / Arcade">
+              🎮 Jeux
+            </button>
+            <button class="cat-pill px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 transition-all" data-category="Sciences">
+              🧪 Sciences
+            </button>
+            <button class="cat-pill px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 transition-all" data-category="Révision">
+              📚 Révision
+            </button>
+            <button class="cat-pill px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 transition-all" data-category="Maths">
+              📐 Maths
+            </button>
           </div>
         </div>
 
         <!-- Zone de Glisser-Déposer Personnalisée -->
-        <div id="drop-zone" class="border-2 border-dashed border-slate-300 hover:border-amber-400 bg-white p-6 rounded-2xl text-center cursor-pointer transition-all">
+        <div id="drop-zone" class="border-2 border-dashed border-slate-700 hover:border-amber-400 bg-slate-900/40 hover:bg-amber-500/5 p-5 rounded-2xl text-center cursor-pointer transition-all group">
           <input type="file" id="file-input" class="hidden" accept=".nwa,.nws,.py" multiple>
-          <div class="w-10 h-10 mx-auto rounded-full bg-slate-100 flex items-center justify-center text-slate-600 text-lg mb-2">
+          <div class="w-11 h-11 mx-auto rounded-xl bg-slate-800 group-hover:bg-amber-500/20 group-hover:text-nw-yellow flex items-center justify-center text-slate-400 text-xl transition-all mb-2">
             📥
           </div>
-          <p class="text-sm font-semibold text-slate-700">Glissez-déposez vos fichiers <span class="font-mono text-amber-600">.nwa</span> ou <span class="font-mono text-amber-600">.nws</span> ici</p>
-          <p class="text-xs text-slate-400 mt-1">ou cliquez pour parcourir vos dossiers</p>
+          <p class="text-sm font-semibold text-slate-200">
+            Importez vos propres fichiers <span class="font-mono text-nw-yellow">.nwa</span> ou <span class="font-mono text-nw-yellow">.nws</span>
+          </p>
+          <p class="text-xs text-slate-500 mt-0.5">Glissez-déposez ici ou cliquez pour parcourir vos dossiers</p>
         </div>
 
-        <!-- Liste du Catalogue -->
+        <!-- Liste des Cartes d'Applications du Catalogue -->
         <div class="space-y-3">
-          <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400">Applications Populaires Vérifiées</h4>
+          <div class="flex items-center justify-between text-xs text-slate-400 font-semibold px-1">
+            <span id="catalog-count-label">Applications disponibles</span>
+            <span class="text-slate-500">Cliquez sur « + Ajouter »</span>
+          </div>
+
           <div id="catalog-list" class="space-y-2.5">
             <!-- Injecté dynamiquement par app.js -->
           </div>
@@ -111,90 +293,97 @@
 
       </div>
 
-      <!-- Colonne Droite : Bibliothèque Sélectionnée & Configuration (5 cols) -->
-      <div class="lg:col-span-5 space-y-6">
+      <!-- ==================== COLONNE DROITE : PACK PERSONNALISÉ & ACTIONS (5 COLS) ==================== -->
+      <div class="lg:col-span-5 space-y-5">
 
-        <!-- Carte de la Bibliothèque -->
-        <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-5">
+        <!-- Carte de configuration du Pack -->
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-5">
           
-          <div class="flex items-center justify-between pb-4 border-b border-slate-100">
+          <div class="flex items-center justify-between pb-4 border-b border-slate-800">
             <div>
-              <h3 class="font-bold text-base text-slate-900">Votre Pack EquaLib</h3>
-              <p class="text-xs text-slate-500">Ordre d'affichage sur la calculatrice</p>
+              <h3 class="font-extrabold text-base text-white flex items-center gap-2">
+                <span>🎯</span> Votre Pack EquaLib
+              </h3>
+              <p class="text-xs text-slate-400">Applications chargées dans le lanceur</p>
             </div>
-            <span id="app-count-badge" class="px-2.5 py-1 rounded-full bg-slate-100 font-mono text-xs font-bold text-slate-700">
+            <span id="app-count-badge" class="px-3 py-1 rounded-full bg-slate-800 border border-slate-700 font-mono text-xs font-extrabold text-nw-yellow">
               0 / 12
             </span>
           </div>
 
-          <!-- Jauge Mémoire Flash -->
-          <div class="space-y-2 bg-slate-50 p-4 rounded-xl border border-slate-100">
+          <!-- Jauge de Stockage Flash QSPI -->
+          <div class="space-y-2 bg-slate-950/70 p-4 rounded-2xl border border-slate-800">
             <div class="flex items-center justify-between text-xs">
-              <span class="font-semibold text-slate-700">Occupation Mémoire Flash N0120</span>
-              <span id="memory-percent" class="font-mono font-bold text-slate-900">0%</span>
+              <span class="font-semibold text-slate-300">Mémoire Flash N0120</span>
+              <span id="memory-percent" class="font-mono font-bold text-white">0%</span>
             </div>
-            <div class="w-full h-2.5 bg-slate-200 rounded-full overflow-hidden">
-              <div id="memory-progress-bar" class="h-full bg-emerald-500 rounded-full transition-all" style="width: 0%;"></div>
+            <div class="w-full h-2.5 bg-slate-800 rounded-full overflow-hidden p-0.5">
+              <div id="memory-progress-bar" class="h-full bg-emerald-500 rounded-full transition-all duration-300" style="width: 0%;"></div>
             </div>
             <div class="flex justify-between text-[11px] text-slate-500 font-mono">
               <span id="memory-text">0.00 Mo / 4.00 Mo</span>
-              <span>Max 8 Mo QSPI</span>
+              <span>Emplacement unique Epsilon</span>
             </div>
           </div>
 
-          <!-- Liste des applications sélectionnées -->
-          <div class="space-y-2 min-h-[160px]">
-            <div id="empty-state" class="text-center py-8 text-slate-400">
-              <div class="text-2xl mb-1">📦</div>
-              <p class="text-xs">Aucune application dans votre pack.<br>Ajoutez-en depuis le catalogue à gauche.</p>
+          <!-- Liste des applications sélectionnées dans le pack -->
+          <div class="space-y-2 min-h-[140px]">
+            <div id="empty-state" class="text-center py-8 text-slate-500 space-y-1">
+              <div class="text-3xl">📦</div>
+              <p class="text-xs font-medium">Votre pack est vide.<br>Ajoutez des applications depuis le catalogue à gauche.</p>
             </div>
-            <div id="selected-list" class="space-y-2 hidden">
+            <div id="selected-list" class="space-y-2 hidden max-h-[300px] overflow-y-auto pr-1">
               <!-- Injecté dynamiquement par app.js -->
             </div>
           </div>
 
-          <!-- Options Avancées (Mode Examen & Sécurité) -->
-          <div class="pt-4 border-t border-slate-100 space-y-3">
+          <!-- Options Système (Mode Examen & Sécurité) -->
+          <div class="pt-4 border-t border-slate-800 space-y-3">
             <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400">Fonctionnalités Spéciales</h4>
             
-            <label class="flex items-start gap-3 p-3 rounded-xl border border-slate-100 hover:bg-slate-50 cursor-pointer transition-all">
-              <input type="checkbox" id="opt-simulate-exam" checked class="mt-0.5 rounded text-amber-500 focus:ring-amber-400">
+            <label class="flex items-start gap-3 p-3 rounded-xl bg-slate-950/40 border border-slate-800 hover:border-slate-700 cursor-pointer transition-all">
+              <input type="checkbox" id="opt-simulate-exam" checked class="mt-0.5 rounded text-amber-500 focus:ring-amber-400 accent-amber-500">
               <div>
-                <p class="text-xs font-bold text-slate-800">Simuler la LED Examen officielle (1 Hz)</p>
-                <p class="text-[11px] text-slate-500 leading-normal">Fait clignoter la LED rouge au même rythme que le mode examen réel sans effacer vos applications.</p>
+                <p class="text-xs font-bold text-slate-200">Simulation LED Mode Examen (1 Hz)</p>
+                <p class="text-[11px] text-slate-400 leading-normal">
+                  Fait clignoter l'indicateur officiel rouge à 1 flash par seconde sans effacer votre mémoire.
+                </p>
               </div>
             </label>
 
-            <label class="flex items-start gap-3 p-3 rounded-xl border border-slate-100 hover:bg-slate-50 cursor-pointer transition-all">
-              <input type="checkbox" id="opt-panic-key" checked class="mt-0.5 rounded text-amber-500 focus:ring-amber-400">
+            <label class="flex items-start gap-3 p-3 rounded-xl bg-slate-950/40 border border-slate-800 hover:border-slate-700 cursor-pointer transition-all">
+              <input type="checkbox" id="opt-panic-key" checked class="mt-0.5 rounded text-amber-500 focus:ring-amber-400 accent-amber-500">
               <div>
-                <p class="text-xs font-bold text-slate-800">Touche de Panique Furtive (Double Back)</p>
-                <p class="text-[11px] text-slate-500 leading-normal">Bascule instantanément vers une fausse calculatrice officielle en cas de contrôle inopiné.</p>
+                <p class="text-xs font-bold text-slate-200">Touche de Panique Furtive (Double Back)</p>
+                <p class="text-[11px] text-slate-400 leading-normal">
+                  Bascule instantanément vers une fausse calculatrice avec [EXAMEN ACTIF] (Sortie secrète Shift+Home).
+                </p>
               </div>
             </label>
           </div>
 
           <!-- Barre de progression du téléversement USB -->
           <div id="progress-container" class="hidden space-y-2 pt-2">
-            <div class="flex justify-between text-xs font-semibold text-slate-700">
+            <div class="flex justify-between text-xs font-semibold text-slate-300">
               <span id="progress-text">Téléversement vers la N0120...</span>
             </div>
-            <div class="w-full h-3 bg-slate-100 rounded-full overflow-hidden">
-              <div id="flash-progress" class="h-full nw-yellow rounded-full transition-all" style="width: 0%;"></div>
+            <div class="w-full h-3 bg-slate-800 rounded-full overflow-hidden">
+              <div id="flash-progress" class="h-full bg-nw-yellow rounded-full transition-all" style="width: 0%;"></div>
             </div>
           </div>
 
-          <!-- Boutons d'Action -->
+          <!-- Boutons d'Action Principaux -->
           <div class="space-y-2.5 pt-2">
-            <button id="download-btn" class="w-full py-3.5 px-4 rounded-xl nw-yellow hover:brightness-105 active:scale-[0.99] text-black font-extrabold text-sm tracking-wide transition-all shadow-md flex items-center justify-center gap-2">
-              <span>💾</span> Télécharger mon application .nwa (Recommandé)
+            <button id="download-btn" class="w-full py-4 px-4 rounded-2xl bg-nw-yellow hover:bg-nw-yellowHover active:scale-[0.98] text-black font-extrabold text-sm tracking-wide transition-all shadow-lg shadow-amber-500/25 flex items-center justify-center gap-2 group">
+              <span class="group-hover:translate-y-[-1px] transition-transform">💾</span>
+              <span>Télécharger mon application .nwa (Recommandé)</span>
             </button>
 
             <div class="grid grid-cols-2 gap-2">
-              <button id="flash-btn" class="py-2.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs transition-all flex items-center justify-center gap-1.5 shadow-sm">
-                <span>⚡</span> Flasher en direct (WebUSB)
+              <button id="flash-btn" class="py-2.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-semibold text-xs transition-all flex items-center justify-center gap-1.5 border border-slate-700">
+                <span>⚡</span> Flash USB Direct
               </button>
-              <button id="download-nws-btn" class="py-2.5 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold text-xs transition-all flex items-center justify-center gap-1.5 border border-slate-200">
+              <button id="download-nws-btn" class="py-2.5 px-3 rounded-xl bg-slate-800/60 hover:bg-slate-800 text-slate-300 font-semibold text-xs transition-all flex items-center justify-center gap-1.5 border border-slate-700">
                 <span>📦</span> Exporter .nws
               </button>
             </div>
@@ -202,22 +391,36 @@
 
         </div>
 
-        <!-- Guide d'installation sur my.numworks.com/apps -->
-        <div class="p-5 rounded-2xl bg-emerald-50 border border-emerald-200 text-xs text-slate-700 space-y-2">
-          <div class="flex items-center gap-2 font-bold text-emerald-800 text-sm">
-            <span>✅</span> Installation en 2 étapes sur N0120 :
+        <!-- Guide d'installation officiel pas-à-pas -->
+        <div class="p-5 rounded-3xl bg-slate-900 border border-emerald-500/30 text-xs text-slate-300 space-y-3">
+          <div class="flex items-center gap-2 font-bold text-emerald-400 text-sm">
+            <span>✅</span> Installation officielle en 3 étapes :
           </div>
-          <ol class="list-decimal list-inside space-y-1.5 text-slate-600 pl-1">
-            <li>Cliquez sur <strong>Télécharger mon application .nwa</strong> ci-dessus.</li>
-            <li>Rendez-vous sur <a href="https://my.numworks.com/apps" target="_blank" class="text-emerald-700 underline font-bold hover:text-emerald-900">my.numworks.com/apps</a> et glissez le fichier téléchargé.</li>
-            <li>Le site affiche <strong>EquaLib</strong> (taille reconnue sans erreur NaN) : cliquez sur <strong>Installer</strong> !</li>
+          <ol class="space-y-2 text-slate-400 pl-1">
+            <li class="flex items-start gap-2">
+              <span class="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-300 flex items-center justify-center font-bold text-[11px] shrink-0">1</span>
+              <span>Cliquez sur le bouton jaune <strong>« Télécharger mon application .nwa »</strong> ci-dessus.</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-300 flex items-center justify-center font-bold text-[11px] shrink-0">2</span>
+              <span>Rendez-vous sur <a href="https://my.numworks.com/apps" target="_blank" class="text-emerald-400 underline font-bold hover:text-emerald-300">my.numworks.com/apps</a> et glissez le fichier <code>equalib_n0120.nwa</code>.</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-300 flex items-center justify-center font-bold text-[11px] shrink-0">3</span>
+              <span>Le site officiel reconnaît <strong>EquaLib</strong> : cliquez sur <strong>Installer</strong>. Profitez de toutes vos apps !</span>
+            </li>
           </ol>
         </div>
 
-        <!-- Note technique WebUSB / Mode DFU -->
-        <div class="p-4 rounded-xl bg-slate-100 border border-slate-200 text-xs text-slate-500 space-y-1">
-          <p class="font-semibold text-slate-700">⚡ Pour le flash direct WebUSB :</p>
-          <p>La calculatrice doit être en mode DFU : maintenez la touche <kbd class="px-1.5 py-0.5 bg-white border rounded font-mono font-bold">6</kbd> enfoncée et appuyez sur le bouton <kbd class="px-1.5 py-0.5 bg-white border rounded font-mono font-bold">RESET</kbd> au dos (l'écran reste éteint et la LED s'allume en rouge).</p>
+        <!-- Raccourcis Clavier sur la calculatrice -->
+        <div class="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 text-xs text-slate-400 space-y-2">
+          <p class="font-bold text-slate-200">🕹️ Raccourcis dans EquaLib sur la calculatrice :</p>
+          <ul class="space-y-1 text-[11px]">
+            <li>• <strong class="text-slate-300">Toolbox</strong> : Activer / Désactiver la LED du Mode Examen (1 Hz)</li>
+            <li>• <strong class="text-slate-300">Double Back</strong> : Basculer instantanément en Mode Panique Furtif</li>
+            <li>• <strong class="text-slate-300">Shift + Home</strong> : Sortie secrète de la calculatrice furtive</li>
+            <li>• <strong class="text-slate-300">Home</strong> : Quitter EquaLib et revenir au menu principal NumWorks</li>
+          </ul>
         </div>
 
       </div>
@@ -226,12 +429,26 @@
 
   </main>
 
+  <!-- ==================== PIED DE PAGE ==================== -->
+  <footer class="border-t border-slate-800/80 bg-slate-950 py-8 text-center text-xs text-slate-500">
+    <div class="max-w-7xl mx-auto px-4 space-y-2">
+      <div class="flex items-center justify-center gap-2 text-slate-400 font-medium">
+        <span>EquaLib Studio</span>
+        <span>•</span>
+        <span>Open Source sur GitHub</span>
+        <span>•</span>
+        <span>NumWorks N0120 (STM32H725 @ 550 MHz)</span>
+      </div>
+      <p class="text-slate-600">NumWorks est une marque déposée de NumWorks SAS. EquaLib est un projet indépendant communautaire.</p>
+    </div>
+  </footer>
+
   <!-- Toast notifications container -->
   <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
   <!-- Scripts -->
-  <script src="bundler.js?v=5"></script>
-  <script src="webusb.js?v=5"></script>
-  <script src="app.js?v=5"></script>
+  <script src="bundler.js?v=6"></script>
+  <script src="webusb.js?v=6"></script>
+  <script src="app.js?v=6"></script>
 </body>
 </html>
