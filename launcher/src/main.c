@@ -311,7 +311,7 @@ int main(int argc, char* argv[]) {
             eadk_display_push_rect_uniform(top_bar, COLOR_NUMWORKS);
 
             eadk_point_t p_title = {8, 5};
-            eadk_display_draw_string("EquaLib - Hub N0120", p_title, false, eadk_color_black, COLOR_NUMWORKS);
+            eadk_display_draw_string("EquaLib Hub (Cameleon & Gemini)", p_title, false, eadk_color_black, COLOR_NUMWORKS);
 
             /* Indicateur visuel du Mode Examen */
             draw_exam_indicator(EADK_SCREEN_WIDTH - 20, 6, COLOR_NUMWORKS);

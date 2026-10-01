@@ -98,5 +98,12 @@ make
 
 ---
 
+## 👥 Contributeurs & Auteurs
+
+* **[CameleonGamer](https://github.com/CameleonGamer)** — Créateur, Lead Developer & Conception du Projet
+* **Gemini (Google DeepMind)** — Pair Programming, architecture système bas-niveau Cortex-M7 (N0120), compilation EADK / freestanding libc, et interface EquaLib Studio
+
+---
+
 ## ⚖️ Avertissement Légal & Éthique
 Ce projet est conçu à des fins éducatives et de recherche sur le matériel embarqué. L'utilisation de fonctionnalités de contournement ou de simulation lors d'épreuves officielles est soumise aux règlements des examens nationaux.
