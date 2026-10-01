@@ -1,0 +1,13 @@
+{
+  "name": "Formulaire Prepas MPSI/PCSI",
+  "description": "Formulaire de reference CPGE",
+  "author": "CPGE Community",
+  "version": "1.0",
+  "created_at": "2026-10-01T16:21:13.076Z",
+  "scripts": [
+    {
+      "name": "prepa_formulaire.py",
+      "text": "# Formulaire Prepas MPSI\nprint(\"=== FORMULAIRE PREPA MPSI/PCSI ===\")\nprint(\"Taylor-Young : f(x) = sum f^(k)(a)/k! (x-a)^k + o(...)\")\nprint(\"Matrices : det(AB) = det(A)*det(B)\")\nprint(\"Trigo : cos(a+b) = cos(a)cos(b) - sin(a)sin(b)\")\n"
+    }
+  ]
+}

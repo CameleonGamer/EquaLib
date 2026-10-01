@@ -1,0 +1,13 @@
+{
+  "name": "Fiches Philosophie & Citations",
+  "description": "Les 17 notions du Bac Philo avec citations",
+  "author": "Bac Philo Hub",
+  "version": "1.0",
+  "created_at": "2026-10-01T16:21:13.077Z",
+  "scripts": [
+    {
+      "name": "fiches_philo.py",
+      "text": "# Fiches Philo Bac\nprint(\"=== FICHES BAC PHILOSOPHIE ===\")\nprint(\"- La liberte : Sartre 'L'homme est condamne a etre libre'\")\nprint(\"- Le devoir : Kant imperatif categorique\")\nprint(\"- L'Etat : Hobbes 'L'homme est un loup pour l'homme'\")\n"
+    }
+  ]
+}

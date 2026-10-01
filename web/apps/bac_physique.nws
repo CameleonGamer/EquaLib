@@ -1,0 +1,13 @@
+{
+  "name": "Pack Fiches Physique-Chimie",
+  "description": "Syntheses completes Bac PC",
+  "author": "Laboratoire Sciences",
+  "version": "1.0",
+  "created_at": "2026-10-01T16:21:13.076Z",
+  "scripts": [
+    {
+      "name": "fiches_pc.py",
+      "text": "# Fiches Bac Physique-Chimie\nprint(\"=== FICHES BAC PHYSIQUE-CHIMIE ===\")\nprint(\"1. Newton : Sum(F) = m * a\")\nprint(\"2. Energie : Ec = 1/2 m v^2, Epp = m g z\")\nprint(\"3. Ondes : v = lambda / T = lambda * f\")\nprint(\"4. pH : pH = -log[H3O+]\")\nprint(\"5. Gaz parfaits : P * V = n * R * T\")\n"
+    }
+  ]
+}

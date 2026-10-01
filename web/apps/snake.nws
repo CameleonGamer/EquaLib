@@ -1,0 +1,13 @@
+{
+  "name": "Snake Classic",
+  "description": "Le jeu du serpent retro avec score",
+  "author": "Zardam",
+  "version": "1.0",
+  "created_at": "2026-10-01T16:21:13.073Z",
+  "scripts": [
+    {
+      "name": "snake.py",
+      "text": "# Snake Classic NumWorks\nimport kandinsky as kd\nimport ion\nimport random\nimport time\n\nkd.fill_rect(0, 0, 320, 240, kd.color(30, 30, 30))\nkd.draw_string(\"Snake Classic NW\", 90, 30, kd.color(0, 255, 100), kd.color(30, 30, 30))\nkd.draw_string(\"Fleches: Diriger | Back: Quitter\", 30, 110, kd.color(255, 255, 255), kd.color(30, 30, 30))\n"
+    }
+  ]
+}

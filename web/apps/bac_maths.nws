@@ -1,0 +1,13 @@
+{
+  "name": "Pack Fiches Bac Maths Spe",
+  "description": "Tout le programme de Terminale Maths Spe",
+  "author": "Professeur R.",
+  "version": "1.0",
+  "created_at": "2026-10-01T16:21:13.075Z",
+  "scripts": [
+    {
+      "name": "fiches_maths.py",
+      "text": "# Fiches Bac Maths Spe\nprint(\"=== FICHES BAC MATHS SPE ===\")\nprint(\"1. Derivation : (uv)' = u'v + uv'\")\nprint(\"2. Convexite : f''(x) >= 0 => f convexe\")\nprint(\"3. Integrales : int(u'/u) = ln|u|\")\nprint(\"4. Probabilites : Loi binomiale B(n, p)\")\nprint(\"5. Espace : Produit scalaire u.v = xx' + yy' + zz'\")\n"
+    }
+  ]
+}

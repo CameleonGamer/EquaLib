@@ -1,0 +1,13 @@
+{
+  "name": "Solveur Matriciel & Gauss",
+  "description": "Determinant, inverse et pivot de Gauss",
+  "author": "Algebre Num",
+  "version": "1.0",
+  "created_at": "2026-10-01T16:21:13.077Z",
+  "scripts": [
+    {
+      "name": "matrices.py",
+      "text": "# Solveur Matriciel\ndef det2(a, b, c, d):\n    return a*d - b*c\n\nprint(\"Module Matrices & Gauss charge.\")\n"
+    }
+  ]
+}

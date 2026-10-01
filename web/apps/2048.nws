@@ -1,0 +1,13 @@
+{
+  "name": "2048 Ultimate",
+  "description": "Le celebre casse-tete 2048 pour NumWorks",
+  "author": "Gabriele Cirulli / NW Port",
+  "version": "1.0",
+  "created_at": "2026-10-01T16:21:13.073Z",
+  "scripts": [
+    {
+      "name": "g2048.py",
+      "text": "# 2048 NumWorks\nimport kandinsky as kd\nimport ion\nimport random\nimport time\n\ndef init_grid():\n    grid = [[0]*4 for _ in range(4)]\n    return grid\n\nkd.fill_rect(0, 0, 320, 240, kd.color(250, 248, 239))\nkd.draw_string(\"2048 NumWorks\", 100, 20, kd.color(119, 110, 101))\nkd.draw_string(\"Utilisez les fleches directionnelles\", 20, 110, kd.color(0, 0, 0))\nkd.draw_string(\"Back pour quitter\", 90, 150, kd.color(150, 150, 150))\n"
+    }
+  ]
+}

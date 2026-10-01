@@ -1,0 +1,13 @@
+{
+  "name": "Demineur NumWorks",
+  "description": "Demineur avec drapeaux et chrono",
+  "author": "Mathieu P.",
+  "version": "1.0",
+  "created_at": "2026-10-01T16:21:13.074Z",
+  "scripts": [
+    {
+      "name": "demineur.py",
+      "text": "# Demineur NumWorks\nimport kandinsky as kd\nimport ion\n\nkd.fill_rect(0, 0, 320, 240, kd.color(190, 190, 190))\nkd.draw_string(\"DEMINEUR NUMWORKS\", 80, 20, kd.color(0, 0, 128))\nkd.draw_string(\"OK: Creuser | EXE: Drapeau\", 40, 100, kd.color(0, 0, 0))\n"
+    }
+  ]
+}

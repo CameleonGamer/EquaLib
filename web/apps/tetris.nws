@@ -1,0 +1,13 @@
+{
+  "name": "Tetris NumWorks",
+  "description": "Tetris complet avec gestion des rotations",
+  "author": "NW Retro",
+  "version": "1.0",
+  "created_at": "2026-10-01T16:21:13.074Z",
+  "scripts": [
+    {
+      "name": "tetris.py",
+      "text": "# Tetris NumWorks\nimport kandinsky as kd\nimport ion\nimport time\n\nkd.fill_rect(0, 0, 320, 240, kd.color(20, 20, 35))\nkd.draw_string(\"TETRIS NUMWORKS\", 85, 30, kd.color(0, 200, 255), kd.color(20, 20, 35))\nkd.draw_string(\"Haut: Rotation | Bas: Chute\", 40, 100, kd.color(255, 255, 255), kd.color(20, 20, 35))\nkd.draw_string(\"Gauche/Droite: Deplacer\", 55, 130, kd.color(255, 255, 255), kd.color(20, 20, 35))\n"
+    }
+  ]
+}

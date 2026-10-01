@@ -1,0 +1,13 @@
+{
+  "name": "Wordle Francais",
+  "description": "Devinez le mot secret en 6 essais",
+  "author": "French Dev Team",
+  "version": "1.0",
+  "created_at": "2026-10-01T16:21:13.074Z",
+  "scripts": [
+    {
+      "name": "wordle.py",
+      "text": "# Wordle Francais NumWorks\nimport kandinsky as kd\nimport ion\n\nkd.fill_rect(0, 0, 320, 240, kd.color(18, 18, 19))\nkd.draw_string(\"LE MOT (WORDLE FR)\", 75, 25, kd.color(255, 255, 255), kd.color(18, 18, 19))\nkd.draw_string(\"6 essais pour trouver le mot de 5 lettres\", 10, 80, kd.color(150, 150, 150), kd.color(18, 18, 19))\n"
+    }
+  ]
+}

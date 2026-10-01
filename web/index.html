@@ -238,56 +238,147 @@
       <!-- ==================== COLONNE GAUCHE : CATALOGUE & RECHERCHE (7 COLS) ==================== -->
       <div class="lg:col-span-7 space-y-5">
         
-        <!-- En-tête Catalogue -->
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-900/60 p-4 rounded-2xl border border-slate-800">
-          <div>
-            <h3 class="font-extrabold text-base text-white flex items-center gap-2">
-              <span>📦</span> Catalogue des Applications
-            </h3>
-            <p class="text-xs text-slate-400">Applications optimisées et testées pour l'architecture N0120</p>
-          </div>
+        <!-- Barre d'onglets Catalogue & Recherche Web -->
+        <div class="flex items-center gap-2 p-1.5 bg-slate-900 border border-slate-800 rounded-2xl">
+          <button id="tab-btn-catalog" class="flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all bg-nw-yellow text-black shadow-sm flex items-center justify-center gap-1.5">
+            <span>📦</span>
+            <span>Apps Intégrées</span>
+          </button>
+          <button id="tab-btn-search" class="flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all text-slate-300 hover:text-white hover:bg-slate-800 flex items-center justify-center gap-1.5">
+            <span>🌐</span>
+            <span>Rechercher sur le Web (.nws)</span>
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          </button>
+          <button id="tab-btn-import" class="flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all text-slate-300 hover:text-white hover:bg-slate-800 flex items-center justify-center gap-1.5">
+            <span>🔗</span>
+            <span>Importer URL / Fichier</span>
+          </button>
+        </div>
 
+        <!-- ================= ONGLET 1 : CATALOGUE PRINCIPAL ================= -->
+        <div id="tab-view-catalog" class="space-y-4">
           <!-- Filtres par catégorie -->
-          <div class="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0" id="category-filters">
-            <button class="cat-pill active px-2.5 py-1 rounded-lg text-xs font-semibold bg-nw-yellow text-black transition-all" data-category="ALL">
-              Toutes
-            </button>
-            <button class="cat-pill px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 transition-all" data-category="Jeux / Arcade">
-              🎮 Jeux
-            </button>
-            <button class="cat-pill px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 transition-all" data-category="Sciences">
-              🧪 Sciences
-            </button>
-            <button class="cat-pill px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 transition-all" data-category="Révision">
-              📚 Révision
-            </button>
-            <button class="cat-pill px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 transition-all" data-category="Maths">
-              📐 Maths
-            </button>
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-900/60 p-3.5 rounded-2xl border border-slate-800">
+            <div>
+              <h3 class="font-extrabold text-sm text-white flex items-center gap-2">
+                <span>⚡</span> Applications Pré-intégrées
+              </h3>
+              <p class="text-[11px] text-slate-400">Prêtes et optimisées pour N0120</p>
+            </div>
+
+            <div class="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0" id="category-filters">
+              <button class="cat-pill active px-2.5 py-1 rounded-lg text-xs font-semibold bg-nw-yellow text-black transition-all" data-category="ALL">
+                Toutes
+              </button>
+              <button class="cat-pill px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 transition-all" data-category="Jeux / Arcade">
+                🎮 Jeux
+              </button>
+              <button class="cat-pill px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 transition-all" data-category="Sciences">
+                🧪 Sciences
+              </button>
+              <button class="cat-pill px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 transition-all" data-category="Révision">
+                📚 Révision
+              </button>
+              <button class="cat-pill px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 transition-all" data-category="Maths">
+                📐 Maths
+              </button>
+            </div>
+          </div>
+
+          <!-- Liste des Cartes d'Applications du Catalogue -->
+          <div class="space-y-3">
+            <div class="flex items-center justify-between text-xs text-slate-400 font-semibold px-1">
+              <span id="catalog-count-label">Applications disponibles</span>
+              <span class="text-slate-500">Cliquez sur « + Ajouter »</span>
+            </div>
+
+            <div id="catalog-list" class="space-y-2.5">
+              <!-- Injecté dynamiquement par app.js -->
+            </div>
           </div>
         </div>
 
-        <!-- Zone de Glisser-Déposer Personnalisée -->
-        <div id="drop-zone" class="border-2 border-dashed border-slate-700 hover:border-amber-400 bg-slate-900/40 hover:bg-amber-500/5 p-5 rounded-2xl text-center cursor-pointer transition-all group">
-          <input type="file" id="file-input" class="hidden" accept=".nwa,.nws,.py" multiple>
-          <div class="w-11 h-11 mx-auto rounded-xl bg-slate-800 group-hover:bg-amber-500/20 group-hover:text-nw-yellow flex items-center justify-center text-slate-400 text-xl transition-all mb-2">
-            📥
+        <!-- ================= ONGLET 2 : RECHERCHE SUR LE WEB (.NWS / .NWA) ================= -->
+        <div id="tab-view-search" class="space-y-4 hidden">
+          <!-- Barre de Recherche Web Dédiée -->
+          <div class="bg-slate-900 p-4 rounded-2xl border border-slate-800 space-y-3">
+            <div class="flex items-center justify-between">
+              <label for="web-search-input" class="text-xs font-extrabold text-white flex items-center gap-2">
+                <span>🔎</span> Rechercher des fichiers .nws & .nwa sur le web
+              </label>
+              <span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                Hub Communautaire
+              </span>
+            </div>
+
+            <div class="relative">
+              <input type="text" id="web-search-input" placeholder="Ex: Snake, 2048, Flappy, Bac, Matrices, Syracuse, Philo..." class="w-full bg-slate-950 border border-slate-700 focus:border-amber-400 focus:ring-1 focus:ring-amber-400 text-sm text-white rounded-xl pl-10 pr-24 py-3 placeholder:text-slate-500 font-medium transition-all">
+              <span class="absolute left-3.5 top-3.5 text-slate-400 text-sm">🔍</span>
+              <button id="web-search-clear" class="hidden absolute right-3 top-2.5 px-2.5 py-1 text-xs text-slate-400 hover:text-white rounded-lg bg-slate-800">
+                Effacer
+              </button>
+            </div>
+
+            <!-- Tags rapides de recherche -->
+            <div class="flex items-center gap-1.5 overflow-x-auto text-[11px] pt-1" id="quick-search-tags">
+              <span class="text-slate-500 shrink-0">Suggestions :</span>
+              <button class="quick-tag px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium transition-all shrink-0" data-tag="">Tous</button>
+              <button class="quick-tag px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium transition-all shrink-0" data-tag="flappy">🐦 Flappy</button>
+              <button class="quick-tag px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium transition-all shrink-0" data-tag="2048">🔢 2048</button>
+              <button class="quick-tag px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium transition-all shrink-0" data-tag="snake">🐍 Snake</button>
+              <button class="quick-tag px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium transition-all shrink-0" data-tag="tetris">🧱 Tetris</button>
+              <button class="quick-tag px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium transition-all shrink-0" data-tag="bac">📚 Fiches Bac</button>
+              <button class="quick-tag px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium transition-all shrink-0" data-tag="prepa">🎓 Prépas</button>
+              <button class="quick-tag px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium transition-all shrink-0" data-tag="matrices">🔢 Matrices</button>
+            </div>
           </div>
-          <p class="text-sm font-semibold text-slate-200">
-            Importez vos propres fichiers <span class="font-mono text-nw-yellow">.nwa</span> ou <span class="font-mono text-nw-yellow">.nws</span>
-          </p>
-          <p class="text-xs text-slate-500 mt-0.5">Glissez-déposez ici ou cliquez pour parcourir vos dossiers</p>
+
+          <!-- Liste des résultats de recherche web -->
+          <div class="space-y-3">
+            <div class="flex items-center justify-between text-xs text-slate-400 font-semibold px-1">
+              <span id="search-count-label">Applications communautaires</span>
+              <span class="text-slate-500">Ajout automatique dans votre Pack</span>
+            </div>
+
+            <div id="search-results-list" class="space-y-2.5">
+              <!-- Injecté dynamiquement par app.js -->
+            </div>
+          </div>
         </div>
 
-        <!-- Liste des Cartes d'Applications du Catalogue -->
-        <div class="space-y-3">
-          <div class="flex items-center justify-between text-xs text-slate-400 font-semibold px-1">
-            <span id="catalog-count-label">Applications disponibles</span>
-            <span class="text-slate-500">Cliquez sur « + Ajouter »</span>
+        <!-- ================= ONGLET 3 : IMPORTATION PAR URL OU GLISSER-DÉPOSER ================= -->
+        <div id="tab-view-import" class="space-y-4 hidden">
+          <!-- Téléchargement par URL web directe -->
+          <div class="bg-slate-900 p-4 rounded-2xl border border-slate-800 space-y-3">
+            <div class="flex items-center justify-between">
+              <h4 class="text-xs font-bold text-white flex items-center gap-2">
+                <span>🌐</span> Télécharger depuis une URL Web (.nws / .nwa)
+              </h4>
+              <span class="text-[10px] text-slate-400 font-mono">HTTP / GitHub Raw</span>
+            </div>
+
+            <p class="text-xs text-slate-400">
+              Collez l'adresse web directe vers n'importe quel fichier <code>.nws</code>, <code>.nwa</code> ou script <code>.py</code> en ligne :
+            </p>
+
+            <div class="flex flex-col sm:flex-row gap-2">
+              <input type="url" id="import-url-input" placeholder="https://raw.githubusercontent.com/.../programme.nws" class="flex-1 bg-slate-950 border border-slate-700 focus:border-amber-400 focus:ring-1 focus:ring-amber-400 text-xs text-white rounded-xl px-3 py-2.5 placeholder:text-slate-500 font-mono">
+              <button id="import-url-btn" class="px-4 py-2.5 rounded-xl bg-nw-yellow hover:bg-nw-yellowHover text-black font-extrabold text-xs transition-all active:scale-95 shrink-0 flex items-center justify-center gap-1.5">
+                <span>⬇️</span> Télécharger & Ajouter
+              </button>
+            </div>
           </div>
 
-          <div id="catalog-list" class="space-y-2.5">
-            <!-- Injecté dynamiquement par app.js -->
+          <!-- Zone de Glisser-Déposer Personnalisée -->
+          <div id="drop-zone" class="border-2 border-dashed border-slate-700 hover:border-amber-400 bg-slate-900/40 hover:bg-amber-500/5 p-6 rounded-2xl text-center cursor-pointer transition-all group">
+            <input type="file" id="file-input" class="hidden" accept=".nwa,.nws,.py" multiple>
+            <div class="w-12 h-12 mx-auto rounded-xl bg-slate-800 group-hover:bg-amber-500/20 group-hover:text-nw-yellow flex items-center justify-center text-slate-400 text-2xl transition-all mb-2">
+              📥
+            </div>
+            <p class="text-sm font-semibold text-slate-200">
+              Ou glissez-déposez vos fichiers <span class="font-mono text-nw-yellow">.nwa</span> ou <span class="font-mono text-nw-yellow">.nws</span> locaux
+            </p>
+            <p class="text-xs text-slate-500 mt-0.5">Cliquez pour parcourir vos dossiers d'ordinateur</p>
           </div>
         </div>
 
@@ -447,8 +538,8 @@
   <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
   <!-- Scripts -->
-  <script src="bundler.js?v=6"></script>
-  <script src="webusb.js?v=6"></script>
-  <script src="app.js?v=6"></script>
+  <script src="bundler.js?v=7"></script>
+  <script src="webusb.js?v=7"></script>
+  <script src="app.js?v=7"></script>
 </body>
 </html>

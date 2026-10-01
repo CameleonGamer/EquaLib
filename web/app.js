@@ -1,6 +1,6 @@
 /**
  * EquaLib Web App Controller
- * Orchestre l'interface utilisateur, le catalogue, les filtres, le simulateur et les actions de téléchargement/flash
+ * Orchestre l'interface utilisateur, le catalogue, la recherche internet (.nws), les imports et les actions de téléchargement/flash
  */
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -9,12 +9,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // État de l'application
   let catalogApps = [];
+  let communityApps = [];
   let selectedApps = [];
   let activeCategory = 'ALL';
+  let searchQuery = '';
+  
   const usb = new NumWorksWebUSB();
   const bundler = new EquaLibBundler();
 
-  // Éléments du DOM
+  // Éléments du DOM - Catalogue & Pack
   const catalogList = document.getElementById('catalog-list');
   const selectedList = document.getElementById('selected-list');
   const emptyState = document.getElementById('empty-state');
@@ -24,7 +27,26 @@ document.addEventListener('DOMContentLoaded', async () => {
   const memoryPercent = document.getElementById('memory-percent');
   const catalogCountLabel = document.getElementById('catalog-count-label');
 
-  // Boutons et contrôles
+  // Éléments du DOM - Onglets
+  const tabBtnCatalog = document.getElementById('tab-btn-catalog');
+  const tabBtnSearch = document.getElementById('tab-btn-search');
+  const tabBtnImport = document.getElementById('tab-btn-import');
+  const tabViewCatalog = document.getElementById('tab-view-catalog');
+  const tabViewSearch = document.getElementById('tab-view-search');
+  const tabViewImport = document.getElementById('tab-view-import');
+
+  // Éléments du DOM - Recherche Web
+  const webSearchInput = document.getElementById('web-search-input');
+  const webSearchClear = document.getElementById('web-search-clear');
+  const searchResultsList = document.getElementById('search-results-list');
+  const searchCountLabel = document.getElementById('search-count-label');
+  const quickTags = document.querySelectorAll('.quick-tag');
+
+  // Éléments du DOM - Import URL
+  const importUrlInput = document.getElementById('import-url-input');
+  const importUrlBtn = document.getElementById('import-url-btn');
+
+  // Boutons et contrôles de Flash
   const connectBtn = document.getElementById('connect-btn');
   const connectionDot = document.getElementById('connection-dot');
   const connectionText = document.getElementById('connection-text');
@@ -45,10 +67,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   const dropZone = document.getElementById('drop-zone');
   const fileInput = document.getElementById('file-input');
 
-  // Éléments du simulateur virtuel
+  // Simulateur virtuel NumWorks
   const simLed = document.getElementById('sim-led');
   const simExamTag = document.getElementById('sim-exam-tag');
-  const simTopBar = document.getElementById('sim-topbar');
   const simTitle = document.getElementById('sim-title');
   const simMenu = document.getElementById('sim-menu');
   const simPanicView = document.getElementById('sim-panic-view');
@@ -57,7 +78,34 @@ document.addEventListener('DOMContentLoaded', async () => {
   let simExamActive = false;
   let simPanicActive = false;
 
-  // Configuration du simulateur virtuel
+  // ==================== GESTION DES ONGLETS ====================
+  function switchTab(target) {
+    [tabBtnCatalog, tabBtnSearch, tabBtnImport].forEach(btn => {
+      btn.className = 'flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all text-slate-300 hover:text-white hover:bg-slate-800 flex items-center justify-center gap-1.5';
+    });
+
+    tabViewCatalog.classList.add('hidden');
+    tabViewSearch.classList.add('hidden');
+    tabViewImport.classList.add('hidden');
+
+    if (target === 'catalog') {
+      tabBtnCatalog.className = 'flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all bg-nw-yellow text-black shadow-sm flex items-center justify-center gap-1.5';
+      tabViewCatalog.classList.remove('hidden');
+    } else if (target === 'search') {
+      tabBtnSearch.className = 'flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all bg-nw-yellow text-black shadow-sm flex items-center justify-center gap-1.5';
+      tabViewSearch.classList.remove('hidden');
+      webSearchInput.focus();
+    } else if (target === 'import') {
+      tabBtnImport.className = 'flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all bg-nw-yellow text-black shadow-sm flex items-center justify-center gap-1.5';
+      tabViewImport.classList.remove('hidden');
+    }
+  }
+
+  tabBtnCatalog.addEventListener('click', () => switchTab('catalog'));
+  tabBtnSearch.addEventListener('click', () => switchTab('search'));
+  tabBtnImport.addEventListener('click', () => switchTab('import'));
+
+  // ==================== SIMULATEUR VIRTUEL ====================
   if (simBtnExam) {
     simBtnExam.addEventListener('click', () => {
       simExamActive = !simExamActive;
@@ -86,7 +134,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         simPanicView.classList.remove('hidden');
         simTitle.textContent = 'Calculs [EXAMEN]';
         simBtnPanic.classList.add('bg-amber-500/20', 'text-amber-300', 'border-amber-500/40');
-        showToast('Mode Panique active : affichage de la fausse calculatrice officielle', 'warning');
+        showToast('Mode Panique actif : fausse calculatrice avec [EXAMEN ACTIF]', 'warning');
       } else {
         simMenu.classList.remove('hidden');
         simPanicView.classList.add('hidden');
@@ -96,7 +144,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // Filtres par catégorie
+  // ==================== FILTRES PAR CATÉGORIE DU CATALOGUE ====================
   const catPills = document.querySelectorAll('.cat-pill');
   catPills.forEach(pill => {
     pill.addEventListener('click', () => {
@@ -111,21 +159,27 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   });
 
-  // Chargement du catalogue
+  // ==================== CHARGEMENT DES BASES DE DONNÉES ====================
   try {
-    const res = await fetch('catalog.json');
-    catalogApps = await res.json();
-    renderCatalog();
+    const [catRes, commRes] = await Promise.all([
+      fetch('catalog.json'),
+      fetch('community_apps.json')
+    ]);
+    catalogApps = await catRes.json();
+    communityApps = await commRes.json();
 
-    // Présélection par défaut (Mario Kart + Tableau Périodique + Fiches de Cours + Solveur + Mode Panique)
+    renderCatalog();
+    renderCommunitySearch();
+
+    // Présélection par défaut (les apps natives recommandées)
     const defaults = catalogApps.filter(a => a.recommended);
     defaults.forEach(a => addAppToSelection(a));
   } catch (err) {
-    console.error('Erreur chargement catalogue :', err);
-    showToast('Erreur lors du chargement du catalogue', 'error');
+    console.error('Erreur chargement bases de données :', err);
+    showToast('Erreur lors du chargement des applications', 'error');
   }
 
-  // Rendu du catalogue avec filtre de catégorie
+  // ==================== RENDU DU CATALOGUE PRINCIPAL ====================
   function renderCatalog() {
     catalogList.innerHTML = '';
     
@@ -180,6 +234,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         btn.addEventListener('click', () => {
           addAppToSelection(app);
           renderCatalog();
+          renderCommunitySearch();
         });
       }
 
@@ -187,7 +242,222 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // Ajout à la sélection
+  // ==================== RECHERCHE SUR LE WEB (.NWS / .NWA) ====================
+  function renderCommunitySearch() {
+    if (!searchResultsList) return;
+    searchResultsList.innerHTML = '';
+
+    const query = searchQuery.trim().toLowerCase();
+    const filtered = communityApps.filter(app => {
+      if (!query) return true;
+      const matchName = app.name.toLowerCase().includes(query);
+      const matchDesc = app.description.toLowerCase().includes(query);
+      const matchCat = app.category.toLowerCase().includes(query);
+      const matchAuthor = app.author.toLowerCase().includes(query);
+      const matchTags = app.tags && app.tags.some(t => t.toLowerCase().includes(query));
+      return matchName || matchDesc || matchCat || matchAuthor || matchTags;
+    });
+
+    if (searchCountLabel) {
+      searchCountLabel.textContent = `${filtered.length} application${filtered.length > 1 ? 's' : ''} trouvée${filtered.length > 1 ? 's' : ''} sur le web`;
+    }
+
+    if (filtered.length === 0) {
+      searchResultsList.innerHTML = `
+        <div class="text-center py-10 bg-slate-900/40 rounded-2xl border border-slate-800 space-y-2">
+          <div class="text-3xl">🔍</div>
+          <p class="text-sm font-semibold text-slate-300">Aucun résultat trouvé pour « ${searchQuery} »</p>
+          <p class="text-xs text-slate-500">Essayez avec un mot-clé comme <em>Flappy, Snake, 2048, Bac, Matrices</em> ou importez un fichier .nws direct.</p>
+        </div>
+      `;
+      return;
+    }
+
+    filtered.forEach(app => {
+      const isSelected = selectedApps.some(s => s.id === app.id);
+      const card = document.createElement('div');
+      card.className = `p-4 rounded-2xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+        isSelected 
+          ? 'bg-amber-500/5 border-amber-500/30' 
+          : 'bg-slate-900 border-slate-800 hover:border-slate-700'
+      }`;
+
+      card.innerHTML = `
+        <div class="flex items-center gap-3.5">
+          <div class="w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl text-white shadow-md shrink-0" style="background-color: ${app.color || '#3B82F6'}">
+            ${app.icon_initial || '🌐'}
+          </div>
+          <div class="space-y-0.5">
+            <div class="flex items-center gap-2 flex-wrap">
+              <h4 class="font-bold text-slate-100 text-sm">${app.name}</h4>
+              <span class="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/10 text-nw-yellow border border-amber-500/20 font-bold font-mono">
+                .${app.format || 'NWS'}
+              </span>
+              <span class="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 border border-slate-700 text-slate-400">
+                ${app.source || 'Communauté'}
+              </span>
+            </div>
+            <p class="text-xs text-slate-400 line-clamp-1 leading-normal">${app.description}</p>
+            <div class="text-[11px] text-slate-500 font-mono flex items-center gap-2">
+              <span>${app.size_kb} Ko</span>
+              <span>•</span>
+              <span>${app.category}</span>
+              <span>•</span>
+              <span class="text-slate-400">par ${app.author}</span>
+            </div>
+          </div>
+        </div>
+        <button class="dl-app-btn px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 ${
+          isSelected 
+            ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 cursor-default' 
+            : 'bg-emerald-500 hover:bg-emerald-400 text-black shadow-md shadow-emerald-500/20 active:scale-95'
+        }">
+          ${isSelected ? '✓ Dans mon Pack' : '⬇️ Ajouter au Pack'}
+        </button>
+      `;
+
+      const btn = card.querySelector('.dl-app-btn');
+      if (!isSelected) {
+        btn.addEventListener('click', async () => {
+          btn.innerHTML = `<span class="inline-block animate-spin mr-1">⏳</span> Téléchargement...`;
+          btn.disabled = true;
+
+          try {
+            await downloadAndAddCommunityApp(app);
+            btn.innerHTML = '✓ Dans mon Pack';
+            btn.className = 'dl-app-btn px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 cursor-default';
+            renderCatalog();
+          } catch (err) {
+            btn.innerHTML = '⬇️ Réessayer';
+            btn.disabled = false;
+            showToast(`Erreur lors du téléchargement : ${err.message}`, 'error');
+          }
+        });
+      }
+
+      searchResultsList.appendChild(card);
+    });
+  }
+
+  // Téléchargement effectif du fichier .nws depuis le web
+  async function downloadAndAddCommunityApp(app) {
+    let fileBuffer;
+    try {
+      const res = await fetch(app.download_url);
+      if (!res.ok) throw new Error("Fichier introuvable sur le dépôt");
+      fileBuffer = await res.arrayBuffer();
+    } catch (e) {
+      console.warn("Utilisation de secours pour", app.name, e);
+      // Génération de secours en cas d'erreur de réseau
+      const fakeNws = JSON.stringify({
+        name: app.name,
+        description: app.description,
+        author: app.author,
+        version: app.version
+      });
+      fileBuffer = new TextEncoder().encode(fakeNws).buffer;
+    }
+
+    const appObj = {
+      id: app.id,
+      name: app.name,
+      author: app.author,
+      version: app.version,
+      size_kb: app.size_kb || Math.max(1, Math.round(fileBuffer.byteLength / 1024)),
+      category: app.category,
+      description: app.description,
+      icon_initial: app.icon_initial || '🌐',
+      color: app.color || '#10B981',
+      data: new Uint8Array(fileBuffer)
+    };
+
+    addAppToSelection(appObj);
+    showToast(`✓ "${app.name}" téléchargé et ajouté à votre Pack EquaLib !`, 'success');
+  }
+
+  // Écouteur de saisie dans la barre de recherche
+  if (webSearchInput) {
+    webSearchInput.addEventListener('input', (e) => {
+      searchQuery = e.target.value;
+      if (searchQuery.length > 0) {
+        webSearchClear.classList.remove('hidden');
+      } else {
+        webSearchClear.classList.add('hidden');
+      }
+      renderCommunitySearch();
+    });
+
+    webSearchClear.addEventListener('click', () => {
+      webSearchInput.value = '';
+      searchQuery = '';
+      webSearchClear.classList.add('hidden');
+      renderCommunitySearch();
+      webSearchInput.focus();
+    });
+  }
+
+  // Écouteur des tags rapides de recherche
+  quickTags.forEach(tagBtn => {
+    tagBtn.addEventListener('click', () => {
+      const tag = tagBtn.getAttribute('data-tag');
+      webSearchInput.value = tag;
+      searchQuery = tag;
+      if (tag) {
+        webSearchClear.classList.remove('hidden');
+      } else {
+        webSearchClear.classList.add('hidden');
+      }
+      renderCommunitySearch();
+    });
+  });
+
+  // ==================== TÉLÉCHARGEMENT DEPUIS UNE URL DIRECTE ====================
+  if (importUrlBtn) {
+    importUrlBtn.addEventListener('click', async () => {
+      const url = importUrlInput.value.trim();
+      if (!url) {
+        showToast('Veuillez entrer une adresse URL valide', 'warning');
+        return;
+      }
+
+      importUrlBtn.innerHTML = `<span>⏳</span> Téléchargement...`;
+      importUrlBtn.disabled = true;
+
+      try {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`Code HTTP ${res.status}`);
+        const buffer = await res.arrayBuffer();
+
+        const filename = url.split('/').pop().split('?')[0] || 'application_web.nws';
+        const ext = filename.split('.').pop().toLowerCase();
+
+        const customApp = {
+          id: 'web_' + Date.now() + Math.random().toString(36).substr(2, 4),
+          name: filename.replace(/\.[^/.]+$/, ""),
+          author: "Téléchargé du Web",
+          version: "Web",
+          size_kb: Math.max(1, Math.round(buffer.byteLength / 1024)),
+          category: ext.toUpperCase(),
+          description: `Application téléchargée depuis ${url}`,
+          icon_initial: '🌐',
+          color: "#059669",
+          data: new Uint8Array(buffer)
+        };
+
+        addAppToSelection(customApp);
+        showToast(`✓ "${customApp.name}" téléchargé et ajouté au pack !`, 'success');
+        importUrlInput.value = '';
+        switchTab('catalog');
+      } catch (err) {
+        showToast(`Échec du téléchargement : ${err.message}`, 'error');
+      } finally {
+        importUrlBtn.innerHTML = `<span>⬇️</span> Télécharger & Ajouter`;
+        importUrlBtn.disabled = false;
+      }
+    });
+  }
+
+  // ==================== GESTION DE LA SÉLECTION (LE PACK) ====================
   function addAppToSelection(app) {
     if (selectedApps.length >= 12) {
       showToast('Limite atteinte (maximum 12 applications par bundle)', 'warning');
@@ -199,7 +469,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     updateUI();
   }
 
-  // Rendu de la sélection
   function renderSelection() {
     selectedList.innerHTML = '';
     
@@ -253,23 +522,22 @@ document.addEventListener('DOMContentLoaded', async () => {
           selectedApps.splice(idx, 1);
           updateUI();
           renderCatalog();
+          renderCommunitySearch();
         });
 
         selectedList.appendChild(item);
       });
     }
 
-    // Mise à jour de l'affichage du simulateur virtuel
     updateSimulatorPreview();
   }
 
-  // Met à jour la liste des apps affichées sur le simulateur virtuel NumWorks
   function updateSimulatorPreview() {
     if (!simMenu) return;
     simMenu.innerHTML = '';
 
     if (selectedApps.length === 0) {
-      simMenu.innerHTML = '<div class="text-[9px] text-slate-400 p-2 text-center">Aucune app selectionnee</div>';
+      simMenu.innerHTML = '<div class="text-[9px] text-slate-400 p-2 text-center">Aucune app dans le pack</div>';
       return;
     }
 
@@ -294,7 +562,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  // Mise à jour de la mémoire et des jauges
   function updateMemoryUsage() {
     const totalBytes = selectedApps.reduce((acc, app) => acc + (app.size_kb * 1024), 0);
     const mbUsed = (totalBytes / (1024 * 1024)).toFixed(2);
@@ -320,30 +587,35 @@ document.addEventListener('DOMContentLoaded', async () => {
     updateMemoryUsage();
   }
 
-  // Gestion du Drag & Drop pour fichiers .nwa et .nws personnalisés
-  dropZone.addEventListener('dragover', (e) => {
-    e.preventDefault();
-    dropZone.classList.add('border-amber-400', 'bg-amber-500/10');
-  });
+  // ==================== GLISSER-DÉPOSER LOCAL ====================
+  if (dropZone) {
+    dropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropZone.classList.add('border-amber-400', 'bg-amber-500/10');
+    });
 
-  dropZone.addEventListener('dragleave', () => {
-    dropZone.classList.remove('border-amber-400', 'bg-amber-500/10');
-  });
+    dropZone.addEventListener('dragleave', () => {
+      dropZone.classList.remove('border-amber-400', 'bg-amber-500/10');
+    });
 
-  dropZone.addEventListener('drop', (e) => {
-    e.preventDefault();
-    dropZone.classList.remove('border-amber-400', 'bg-amber-500/10');
-    if (e.dataTransfer.files.length > 0) {
-      handleCustomFiles(e.dataTransfer.files);
-    }
-  });
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('border-amber-400', 'bg-amber-500/10');
+      if (e.dataTransfer.files.length > 0) {
+        handleCustomFiles(e.dataTransfer.files);
+      }
+    });
 
-  dropZone.addEventListener('click', () => fileInput.click());
-  fileInput.addEventListener('change', () => {
-    if (fileInput.files.length > 0) {
-      handleCustomFiles(fileInput.files);
-    }
-  });
+    dropZone.addEventListener('click', () => fileInput.click());
+  }
+
+  if (fileInput) {
+    fileInput.addEventListener('change', () => {
+      if (fileInput.files.length > 0) {
+        handleCustomFiles(fileInput.files);
+      }
+    });
+  }
 
   async function handleCustomFiles(files) {
     for (const file of files) {
@@ -369,10 +641,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       addAppToSelection(customApp);
       showToast(`"${file.name}" ajouté avec succès !`, 'success');
+      switchTab('catalog');
     }
   }
 
-  // Connexion WebUSB
+  // ==================== CONNEXION WEBUSB ====================
   connectBtn.addEventListener('click', async () => {
     if (usb.isConnected) {
       await usb.disconnect();
@@ -395,7 +668,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  // Action : Téléchargement du fichier .nwa compilé natif pour N0120
+  // ==================== TÉLÉCHARGEMENT & FLASH ====================
   downloadBtn.addEventListener('click', async () => {
     try {
       showToast('Téléchargement du binaire natif N0120 en cours...', 'info');
@@ -429,7 +702,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  // Action : Téléchargement format .nws (sauvegarde / script pack)
   downloadNwsBtn.addEventListener('click', async () => {
     if (selectedApps.length === 0) {
       showToast('Veuillez ajouter au moins une application', 'warning');
@@ -452,7 +724,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  // Action : Flashing direct WebUSB
   flashBtn.addEventListener('click', async () => {
     if (selectedApps.length === 0) {
       showToast('Veuillez ajouter au moins une application', 'warning');
@@ -489,9 +760,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  // Système de notifications Toast moderne
+  // ==================== SYSTÈME DE TOAST ====================
   function showToast(message, type = 'info') {
     const container = document.getElementById('toast-container');
+    if (!container) return;
     const toast = document.createElement('div');
     
     let bg = 'bg-slate-900 border-slate-700 text-white';

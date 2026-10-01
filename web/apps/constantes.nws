@@ -1,0 +1,13 @@
+{
+  "name": "Table des Constantes Physiques",
+  "description": "Valeurs CODATA des constantes fondamentales",
+  "author": "CODATA Team",
+  "version": "1.0",
+  "created_at": "2026-10-01T16:21:13.078Z",
+  "scripts": [
+    {
+      "name": "constantes.py",
+      "text": "# Constantes Physiques CODATA\nc = 299792458 # m/s\nh = 6.62607015e-34 # J.s\nG = 6.67430e-11 # m3/kg/s2\ne = 1.602176634e-19 # C\nkB = 1.380649e-23 # J/K\nNA = 6.02214076e23 # mol^-1\nprint(\"c =\", c, \"m/s | h =\", h)\n"
+    }
+  ]
+}
