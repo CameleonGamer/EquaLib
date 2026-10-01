@@ -3,6 +3,7 @@ launcher/build/
 *.o
 *.elf
 *.bin
+!web/*.bin
 
 # Node & OS
 node_modules/

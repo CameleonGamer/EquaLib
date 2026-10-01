@@ -475,8 +475,8 @@
             </button>
 
             <div class="grid grid-cols-2 gap-2">
-              <button id="flash-btn" class="py-2.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-semibold text-xs transition-all flex items-center justify-center gap-1.5 border border-slate-700">
-                <span>⚡</span> Flash USB Direct
+              <button id="flash-btn" class="py-2.5 px-3 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 border border-amber-500/40 font-bold text-xs transition-all flex items-center justify-center gap-1.5 shadow-sm active:scale-95 group">
+                <span class="group-hover:scale-110 transition-transform">⚡</span> Flash USB Direct
               </button>
               <button id="download-nws-btn" class="py-2.5 px-3 rounded-xl bg-slate-800/60 hover:bg-slate-800 text-slate-300 font-semibold text-xs transition-all flex items-center justify-center gap-1.5 border border-slate-700">
                 <span>📦</span> Exporter .nws
@@ -486,25 +486,29 @@
 
         </div>
 
-        <!-- Guide d'installation officiel pas-à-pas -->
-        <div class="p-5 rounded-3xl bg-slate-900 border border-emerald-500/30 text-xs text-slate-300 space-y-3">
-          <div class="flex items-center gap-2 font-bold text-emerald-400 text-sm">
-            <span>✅</span> Installation officielle en 3 étapes :
+        <!-- Guide d'installation pas-à-pas -->
+        <div class="p-5 rounded-3xl bg-slate-900 border border-amber-500/30 text-xs text-slate-300 space-y-3">
+          <div class="flex items-center gap-2 font-bold text-nw-yellow text-sm">
+            <span>⚡</span> Deux méthodes pour installer EquaLib :
           </div>
-          <ol class="space-y-2 text-slate-400 pl-1">
-            <li class="flex items-start gap-2">
-              <span class="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-300 flex items-center justify-center font-bold text-[11px] shrink-0">1</span>
-              <span>Cliquez sur le bouton jaune <strong>« Télécharger mon application .nwa »</strong> ci-dessus.</span>
-            </li>
-            <li class="flex items-start gap-2">
-              <span class="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-300 flex items-center justify-center font-bold text-[11px] shrink-0">2</span>
-              <span>Rendez-vous sur <a href="https://my.numworks.com/apps" target="_blank" class="text-emerald-400 underline font-bold hover:text-emerald-300">my.numworks.com/apps</a> et glissez le fichier <code>equalib_n0120.nwa</code>.</span>
-            </li>
-            <li class="flex items-start gap-2">
-              <span class="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-300 flex items-center justify-center font-bold text-[11px] shrink-0">3</span>
-              <span>Le site officiel reconnaît <strong>EquaLib</strong> : cliquez sur <strong>Installer</strong>. Profitez de toutes vos apps !</span>
-            </li>
-          </ol>
+          <div class="space-y-3 text-slate-400 pl-1">
+            <div class="p-2.5 rounded-xl bg-slate-950/60 border border-amber-500/20 space-y-1">
+              <p class="font-bold text-slate-200 text-[11px] flex items-center gap-1.5">
+                <span class="text-amber-400">Option 1 (Direct en 1 clic) :</span> Flash USB WebUSB
+              </p>
+              <p class="text-[11px]">
+                Branchez votre calculatrice en USB, cliquez sur <strong>« Flash USB Direct »</strong> puis sélectionnez votre NumWorks. L'application est téléversée et la calculatrice redémarre automatiquement !
+              </p>
+            </div>
+            <div class="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800 space-y-1">
+              <p class="font-bold text-slate-200 text-[11px] flex items-center gap-1.5">
+                <span class="text-emerald-400">Option 2 (Site officiel NumWorks) :</span> Glisser-déposer .nwa
+              </p>
+              <p class="text-[11px]">
+                Cliquez sur <strong>« Télécharger mon application .nwa »</strong> puis glissez le fichier sur <a href="https://my.numworks.com/apps" target="_blank" class="text-emerald-400 underline font-bold hover:text-emerald-300">my.numworks.com/apps</a> pour l'installer via l'outil officiel.
+              </p>
+            </div>
+          </div>
         </div>
 
         <!-- Raccourcis Clavier sur la calculatrice -->
@@ -546,8 +550,8 @@
   <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
   <!-- Scripts -->
-  <script src="bundler.js?v=8"></script>
-  <script src="webusb.js?v=8"></script>
-  <script src="app.js?v=8"></script>
+  <script src="bundler.js?v=10"></script>
+  <script src="webusb.js?v=10"></script>
+  <script src="app.js?v=10"></script>
 </body>
 </html>

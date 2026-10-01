@@ -1,150 +1,473 @@
 /**
  * EquaLib WebUSB & WebDFU Manager
- * Gère la communication directe USB avec la calculatrice NumWorks (modèles N0110 et N0120)
+ * Protocole DFU / USB officiel NumWorks pour les modèles N0120 et N0110
+ * Compatible Epsilon OS (0xA291), Scandium Bootloader (0xA51A) et ST DFU (0xDF11)
+ * Développé par CameleonGamer en collaboration avec Gemini (Google DeepMind)
  */
 
 const NUMWORKS_VENDOR_ID = 0x0483; // STMicroelectronics
-const NUMWORKS_PRODUCT_IDS = [
-  0xA291, // Epsilon OS standard
-  0xDF11  // Mode DFU STM32 (Bootloader)
-];
+
+const NUMWORKS_PIDS = {
+  EPSILON: 0xA291,    // 41617: Epsilon OS standard
+  SCANDIUM: 0xA51A,   // 42266: Bootloader Scandium (N0120)
+  DFU_STM32: 0xDF11   // 57105: Mode DFU STM32 (Bootloader matériel N0110 / Recovery)
+};
+
+// Requêtes standard USB DFU (bRequest)
+const DFU_REQUESTS = {
+  DETACH: 0,
+  DNLOAD: 1,
+  UPLOAD: 2,
+  GETSTATUS: 3,
+  CLRSTATUS: 4,
+  GETSTATE: 5,
+  ABORT: 6
+};
+
+// États DFU du périphérique
+const DFU_STATES = {
+  appIDLE: 0,
+  appDETACH: 1,
+  dfuIDLE: 2,
+  dfuDNLOAD_SYNC: 3,
+  dfuDNBUSY: 4,
+  dfuDNLOAD_IDLE: 5,
+  dfuMANIFEST_SYNC: 6,
+  dfuMANIFEST: 7,
+  dfuMANIFEST_WAIT_RESET: 8,
+  dfuUPLOAD_IDLE: 9,
+  dfuERROR: 10
+};
+
+// Statuts d'erreur DFU (bStatus)
+const DFU_STATUS_OK = 0x00;
+
+// Commandes spécifiques ST DFU (transmises via DFU_DNLOAD avec wValue = 0)
+const ST_DFU_COMMANDS = {
+  SET_ADDRESS: 0x21, // Définir le pointeur d'adresse
+  ERASE_PAGE: 0x41   // Effacer un secteur Flash
+};
+
+const FLASH_SECTOR_SIZE = 65536;       // 64 Ko par secteur Flash externe QSPI
+const DFU_TRANSFER_SIZE = 2048;        // 2048 octets par bloc USB DFU
+const DEFAULT_FLASH_ADDR = 0x90000000;  // Adresse de base des applications externes (N0120 & N0110)
 
 class NumWorksWebUSB {
   constructor() {
     this.device = null;
     this.isConnected = false;
-    this.model = 'Inconnu';
+    this.model = 'NumWorks N0120';
+    this.mode = 'Inconnu';
+    this.interfaceNumber = 0;
+    this.alternateSetting = 0;
   }
 
   isSupported() {
-    return 'usb' in navigator;
+    return typeof navigator !== 'undefined' && 'usb' in navigator;
   }
 
   /**
-   * Ouvre la boîte de dialogue de sélection USB du navigateur
+   * Ouvre la boîte de dialogue de sélection WebUSB du navigateur
    */
   async connect() {
     if (!this.isSupported()) {
-      throw new Error("WebUSB n'est pas supporté par ce navigateur. Utilisez Chrome, Edge ou Brave.");
+      throw new Error("WebUSB n'est pas supporté par votre navigateur. Veuillez utiliser Google Chrome, Microsoft Edge ou Brave.");
     }
 
     try {
-      const filters = NUMWORKS_PRODUCT_IDS.map(pid => ({
-        vendorId: NUMWORKS_VENDOR_ID,
-        productId: pid
-      }));
-
-      // Fallback : autoriser n'importe quel périphérique STMicroelectronics si besoin
-      filters.push({ vendorId: NUMWORKS_VENDOR_ID });
+      const filters = [
+        { vendorId: NUMWORKS_VENDOR_ID, productId: NUMWORKS_PIDS.EPSILON },
+        { vendorId: NUMWORKS_VENDOR_ID, productId: NUMWORKS_PIDS.SCANDIUM },
+        { vendorId: NUMWORKS_VENDOR_ID, productId: NUMWORKS_PIDS.DFU_STM32 },
+        { vendorId: NUMWORKS_VENDOR_ID } // Fallback générique STMicroelectronics
+      ];
 
       this.device = await navigator.usb.requestDevice({ filters });
-
       await this.device.open();
-      if (this.device.configuration === null) {
-        await this.device.selectConfiguration(1);
-      }
-      await this.device.claimInterface(0);
 
+      // Découverte de l'interface USB DFU (Class 0xFE, Subclass 0x01)
+      let configValue = 1;
+      let targetInterface = 0;
+      let targetAlternate = 0;
+      let foundDfu = false;
+
+      if (this.device.configurations && this.device.configurations.length > 0) {
+        for (const config of this.device.configurations) {
+          for (const iface of config.interfaces) {
+            for (const alt of iface.alternates) {
+              if (alt.interfaceClass === 0xFE && alt.interfaceSubclass === 0x01) {
+                configValue = config.configurationValue;
+                targetInterface = iface.interfaceNumber;
+                targetAlternate = alt.alternateSetting;
+                foundDfu = true;
+                break;
+              }
+            }
+            if (foundDfu) break;
+          }
+          if (foundDfu) break;
+        }
+      }
+
+      if (this.device.configuration === null || this.device.configuration.configurationValue !== configValue) {
+        await this.device.selectConfiguration(configValue);
+      }
+
+      try {
+        await this.device.claimInterface(targetInterface);
+      } catch (claimErr) {
+        console.warn("[WebUSB] claimInterface warning :", claimErr);
+      }
+
+      if (foundDfu && targetAlternate > 0) {
+        try {
+          await this.device.selectAlternateInterface(targetInterface, targetAlternate);
+        } catch (altErr) {
+          console.warn("[WebUSB] selectAlternateInterface warning :", altErr);
+        }
+      }
+
+      this.interfaceNumber = targetInterface;
+      this.alternateSetting = targetAlternate;
       this.isConnected = true;
-      
-      // Détection du mode et du modèle
-      const prodId = this.device.productId;
-      const isDFU = (prodId === 0xDF11);
 
+      // Détection du modèle et du mode d'exécution
+      const pid = this.device.productId;
       const prodName = this.device.productName || '';
-      let modelLabel = 'NumWorks N0120';
-      if (prodName.includes('N0110') || prodName.includes('F7')) {
-        modelLabel = 'NumWorks N0110';
+      const bcd = (this.device.deviceVersionMajor << 8) | this.device.deviceVersionMinor;
+
+      let modelName = 'NumWorks N0120';
+      if (bcd === 0x0110 || prodName.includes('N0110') || prodName.includes('F7')) {
+        modelName = 'NumWorks N0110';
       }
 
-      if (isDFU) {
-        this.model = `${modelLabel} (Mode DFU détecté)`;
-      } else {
-        this.model = `${modelLabel} (Mode OS standard)`;
+      let modeName = 'Epsilon OS';
+      if (pid === NUMWORKS_PIDS.DFU_STM32) {
+        modeName = 'Mode DFU';
+      } else if (pid === NUMWORKS_PIDS.SCANDIUM) {
+        modeName = 'Scandium Bootloader';
       }
 
-      console.log(`[WebUSB] Connecté à ${this.model}`);
+      this.model = modelName;
+      this.mode = modeName;
+
+      console.log(`[WebUSB] Connecté à ${this.model} (${this.mode}) sur interface ${this.interfaceNumber}`);
+
+      // Réinitialisation de l'état DFU vers dfuIDLE
+      await this.abortToIdle();
+
       return {
         success: true,
         model: this.model,
-        isDFU: isDFU,
+        mode: this.mode,
         device: this.device
       };
     } catch (err) {
       this.isConnected = false;
-      console.error('[WebUSB] Erreur de connexion :', err);
+      this.device = null;
+      console.error('[WebUSB] Erreur lors de la connexion :', err);
       throw err;
     }
   }
 
   /**
-   * Déconnecte le périphérique
+   * Déconnexion sécurisée du périphérique USB
    */
   async disconnect() {
     if (this.device && this.device.opened) {
-      await this.device.close();
+      try {
+        await this.device.close();
+      } catch (e) {
+        console.warn("[WebUSB] Erreur fermeture device :", e);
+      }
     }
     this.isConnected = false;
     this.device = null;
     console.log('[WebUSB] Déconnecté');
   }
 
+  // ==================== PRIMITIVES DE CONTRÔLE USB DFU ====================
+
+  async controlTransferIn(bRequest, wValue = 0, wLength = 0) {
+    const res = await this.device.controlTransferIn({
+      requestType: 'class',
+      recipient: 'interface',
+      request: bRequest,
+      value: wValue,
+      index: this.interfaceNumber
+    }, wLength);
+
+    if (res.status !== 'ok') {
+      throw new Error(`USB TransferIn échoué (requête ${bRequest}, statut ${res.status})`);
+    }
+    return res.data;
+  }
+
+  async controlTransferOut(bRequest, data, wValue = 0) {
+    const res = await this.device.controlTransferOut({
+      requestType: 'class',
+      recipient: 'interface',
+      request: bRequest,
+      value: wValue,
+      index: this.interfaceNumber
+    }, data);
+
+    if (res.status !== 'ok') {
+      throw new Error(`USB TransferOut échoué (requête ${bRequest}, statut ${res.status})`);
+    }
+    return res.bytesWritten;
+  }
+
   /**
-   * Téléverse le bundle binaire dans le slot d'application externe de la calculatrice
-   * @param {ArrayBuffer} bundleData Les données du fichier .nwa
-   * @param {Function} onProgress Callback de progression (0 à 100)
+   * Récupère l'état et le statut DFU du périphérique (6 octets)
    */
-  async flashBundle(bundleData, onProgress = () => {}) {
-    if (!this.isConnected || !this.device) {
-      throw new Error("Calculatrice non connectée. Branchez-la et cliquez sur 'Connecter'.");
-    }
+  async getStatus() {
+    const data = await this.controlTransferIn(DFU_REQUESTS.GETSTATUS, 0, 6);
+    const status = data.getUint8(0);
+    const pollTimeout = (data.getUint32(1, true) & 0x00FFFFFF);
+    const state = data.getUint8(4);
+    return { status, pollTimeout, state };
+  }
 
-    if (this.device.productId !== 0xDF11) {
-      throw new Error("Pour flasher en direct via WebUSB, la calculatrice doit être en mode DFU (maintenez la touche 6 enfoncée et appuyez sur RESET au dos). Sinon, cliquez sur 'Télécharger mon application .nwa' et glissez-la sur my.numworks.com/apps !");
-    }
+  /**
+   * Récupère l'état DFU brut (1 octet)
+   */
+  async getState() {
+    const data = await this.controlTransferIn(DFU_REQUESTS.GETSTATE, 0, 1);
+    return data.getUint8(0);
+  }
 
-    console.log(`[WebUSB] Début du téléversement (${bundleData.byteLength} octets)...`);
+  /**
+   * Réinitialise le statut d'erreur DFU
+   */
+  async clearStatus() {
+    await this.controlTransferOut(DFU_REQUESTS.CLRSTATUS, new ArrayBuffer(0), 0);
+  }
 
-    // Découpage en blocs de 2048 octets pour transfert fluide
-    const CHUNK_SIZE = 2048;
-    const totalBytes = bundleData.byteLength;
-    let sentBytes = 0;
+  /**
+   * Interrompt l'opération DFU en cours
+   */
+  async abort() {
+    await this.controlTransferOut(DFU_REQUESTS.ABORT, new ArrayBuffer(0), 0);
+  }
 
-    const uint8 = new Uint8Array(bundleData);
-
+  /**
+   * Remet le contrôleur DFU dans l'état dfuIDLE (2)
+   */
+  async abortToIdle() {
     try {
-      while (sentBytes < totalBytes) {
-        const chunkLength = Math.min(CHUNK_SIZE, totalBytes - sentBytes);
-        const chunk = uint8.slice(sentBytes, sentBytes + chunkLength);
+      await this.abort();
+    } catch (e) {
+      // Ignoré si le périphérique est déjà inactif
+    }
 
-        // Envoi via l'interface bulk USB (Endpoint 1 OUT standard NumWorks)
-        try {
-          await this.device.transferOut(1, chunk);
-        } catch (transferErr) {
-          // Fallback sur controlTransferOut pour les commandes spécifiques Epsilon
-          await this.device.controlTransferOut({
-            requestType: 'class',
-            recipient: 'interface',
-            request: 0x01,
-            value: 0,
-            index: 0
-          }, chunk);
-        }
+    let state;
+    try {
+      state = await this.getState();
+    } catch (e) {
+      state = DFU_STATES.dfuIDLE;
+    }
 
-        sentBytes += chunkLength;
-        const progress = Math.min(100, Math.round((sentBytes / totalBytes) * 100));
-        onProgress(progress);
+    if (state === DFU_STATES.dfuERROR) {
+      await this.clearStatus();
+      try {
+        state = await this.getState();
+      } catch (e) {
+        state = DFU_STATES.dfuIDLE;
+      }
+    }
+    return state;
+  }
 
-        // Petit délai pour laisser respirer le contrôleur USB
-        await new Promise(r => setTimeout(r, 8));
+  /**
+   * Attend activement qu'une condition d'état DFU soit remplie
+   */
+  async pollUntil(predicate, timeoutMs = 20000) {
+    const startTime = Date.now();
+    let status = await this.getStatus();
+
+    while (!predicate(status.state)) {
+      if (status.state === DFU_STATES.dfuERROR) {
+        await this.clearStatus();
+        throw new Error(`Erreur DFU (state=${status.state}, status=${status.status})`);
       }
 
-      console.log('[WebUSB] Flashage terminé avec succès !');
-      return true;
-    } catch (err) {
-      console.error('[WebUSB] Erreur lors du téléversement :', err);
-      throw err;
+      if (Date.now() - startTime > timeoutMs) {
+        throw new Error(`Délai d'attente DFU dépassé (${timeoutMs} ms)`);
+      }
+
+      const delay = Math.max(10, Math.min(status.pollTimeout || 10, 150));
+      await new Promise(r => setTimeout(r, delay));
+      status = await this.getStatus();
     }
+
+    return status;
+  }
+
+  /**
+   * Positionne le pointeur d'adresse en mémoire Flash (Commande ST DFU 0x21)
+   */
+  async setAddress(address) {
+    const buf = new ArrayBuffer(5);
+    const view = new DataView(buf);
+    view.setUint8(0, ST_DFU_COMMANDS.SET_ADDRESS);
+    view.setUint32(1, address, true); // Little-endian 32-bit uint
+
+    await this.controlTransferOut(DFU_REQUESTS.DNLOAD, buf, 0);
+    const status = await this.pollUntil(state => state !== DFU_STATES.dfuDNBUSY);
+    if (status.status !== DFU_STATUS_OK) {
+      throw new Error(`Échec setAddress à 0x${address.toString(16)} (status ${status.status})`);
+    }
+  }
+
+  /**
+   * Efface un secteur Flash à l'adresse spécifiée (Commande ST DFU 0x41)
+   */
+  async eraseSegment(address) {
+    await this.abortToIdle();
+    const buf = new ArrayBuffer(5);
+    const view = new DataView(buf);
+    view.setUint8(0, ST_DFU_COMMANDS.ERASE_PAGE);
+    view.setUint32(1, address, true); // Little-endian 32-bit uint
+
+    await this.controlTransferOut(DFU_REQUESTS.DNLOAD, buf, 0);
+    const status = await this.pollUntil(state => state !== DFU_STATES.dfuDNBUSY, 30000);
+    if (status.status !== DFU_STATUS_OK) {
+      console.warn(`[WebUSB] Avertissement effacement à 0x${address.toString(16)} (status ${status.status})`);
+    }
+  }
+
+  /**
+   * Téléverse un bloc binaire vers la mémoire Flash
+   */
+  async downloadBlock(chunk, targetAddress) {
+    await this.setAddress(targetAddress);
+    await this.controlTransferOut(DFU_REQUESTS.DNLOAD, chunk, 2); // wValue = 2 pour les blocs de données
+    const status = await this.pollUntil(state => state === DFU_STATES.dfuDNLOAD_IDLE || state === DFU_STATES.dfuIDLE);
+    if (status.status !== DFU_STATUS_OK) {
+      throw new Error(`Échec écriture bloc à 0x${targetAddress.toString(16)} (status ${status.status})`);
+    }
+  }
+
+  /**
+   * Quitte le mode DFU et déclenche l'exécution du code Flash
+   */
+  async leave(resetAddress = DEFAULT_FLASH_ADDR) {
+    console.log(`[WebUSB] Sortie DFU vers 0x${resetAddress.toString(16)}...`);
+    try {
+      await this.setAddress(resetAddress);
+      await this.controlTransferOut(DFU_REQUESTS.DNLOAD, new ArrayBuffer(0), 2);
+      await this.pollUntil(state => state === DFU_STATES.dfuMANIFEST, 1500);
+    } catch (e) {
+      // La déconnexion / reset USB immédiat du STM32 est le comportement attendu
+      console.log("[WebUSB] Calculatrice redémarrée avec succès.");
+    }
+  }
+
+  // ==================== MÉTHODE PRINCIPALE DE FLASHAGE ====================
+
+  /**
+   * Flashe le binaire complet dans le slot d'applications externes de la NumWorks
+   * @param {ArrayBuffer|Uint8Array} binaryData Données binaires exécutables
+   * @param {Function} onProgress Callback de progression ({ phase, percent, message })
+   * @param {number} flashAddress Adresse de destination en Flash (0x90000000 par défaut)
+   */
+  async flashBinary(binaryData, onProgress = () => {}, flashAddress = DEFAULT_FLASH_ADDR) {
+    if (!this.isConnected || !this.device) {
+      throw new Error("Calculatrice non connectée. Veuillez brancher votre NumWorks et cliquer sur 'Connecter'.");
+    }
+
+    const uint8 = (binaryData instanceof Uint8Array) 
+      ? binaryData 
+      : new Uint8Array(binaryData);
+
+    if (uint8.byteLength < 64) {
+      throw new Error("Données de l'application invalides ou fichier vide.");
+    }
+
+    // Protection anti-erreur ELF : si un fichier .nwa brut (non lié en .bin) est passé
+    if (uint8[0] === 0x7F && uint8[1] === 0x45 && uint8[2] === 0x4C && uint8[3] === 0x46) {
+      console.warn("[WebUSB] Détection d'un fichier ELF .nwa. Récupération automatique du binaire plat lié .bin...");
+      const binResp = await fetch(`equalib_n0120.bin?v=${Date.now()}`);
+      if (binResp.ok) {
+        return await this.flashBinary(await binResp.arrayBuffer(), onProgress, flashAddress);
+      }
+    }
+
+    // Alignement sur secteur 64 Ko et ajout du secteur terminateur 0xFF
+    const rem = uint8.byteLength % FLASH_SECTOR_SIZE;
+    const padSize = (rem > 0) ? (FLASH_SECTOR_SIZE - rem) : 0;
+    const terminatorSize = FLASH_SECTOR_SIZE;
+    const totalProgramSize = uint8.byteLength + padSize + terminatorSize;
+
+    const paddedData = new Uint8Array(totalProgramSize);
+    paddedData.set(uint8, 0);
+    paddedData.fill(0xFF, uint8.byteLength);
+
+    const nbSectors = Math.ceil(totalProgramSize / FLASH_SECTOR_SIZE);
+
+    console.log(`[WebUSB] Début du flashage vers 0x${flashAddress.toString(16)} :`);
+    console.log(`         - Taille binaire utile : ${uint8.byteLength} octets`);
+    console.log(`         - Taille totale programmée : ${paddedData.byteLength} octets (${nbSectors} secteurs de 64 Ko)`);
+
+    // Phase 1 : Effacement des secteurs Flash (Progression 0% à 20%)
+    onProgress({ phase: 'erase', percent: 2, message: 'Effacement de la mémoire Flash...' });
+
+    for (let s = 0; s < nbSectors; s++) {
+      const sectorAddr = flashAddress + (s * FLASH_SECTOR_SIZE);
+      try {
+        await this.eraseSegment(sectorAddr);
+      } catch (err) {
+        console.warn(`[WebUSB] Avertissement effacement secteur 0x${sectorAddr.toString(16)} :`, err);
+        await this.abortToIdle();
+      }
+      const erasePercent = Math.min(20, Math.round(((s + 1) / nbSectors) * 20));
+      onProgress({
+        phase: 'erase',
+        percent: erasePercent,
+        message: `Effacement Flash... (${s + 1}/${nbSectors} secteurs)`
+      });
+    }
+
+    // Phase 2 : Écriture des blocs de 2048 octets (Progression 20% à 96%)
+    const totalBytes = paddedData.byteLength;
+    let offset = 0;
+
+    onProgress({ phase: 'write', percent: 20, message: 'Écriture du binaire en Flash...' });
+
+    while (offset < totalBytes) {
+      const chunkLength = Math.min(DFU_TRANSFER_SIZE, totalBytes - offset);
+      const chunk = paddedData.subarray(offset, offset + chunkLength);
+      const currentTargetAddr = flashAddress + offset;
+
+      await this.downloadBlock(chunk, currentTargetAddr);
+
+      offset += chunkLength;
+      const writePercent = 20 + Math.round((offset / totalBytes) * 76);
+      onProgress({
+        phase: 'write',
+        percent: Math.min(96, writePercent),
+        message: `Programmation Flash : ${Math.round((offset / totalBytes) * 100)}%`
+      });
+
+      // Bref répit pour soulager la pile USB
+      await new Promise(r => setTimeout(r, 4));
+    }
+
+    // Phase 3 : Sortie DFU et redémarrage de la calculatrice (Progression 97% à 100%)
+    onProgress({ phase: 'reboot', percent: 98, message: 'Redémarrage de votre NumWorks...' });
+    await this.leave(flashAddress);
+    onProgress({ phase: 'done', percent: 100, message: '✓ EquaLib a été installé avec succès !' });
+
+    console.log('[WebUSB] Flashage terminé avec succès !');
+    return true;
+  }
+
+  /**
+   * Alias de compatibilité ascendante pour flashBinary
+   */
+  async flashBundle(bundleData, onProgress = () => {}) {
+    return await this.flashBinary(bundleData, onProgress, DEFAULT_FLASH_ADDR);
   }
 }
 

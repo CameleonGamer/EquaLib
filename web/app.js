@@ -659,9 +659,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         const res = await usb.connect();
         connectionDot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse';
         connectionText.textContent = 'Connectée';
-        modelText.textContent = res.model;
+        modelText.textContent = `${res.model} (${res.mode})`;
         connectBtn.innerHTML = '<span>✕</span> <span class="hidden sm:inline">Déconnecter</span>';
-        showToast('NumWorks détectée avec succès !', 'success');
+        showToast(`NumWorks connectée (${res.model} - ${res.mode}) !`, 'success');
       } catch (err) {
         showToast(err.message || 'Échec de connexion USB', 'error');
       }
@@ -725,16 +725,17 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   flashBtn.addEventListener('click', async () => {
-    if (selectedApps.length === 0) {
-      showToast('Veuillez ajouter au moins une application', 'warning');
-      return;
-    }
-
     if (!usb.isConnected) {
-      showToast('Veuillez connecter votre calculatrice par USB', 'warning');
+      showToast('Ouverture du sélecteur USB...', 'info');
       try {
-        await usb.connect();
+        const res = await usb.connect();
+        connectionDot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse';
+        connectionText.textContent = 'Connectée';
+        modelText.textContent = `${res.model} (${res.mode})`;
+        connectBtn.innerHTML = '<span>✕</span> <span class="hidden sm:inline">Déconnecter</span>';
+        showToast(`NumWorks détectée (${res.model} - ${res.mode}) !`, 'success');
       } catch (e) {
+        showToast(e.message || 'Échec de connexion USB', 'error');
         return;
       }
     }
@@ -742,21 +743,43 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
       flashBtn.disabled = true;
       progressContainer.classList.remove('hidden');
+      flashProgress.style.width = '0%';
+      progressText.textContent = 'Préparation du binaire pour le flash USB...';
 
-      const bundle = await bundler.buildBundle(selectedApps);
-      await usb.flashBundle(bundle.arrayBuffer, (percent) => {
+      // 1. Récupération du binaire natif lié (avec header babec0de et entrypoint valide)
+      let binaryData = null;
+      try {
+        const binResp = await fetch(`equalib_n0120.bin?v=${Date.now()}`, { cache: 'no-store' });
+        if (binResp.ok) {
+          binaryData = await binResp.arrayBuffer();
+        }
+      } catch (fetchErr) {
+        console.warn('[Flash] Erreur fetch equalib_n0120.bin :', fetchErr);
+      }
+
+      if (!binaryData) {
+        // Fallback sur le bundle généré par bundler
+        const bundle = await bundler.buildBundle(selectedApps);
+        binaryData = bundle.arrayBuffer;
+      }
+
+      // 2. Flashage USB DFU réel
+      await usb.flashBinary(binaryData, (progress) => {
+        const percent = (typeof progress === 'number') ? progress : progress.percent;
+        const msg = (typeof progress === 'object' && progress.message) ? progress.message : `Progression : ${percent}%`;
         flashProgress.style.width = `${percent}%`;
-        progressText.textContent = `Téléversement en cours... ${percent}%`;
+        progressText.textContent = msg;
       });
 
-      showToast('🎉 Installation réussie sur votre NumWorks N0120 !', 'success');
+      showToast('🎉 Installation réussie ! Votre NumWorks redémarre avec EquaLib.', 'success');
     } catch (err) {
-      showToast(err.message || 'Erreur lors du téléversement', 'error');
+      console.error('[Flash] Erreur :', err);
+      showToast(err.message || 'Erreur lors du téléversement USB', 'error');
     } finally {
       flashBtn.disabled = false;
       setTimeout(() => {
         progressContainer.classList.add('hidden');
-      }, 3000);
+      }, 5000);
     }
   });
 
