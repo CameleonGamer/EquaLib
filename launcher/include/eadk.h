@@ -1,104 +1,290 @@
 #ifndef EADK_H
-#define EQUALIB_EADK_H
+#define EADK_H
 
-#include <stdint.h>
 #include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
 
-#define EADK_SCREEN_WIDTH  320
-#define EADK_SCREEN_HEIGHT 240
+// Types and constants
 
 typedef uint16_t eadk_color_t;
 
+static const eadk_color_t eadk_color_black = 0x0;
+static const eadk_color_t eadk_color_white = 0xFFFF;
+static const eadk_color_t eadk_color_red = 0xF800;
+static const eadk_color_t eadk_color_green = 0x07E0;
+static const eadk_color_t eadk_color_blue = 0x001F;
+
 typedef struct {
-  int16_t x;
-  int16_t y;
+  uint16_t x;
+  uint16_t y;
 } eadk_point_t;
 
 typedef struct {
-  int16_t x;
-  int16_t y;
-  int16_t width;
-  int16_t height;
+  uint16_t x;
+  uint16_t y;
+  uint16_t width;
+  uint16_t height;
 } eadk_rect_t;
 
-// Encodage RGB565
-static inline eadk_color_t eadk_color_rgb(uint8_t r, uint8_t g, uint8_t b) {
-  return ((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3);
-}
+// Keyboard and Events
 
-#define EADK_COLOR_WHITE      0xFFFF
-#define EADK_COLOR_BLACK      0x0000
-#define EADK_COLOR_NUMWORKS   0xFE60 // Jaune officiel NumWorks ~RGB(255, 187, 0)
-#define EADK_COLOR_RED        0xF800
-#define EADK_COLOR_GREEN      0x07E0
-#define EADK_COLOR_BLUE       0x001F
-#define EADK_COLOR_GRAY_LIGHT 0xEF5D
-#define EADK_COLOR_GRAY_DARK  0x4208
-#define EADK_COLOR_TEXT       0x18C3
+#define EADK_SCREEN_WIDTH 320
+#define EADK_SCREEN_HEIGHT 240
+static const eadk_rect_t eadk_screen_rect = {0, 0, EADK_SCREEN_WIDTH,
+                                             EADK_SCREEN_HEIGHT};
 
-// Clavier NumWorks
 typedef uint64_t eadk_keyboard_state_t;
-
 typedef enum {
-  EADK_KEY_LEFT = 0,
-  EADK_KEY_UP = 1,
-  EADK_KEY_DOWN = 2,
-  EADK_KEY_RIGHT = 3,
-  EADK_KEY_OK = 4,
-  EADK_KEY_BACK = 5,
-  EADK_KEY_HOME = 6,
-  EADK_KEY_ONOFF = 7,
-  EADK_KEY_SHIFT = 12,
-  EADK_KEY_ALPHA = 13,
-  EADK_KEY_XNT = 14,
-  EADK_KEY_VAR = 15,
-  EADK_KEY_TOOLBOX = 16,
-  EADK_KEY_BACKSPACE = 17,
-  EADK_KEY_EXP = 18,
-  EADK_KEY_LN = 19,
-  EADK_KEY_LOG = 20,
-  EADK_KEY_IMAGINARY = 21,
-  EADK_KEY_COMMA = 22,
-  EADK_KEY_POWER = 23,
-  EADK_KEY_SINE = 24,
-  EADK_KEY_COSINE = 25,
-  EADK_KEY_TANGENT = 26,
-  EADK_KEY_PI = 27,
-  EADK_KEY_SQRT = 28,
-  EADK_KEY_SQUARE = 29,
-  EADK_KEY_SEVEN = 30,
-  EADK_KEY_EIGHT = 31,
-  EADK_KEY_NINE = 32,
-  EADK_KEY_LEFT_PARENTHESIS = 33,
-  EADK_KEY_RIGHT_PARENTHESIS = 34,
-  EADK_KEY_FOUR = 36,
-  EADK_KEY_FIVE = 37,
-  EADK_KEY_SIX = 38,
-  EADK_KEY_MULTIPLICATION = 39,
-  EADK_KEY_DIVISION = 40,
-  EADK_KEY_ONE = 42,
-  EADK_KEY_TWO = 43,
-  EADK_KEY_THREE = 44,
-  EADK_KEY_PLUS = 45,
-  EADK_KEY_MINUS = 46,
-  EADK_KEY_ZERO = 48,
-  EADK_KEY_DOT = 49,
-  EADK_KEY_EE = 50,
-  EADK_KEY_ANS = 51,
-  EADK_KEY_EXE = 52
+  eadk_key_left = 0,
+  eadk_key_up = 1,
+  eadk_key_down = 2,
+  eadk_key_right = 3,
+  eadk_key_ok = 4,
+  eadk_key_back = 5,
+  eadk_key_home = 6,
+  eadk_key_on_off = 8,
+  eadk_key_shift = 12,
+  eadk_key_alpha = 13,
+  eadk_key_xnt = 14,
+  eadk_key_var = 15,
+  eadk_key_toolbox = 16,
+  eadk_key_backspace = 17,
+  eadk_key_exp = 18,
+  eadk_key_ln = 19,
+  eadk_key_log = 20,
+  eadk_key_imaginary = 21,
+  eadk_key_comma = 22,
+  eadk_key_power = 23,
+  eadk_key_sine = 24,
+  eadk_key_cosine = 25,
+  eadk_key_tangent = 26,
+  eadk_key_pi = 27,
+  eadk_key_sqrt = 28,
+  eadk_key_square = 29,
+  eadk_key_seven = 30,
+  eadk_key_eight = 31,
+  eadk_key_nine = 32,
+  eadk_key_left_parenthesis = 33,
+  eadk_key_right_parenthesis = 34,
+  eadk_key_four = 36,
+  eadk_key_five = 37,
+  eadk_key_six = 38,
+  eadk_key_multiplication = 39,
+  eadk_key_division = 40,
+  eadk_key_one = 42,
+  eadk_key_two = 43,
+  eadk_key_three = 44,
+  eadk_key_plus = 45,
+  eadk_key_minus = 46,
+  eadk_key_zero = 48,
+  eadk_key_dot = 49,
+  eadk_key_ee = 50,
+  eadk_key_ans = 51,
+  eadk_key_exe = 52
 } eadk_key_t;
 
-// Fonctions graphiques et système
-void eadk_display_push_rect(eadk_rect_t rect, const eadk_color_t * pixels);
-void eadk_display_push_rect_uniform(eadk_rect_t rect, eadk_color_t color);
-void eadk_display_wait_for_vblank(void);
+#if PLATFORM_DEVICE
+eadk_keyboard_state_t eadk_keyboard_scan();
+#else
+/* Returning a 64 bit value with emscripten would require WASM_BIGINT that
+ * causes some issue when the external app use a libc. */
+void _eadk_keyboard_scan_do_scan();
+uint32_t _eadk_keyboard_scan_low();
+uint32_t _eadk_keyboard_scan_high();
 
-eadk_keyboard_state_t eadk_keyboard_scan(void);
-static inline bool eadk_keyboard_key_down(eadk_keyboard_state_t state, eadk_key_t key) {
-  return (state >> key) & 1;
+static inline eadk_keyboard_state_t eadk_keyboard_scan() {
+  _eadk_keyboard_scan_do_scan();
+  uint64_t state = _eadk_keyboard_scan_high();
+  state <<= 32;
+  state |= _eadk_keyboard_scan_low();
+  return state;
+}
+#endif
+
+static inline bool eadk_keyboard_key_down(eadk_keyboard_state_t state,
+                                          eadk_key_t key) {
+  return (state >> (uint8_t)key) & 1;
 }
 
-uint32_t eadk_timing_millis(void);
+typedef uint16_t eadk_event_t;
+enum {
+  eadk_event_left = 0,
+  eadk_event_up = 1,
+  eadk_event_down = 2,
+  eadk_event_right = 3,
+  eadk_event_ok = 4,
+  eadk_event_back = 5,
+  eadk_event_shift = 12,
+  eadk_event_alpha = 13,
+  eadk_event_xnt = 14,
+  eadk_event_var = 15,
+  eadk_event_toolbox = 16,
+  eadk_event_backspace = 17,
+  eadk_event_exp = 18,
+  eadk_event_ln = 19,
+  eadk_event_log = 20,
+  eadk_event_imaginary = 21,
+  eadk_event_comma = 22,
+  eadk_event_power = 23,
+  eadk_event_sine = 24,
+  eadk_event_cosine = 25,
+  eadk_event_tangent = 26,
+  eadk_event_pi = 27,
+  eadk_event_sqrt = 28,
+  eadk_event_square = 29,
+  eadk_event_seven = 30,
+  eadk_event_eight = 31,
+  eadk_event_nine = 32,
+  eadk_event_left_parenthesis = 33,
+  eadk_event_right_parenthesis = 34,
+  eadk_event_four = 36,
+  eadk_event_five = 37,
+  eadk_event_six = 38,
+  eadk_event_multiplication = 39,
+  eadk_event_division = 40,
+  eadk_event_one = 42,
+  eadk_event_two = 43,
+  eadk_event_three = 44,
+  eadk_event_plus = 45,
+  eadk_event_minus = 46,
+  eadk_event_zero = 48,
+  eadk_event_dot = 49,
+  eadk_event_ee = 50,
+  eadk_event_ans = 51,
+  eadk_event_exe = 52,
+  eadk_event_shift_left = 54,
+  eadk_event_shift_up = 55,
+  eadk_event_shift_down = 56,
+  eadk_event_shift_right = 57,
+  eadk_event_alpha_lock = 67,
+  eadk_event_cut = 68,
+  eadk_event_copy = 69,
+  eadk_event_paste = 70,
+  eadk_event_clear = 71,
+  eadk_event_left_bracket = 72,
+  eadk_event_right_bracket = 73,
+  eadk_event_left_brace = 74,
+  eadk_event_right_brace = 75,
+  eadk_event_underscore = 76,
+  eadk_event_sto = 77,
+  eadk_event_arcsine = 78,
+  eadk_event_arccosine = 79,
+  eadk_event_arctangent = 80,
+  eadk_event_equal = 81,
+  eadk_event_lower = 82,
+  eadk_event_greater = 83,
+  eadk_event_colon = 122,
+  eadk_event_semicolon = 123,
+  eadk_event_double_quotes = 124,
+  eadk_event_percent = 125,
+  eadk_event_lower_a = 126,
+  eadk_event_lower_b = 127,
+  eadk_event_lower_c = 128,
+  eadk_event_lower_d = 129,
+  eadk_event_lower_e = 130,
+  eadk_event_lower_f = 131,
+  eadk_event_lower_g = 132,
+  eadk_event_lower_h = 133,
+  eadk_event_lower_i = 134,
+  eadk_event_lower_j = 135,
+  eadk_event_lower_k = 136,
+  eadk_event_lower_l = 137,
+  eadk_event_lower_m = 138,
+  eadk_event_lower_n = 139,
+  eadk_event_lower_o = 140,
+  eadk_event_lower_p = 141,
+  eadk_event_lower_q = 142,
+  eadk_event_lower_r = 144,
+  eadk_event_lower_s = 145,
+  eadk_event_lower_t = 146,
+  eadk_event_lower_u = 147,
+  eadk_event_lower_v = 148,
+  eadk_event_lower_w = 150,
+  eadk_event_lower_x = 151,
+  eadk_event_lower_y = 152,
+  eadk_event_lower_z = 153,
+  eadk_event_space = 154,
+  eadk_event_question = 156,
+  eadk_event_exclamation = 157,
+  eadk_event_upper_a = 180,
+  eadk_event_upper_b = 181,
+  eadk_event_upper_c = 182,
+  eadk_event_upper_d = 183,
+  eadk_event_upper_e = 184,
+  eadk_event_upper_f = 185,
+  eadk_event_upper_g = 186,
+  eadk_event_upper_h = 187,
+  eadk_event_upper_i = 188,
+  eadk_event_upper_j = 189,
+  eadk_event_upper_k = 190,
+  eadk_event_upper_l = 191,
+  eadk_event_upper_m = 192,
+  eadk_event_upper_n = 193,
+  eadk_event_upper_o = 194,
+  eadk_event_upper_p = 195,
+  eadk_event_upper_q = 196,
+  eadk_event_upper_r = 198,
+  eadk_event_upper_s = 199,
+  eadk_event_upper_t = 200,
+  eadk_event_upper_u = 201,
+  eadk_event_upper_v = 202,
+  eadk_event_upper_w = 204,
+  eadk_event_upper_x = 205,
+  eadk_event_upper_y = 206,
+  eadk_event_upper_z = 207,
+};
+
+eadk_event_t eadk_event_get(int32_t* timeout);
+
+// Backlight
+
+void eadk_backlight_set_brightness(uint8_t brightness);
+uint8_t eadk_backlight_brightness();
+
+// Battery
+
+bool eadk_battery_is_charging();
+uint8_t eadk_battery_level();
+float eadk_battery_voltage();
+
+// Display
+
+void eadk_display_push_rect(eadk_rect_t rect, const eadk_color_t* pixels);
+void eadk_display_push_rect_uniform(eadk_rect_t rect, eadk_color_t color);
+void eadk_display_pull_rect(eadk_rect_t rect, eadk_color_t* pixels);
+bool eadk_display_wait_for_vblank();
+void eadk_display_draw_string(const char* text, eadk_point_t point,
+                              bool large_font, eadk_color_t text_color,
+                              eadk_color_t background_color);
+
+// Timing
+
+void eadk_timing_usleep(uint32_t us);
 void eadk_timing_msleep(uint32_t ms);
 
-#endif // EQUALIB_EADK_H
+#if PLATFORM_DEVICE
+uint64_t eadk_timing_millis();
+#else
+uint32_t _eadk_timing_millis_low();
+uint32_t _eadk_timing_millis_high();
+
+static inline uint64_t eadk_timing_millis() {
+  uint64_t millis = _eadk_timing_millis_high();
+  millis <<= 32;
+  millis |= _eadk_timing_millis_low();
+  return millis;
+}
+#endif
+
+// External data
+
+extern const char* eadk_external_data;
+extern size_t eadk_external_data_size;
+
+// Misc
+
+bool eadk_usb_is_plugged();
+uint32_t eadk_random();
+
+#endif
