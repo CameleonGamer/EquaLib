@@ -26,7 +26,7 @@ static uint64_t s_last_pulse_ms = 0;
 static bool s_led_active = false;
 
 /* Manifeste dynamique stocké en flash (.rodata), modifiable à chaud lors du packaging */
-volatile const equalib_manifest_t g_equalib_manifest __attribute__((used)) = {
+const equalib_manifest_t g_equalib_manifest __attribute__((used, aligned(4), section(".rodata.equalib_manifest"))) = {
     .magic = EQUALIB_MANIFEST_MAGIC,
     .version = 1,
     .app_count = 5,
@@ -274,27 +274,26 @@ int main(int argc, char* argv[]) {
     int scroll_offset = 0;
     bool redraw = true;
     eadk_keyboard_state_t prev_kbd = 0;
-    uint64_t last_back_press = 0;
 
     while (true) {
         uint64_t now = eadk_timing_millis();
         bool prev_led = s_led_active;
         exam_tick(now);
 
-        /* Si la LED d'examen a changé d'état, on met à jour la barre de titre */
-        if (s_exam_mode && prev_led != s_led_active) {
+        /* Si la LED d'examen a changé d'état et qu'un redessin complet n'est pas déjà planifié */
+        if (!redraw && s_exam_mode && prev_led != s_led_active) {
             draw_exam_indicator(EADK_SCREEN_WIDTH - 20, 6, COLOR_NUMWORKS);
         }
 
         eadk_keyboard_state_t kbd = eadk_keyboard_scan();
+        eadk_keyboard_state_t pressed = kbd & ~prev_kbd;
 
-        /* Sortie complète de l'application vers Epsilon via Home ou On/Off */
+        /* Sortie complète de l'application vers Epsilon via Home, On/Off ou Back depuis le Hub */
         if (eadk_keyboard_key_down(kbd, eadk_key_home) ||
-            eadk_keyboard_key_down(kbd, eadk_key_on_off)) {
+            eadk_keyboard_key_down(kbd, eadk_key_on_off) ||
+            eadk_keyboard_key_down(pressed, eadk_key_back)) {
             break;
         }
-
-        eadk_keyboard_state_t pressed = kbd & ~prev_kbd;
 
         /* Raccourci Panique Furtif universel direct : Touche [Var] */
         if (eadk_keyboard_key_down(pressed, eadk_key_var)) {
@@ -303,27 +302,6 @@ int main(int argc, char* argv[]) {
             prev_kbd = 0;
             redraw = true;
             continue;
-        }
-
-        /* Détection double-clic rapide sur Back (moins de 400ms) = Mode Panique Furtif ! */
-        if (eadk_keyboard_key_down(pressed, eadk_key_back)) {
-            uint64_t diff = now - last_back_press;
-            if (diff > 50 && diff < 400) {
-                run_panic_calculator();
-                while (eadk_keyboard_scan() != 0) eadk_timing_msleep(20);
-                prev_kbd = 0;
-                redraw = true;
-                last_back_press = 0;
-                continue;
-            }
-            last_back_press = now;
-        }
-
-        /* Sortie vers Epsilon si Back est pressé longuement ou seul */
-        if (last_back_press > 0 && (now - last_back_press >= 400)) {
-            if (eadk_keyboard_key_down(kbd, eadk_key_back)) {
-                break;
-            }
         }
 
         if (eadk_keyboard_key_down(pressed, eadk_key_down)) {
@@ -343,7 +321,7 @@ int main(int argc, char* argv[]) {
                 redraw = true;
             }
         } else if (eadk_keyboard_key_down(pressed, eadk_key_ok) || eadk_keyboard_key_down(pressed, eadk_key_exe)) {
-            volatile const equalib_manifest_app_t* app = &g_equalib_manifest.apps[selected];
+            const equalib_manifest_app_t* app = &g_equalib_manifest.apps[selected];
             uint8_t type = app->app_type;
 
             if (type == APP_TYPE_MARIOKART) {
@@ -415,7 +393,7 @@ int main(int argc, char* argv[]) {
                     eadk_display_push_rect_uniform(accent, COLOR_NUMWORKS);
                 }
 
-                volatile const equalib_manifest_app_t* cur_app = &g_equalib_manifest.apps[i];
+                const equalib_manifest_app_t* cur_app = &g_equalib_manifest.apps[i];
 
                 eadk_point_t p_name = {20, (uint16_t)(y + 5)};
                 eadk_display_draw_string((const char*)cur_app->name, p_name, false, eadk_color_black, is_sel ? COLOR_CARD_SEL : COLOR_CARD_BG);
@@ -432,7 +410,7 @@ int main(int argc, char* argv[]) {
             eadk_display_push_rect_uniform(bottom_bar, eadk_color_white);
 
             eadk_point_t p_help = {8, EADK_SCREEN_HEIGHT - 13};
-            eadk_display_draw_string("OK: Lancer | Back: Menu | Var/Backx2: Furtif | Toolbox: Examen", p_help, false, 0x4208, eadk_color_white);
+            eadk_display_draw_string("OK: Lancer | Back: Quitter | Var: Furtif | Toolbox: Examen", p_help, false, 0x4208, eadk_color_white);
         }
 
         eadk_timing_msleep(20);

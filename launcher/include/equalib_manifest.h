@@ -38,6 +38,6 @@ typedef struct {
 
 #pragma pack(pop)
 
-extern volatile const equalib_manifest_t g_equalib_manifest;
+extern const equalib_manifest_t g_equalib_manifest;
 
 #endif // EQUALIB_MANIFEST_H
