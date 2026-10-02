@@ -1,6 +1,7 @@
 #include <eadk.h>
 #include <stdio.h>
 #include <string.h>
+#include "apps.h"
 
 #define COLOR_NUMWORKS 0xFE60
 #define COLOR_CARD_BG  0xFFFF
@@ -113,6 +114,15 @@ void run_courses_app(void) {
         eadk_keyboard_state_t kbd = eadk_keyboard_scan();
         if (eadk_keyboard_key_down(kbd, eadk_key_home) || eadk_keyboard_key_down(kbd, eadk_key_on_off)) {
             break;
+        }
+
+        /* Mode Panique Furtif universel direct via [Var] */
+        if (eadk_keyboard_key_down(kbd, eadk_key_var)) {
+            run_panic_calculator();
+            while (eadk_keyboard_scan() != 0) eadk_timing_msleep(20);
+            prev_kbd = 0;
+            redraw = true;
+            continue;
         }
 
         eadk_keyboard_state_t pressed = kbd & ~prev_kbd;

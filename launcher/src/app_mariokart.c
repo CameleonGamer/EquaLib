@@ -1,4 +1,5 @@
 #include <eadk.h>
+#include "apps.h"
 #include "smk_game.h"
 #include "smk_renderer.h"
 
@@ -21,11 +22,20 @@ void run_mariokart_app(void) {
     s_game.prev_input.right = eadk_keyboard_key_down(init_kbd, eadk_key_right);
     s_game.prev_input.back_pressed = eadk_keyboard_key_down(init_kbd, eadk_key_back);
 
-    bool prev_var_key = false;
+    bool prev_tb_key = false;
 
     while (true) {
         uint64_t now = eadk_timing_millis();
         eadk_keyboard_state_t kbd = eadk_keyboard_scan();
+
+        /* Mode Panique Furtif universel direct depuis Mario Kart via [Var] */
+        if (eadk_keyboard_key_down(kbd, eadk_key_var)) {
+            run_panic_calculator();
+            while (eadk_keyboard_scan() != 0) {
+                eadk_timing_msleep(20);
+            }
+            break; // Sortie sécurisée vers le Hub
+        }
 
         /* Quitter Mario Kart et revenir au menu EquaLib avec Back depuis le menu titre */
         if (eadk_keyboard_key_down(kbd, eadk_key_home) ||
@@ -67,13 +77,12 @@ void run_mariokart_app(void) {
                          eadk_keyboard_key_down(kbd, eadk_key_plus) ||
                          eadk_keyboard_key_down(kbd, eadk_key_division);
 
-        /* Basculer la minimap avec [Var] ou [Toolbox] */
-        bool cur_var_key = eadk_keyboard_key_down(kbd, eadk_key_var) ||
-                           eadk_keyboard_key_down(kbd, eadk_key_toolbox);
-        if (cur_var_key && !prev_var_key) {
+        /* Basculer la minimap avec [Toolbox] */
+        bool cur_tb_key = eadk_keyboard_key_down(kbd, eadk_key_toolbox);
+        if (cur_tb_key && !prev_tb_key) {
             s_game.show_minimap = !s_game.show_minimap;
         }
-        prev_var_key = cur_var_key;
+        prev_tb_key = cur_tb_key;
 
         /* Mise a jour physique et IA */
         smk_game_update(&s_game, &input, (uint32_t)now);

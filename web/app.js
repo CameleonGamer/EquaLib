@@ -672,25 +672,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   // ==================== TÉLÉCHARGEMENT & FLASH ====================
   downloadBtn.addEventListener('click', async () => {
     try {
-      showToast('Téléchargement du binaire natif N0120 en cours...', 'info');
-      const timestamp = Date.now();
-      const response = await fetch(`equalib_n0120.nwa?v=${timestamp}`, { cache: 'no-store' });
-      if (!response.ok) {
-        throw new Error("Fichier introuvable sur le serveur");
-      }
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'equalib_n0120.nwa';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      showToast('✓ Nouveau fichier equalib_n0120.nwa téléchargé !', 'success');
-    } catch (err) {
-      console.warn("Fallback sur bundler :", err);
-      const bundle = await bundler.buildBundle(selectedApps);
+      showToast(`Génération du binaire natif N0120 avec vos ${selectedApps.length} applications...`, 'info');
+      const bundle = await bundler.buildBundle(selectedApps, 'nwa');
       const url = URL.createObjectURL(bundle.blob);
       const a = document.createElement('a');
       a.href = url;
@@ -699,7 +682,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      showToast('Fichier equalib_n0120.nwa généré !', 'success');
+      showToast(`✓ Fichier equalib_n0120.nwa téléchargé avec vos ${selectedApps.length} applications !`, 'success');
+    } catch (err) {
+      console.error("Erreur téléchargement .nwa :", err);
+      showToast(`Erreur lors de la génération du fichier .nwa : ${err.message}`, 'error');
     }
   });
 
@@ -746,27 +732,15 @@ document.addEventListener('DOMContentLoaded', async () => {
       flashBtn.disabled = true;
       progressContainer.classList.remove('hidden');
       flashProgress.style.width = '0%';
-      progressText.textContent = 'Préparation du binaire pour le flash USB...';
+      progressText.textContent = `Génération du pack personnalisé (${selectedApps.length} application${selectedApps.length > 1 ? 's' : ''})...`;
 
-      // 1. Récupération du binaire natif lié (avec header babec0de et entrypoint valide)
-      let binaryData = null;
-      try {
-        const binResp = await fetch(`equalib_n0120.bin?v=${Date.now()}`, { cache: 'no-store' });
-        if (binResp.ok) {
-          binaryData = await binResp.arrayBuffer();
-        }
-      } catch (fetchErr) {
-        console.warn('[Flash] Erreur fetch equalib_n0120.bin :', fetchErr);
-      }
+      // 1. Génération dynamique du binaire natif patché avec les apps sélectionnées
+      const bundle = await bundler.buildBundle(selectedApps, 'bin');
 
-      if (!binaryData) {
-        // Fallback sur le bundle généré par bundler
-        const bundle = await bundler.buildBundle(selectedApps);
-        binaryData = bundle.arrayBuffer;
-      }
+      progressText.textContent = 'Préparation du flash USB...';
 
-      // 2. Flashage USB DFU réel
-      await usb.flashBinary(binaryData, (progress) => {
+      // 2. Flashage USB DFU réel vers le slot 0x90180000
+      await usb.flashBinary(bundle.arrayBuffer, (progress) => {
         const percent = (typeof progress === 'number') ? progress : progress.percent;
         const msg = (typeof progress === 'object' && progress.message) ? progress.message : `Progression : ${percent}%`;
         flashProgress.style.width = `${percent}%`;
@@ -776,7 +750,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       connectionDot.className = 'w-2.5 h-2.5 rounded-full bg-slate-500';
       connectionText.textContent = 'Installé ✓';
       connectBtn.innerHTML = '<span>🔌</span> <span class="hidden sm:inline">Connecter</span>';
-      showToast('🎉 Installation réussie ! Votre NumWorks redémarre avec EquaLib.', 'success');
+      showToast(`🎉 Installation réussie ! Votre NumWorks démarre avec vos ${selectedApps.length} applications.`, 'success');
     } catch (err) {
       console.error('[Flash] Erreur :', err);
       showToast(err.message || 'Erreur lors du téléversement USB', 'error');

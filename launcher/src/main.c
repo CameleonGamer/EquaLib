@@ -2,16 +2,12 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stddef.h>
+#include "apps.h"
+#include "equalib_manifest.h"
 
 /* Déclarations mini libc */
 size_t strlen(const char* s);
 int snprintf(char* buf, size_t max, const char* fmt, ...);
-
-/* Déclarations des sous-applications intégrées */
-void run_mariokart_app(void);
-void run_periodic_table_app(void);
-void run_courses_app(void);
-void run_math_tools_app(void);
 
 /* Symboles officiels EADK requis par Epsilon */
 const char eadk_app_name[] __attribute__((section(".rodata.eadk_app_name"))) = "EquaLib";
@@ -25,9 +21,24 @@ const uint32_t eadk_api_level __attribute__((section(".rodata.eadk_api_level")))
 #define COLOR_EXAM_RED 0xF800
 
 /* Simulation du Mode Examen (100% sécurisée sans aucun accès direct aux registres STM32) */
-static bool s_exam_mode = false;
+static bool s_exam_mode = true;
 static uint64_t s_last_pulse_ms = 0;
 static bool s_led_active = false;
+
+/* Manifeste dynamique stocké en flash (.rodata), modifiable à chaud lors du packaging */
+volatile const equalib_manifest_t g_equalib_manifest __attribute__((used)) = {
+    .magic = EQUALIB_MANIFEST_MAGIC,
+    .version = 1,
+    .app_count = 5,
+    .flags = 0,
+    .apps = {
+        {"mariokart", "1. Mario Kart", "Jeu / Arcade", "Course Mode 7 3D complete pour N0120", APP_TYPE_MARIOKART, {0,0,0}, 0, 0},
+        {"periodique", "2. Tableau Periodique", "Chimie", "118 elements, masses et configurations", APP_TYPE_PERIODIC, {0,0,0}, 0, 0},
+        {"fiches", "3. Fiches de Cours", "Revision", "Formulaires Maths, Physique et Chimie", APP_TYPE_COURSES, {0,0,0}, 0, 0},
+        {"math_solver", "4. Solveur de Maths", "Algebre", "Polynomes 2nd degre, racines et outils", APP_TYPE_MATH_TOOLS, {0,0,0}, 0, 0},
+        {"stealth_calc", "5. Mode Furtif Panique", "Securite", "Fausse calculatrice avec [EXAMEN ACTIF]", APP_TYPE_STEALTH, {0,0,0}, 0, 0}
+    }
+};
 
 /* Gestion du clignotement 1 Hz (120ms allumé, 880ms éteint) */
 static void exam_tick(uint64_t now) {
@@ -53,7 +64,7 @@ static void draw_exam_indicator(uint16_t x, uint16_t y, eadk_color_t bg_color) {
         eadk_display_draw_string("EXAMEN", p, false, COLOR_EXAM_RED, bg_color);
     } else if (s_exam_mode) {
         eadk_rect_t led = {x, y, 10, 10};
-        eadk_display_push_rect_uniform(led, 0x8000); /* Rouge éteint/sombre */
+        eadk_display_push_rect_uniform(led, 0x8000); /* Rouge sombre quand inactif */
         eadk_point_t p = {(uint16_t)(x - 65), (uint16_t)(y - 1)};
         eadk_display_draw_string("EXAMEN", p, false, 0x8000, bg_color);
     }
@@ -95,13 +106,28 @@ static void evaluate_simple_expr(const char* expr, char* result, size_t max_res)
     else snprintf(result, max_res, "%d", v1);
 }
 
-/* Mini calculatrice furtive et fonctionnelle pour le Mode Panique */
-static void run_panic_calculator(void) {
+/* Redessine uniquement la barre supérieure de la calculatrice furtive */
+static void draw_panic_top_bar(void) {
+    eadk_rect_t bar = {0, 0, EADK_SCREEN_WIDTH, 20};
+    eadk_display_push_rect_uniform(bar, COLOR_NUMWORKS);
+
+    eadk_point_t p_status = {8, 4};
+    eadk_display_draw_string("[EXAMEN ACTIF]", p_status, false, COLOR_EXAM_RED, COLOR_NUMWORKS);
+
+    eadk_point_t p_calc = {130, 4};
+    eadk_display_draw_string("Calculs", p_calc, false, eadk_color_black, COLOR_NUMWORKS);
+
+    draw_exam_indicator(EADK_SCREEN_WIDTH - 20, 5, COLOR_NUMWORKS);
+}
+
+/* Mini calculatrice furtive et 100% réaliste pour le Mode Panique */
+void run_panic_calculator(void) {
     s_exam_mode = true;
     char expr[64] = "cos(pi/3) + ln(e^2)";
     char result[32] = "2.5";
-    int expr_len = strlen(expr);
-    bool redraw = true;
+    int expr_len = (int)strlen(expr);
+    bool redraw_all = true;
+
     while (eadk_keyboard_scan() != 0) {
         eadk_timing_msleep(20);
     }
@@ -112,23 +138,39 @@ static void run_panic_calculator(void) {
         bool prev_led = s_led_active;
         exam_tick(now);
 
+        /* Si l'état de pulsation change, on redessine SEULEMENT la barre supérieure (aucun clignotement d'écran !) */
         if (prev_led != s_led_active) {
-            redraw = true;
+            draw_panic_top_bar();
         }
 
         eadk_keyboard_state_t kbd = eadk_keyboard_scan();
 
-        /* Combinaison secrète de sortie : Shift + Home OU Toolbox + Back */
+        /* Raccourcis de sortie :
+         * 1. Touche [Var] : bascule instantanée aller/retour !
+         * 2. Shift + Home ou Toolbox + Back (combinaison secrète)
+         * 3. Home / On/Off : retour immédiat Epsilon
+         */
         bool shift = eadk_keyboard_key_down(kbd, eadk_key_shift);
         bool home = eadk_keyboard_key_down(kbd, eadk_key_home);
         bool toolbox = eadk_keyboard_key_down(kbd, eadk_key_toolbox);
         bool back = eadk_keyboard_key_down(kbd, eadk_key_back);
+        bool var_key = eadk_keyboard_key_down(kbd, eadk_key_var);
 
-        if ((shift && home) || (toolbox && back)) {
+        if ((shift && home) || (toolbox && back) || (home && !shift)) {
             break;
         }
 
         eadk_keyboard_state_t pressed = kbd & ~prev_kbd;
+
+        /* Sortie via appui sur Var */
+        if (eadk_keyboard_key_down(pressed, eadk_key_var)) {
+            break;
+        }
+
+        /* Sortie via appui sur Back si expression vide */
+        if (eadk_keyboard_key_down(pressed, eadk_key_back) && expr_len == 0) {
+            break;
+        }
 
         /* Saisie de chiffres et touches */
         char add_ch = 0;
@@ -151,39 +193,28 @@ static void run_panic_calculator(void) {
         if (add_ch && expr_len < (int)sizeof(expr) - 2) {
             expr[expr_len++] = add_ch;
             expr[expr_len] = '\0';
-            redraw = true;
+            redraw_all = true;
         }
 
         if (eadk_keyboard_key_down(pressed, eadk_key_backspace) && expr_len > 0) {
             expr[--expr_len] = '\0';
-            redraw = true;
+            redraw_all = true;
         }
 
         if (eadk_keyboard_key_down(pressed, eadk_key_ok) || eadk_keyboard_key_down(pressed, eadk_key_exe)) {
             evaluate_simple_expr(expr, result, sizeof(result));
-            redraw = true;
+            redraw_all = true;
         }
 
         prev_kbd = kbd;
 
-        if (redraw) {
-            redraw = false;
+        if (redraw_all) {
+            redraw_all = false;
             eadk_display_push_rect_uniform(eadk_screen_rect, eadk_color_white);
 
-            /* Bandeau jaune officiel */
-            eadk_rect_t bar = {0, 0, EADK_SCREEN_WIDTH, 20};
-            eadk_display_push_rect_uniform(bar, COLOR_NUMWORKS);
+            draw_panic_top_bar();
 
-            eadk_point_t p_status = {8, 4};
-            eadk_display_draw_string("[EXAMEN ACTIF]", p_status, false, COLOR_EXAM_RED, COLOR_NUMWORKS);
-
-            eadk_point_t p_calc = {130, 4};
-            eadk_display_draw_string("Calculs", p_calc, false, eadk_color_black, COLOR_NUMWORKS);
-
-            /* LED d'examen */
-            draw_exam_indicator(EADK_SCREEN_WIDTH - 20, 5, COLOR_NUMWORKS);
-
-            /* Historique calcul précédent */
+            /* Historique calcul precedent */
             eadk_rect_t box1 = {8, 28, EADK_SCREEN_WIDTH - 16, 50};
             eadk_display_push_rect_uniform(box1, 0xF7BE);
 
@@ -193,7 +224,7 @@ static void run_panic_calculator(void) {
             eadk_point_t p_res1 = {EADK_SCREEN_WIDTH - 50, 56};
             eadk_display_draw_string("2.5", p_res1, true, eadk_color_black, 0xF7BE);
 
-            /* Ligne active */
+            /* Ligne active de calcul */
             eadk_rect_t box2 = {8, 86, EADK_SCREEN_WIDTH - 16, 56};
             eadk_display_push_rect_uniform(box2, 0xF7BE);
 
@@ -209,11 +240,11 @@ static void run_panic_calculator(void) {
                 eadk_display_draw_string(result, p_ans, true, 0x028A, 0xF7BE);
             }
 
-            /* Indication discrète en bas */
-            eadk_rect_t bottom = {0, EADK_SCREEN_HEIGHT - 16, EADK_SCREEN_WIDTH, 16};
-            eadk_display_push_rect_uniform(bottom, eadk_color_white);
-            eadk_point_t p_tip = {10, EADK_SCREEN_HEIGHT - 13};
-            eadk_display_draw_string("Shift+Home ou Toolbox+Back : Sortie", p_tip, false, 0xAD75, eadk_color_white);
+            /* Bas de l'ecran sobre et authentique (style officiel NumWorks) */
+            eadk_rect_t bottom = {0, EADK_SCREEN_HEIGHT - 18, EADK_SCREEN_WIDTH, 18};
+            eadk_display_push_rect_uniform(bottom, 0xEF7D);
+            eadk_point_t p_sub = {10, EADK_SCREEN_HEIGHT - 14};
+            eadk_display_draw_string("rad   norm", p_sub, false, 0x7BEF, 0xEF7D);
         }
 
         eadk_timing_msleep(20);
@@ -224,34 +255,26 @@ static void run_panic_calculator(void) {
     }
 }
 
-/* Liste des applications de la bibliothèque EquaLib */
-typedef struct {
-    const char * name;
-    const char * category;
-    const char * desc;
-} app_item_t;
-
-static const app_item_t s_apps[] = {
-    {"1. Mario Kart", "Jeu / Arcade", "Course Mode 7 3D complete pour N0120"},
-    {"2. Tableau Periodique", "Chimie", "118 elements, masses et configurations"},
-    {"3. Fiches de Cours", "Revision", "Formulaires Maths, Physique et Chimie"},
-    {"4. Solveur de Maths", "Algebre", "Polynomes 2nd degre, racines et outils"},
-    {"5. Mode Furtif Panique", "Securite", "Fausse calculatrice avec [EXAMEN ACTIF]"}
-};
-#define APP_COUNT (sizeof(s_apps) / sizeof(s_apps[0]))
-
 int main(int argc, char* argv[]) {
     (void)argc;
     (void)argv;
 
-    /* Attendre que toutes les touches (notamment OK/EXE lors du lancement depuis Epsilon) soient relâchées */
+    /* Attendre le relâchement initial des touches */
     while (eadk_keyboard_scan() != 0) {
         eadk_timing_msleep(20);
     }
 
+    /* Détermination du nombre d'applications via le manifeste */
+    uint32_t total_apps = g_equalib_manifest.app_count;
+    if (g_equalib_manifest.magic != EQUALIB_MANIFEST_MAGIC || total_apps == 0 || total_apps > MAX_MANIFEST_APPS) {
+        total_apps = 5;
+    }
+
     int selected = 0;
+    int scroll_offset = 0;
     bool redraw = true;
     eadk_keyboard_state_t prev_kbd = 0;
+    uint64_t last_back_press = 0;
 
     while (true) {
         uint64_t now = eadk_timing_millis();
@@ -260,60 +283,94 @@ int main(int argc, char* argv[]) {
 
         /* Si la LED d'examen a changé d'état, on met à jour la barre de titre */
         if (s_exam_mode && prev_led != s_led_active) {
-            redraw = true;
+            draw_exam_indicator(EADK_SCREEN_WIDTH - 20, 6, COLOR_NUMWORKS);
         }
 
         eadk_keyboard_state_t kbd = eadk_keyboard_scan();
 
-        /* Sortie complète de l'application vers Epsilon via Home, On/Off ou Back depuis le Hub */
+        /* Sortie complète de l'application vers Epsilon via Home ou On/Off */
         if (eadk_keyboard_key_down(kbd, eadk_key_home) ||
-            eadk_keyboard_key_down(kbd, eadk_key_on_off) ||
-            eadk_keyboard_key_down(kbd, eadk_key_back)) {
+            eadk_keyboard_key_down(kbd, eadk_key_on_off)) {
             break;
         }
 
         eadk_keyboard_state_t pressed = kbd & ~prev_kbd;
 
+        /* Raccourci Panique Furtif universel direct : Touche [Var] */
+        if (eadk_keyboard_key_down(pressed, eadk_key_var)) {
+            run_panic_calculator();
+            while (eadk_keyboard_scan() != 0) eadk_timing_msleep(20);
+            prev_kbd = 0;
+            redraw = true;
+            continue;
+        }
+
+        /* Détection double-clic rapide sur Back (moins de 400ms) = Mode Panique Furtif ! */
+        if (eadk_keyboard_key_down(pressed, eadk_key_back)) {
+            uint64_t diff = now - last_back_press;
+            if (diff > 50 && diff < 400) {
+                run_panic_calculator();
+                while (eadk_keyboard_scan() != 0) eadk_timing_msleep(20);
+                prev_kbd = 0;
+                redraw = true;
+                last_back_press = 0;
+                continue;
+            }
+            last_back_press = now;
+        }
+
+        /* Sortie vers Epsilon si Back est pressé longuement ou seul */
+        if (last_back_press > 0 && (now - last_back_press >= 400)) {
+            if (eadk_keyboard_key_down(kbd, eadk_key_back)) {
+                break;
+            }
+        }
+
         if (eadk_keyboard_key_down(pressed, eadk_key_down)) {
-            if (selected < (int)APP_COUNT - 1) {
+            if (selected < (int)total_apps - 1) {
                 selected++;
+                if (selected >= scroll_offset + 5) {
+                    scroll_offset = selected - 4;
+                }
                 redraw = true;
             }
         } else if (eadk_keyboard_key_down(pressed, eadk_key_up)) {
             if (selected > 0) {
                 selected--;
+                if (selected < scroll_offset) {
+                    scroll_offset = selected;
+                }
                 redraw = true;
             }
         } else if (eadk_keyboard_key_down(pressed, eadk_key_ok) || eadk_keyboard_key_down(pressed, eadk_key_exe)) {
-            /* Lancement effectif de la véritable application sélectionnée */
-            if (selected == 0) {
+            volatile const equalib_manifest_app_t* app = &g_equalib_manifest.apps[selected];
+            uint8_t type = app->app_type;
+
+            if (type == APP_TYPE_MARIOKART) {
                 run_mariokart_app();
-            } else if (selected == 1) {
+            } else if (type == APP_TYPE_PERIODIC) {
                 run_periodic_table_app();
-            } else if (selected == 2) {
+            } else if (type == APP_TYPE_COURSES) {
                 run_courses_app();
-            } else if (selected == 3) {
+            } else if (type == APP_TYPE_MATH_TOOLS) {
                 run_math_tools_app();
-            } else if (selected == 4) {
+            } else if (type == APP_TYPE_STEALTH) {
                 run_panic_calculator();
+            } else if (type == APP_TYPE_TEXT_VIEWER) {
+                const char* data_ptr = NULL;
+                if (app->data_size > 0) {
+                    data_ptr = (const char*)(0x90180000 + app->data_offset);
+                }
+                run_text_viewer_app((const char*)app->name, data_ptr, app->data_size);
             }
 
-            /* Attendre le relâchement complet des touches au retour au menu */
-            while (eadk_keyboard_scan() != 0) {
-                eadk_timing_msleep(20);
-            }
-            prev_kbd = 0;
-            redraw = true;
-        } else if (eadk_keyboard_key_down(pressed, eadk_key_var)) {
-            /* Raccourci furtif direct vers la fausse calculatrice panique */
-            run_panic_calculator();
             while (eadk_keyboard_scan() != 0) {
                 eadk_timing_msleep(20);
             }
             prev_kbd = 0;
             redraw = true;
         } else if (eadk_keyboard_key_down(pressed, eadk_key_toolbox)) {
-            /* Basculer la simulation du Mode Examen sans aucun crash */
+            /* Basculer la simulation du Mode Examen */
             s_exam_mode = !s_exam_mode;
             s_led_active = false;
             redraw = true;
@@ -321,12 +378,12 @@ int main(int argc, char* argv[]) {
 
         prev_kbd = kbd;
 
-        /* Rendu graphique de l'interface EquaLib Hub */
+        /* Rendu graphique du Hub */
         if (redraw) {
             redraw = false;
             eadk_display_push_rect_uniform(eadk_screen_rect, COLOR_GRAY_BG);
 
-            /* Barre supérieure officielle */
+            /* Barre superieure officielle */
             eadk_rect_t top_bar = {0, 0, EADK_SCREEN_WIDTH, 22};
             eadk_display_push_rect_uniform(top_bar, COLOR_NUMWORKS);
 
@@ -336,46 +393,51 @@ int main(int argc, char* argv[]) {
             /* Indicateur visuel du Mode Examen */
             draw_exam_indicator(EADK_SCREEN_WIDTH - 20, 6, COLOR_NUMWORKS);
 
-            /* Liste des cartes d'applications */
+            /* Liste des cartes d'applications avec défilement fluide */
             int start_y = 28;
             int card_h = 36;
             int card_w = EADK_SCREEN_WIDTH - 16;
+            int visible_count = 5;
+            if (visible_count > (int)total_apps - scroll_offset) {
+                visible_count = (int)total_apps - scroll_offset;
+            }
 
-            for (int i = 0; i < (int)APP_COUNT; i++) {
-                int y = start_y + i * (card_h + 5);
+            for (int v = 0; v < visible_count; v++) {
+                int i = scroll_offset + v;
+                int y = start_y + v * (card_h + 5);
                 bool is_sel = (i == selected);
 
                 eadk_rect_t card = {8, (uint16_t)y, (uint16_t)card_w, (uint16_t)card_h};
                 eadk_display_push_rect_uniform(card, is_sel ? COLOR_CARD_SEL : COLOR_CARD_BG);
 
-                /* Barre d'accentuation à gauche de la carte sélectionnée */
                 if (is_sel) {
                     eadk_rect_t accent = {8, (uint16_t)y, 4, (uint16_t)card_h};
                     eadk_display_push_rect_uniform(accent, COLOR_NUMWORKS);
                 }
 
+                volatile const equalib_manifest_app_t* cur_app = &g_equalib_manifest.apps[i];
+
                 eadk_point_t p_name = {20, (uint16_t)(y + 5)};
-                eadk_display_draw_string(s_apps[i].name, p_name, false, eadk_color_black, is_sel ? COLOR_CARD_SEL : COLOR_CARD_BG);
+                eadk_display_draw_string((const char*)cur_app->name, p_name, false, eadk_color_black, is_sel ? COLOR_CARD_SEL : COLOR_CARD_BG);
 
                 eadk_point_t p_cat = {(uint16_t)(EADK_SCREEN_WIDTH - 110), (uint16_t)(y + 5)};
-                eadk_display_draw_string(s_apps[i].category, p_cat, false, COLOR_TEXT_MUTED, is_sel ? COLOR_CARD_SEL : COLOR_CARD_BG);
+                eadk_display_draw_string((const char*)cur_app->category, p_cat, false, COLOR_TEXT_MUTED, is_sel ? COLOR_CARD_SEL : COLOR_CARD_BG);
 
                 eadk_point_t p_desc = {20, (uint16_t)(y + 20)};
-                eadk_display_draw_string(s_apps[i].desc, p_desc, false, 0x52AA, is_sel ? COLOR_CARD_SEL : COLOR_CARD_BG);
+                eadk_display_draw_string((const char*)cur_app->desc, p_desc, false, 0x52AA, is_sel ? COLOR_CARD_SEL : COLOR_CARD_BG);
             }
 
-            /* Pied de page avec raccourcis */
+            /* Pied de page avec raccourcis clairs */
             eadk_rect_t bottom_bar = {0, EADK_SCREEN_HEIGHT - 16, EADK_SCREEN_WIDTH, 16};
             eadk_display_push_rect_uniform(bottom_bar, eadk_color_white);
 
             eadk_point_t p_help = {8, EADK_SCREEN_HEIGHT - 13};
-            eadk_display_draw_string("OK: Lancer | Back: Quitter | Toolbox: Examen | Var: Furtif", p_help, false, 0x4208, eadk_color_white);
+            eadk_display_draw_string("OK: Lancer | Back: Menu | Var/Backx2: Furtif | Toolbox: Examen", p_help, false, 0x4208, eadk_color_white);
         }
 
         eadk_timing_msleep(20);
     }
 
-    /* Attendre le relâchement complet des touches avant de redonner la main à Epsilon */
     while (eadk_keyboard_scan() != 0) {
         eadk_timing_msleep(20);
     }

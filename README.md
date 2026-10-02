@@ -78,12 +78,12 @@ L'interface web dans le dossier `web/` est **100% statique** (aucun serveur requ
 
 | Action | Raccourci Clavier |
 | :--- | :--- |
-| **Naviguer dans la grille d'apps** | Touches directionnelles `←` `↑` `↓` `→` |
-| **Lancer l'application sélectionnée** | Touche `OK` |
+| **Naviguer dans les applications** | Touches directionnelles `←` `↑` `↓` `→` |
+| **Lancer l'application sélectionnée** | Touche `OK` ou `EXE` |
 | **Quitter l'application et revenir au hub** | Touche `Back` |
-| **Activer / Désactiver la LED Examen (1 Hz)** | Touche `Toolbox` |
-| **Mode Panique Furtif (Fausse calculatrice)** | **Double appui rapide sur `Back`** |
-| **Sortir du Mode Panique Furtif** | `Shift` + `Home` ou `Toolbox` + `Back` |
+| **Activer / Désactiver la simulation LED Examen (1 Hz)** | Touche `Toolbox` |
+| **Mode Panique Furtif (Calculatrice de secours)** | **Touche `Var`** (accessible instantanément depuis n'importe quelle app ou jeu) ou **Double appui rapide sur `Back`** |
+| **Sortir du Mode Panique Furtif** | **Touche `Var`** (bascule immédiate) ou `Shift` + `Home` / `Toolbox` + `Back` |
 
 ---
 
