@@ -104,7 +104,10 @@ static const course_page_t s_pages[] = {
 void run_courses_app(void) {
     int cur_page = 0;
     bool redraw = true;
-    eadk_keyboard_state_t prev_kbd = eadk_keyboard_scan();
+    while (eadk_keyboard_scan() != 0) {
+        eadk_timing_msleep(20);
+    }
+    eadk_keyboard_state_t prev_kbd = 0;
 
     while (true) {
         eadk_keyboard_state_t kbd = eadk_keyboard_scan();
@@ -179,6 +182,10 @@ void run_courses_app(void) {
             eadk_display_draw_string("< > : Changer fiche  |  BACK : Menu", pt_help, false, 0x4208, eadk_color_white);
         }
 
+        eadk_timing_msleep(20);
+    }
+
+    while (eadk_keyboard_scan() != 0) {
         eadk_timing_msleep(20);
     }
 }

@@ -22,7 +22,10 @@ void run_math_tools_app(void) {
     int a = 1, b = -5, c = 6;
     int active_field = 0; /* 0: a, 1: b, 2: c */
     bool redraw = true;
-    eadk_keyboard_state_t prev_kbd = eadk_keyboard_scan();
+    while (eadk_keyboard_scan() != 0) {
+        eadk_timing_msleep(20);
+    }
+    eadk_keyboard_state_t prev_kbd = 0;
 
     while (true) {
         eadk_keyboard_state_t kbd = eadk_keyboard_scan();
@@ -149,6 +152,10 @@ void run_math_tools_app(void) {
             eadk_display_draw_string("Haut/Bas: Sel  |  +/- : Ajuster  |  BACK: Menu", pt_help, false, 0x4208, eadk_color_white);
         }
 
+        eadk_timing_msleep(20);
+    }
+
+    while (eadk_keyboard_scan() != 0) {
         eadk_timing_msleep(20);
     }
 }

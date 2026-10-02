@@ -102,7 +102,10 @@ static void run_panic_calculator(void) {
     char result[32] = "2.5";
     int expr_len = strlen(expr);
     bool redraw = true;
-    eadk_keyboard_state_t prev_kbd = eadk_keyboard_scan();
+    while (eadk_keyboard_scan() != 0) {
+        eadk_timing_msleep(20);
+    }
+    eadk_keyboard_state_t prev_kbd = 0;
 
     while (true) {
         uint64_t now = eadk_timing_millis();
@@ -215,6 +218,10 @@ static void run_panic_calculator(void) {
 
         eadk_timing_msleep(20);
     }
+
+    while (eadk_keyboard_scan() != 0) {
+        eadk_timing_msleep(20);
+    }
 }
 
 /* Liste des applications de la bibliothèque EquaLib */
@@ -237,9 +244,13 @@ int main(int argc, char* argv[]) {
     (void)argc;
     (void)argv;
 
+    /* Attendre que toutes les touches (notamment OK/EXE lors du lancement depuis Epsilon) soient relâchées */
+    while (eadk_keyboard_scan() != 0) {
+        eadk_timing_msleep(20);
+    }
+
     int selected = 0;
     bool redraw = true;
-    uint64_t last_back_press = 0;
     eadk_keyboard_state_t prev_kbd = 0;
 
     while (true) {
@@ -254,8 +265,10 @@ int main(int argc, char* argv[]) {
 
         eadk_keyboard_state_t kbd = eadk_keyboard_scan();
 
-        /* Sortie complète de l'application via Home ou On/Off */
-        if (eadk_keyboard_key_down(kbd, eadk_key_home) || eadk_keyboard_key_down(kbd, eadk_key_on_off)) {
+        /* Sortie complète de l'application vers Epsilon via Home, On/Off ou Back depuis le Hub */
+        if (eadk_keyboard_key_down(kbd, eadk_key_home) ||
+            eadk_keyboard_key_down(kbd, eadk_key_on_off) ||
+            eadk_keyboard_key_down(kbd, eadk_key_back)) {
             break;
         }
 
@@ -284,13 +297,20 @@ int main(int argc, char* argv[]) {
             } else if (selected == 4) {
                 run_panic_calculator();
             }
-            redraw = true;
-        } else if (eadk_keyboard_key_down(pressed, eadk_key_back)) {
-            /* Détection double appui rapide pour Mode Panique Furtif */
-            if (now - last_back_press < 500) {
-                run_panic_calculator();
+
+            /* Attendre le relâchement complet des touches au retour au menu */
+            while (eadk_keyboard_scan() != 0) {
+                eadk_timing_msleep(20);
             }
-            last_back_press = now;
+            prev_kbd = 0;
+            redraw = true;
+        } else if (eadk_keyboard_key_down(pressed, eadk_key_var)) {
+            /* Raccourci furtif direct vers la fausse calculatrice panique */
+            run_panic_calculator();
+            while (eadk_keyboard_scan() != 0) {
+                eadk_timing_msleep(20);
+            }
+            prev_kbd = 0;
             redraw = true;
         } else if (eadk_keyboard_key_down(pressed, eadk_key_toolbox)) {
             /* Basculer la simulation du Mode Examen sans aucun crash */
@@ -349,9 +369,14 @@ int main(int argc, char* argv[]) {
             eadk_display_push_rect_uniform(bottom_bar, eadk_color_white);
 
             eadk_point_t p_help = {8, EADK_SCREEN_HEIGHT - 13};
-            eadk_display_draw_string("OK: Lancer | Toolbox: Mode Examen | Backx2: Furtif", p_help, false, 0x4208, eadk_color_white);
+            eadk_display_draw_string("OK: Lancer | Back: Quitter | Toolbox: Examen | Var: Furtif", p_help, false, 0x4208, eadk_color_white);
         }
 
+        eadk_timing_msleep(20);
+    }
+
+    /* Attendre le relâchement complet des touches avant de redonner la main à Epsilon */
+    while (eadk_keyboard_scan() != 0) {
         eadk_timing_msleep(20);
     }
 

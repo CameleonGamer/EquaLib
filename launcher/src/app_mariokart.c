@@ -5,6 +5,10 @@
 static smk_game_t s_game;
 
 void run_mariokart_app(void) {
+    while (eadk_keyboard_scan() != 0) {
+        eadk_timing_msleep(20);
+    }
+
     smk_renderer_init();
     smk_game_init(&s_game);
 
@@ -86,5 +90,9 @@ void run_mariokart_app(void) {
         if (elapsed < 16) {
             eadk_timing_usleep((uint32_t)((16 - elapsed) * 1000));
         }
+    }
+
+    while (eadk_keyboard_scan() != 0) {
+        eadk_timing_msleep(20);
     }
 }

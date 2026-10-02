@@ -254,9 +254,10 @@ void eadk_display_push_rect(eadk_rect_t rect, const eadk_color_t* pixels);
 void eadk_display_push_rect_uniform(eadk_rect_t rect, eadk_color_t color);
 void eadk_display_pull_rect(eadk_rect_t rect, eadk_color_t* pixels);
 bool eadk_display_wait_for_vblank();
-void eadk_display_draw_string(const char* text, eadk_point_t point,
-                              bool large_font, eadk_color_t text_color,
-                              eadk_color_t background_color);
+void eq_display_draw_string(const char* text, eadk_point_t point,
+                            bool large_font, eadk_color_t text_color,
+                            eadk_color_t background_color);
+#define eadk_display_draw_string eq_display_draw_string
 
 // Timing
 
