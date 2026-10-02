@@ -659,7 +659,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const res = await usb.connect();
         connectionDot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse';
         connectionText.textContent = 'Connectée';
-        const slotText = (res.infos && res.infos.externalAppsFlashStart) ? ` - Slot 0x${res.infos.externalAppsFlashStart.toString(16)}` : '';
+        const slotText = res.flashAddress ? ` - Slot 0x${res.flashAddress.toString(16)}` : '';
         modelText.textContent = `${res.model} (${res.mode})${slotText}`;
         connectBtn.innerHTML = '<span>✕</span> <span class="hidden sm:inline">Déconnecter</span>';
         showToast(`NumWorks connectée (${res.model} - ${res.mode}) !`, 'success');
@@ -732,7 +732,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const res = await usb.connect();
         connectionDot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse';
         connectionText.textContent = 'Connectée';
-        const slotText = (res.infos && res.infos.externalAppsFlashStart) ? ` - Slot 0x${res.infos.externalAppsFlashStart.toString(16)}` : '';
+        const slotText = res.flashAddress ? ` - Slot 0x${res.flashAddress.toString(16)}` : '';
         modelText.textContent = `${res.model} (${res.mode})${slotText}`;
         connectBtn.innerHTML = '<span>✕</span> <span class="hidden sm:inline">Déconnecter</span>';
         showToast(`NumWorks détectée (${res.model} - ${res.mode}) !`, 'success');
@@ -773,6 +773,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         progressText.textContent = msg;
       });
 
+      connectionDot.className = 'w-2.5 h-2.5 rounded-full bg-slate-500';
+      connectionText.textContent = 'Installé ✓';
+      connectBtn.innerHTML = '<span>🔌</span> <span class="hidden sm:inline">Connecter</span>';
       showToast('🎉 Installation réussie ! Votre NumWorks redémarre avec EquaLib.', 'success');
     } catch (err) {
       console.error('[Flash] Erreur :', err);
