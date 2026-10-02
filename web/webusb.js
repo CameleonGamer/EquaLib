@@ -50,7 +50,7 @@ const ST_DFU_COMMANDS = {
 
 const FLASH_SECTOR_SIZE = 65536;       // 64 Ko par secteur Flash externe QSPI
 const DFU_TRANSFER_SIZE = 2048;        // 2048 octets par bloc USB DFU
-const DEFAULT_FLASH_ADDR = 0x90200000; // Adresse officielle des applications externes Epsilon (N0120 & N0110)
+const DEFAULT_FLASH_ADDR = 0x90180000; // Adresse officielle des applications externes Epsilon (N0120 & N0110)
 
 class NumWorksWebUSB {
   constructor() {
@@ -382,7 +382,7 @@ class NumWorksWebUSB {
    * Flashe le binaire complet dans le slot d'applications externes de la NumWorks
    * @param {ArrayBuffer|Uint8Array} binaryData Données binaires exécutables
    * @param {Function} onProgress Callback de progression ({ phase, percent, message })
-   * @param {number|null} targetFlashAddr Adresse optionnelle de destination en Flash (0x90200000 par défaut)
+   * @param {number|null} targetFlashAddr Adresse optionnelle de destination en Flash (0x90180000 par défaut)
    */
   async flashBinary(binaryData, onProgress = () => {}, targetFlashAddr = null) {
     if (!this.isConnected || !this.device) {
