@@ -659,7 +659,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         const res = await usb.connect();
         connectionDot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse';
         connectionText.textContent = 'Connectée';
-        modelText.textContent = `${res.model} (${res.mode})`;
+        const slotText = (res.infos && res.infos.externalAppsFlashStart) ? ` - Slot 0x${res.infos.externalAppsFlashStart.toString(16)}` : '';
+        modelText.textContent = `${res.model} (${res.mode})${slotText}`;
         connectBtn.innerHTML = '<span>✕</span> <span class="hidden sm:inline">Déconnecter</span>';
         showToast(`NumWorks connectée (${res.model} - ${res.mode}) !`, 'success');
       } catch (err) {
@@ -731,7 +732,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         const res = await usb.connect();
         connectionDot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse';
         connectionText.textContent = 'Connectée';
-        modelText.textContent = `${res.model} (${res.mode})`;
+        const slotText = (res.infos && res.infos.externalAppsFlashStart) ? ` - Slot 0x${res.infos.externalAppsFlashStart.toString(16)}` : '';
+        modelText.textContent = `${res.model} (${res.mode})${slotText}`;
         connectBtn.innerHTML = '<span>✕</span> <span class="hidden sm:inline">Déconnecter</span>';
         showToast(`NumWorks détectée (${res.model} - ${res.mode}) !`, 'success');
       } catch (e) {
