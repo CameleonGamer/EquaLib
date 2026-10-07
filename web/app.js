@@ -225,7 +225,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const card = document.createElement('div');
       card.className = `p-4 rounded-2xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
         isSelected 
-          ? 'bg-amber-500/5 border-amber-500/30' 
+          ? 'bg-slate-900 border-amber-500/50 ring-1 ring-amber-500/20' 
           : 'bg-slate-900 border-slate-800 hover:border-slate-700'
       }`;
 
@@ -307,7 +307,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const card = document.createElement('div');
       card.className = `p-4 rounded-2xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
         isSelected 
-          ? 'bg-amber-500/5 border-amber-500/30' 
+          ? 'bg-slate-900 border-amber-500/50 ring-1 ring-amber-500/20' 
           : 'bg-slate-900 border-slate-800 hover:border-slate-700'
       }`;
 
@@ -511,7 +511,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       selectedApps.forEach((app, idx) => {
         const item = document.createElement('div');
-        item.className = 'p-3 bg-slate-950/60 rounded-xl border border-slate-800 hover:border-slate-700 flex items-center justify-between shadow-sm transition-all';
+        item.className = 'p-3 bg-slate-950 rounded-xl border border-slate-800 hover:border-slate-700 flex items-center justify-between shadow-sm transition-all';
         item.innerHTML = `
           <div class="flex items-center gap-3 min-w-0">
             <span class="font-mono text-xs text-amber-500 font-extrabold w-4">${idx + 1}.</span>

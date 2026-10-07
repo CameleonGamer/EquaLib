@@ -32,7 +32,7 @@
   </script>
 
   <!-- Feuille de style Cyber-ASCII & CRT avec police Arista Pro -->
-  <link rel="stylesheet" href="retro_ascii.css?v=24">
+  <link rel="stylesheet" href="retro_ascii.css?v=25">
 
   <style>
     /* Animation du clignotement de la LED examen */
@@ -60,17 +60,17 @@
 
   <!-- Fond interactif de symboles mathématiques et chiffres avec lueur de curseur -->
   <canvas id="math-canvas" class="fixed inset-0 pointer-events-none z-0"></canvas>
-  <div id="cursor-glow" class="pointer-events-none fixed -translate-x-1/2 -translate-y-1/2 rounded-full w-[450px] h-[450px] bg-[radial-gradient(circle,rgba(56,189,248,0.22)_0%,rgba(168,85,247,0.12)_35%,transparent_70%)] blur-2xl z-10"></div>
+  <div id="cursor-glow" class="pointer-events-none fixed -translate-x-1/2 -translate-y-1/2 rounded-full w-[450px] h-[450px] bg-[radial-gradient(circle,rgba(56,189,248,0.22)_0%,rgba(168,85,247,0.12)_35%,transparent_70%)] blur-2xl z-[1]"></div>
 
   <!-- ==================== BARRE DE NAVIGATION OFFICIELLE ==================== -->
-  <header class="bg-slate-950/85 backdrop-blur-md border-b border-cyan-500/20 sticky top-0 z-50">
+  <header class="bg-slate-950/95 backdrop-blur-md border-b border-cyan-500/20 sticky top-0 z-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
       
       <!-- Logo et Identité avec icône π -->
       <div class="flex items-center gap-3.5">
         <a href="index.html" class="flex items-center gap-3 group">
           <div class="relative w-11 h-11 rounded-2xl overflow-hidden border-2 border-cyan-400/40 shadow-lg shadow-cyan-500/20 group-hover:scale-105 transition-all">
-            <img src="assets/logo.png?v=24" alt="EquaLib Pi Logo" class="w-full h-full object-cover">
+            <img src="assets/logo.png?v=25" alt="EquaLib Pi Logo" class="w-full h-full object-cover">
           </div>
           <div>
             <div class="flex items-center gap-2">
@@ -126,7 +126,7 @@
   </header>
 
   <!-- ==================== BANNIÈRE HERO ==================== -->
-  <section class="relative overflow-hidden border-b border-slate-800/80 bg-gradient-to-b from-slate-900 via-slate-950 to-slate-950 py-10">
+  <section class="relative z-10 overflow-hidden border-b border-slate-800/80 bg-gradient-to-b from-slate-900 via-slate-950 to-slate-950 py-10">
     <div class="absolute inset-0 bg-[radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-amber-500/10 via-transparent to-transparent pointer-events-none"></div>
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
@@ -255,7 +255,7 @@
   </section>
 
   <!-- ==================== STUDIO PRINCIPAL ==================== -->
-  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+  <main class="relative z-10 flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
 
     <!-- Grille de travail (2 colonnes principales) -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
@@ -283,7 +283,7 @@
         <!-- ================= ONGLET 1 : CATALOGUE PRINCIPAL ================= -->
         <div id="tab-view-catalog" class="space-y-4">
           <!-- Filtres par catégorie -->
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-900/60 p-3.5 rounded-2xl border border-slate-800">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-900 p-3.5 rounded-2xl border border-slate-800">
             <div>
               <h3 class="font-extrabold text-sm text-white flex items-center gap-2">
                 <span>⚡</span> Applications Pré-intégrées
@@ -477,7 +477,7 @@
           <div class="pt-4 border-t border-slate-800 space-y-3">
             <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400">Fonctionnalités Spéciales</h4>
             
-            <label class="flex items-start gap-3 p-3 rounded-xl bg-slate-950/40 border border-slate-800 hover:border-slate-700 cursor-pointer transition-all">
+            <label class="flex items-start gap-3 p-3 rounded-xl bg-slate-950 border border-slate-800 hover:border-slate-700 cursor-pointer transition-all">
               <input type="checkbox" id="opt-simulate-exam" checked class="mt-0.5 rounded text-amber-500 focus:ring-amber-400 accent-amber-500">
               <div>
                 <p class="text-xs font-bold text-slate-200">Simulation LED Mode Examen (1 Hz)</p>
@@ -487,7 +487,7 @@
               </div>
             </label>
 
-            <label class="flex items-start gap-3 p-3 rounded-xl bg-slate-950/40 border border-slate-800 hover:border-slate-700 cursor-pointer transition-all">
+            <label class="flex items-start gap-3 p-3 rounded-xl bg-slate-950 border border-slate-800 hover:border-slate-700 cursor-pointer transition-all">
               <input type="checkbox" id="opt-panic-key" checked class="mt-0.5 rounded text-amber-500 focus:ring-amber-400 accent-amber-500">
               <div>
                 <p class="text-xs font-bold text-slate-200">Touche de Panique Furtive (Double Back)</p>
@@ -533,7 +533,7 @@
             <span>⚡</span> Deux méthodes pour installer EquaLib :
           </div>
           <div class="space-y-3 text-slate-400 pl-1">
-            <div class="p-2.5 rounded-xl bg-slate-950/60 border border-amber-500/20 space-y-1">
+            <div class="p-2.5 rounded-xl bg-slate-950 border border-amber-500/20 space-y-1">
               <p class="font-bold text-slate-200 text-[11px] flex items-center gap-1.5">
                 <span class="text-amber-400">Option 1 (Direct en 1 clic) :</span> Flash USB WebUSB
               </p>
@@ -541,7 +541,7 @@
                 Branchez votre calculatrice en USB, cliquez sur <strong>« Flash USB Direct »</strong> puis sélectionnez votre NumWorks. L'application est téléversée et la calculatrice redémarre automatiquement !
               </p>
             </div>
-            <div class="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800 space-y-1">
+            <div class="p-2.5 rounded-xl bg-slate-950 border border-slate-800 space-y-1">
               <p class="font-bold text-slate-200 text-[11px] flex items-center gap-1.5">
                 <span class="text-emerald-400">Option 2 (Site officiel NumWorks) :</span> Glisser-déposer .nwa
               </p>
@@ -553,7 +553,7 @@
         </div>
 
         <!-- Raccourcis Clavier sur la calculatrice -->
-        <div class="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 text-xs text-slate-400 space-y-2">
+        <div class="p-4 rounded-2xl bg-slate-900 border border-slate-800 text-xs text-slate-400 space-y-2">
           <p class="font-bold text-slate-200">🕹️ Raccourcis dans EquaLib sur la calculatrice :</p>
           <ul class="space-y-1 text-[11px]">
             <li>• <strong class="text-slate-300">Toolbox</strong> : Activer / Désactiver la LED du Mode Examen (1 Hz)</li>
@@ -570,7 +570,7 @@
   </main>
 
   <!-- ==================== PIED DE PAGE ==================== -->
-  <footer class="border-t border-slate-800/80 bg-slate-950 py-8 text-center text-xs text-slate-500">
+  <footer class="relative z-10 border-t border-slate-800/80 bg-slate-950 py-8 text-center text-xs text-slate-500">
     <div class="max-w-7xl mx-auto px-4 space-y-3">
       <div class="flex flex-wrap items-center justify-center gap-2 text-slate-400 font-medium">
         <span>EquaLib Studio</span>
@@ -591,9 +591,9 @@
   <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
   <!-- Scripts -->
-  <script src="bundler.js?v=24"></script>
-  <script src="webusb.js?v=24"></script>
-  <script src="crt_math.js?v=24"></script>
-  <script src="app.js?v=24"></script>
+  <script src="bundler.js?v=25"></script>
+  <script src="webusb.js?v=25"></script>
+  <script src="crt_math.js?v=25"></script>
+  <script src="app.js?v=25"></script>
 </body>
 </html>

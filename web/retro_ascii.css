@@ -48,9 +48,9 @@ body {
   font-family: var(--font-arista) !important;
 }
 
-/* ==================== EFFETS CRT VINTAGE TV ==================== */
+/* ==================== EFFETS CRT VINTAGE TV (ISOLÉS SUR LE FOND) ==================== */
 
-/* 1. Lignes de balayage CRT (Scanlines) */
+/* 1. Lignes de balayage CRT (Scanlines) - Uniquement sur l'arrière-plan */
 .crt-scanlines {
   position: fixed;
   top: 0;
@@ -58,21 +58,21 @@ body {
   width: 100vw;
   height: 100vh;
   pointer-events: none;
-  z-index: 40;
+  z-index: 1; /* Inférieur à tous les éléments de texte et d'UI (z-10, z-20, z-50) */
   background: linear-gradient(
     rgba(18, 16, 16, 0) 50%,
-    rgba(0, 0, 0, 0.38) 50%
+    rgba(0, 0, 0, 0.45) 50%
   ),
   linear-gradient(
     90deg,
-    rgba(255, 0, 0, 0.025),
-    rgba(0, 255, 0, 0.015),
-    rgba(0, 0, 255, 0.025)
+    rgba(255, 0, 0, 0.03),
+    rgba(0, 255, 0, 0.02),
+    rgba(0, 0, 255, 0.03)
   );
   background-size: 100% 3px, 6px 100%;
 }
 
-/* 2. Vignette et courbure de tube cathodique (CRT Vignette) */
+/* 2. Vignette et tube cathodique (CRT Vignette) - Arrière-plan uniquement */
 .crt-vignette {
   position: fixed;
   top: 0;
@@ -80,9 +80,9 @@ body {
   width: 100vw;
   height: 100vh;
   pointer-events: none;
-  z-index: 41;
+  z-index: 1; /* Inférieur à tous les éléments de texte et d'UI */
   box-shadow: 
-    inset 0 0 120px rgba(0, 0, 0, 0.85),
+    inset 0 0 120px rgba(0, 0, 0, 0.9),
     inset 0 0 50px rgba(0, 0, 0, 0.95);
 }
 
@@ -106,8 +106,8 @@ body {
 /* ==================== CADRES ET BORDURES ASCII ==================== */
 
 .ascii-box {
-  background: rgba(15, 23, 42, 0.88);
-  backdrop-filter: blur(8px);
+  background: rgba(15, 23, 42, 0.96); /* Opaque pour garantir une lisibilité absolue des textes */
+  backdrop-filter: blur(12px);
   border: 1px solid rgba(56, 189, 248, 0.25);
   border-radius: 16px;
   position: relative;

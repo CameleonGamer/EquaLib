@@ -136,7 +136,7 @@
     if (!glow) {
       glow = document.createElement('div');
       glow.id = 'cursor-glow';
-      glow.className = 'pointer-events-none fixed -translate-x-1/2 -translate-y-1/2 rounded-full w-[450px] h-[450px] bg-[radial-gradient(circle,rgba(56,189,248,0.20)_0%,rgba(168,85,247,0.12)_35%,transparent_70%)] blur-2xl z-10';
+      glow.className = 'pointer-events-none fixed -translate-x-1/2 -translate-y-1/2 rounded-full w-[450px] h-[450px] bg-[radial-gradient(circle,rgba(56,189,248,0.20)_0%,rgba(168,85,247,0.12)_35%,transparent_70%)] blur-2xl z-[1]';
       glow.style.transform = 'translate(-50%, -50%)';
       document.body.appendChild(glow);
     }

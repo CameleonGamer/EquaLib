@@ -32,7 +32,7 @@
   </script>
 
   <!-- Feuille de style Cyber-ASCII & CRT avec police Arista Pro -->
-  <link rel="stylesheet" href="retro_ascii.css?v=24">
+  <link rel="stylesheet" href="retro_ascii.css?v=25">
 </head>
 <body class="min-h-screen text-slate-100 flex flex-col justify-between selection:bg-cyan-500 selection:text-black">
 
@@ -42,17 +42,17 @@
 
   <!-- Fond interactif de symboles mathématiques et chiffres -->
   <canvas id="math-canvas" class="fixed inset-0 pointer-events-none z-0"></canvas>
-  <div id="cursor-glow" class="pointer-events-none fixed -translate-x-1/2 -translate-y-1/2 rounded-full w-[450px] h-[450px] bg-[radial-gradient(circle,rgba(56,189,248,0.22)_0%,rgba(168,85,247,0.12)_35%,transparent_70%)] blur-2xl z-10"></div>
+  <div id="cursor-glow" class="pointer-events-none fixed -translate-x-1/2 -translate-y-1/2 rounded-full w-[450px] h-[450px] bg-[radial-gradient(circle,rgba(56,189,248,0.22)_0%,rgba(168,85,247,0.12)_35%,transparent_70%)] blur-2xl z-[1]"></div>
 
   <!-- ==================== HEADER OFFICIEL CYBER-ASCII ==================== -->
-  <header class="relative z-20 border-b border-cyan-500/20 bg-slate-950/80 backdrop-blur-md">
+  <header class="relative z-20 border-b border-cyan-500/20 bg-slate-950/95 backdrop-blur-md">
     <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
       
       <!-- Logo et Titre avec icône π -->
       <div class="flex items-center gap-3">
         <a href="index.html" class="flex items-center gap-3 group">
           <div class="relative w-11 h-11 rounded-2xl overflow-hidden border-2 border-cyan-400/40 shadow-lg shadow-cyan-500/20 group-hover:scale-105 transition-all">
-            <img src="assets/logo.png?v=24" alt="EquaLib Pi Logo" class="w-full h-full object-cover">
+            <img src="assets/logo.png?v=25" alt="EquaLib Pi Logo" class="w-full h-full object-cover">
           </div>
           <div>
             <div class="flex items-center gap-2">
@@ -238,8 +238,8 @@
   </footer>
 
   <!-- Scripts -->
-  <script src="nwa_linker.js?v=24"></script>
-  <script src="crt_math.js?v=24"></script>
+  <script src="nwa_linker.js?v=25"></script>
+  <script src="crt_math.js?v=25"></script>
   
   <script>
     document.addEventListener('DOMContentLoaded', () => {
