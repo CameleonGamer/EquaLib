@@ -344,12 +344,18 @@ int main(int argc, char* argv[]) {
                 run_tetris_app();
             } else if (type == APP_TYPE_MINESWEEPER) {
                 run_minesweeper_app();
-            } else if (type == APP_TYPE_TEXT_VIEWER) {
+            } else if (type == APP_TYPE_PYTHON || type == APP_TYPE_TEXT_VIEWER) {
                 const char* data_ptr = NULL;
                 if (app->data_size > 0) {
                     data_ptr = (const char*)(0x90180000 + app->data_offset);
                 }
-                run_text_viewer_app((const char*)app->name, data_ptr, app->data_size);
+                /* Détection intelligente : si c'est du code Python, l'exécuter avec le moteur Python */
+                if (type == APP_TYPE_PYTHON || (data_ptr && app->data_size > 0 &&
+                    (data_ptr[0] == '#' || data_ptr[0] == 'i' || data_ptr[0] == 'd' || data_ptr[0] == 'f' || data_ptr[0] == 'k'))) {
+                    run_python_app((const char*)app->name, data_ptr, app->data_size);
+                } else {
+                    run_text_viewer_app((const char*)app->name, data_ptr, app->data_size);
+                }
             }
 
             while (eadk_keyboard_scan() != 0) {

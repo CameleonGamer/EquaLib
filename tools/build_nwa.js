@@ -17,6 +17,7 @@ const srcFiles = [
   'app_snake.c',
   'app_tetris.c',
   'app_minesweeper.c',
+  'app_python.c',
   'eq_font.c',
   'mini_libc.c'
 ];

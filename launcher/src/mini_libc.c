@@ -113,3 +113,12 @@ int snprintf(char* buf, size_t max, const char* fmt, ...) {
     va_end(args);
     return ret;
 }
+
+float __aeabi_ul2f(unsigned long long val) {
+    float f = (float)(uint32_t)(val & 0xFFFFFFFFULL);
+    uint32_t hi = (uint32_t)(val >> 32);
+    if (hi > 0) {
+        f += (float)hi * 4294967296.0f;
+    }
+    return f;
+}

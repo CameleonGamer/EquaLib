@@ -17,6 +17,7 @@
 #define APP_TYPE_SNAKE       9
 #define APP_TYPE_TETRIS      10
 #define APP_TYPE_MINESWEEPER 11
+#define APP_TYPE_PYTHON      12
 
 #define MAX_MANIFEST_APPS 12
 

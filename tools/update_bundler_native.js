@@ -138,19 +138,21 @@ class EquaLibBundler {
       else if (appIdLower.includes('snake') || appNameLower.includes('serpent') || appNameLower.includes('snake')) appType = 9;
       else if (appIdLower.includes('tetris') || appNameLower.includes('tetris')) appType = 10;
       else if (appIdLower.includes('minesweeper') || appIdLower.includes('demineur') || appNameLower.includes('démineur') || appNameLower.includes('demineur')) appType = 11;
+      else if (app.format === 'NWS' || (app.id && app.id.indexOf('.nws') !== -1) || (app.name && app.name.indexOf('.nws') !== -1)) appType = 12; // Type 12: Exécution Python native
 
       u8[entryOffset + 132] = appType;
 
-      // 6. Si type 6 (script/note personnalisée), extraction et injection du contenu
-      if (appType === 6) {
+      // 6. Si type 6 (notes/texte) ou type 12 (script Python exécutable), extraction et injection du code
+      if (appType === 6 || appType === 12) {
         let scriptText = '';
         if (app.data) {
           try {
             const rawStr = new TextDecoder('utf-8').decode(app.data);
             try {
               const parsed = JSON.parse(rawStr);
-              if (parsed.scripts && parsed.scripts[0] && parsed.scripts[0].text) {
-                scriptText = parsed.scripts[0].text;
+              if (parsed.scripts && parsed.scripts.length > 0) {
+                scriptText = parsed.scripts.map(s => s.text).join('\\n\\n');
+                appType = 12; // C'est un vrai script Python exécutable !
               } else if (parsed.description) {
                 scriptText = '# ' + (parsed.name || app.name) + '\\n\\n' + parsed.description;
               } else {
@@ -165,6 +167,13 @@ class EquaLibBundler {
         } else if (app.description) {
           scriptText = '# ' + app.name + '\\n' + app.description + '\\n';
         }
+
+        // Si le contenu commence par du code Python (import, def, while, #), forcer type 12
+        if (scriptText && (scriptText.includes('import ') || scriptText.includes('def ') || scriptText.includes('kandinsky') || scriptText.includes('ion.'))) {
+          appType = 12;
+        }
+
+        u8[entryOffset + 132] = appType;
 
         if (scriptText) {
           const textBytes = new TextEncoder().encode(scriptText);
