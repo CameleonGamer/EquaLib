@@ -8,11 +8,17 @@ const p7481 = nwlinkCode.indexOf('7481:(t,e,r)=>{');
 const p3825 = nwlinkCode.indexOf('3825:(t,e,r)=>{');
 let code7481 = nwlinkCode.substring(p7481 + '7481:(t,e,r)=>{'.length, p3825 - 1).trim();
 if (code7481.endsWith('}')) code7481 = code7481.slice(0, -1);
+code7481 = code7481
+  .replace(/\|\|__filename/g, "||(typeof __filename!=='undefined'?__filename:'')")
+  .replace(/__dirname\+"/g, '(typeof __dirname!=="undefined"?__dirname:"")+"');
 
 // Module 3825 (objcopy emscripten)
 const p7757 = nwlinkCode.indexOf('7757:(t,e,r)=>{');
 let code3825 = nwlinkCode.substring(p3825 + '3825:(t,e,r)=>{'.length, p7757 - 1).trim();
 if (code3825.endsWith('}')) code3825 = code3825.slice(0, -1);
+code3825 = code3825
+  .replace(/\|\|__filename/g, "||(typeof __filename!=='undefined'?__filename:'')")
+  .replace(/__dirname\+"/g, '(typeof __dirname!=="undefined"?__dirname:"")+"');
 
 // Module 8006 (eadk.o data)
 const p8006 = nwlinkCode.indexOf('8006:t=>{');
@@ -98,7 +104,7 @@ const outputContent = `/**
   const factoryLd = (function() {
     const module = { exports: {} };
     const r = function(id) {
-      if (id === 1017) return { dirname: () => '' };
+      if (id === 1017) return { dirname: () => '', normalize: (p) => p };
       if (id === 7147) return {};
       return {};
     };
@@ -112,7 +118,7 @@ const outputContent = `/**
   const factoryObjcopy = (function() {
     const module = { exports: {} };
     const r = function(id) {
-      if (id === 1017) return { dirname: () => '' };
+      if (id === 1017) return { dirname: () => '', normalize: (p) => p };
       if (id === 7147) return {};
       return {};
     };
@@ -134,10 +140,33 @@ const outputContent = `/**
   // 4. Générateur de script de linkage linker.ld
   const generateLinkerScript = ${linkerScriptTemplate.toString()};
 
+  // Cache en mémoire des binaires wasm pour éviter les re-téléchargements
+  let cachedLdWasm = null;
+  let cachedObjcopyWasm = null;
+
+  async function fetchWasmBinary(url) {
+    if (typeof fetch === 'function') {
+      try {
+        const resp = await fetch(url);
+        if (resp.ok) return await resp.arrayBuffer();
+      } catch (e) {
+        console.warn('Échec fetch ' + url + ':', e);
+      }
+    }
+    return null;
+  }
+
   // 5. Exécution de ld.wasm
-  function runLd(args, inputs, wasmUrl = 'toolchain/ld.wasm') {
+  async function runLd(args, inputs, wasmUrl = 'toolchain/ld.wasm', customWasmBinary = null) {
+    let wasmBinary = customWasmBinary || cachedLdWasm;
+    if (!wasmBinary) {
+      wasmBinary = await fetchWasmBinary(wasmUrl);
+      if (wasmBinary) cachedLdWasm = wasmBinary;
+    }
+
     return new Promise((resolve, reject) => {
       let modObj = {
+        wasmBinary: wasmBinary || undefined,
         locateFile: function(path) { return wasmUrl; },
         preRun: function() {
           for (const [name, content] of Object.entries(inputs)) {
@@ -164,9 +193,16 @@ const outputContent = `/**
   }
 
   // 6. Exécution de objcopy.wasm
-  function runObjcopy(args, inputData, wasmUrl = 'toolchain/objcopy.wasm') {
+  async function runObjcopy(args, inputData, wasmUrl = 'toolchain/objcopy.wasm', customWasmBinary = null) {
+    let wasmBinary = customWasmBinary || cachedObjcopyWasm;
+    if (!wasmBinary) {
+      wasmBinary = await fetchWasmBinary(wasmUrl);
+      if (wasmBinary) cachedObjcopyWasm = wasmBinary;
+    }
+
     return new Promise((resolve, reject) => {
       let modObj = {
+        wasmBinary: wasmBinary || undefined,
         locateFile: function(path) { return wasmUrl; },
         preRun: function() {
           modObj.FS.writeFile('input.dat', inputData);
@@ -235,8 +271,8 @@ const outputContent = `/**
   async function convertNwaToBin(nwaBytes, options = {}) {
     const flashStart = options.flashStart || '0x90180000';
     const flashLength = options.flashLength || '8M';
-    const ramStart = options.ramStart || '0x240118a4';
-    const ramLength = options.ramLength || '256K';
+    const ramStart = options.ramStart || '0x24020000';
+    const ramLength = options.ramLength || '128K';
 
     const linkerScript = generateLinkerScript({ flashStart, flashLength, ramStart, ramLength });
 
@@ -248,14 +284,16 @@ const outputContent = `/**
         'app.nwa': nwaBytes,
         'eadk.o': eadkObjectData
       },
-      options.ldWasmUrl || 'toolchain/ld.wasm'
+      options.ldWasmUrl || 'toolchain/ld.wasm',
+      options.ldWasmBinary || null
     );
 
     // Étape 2 : Extraction en binaire plat
     const binBytes = await runObjcopy(
       ['--output-target', 'binary'],
       elfBytes,
-      options.objcopyWasmUrl || 'toolchain/objcopy.wasm'
+      options.objcopyWasmUrl || 'toolchain/objcopy.wasm',
+      options.objcopyWasmBinary || null
     );
 
     return binBytes;

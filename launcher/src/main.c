@@ -284,6 +284,44 @@ void run_native_app(const char* name, const uint8_t* bin_ptr, uint32_t bin_size)
             return;
         }
 
+        /* Verification de relogement de l'adresse Flash */
+        /* Dans EADK _start, l'adresse flash de compilation de .data est stockee a entry_offset + 0x38 */
+        if (entry_offset + 0x3C <= bin_size) {
+            uint32_t compiled_flash_data = *(const uint32_t*)(bin_ptr + entry_offset + 0x38);
+            uint32_t actual_flash_base = (uint32_t)bin_ptr;
+            /* Si l'application a ete compilee pour une base Flash differente (ex: 0x90180000 au lieu de l'emplacement reel) */
+            if (compiled_flash_data < actual_flash_base || compiled_flash_data > actual_flash_base + bin_size + 0x1000) {
+                eadk_display_push_rect_uniform(eadk_screen_rect, COLOR_CARD_BG);
+                eadk_rect_t bar = {0, 0, EADK_SCREEN_WIDTH, 22};
+                eadk_display_push_rect_uniform(bar, 0xD800);
+                eadk_point_t pt_title = {8, 5};
+                eadk_display_draw_string(name ? name : "Application Native", pt_title, false, eadk_color_white, 0xD800);
+
+                eadk_point_t p1 = {12, 35};
+                eadk_display_draw_string("Erreur d'adresse Flash :", p1, false, eadk_color_black, COLOR_CARD_BG);
+                eadk_point_t p2 = {12, 60};
+                eadk_display_draw_string("Binaire non reloge a cet emplacement.", p2, false, 0x7BEF, COLOR_CARD_BG);
+                eadk_point_t p3 = {12, 90};
+                eadk_display_draw_string("Pour fonctionner dans un Pack EquaLib,", p3, false, eadk_color_black, COLOR_CARD_BG);
+                eadk_point_t p4 = {12, 115};
+                eadk_display_draw_string("importez le fichier original .nwa sur le site", p4, false, 0x05E0, COLOR_CARD_BG);
+                eadk_point_t p5 = {12, 140};
+                eadk_display_draw_string("pour un linkage relogeable automatique.", p5, false, eadk_color_black, COLOR_CARD_BG);
+                eadk_point_t p6 = {12, 190};
+                eadk_display_draw_string("[Back] : Revenir au Hub", p6, false, 0xD800, COLOR_CARD_BG);
+
+                while (true) {
+                    eadk_keyboard_state_t k = eadk_keyboard_scan();
+                    if (eadk_keyboard_key_down(k, eadk_key_back) || eadk_keyboard_key_down(k, eadk_key_home)) {
+                        break;
+                    }
+                    eadk_timing_msleep(20);
+                }
+                while (eadk_keyboard_scan() != 0) eadk_timing_msleep(20);
+                return;
+            }
+        }
+
         /* Attendre le relâchement complet des touches avant exécution */
         while (eadk_keyboard_scan() != 0) {
             eadk_timing_msleep(20);

@@ -238,8 +238,8 @@
   </footer>
 
   <!-- Scripts -->
-  <script src="nwa_linker.js?v=25"></script>
-  <script src="crt_math.js?v=25"></script>
+  <script src="nwa_linker.js?v=26"></script>
+  <script src="crt_math.js?v=26"></script>
   
   <script>
     document.addEventListener('DOMContentLoaded', () => {
@@ -363,14 +363,22 @@
 
       // Ajouter directement au pack
       sendToPackBtn.addEventListener('click', () => {
-        if (!convertedBinBytes || !currentFile) return;
-        const binName = currentFile.name.replace(/\.nwa$/i, '');
+        if (!currentBytes || !currentFile) return;
+        const appName = currentMetadata ? currentMetadata.appName : currentFile.name.replace(/\.nwa$/i, '');
         
         // Stockage temporaire dans sessionStorage pour index.html
-        const b64 = btoa(String.fromCharCode.apply(null, convertedBinBytes));
+        // On passe les octets .nwa originaux pour relogement dynamique à l'offset flash exact du pack !
+        let b64 = '';
+        const chunkSize = 8192;
+        for (let i = 0; i < currentBytes.length; i += chunkSize) {
+          b64 += String.fromCharCode.apply(null, currentBytes.subarray(i, i + chunkSize));
+        }
+        b64 = btoa(b64);
+
         sessionStorage.setItem('equalib_imported_app', JSON.stringify({
-          name: currentMetadata ? currentMetadata.appName : binName,
-          filename: currentFile.name.replace(/\.nwa$/i, '.bin'),
+          name: appName,
+          filename: currentFile.name,
+          format: 'NWA',
           b64Data: b64
         }));
 

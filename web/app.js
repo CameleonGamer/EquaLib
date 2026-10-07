@@ -184,6 +184,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const binaryStr = atob(pApp.b64Data);
         const u8 = new Uint8Array(binaryStr.length);
         for (let i = 0; i < binaryStr.length; i++) u8[i] = binaryStr.charCodeAt(i);
+        const pFormat = pApp.format || 'NWA';
         const importedConverted = {
           id: 'custom_' + Date.now(),
           name: pApp.name || 'App Convertie',
@@ -191,14 +192,14 @@ document.addEventListener('DOMContentLoaded', async () => {
           version: 'Natif',
           size_kb: Math.max(1, Math.round(u8.byteLength / 1024)),
           category: 'Natif ARM',
-          format: 'BIN',
-          description: `Application convertie depuis ${pApp.filename}`,
+          format: pFormat,
+          description: `Application issue de ${pApp.filename}`,
           icon_initial: '⚡',
           color: '#10B981',
           data: u8
         };
         addAppToSelection(importedConverted);
-        showToast(`✓ "${importedConverted.name}" ajouté avec succès depuis le convertisseur !`, 'success');
+        showToast(`✓ "${importedConverted.name}" ajouté avec succès au Pack EquaLib !`, 'success');
       } catch (e) {
         console.error('Erreur importation converter.html :', e);
       }

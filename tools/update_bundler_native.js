@@ -61,7 +61,7 @@ class EquaLibBundler {
   /**
    * Injecte les applications sélectionnées dans le manifeste binaire
    */
-  patchManifest(rawBytes, apps = []) {
+  async patchManifest(rawBytes, apps = []) {
     // Créer une copie indépendante du buffer
     const u8 = new Uint8Array(rawBytes.length);
     u8.set(rawBytes, 0);
@@ -132,7 +132,7 @@ class EquaLibBundler {
       const isNwa = (app.format === 'NWA') || (app.category === 'NWA') || appIdLower.includes('.nwa') || appNameLower.includes('.nwa');
       const isNative = isBin || isNwa || (app.data && app.data.length >= 4 && (
         (app.data[0] === 0xBA && app.data[1] === 0xBE && app.data[2] === 0xC0 && app.data[3] === 0xDE) || // 0xDEC0BEBA EADK flat binary
-        (app.data[0] === 0x7F && app.data[1] === 0x45 && app.data[2] === 0x4C && app.data[3] === 0x46)    // \x7fELF relocatable object
+        (app.data[0] === 0x7F && app.data[1] === 0x45 && app.data[2] === 0x4C && app.data[3] === 0x46)    // ELF relocatable object
       ));
 
       if (appIdLower === 'mariokart' || appIdLower.includes('mario') || appNameLower.includes('mario')) {
@@ -166,7 +166,32 @@ class EquaLibBundler {
       // 6. Gestion du payload binaire (type 13) vs texte/script (type 6 ou 12)
       if (appType === 13) {
         if (app.data && app.data.length > 0) {
-          const binBytes = (app.data instanceof Uint8Array) ? app.data : new Uint8Array(app.data);
+          let binBytes = (app.data instanceof Uint8Array) ? app.data : new Uint8Array(app.data);
+
+          // Détection d'un fichier ELF .nwa qui doit être lié dynamiquement à l'adresse Flash du pack
+          const isElf = (binBytes.length >= 4 && binBytes[0] === 0x7F && binBytes[1] === 0x45 && binBytes[2] === 0x4C && binBytes[3] === 0x46);
+          if (isElf) {
+            const targetFlash = 0x90180000 + currentExtraOffset;
+            const targetRam = 0x24020000 + (extraPayloads.length * 0x8000);
+            console.log('[EquaLib Bundler] Liaison dynamique de "' + app.name + '" pour Flash 0x' + targetFlash.toString(16) + ', RAM 0x' + targetRam.toString(16) + '...');
+            if (typeof EquaLibLinker !== 'undefined' && EquaLibLinker.convertNwaToBin) {
+              try {
+                binBytes = await EquaLibLinker.convertNwaToBin(binBytes, {
+                  flashStart: '0x' + targetFlash.toString(16),
+                  ramStart: '0x' + targetRam.toString(16),
+                  ldWasmUrl: 'toolchain/ld.wasm',
+                  objcopyWasmUrl: 'toolchain/objcopy.wasm'
+                });
+                console.log('[EquaLib Bundler] ✓ Binaire lié avec succès (' + binBytes.length + ' octets) !');
+              } catch (linkErr) {
+                console.error('[EquaLib Bundler] Erreur lors du linkage de "' + app.name + '":', linkErr);
+                throw new Error('Échec du linkage pour "' + app.name + '": ' + linkErr.message);
+              }
+            } else {
+              console.warn('[EquaLib Bundler] EquaLibLinker non disponible, inclusion brute.');
+            }
+          }
+
           const pad = (4 - (binBytes.length % 4)) % 4;
           const totalPayload = new Uint8Array(binBytes.length + pad);
           totalPayload.set(binBytes, 0);
@@ -293,7 +318,7 @@ class EquaLibBundler {
       rawData = this.base64ToUint8Array(b64);
     }
 
-    const patchedBytes = this.patchManifest(rawData, apps);
+    const patchedBytes = await this.patchManifest(rawData, apps);
     const totalSize = patchedBytes.byteLength;
 
     console.log(\`[EquaLib] Pack personnalisé prêt (\${(totalSize / 1024).toFixed(1)} Ko, \${apps.length} apps)\`);
