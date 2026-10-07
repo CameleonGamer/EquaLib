@@ -1,13 +1,13 @@
 {
   "name": "Tetris NumWorks",
-  "description": "Tetris complet avec gestion des rotations",
+  "description": "Le jeu de briques legendaire avec pieces, chutes et score",
   "author": "NW Retro",
-  "version": "1.0",
-  "created_at": "2026-10-01T16:21:13.074Z",
+  "version": "1.5",
+  "created_at": "2026-10-07T16:00:00.000Z",
   "scripts": [
     {
       "name": "tetris.py",
-      "text": "# Tetris NumWorks\nimport kandinsky as kd\nimport ion\nimport time\n\nkd.fill_rect(0, 0, 320, 240, kd.color(20, 20, 35))\nkd.draw_string(\"TETRIS NUMWORKS\", 85, 30, kd.color(0, 200, 255), kd.color(20, 20, 35))\nkd.draw_string(\"Haut: Rotation | Bas: Chute\", 40, 100, kd.color(255, 255, 255), kd.color(20, 20, 35))\nkd.draw_string(\"Gauche/Droite: Deplacer\", 55, 130, kd.color(255, 255, 255), kd.color(20, 20, 35))\n"
+      "text": "# Tetris NumWorks\nimport kandinsky as kd\nimport ion\nimport time\n\nkd.fill_rect(0, 0, 320, 240, kd.color(15, 15, 25))\nkd.draw_string(\"TETRIS NW\", 115, 10, kd.color(0, 200, 255), kd.color(15, 15, 25))\nkd.draw_string(\"Fleches: Deplacer/Tourner\", 40, 30, kd.color(180, 180, 200), kd.color(15, 15, 25))\n\n# Zone de jeu 10x20\nkd.fill_rect(100, 48, 120, 185, kd.color(25, 25, 40))\nkd.fill_rect(98, 48, 2, 185, kd.color(100, 100, 150))\nkd.fill_rect(220, 48, 2, 185, kd.color(100, 100, 150))\nkd.fill_rect(98, 233, 124, 2, kd.color(100, 100, 150))\n\npiece_x = 150\npiece_y = 50\npiece_col = kd.color(255, 200, 0)\nscore = 0\n\nwhile True:\n    if ion.keydown(ion.KEY_BACK):\n        break\n    \n    # Effacer piece a l'ancienne position\n    kd.fill_rect(piece_x, piece_y, 16, 16, kd.color(25, 25, 40))\n    \n    if ion.keydown(ion.KEY_LEFT) and piece_x > 105:\n        piece_x -= 10; time.sleep(0.1)\n    if ion.keydown(ion.KEY_RIGHT) and piece_x < 200:\n        piece_x += 10; time.sleep(0.1)\n    if ion.keydown(ion.KEY_DOWN):\n        piece_y += 6\n    \n    piece_y += 4\n    \n    # Piece au sol : se fige et nouvelle piece\n    if piece_y >= 215:\n        kd.fill_rect(piece_x, 215, 16, 16, piece_col)\n        score += 10\n        kd.draw_string(str(score), 240, 70, kd.color(255, 255, 255), kd.color(15, 15, 25))\n        piece_x = 150\n        piece_y = 50\n    \n    # Dessiner piece\n    kd.fill_rect(piece_x, piece_y, 16, 16, piece_col)\n    time.sleep(0.04)\n"
     }
   ]
 }

@@ -1,0 +1,13 @@
+{
+  "name": "Space Invaders",
+  "description": "Defendez la Terre contre les vagues extraterrestres",
+  "author": "Tomohiro Nishikado / NW",
+  "version": "1.0",
+  "created_at": "2026-10-07T16:00:00.000Z",
+  "scripts": [
+    {
+      "name": "space_invaders.py",
+      "text": "# Space Invaders NumWorks\nimport kandinsky as kd\nimport ion\nimport time\n\nkd.fill_rect(0, 0, 320, 240, kd.color(0, 0, 15))\nkd.draw_string(\"SPACE INVADERS NW\", 70, 20, kd.color(0, 255, 150), kd.color(0, 0, 15))\nkd.draw_string(\"Gauche/Droite: Navire | OK: Tirer\", 10, 60, kd.color(200, 200, 200), kd.color(0, 0, 15))\n\nship_x = 150\nlaser_x = 0\nlaser_y = 0\nlaser_active = False\nalien_x = 100\nalien_y = 90\nalien_dx = 3\nalien_alive = True\nscore = 0\n\nwhile True:\n    if ion.keydown(ion.KEY_BACK):\n        break\n    if ion.keydown(ion.KEY_LEFT) and ship_x > 10:\n        kd.fill_rect(ship_x, 210, 20, 12, kd.color(0, 0, 15))\n        ship_x -= 5\n    if ion.keydown(ion.KEY_RIGHT) and ship_x < 290:\n        kd.fill_rect(ship_x, 210, 20, 12, kd.color(0, 0, 15))\n        ship_x += 5\n    if ion.keydown(ion.KEY_OK) and not laser_active:\n        laser_active = True\n        laser_x = ship_x + 9\n        laser_y = 205\n    \n    # Dessiner vaisseau\n    kd.fill_rect(ship_x, 210, 20, 12, kd.color(0, 255, 0))\n    kd.fill_rect(ship_x + 8, 204, 4, 6, kd.color(0, 255, 0))\n    \n    # Laser\n    if laser_active:\n        kd.fill_rect(laser_x, laser_y, 2, 8, kd.color(0, 0, 15))\n        laser_y -= 8\n        if laser_y < 10:\n            laser_active = False\n        else:\n            kd.fill_rect(laser_x, laser_y, 2, 8, kd.color(255, 255, 0))\n    \n    # Alien\n    if alien_alive:\n        kd.fill_rect(alien_x, alien_y, 24, 16, kd.color(0, 0, 15))\n        alien_x += alien_dx\n        if alien_x >= 280 or alien_x <= 20:\n            alien_dx = -alien_dx\n            alien_y += 10\n        kd.fill_rect(alien_x, alien_y, 24, 16, kd.color(255, 50, 50))\n        \n        # Collision laser - alien\n        if laser_active and abs(laser_x - alien_x - 12) < 14 and abs(laser_y - alien_y - 8) < 12:\n            alien_alive = False\n            laser_active = False\n            kd.fill_rect(alien_x, alien_y, 24, 16, kd.color(0, 0, 15))\n            score += 10\n            kd.draw_string(str(score), 260, 20, kd.color(255, 255, 255), kd.color(0, 0, 15))\n    else:\n        alien_x = 40\n        alien_y = 80\n        alien_alive = True\n    \n    time.sleep(0.03)\n"
+    }
+  ]
+}

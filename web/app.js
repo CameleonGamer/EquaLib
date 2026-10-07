@@ -620,27 +620,34 @@ document.addEventListener('DOMContentLoaded', async () => {
   async function handleCustomFiles(files) {
     for (const file of files) {
       const ext = file.name.split('.').pop().toLowerCase();
-      if (!['nwa', 'nws', 'py'].includes(ext)) {
-        showToast(`Format .${ext} non supporté (utilisez .nwa ou .nws)`, 'error');
+      if (!['nwa', 'nws', 'py', 'json', 'txt'].includes(ext)) {
+        showToast(`Format .${ext} non supporté (utilisez .nws, .py ou .nwa)`, 'error');
         continue;
       }
 
       const buffer = await file.arrayBuffer();
+      const format = (ext === 'py' || ext === 'txt') ? 'PY' : ext.toUpperCase();
       const customApp = {
         id: 'custom_' + Date.now() + Math.random().toString(36).substr(2, 4),
         name: file.name.replace(/\.[^/.]+$/, ""),
         author: "Fichier importé",
         version: "Custom",
         size_kb: Math.max(1, Math.round(buffer.byteLength / 1024)),
-        category: ext.toUpperCase(),
+        category: format,
+        format: format,
         description: `Application importée manuellement (${file.name})`,
         icon_initial: '📁',
         color: "#0284C7",
         data: new Uint8Array(buffer)
       };
 
+      if (customApp.name.toLowerCase().includes('mario')) {
+        customApp.id = 'mariokart';
+        customApp.category = 'Jeu / Arcade';
+      }
+
       addAppToSelection(customApp);
-      showToast(`"${file.name}" ajouté avec succès !`, 'success');
+      showToast(`"${file.name}" ajouté avec succès à votre Pack !`, 'success');
       switchTab('catalog');
     }
   }

@@ -1,0 +1,13 @@
+{
+  "name": "Pong Arcade",
+  "description": "Le jeu d'arcade mythique Pong a 60 FPS sur NumWorks",
+  "author": "NW Arcade",
+  "version": "1.2",
+  "created_at": "2026-10-07T16:00:00.000Z",
+  "scripts": [
+    {
+      "name": "pong.py",
+      "text": "# Pong Arcade NumWorks\nimport kandinsky as kd\nimport ion\nimport time\n\nkd.fill_rect(0, 0, 320, 240, kd.color(0, 0, 0))\nkd.draw_string(\"PONG RETRO\", 110, 20, kd.color(255, 255, 255), kd.color(0, 0, 0))\nkd.draw_string(\"Haut/Bas: Raquette | Back: Quitter\", 20, 100, kd.color(200, 200, 200), kd.color(0, 0, 0))\n\npaddle_y = 90\npaddle_h = 45\nball_x = 160\nball_y = 120\nbvx = 4\nbvy = 3\nscore = 0\n\nwhile True:\n    if ion.keydown(ion.KEY_BACK):\n        break\n    if ion.keydown(ion.KEY_UP) and paddle_y > 10:\n        kd.fill_rect(20, paddle_y, 8, paddle_h, kd.color(0, 0, 0))\n        paddle_y -= 5\n    if ion.keydown(ion.KEY_DOWN) and paddle_y < 185:\n        kd.fill_rect(20, paddle_y, 8, paddle_h, kd.color(0, 0, 0))\n        paddle_y += 5\n    \n    # Dessiner raquette\n    kd.fill_rect(20, paddle_y, 8, paddle_h, kd.color(255, 255, 255))\n    \n    # Effacer balle\n    kd.fill_rect(ball_x, ball_y, 6, 6, kd.color(0, 0, 0))\n    ball_x += bvx\n    ball_y += bvy\n    \n    # Rebond haut/bas\n    if ball_y <= 5 or ball_y >= 230:\n        bvy = -bvy\n    \n    # Rebond mur droit\n    if ball_x >= 310:\n        bvx = -bvx\n    \n    # Collision raquette\n    if ball_x <= 28 and ball_x >= 20 and ball_y >= paddle_y and ball_y <= paddle_y + paddle_h:\n        bvx = 4\n        score += 1\n        kd.draw_string(str(score), 150, 10, kd.color(255, 255, 0), kd.color(0, 0, 0))\n    \n    # Perdu a gauche : reset\n    if ball_x < 5:\n        ball_x = 160\n        ball_y = 120\n        bvx = 4\n    \n    # Dessiner balle\n    kd.fill_rect(ball_x, ball_y, 6, 6, kd.color(255, 255, 255))\n    time.sleep(0.025)\n"
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "name": "Casse-Briques (Breakout)",
+  "description": "Detruisez toutes les briques avec la balle et votre raquette",
+  "author": "Atari / NW Port",
+  "version": "1.0",
+  "created_at": "2026-10-07T16:00:00.000Z",
+  "scripts": [
+    {
+      "name": "breakout.py",
+      "text": "# Casse-Briques NumWorks\nimport kandinsky as kd\nimport ion\nimport time\n\nkd.fill_rect(0, 0, 320, 240, kd.color(10, 10, 20))\nkd.draw_string(\"CASSE-BRIQUES\", 95, 10, kd.color(255, 200, 0), kd.color(10, 10, 20))\n\n# Dessiner mur de briques\nkd.fill_rect(20, 40, 50, 14, kd.color(255, 50, 50))\nkd.fill_rect(80, 40, 50, 14, kd.color(255, 120, 0))\nkd.fill_rect(140, 40, 50, 14, kd.color(255, 220, 0))\nkd.fill_rect(200, 40, 50, 14, kd.color(0, 220, 100))\nkd.fill_rect(260, 40, 40, 14, kd.color(0, 180, 255))\n\nkd.fill_rect(20, 60, 50, 14, kd.color(255, 50, 50))\nkd.fill_rect(80, 60, 50, 14, kd.color(255, 120, 0))\nkd.fill_rect(140, 60, 50, 14, kd.color(255, 220, 0))\nkd.fill_rect(200, 60, 50, 14, kd.color(0, 220, 100))\nkd.fill_rect(260, 60, 40, 14, kd.color(0, 180, 255))\n\npaddle_x = 130\npaddle_w = 55\nball_x = 160\nball_y = 150\nbvx = 3\nbvy = -3\nscore = 0\n\nwhile True:\n    if ion.keydown(ion.KEY_BACK):\n        break\n    if ion.keydown(ion.KEY_LEFT) and paddle_x > 10:\n        kd.fill_rect(paddle_x, 220, paddle_w, 8, kd.color(10, 10, 20))\n        paddle_x -= 5\n    if ion.keydown(ion.KEY_RIGHT) and paddle_x < 255:\n        kd.fill_rect(paddle_x, 220, paddle_w, 8, kd.color(10, 10, 20))\n        paddle_x += 5\n    \n    kd.fill_rect(paddle_x, 220, paddle_w, 8, kd.color(255, 255, 255))\n    \n    kd.fill_rect(ball_x, ball_y, 6, 6, kd.color(10, 10, 20))\n    ball_x += bvx\n    ball_y += bvy\n    \n    if ball_x <= 5 or ball_x >= 310: bvx = -bvx\n    if ball_y <= 30: bvy = -bvy\n    \n    # Rebond raquette\n    if ball_y >= 214 and ball_y <= 222 and ball_x >= paddle_x and ball_x <= paddle_x + paddle_w:\n        bvy = -3\n    \n    # Perte de balle\n    if ball_y > 235:\n        ball_x = 160\n        ball_y = 150\n        bvy = -3\n    \n    # Cassage briques simples\n    if ball_y >= 40 and ball_y <= 75:\n        kd.fill_rect(ball_x - 10, ball_y - 2, 25, 16, kd.color(10, 10, 20))\n        bvy = 3\n        score += 10\n        kd.draw_string(str(score), 270, 10, kd.color(255, 255, 255), kd.color(10, 10, 20))\n    \n    kd.fill_rect(ball_x, ball_y, 6, 6, kd.color(255, 255, 255))\n    time.sleep(0.025)\n"
+    }
+  ]
+}
