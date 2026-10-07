@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="fr" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EquaLib π | Convertisseur NWA → BIN (Linker Natif)</title>
+  
+  <!-- Favicon officiel avec l'icône π personnalisée -->
+  <link rel="icon" type="image/png" href="favicon.png?v=24">
+  <link rel="apple-touch-icon" href="assets/logo.png?v=24">
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            nw: {
+              yellow: '#FFB800',
+              yellowHover: '#E5A600',
+              dark: '#030712',
+              card: '#0f172a',
+              cyan: '#38bdf8',
+              purple: '#c084fc'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Feuille de style Cyber-ASCII & CRT avec police Arista Pro -->
+  <link rel="stylesheet" href="retro_ascii.css?v=24">
+</head>
+<body class="min-h-screen text-slate-100 flex flex-col justify-between selection:bg-cyan-500 selection:text-black">
+
+  <!-- Effets CRT TV vintage : Lignes de balayage & vignette -->
+  <div class="crt-scanlines"></div>
+  <div class="crt-vignette"></div>
+
+  <!-- Fond interactif de symboles mathématiques et chiffres -->
+  <canvas id="math-canvas" class="fixed inset-0 pointer-events-none z-0"></canvas>
+  <div id="cursor-glow" class="pointer-events-none fixed -translate-x-1/2 -translate-y-1/2 rounded-full w-[450px] h-[450px] bg-[radial-gradient(circle,rgba(56,189,248,0.22)_0%,rgba(168,85,247,0.12)_35%,transparent_70%)] blur-2xl z-10"></div>
+
+  <!-- ==================== HEADER OFFICIEL CYBER-ASCII ==================== -->
+  <header class="relative z-20 border-b border-cyan-500/20 bg-slate-950/80 backdrop-blur-md">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+      
+      <!-- Logo et Titre avec icône π -->
+      <div class="flex items-center gap-3">
+        <a href="index.html" class="flex items-center gap-3 group">
+          <div class="relative w-11 h-11 rounded-2xl overflow-hidden border-2 border-cyan-400/40 shadow-lg shadow-cyan-500/20 group-hover:scale-105 transition-all">
+            <img src="assets/logo.png?v=24" alt="EquaLib Pi Logo" class="w-full h-full object-cover">
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="text-xl font-extrabold tracking-wider text-white glow-cyan">EQUALIB</span>
+              <span class="ascii-badge">π-LINKER v3.0</span>
+            </div>
+            <p class="text-[11px] font-ascii text-slate-400">NumWorks N0120 & N0110 • ARM Cortex-M7</p>
+          </div>
+        </a>
+      </div>
+
+      <!-- Navigation entre Hub et Convertisseur -->
+      <nav class="flex items-center gap-2 font-ascii text-xs">
+        <a href="index.html" class="px-4 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800/60 border border-slate-700/50 transition-all flex items-center gap-2">
+          <span>🎯</span> Hub Applications
+        </a>
+        <a href="converter.html" class="px-4 py-2 rounded-xl bg-cyan-500/15 text-cyan-300 border border-cyan-400/50 shadow-sm flex items-center gap-2 font-bold">
+          <span>⚡</span> Convertisseur NWA → BIN
+        </a>
+      </nav>
+
+    </div>
+
+    <!-- Ruban ASCII de formules mathématiques -->
+    <div class="border-t border-cyan-500/10 bg-slate-900/60 py-1 px-4 overflow-hidden text-center">
+      <p class="math-ticker text-[11px] text-cyan-400/80 truncate">
+        [ e^(iπ) + 1 = 0 ] ─── [ ∑(1/n²) = π²/6 ] ─── [ ∫₀^∞ e^(-x²) dx = √π ] ─── [ ∇×E = -∂B/∂t ] ─── [ [A]·[x] = [b] ] ─── [ ∮ B·dl = μ₀I ]
+      </p>
+    </div>
+  </header>
+
+  <!-- ==================== CONTENU PRINCIPAL ==================== -->
+  <main class="relative z-20 max-w-5xl mx-auto px-4 py-8 flex-1 w-full space-y-8">
+    
+    <!-- Bannière ASCII stylisée -->
+    <div class="text-center space-y-3">
+      <pre class="font-ascii text-[9px] sm:text-[11px] text-cyan-400 font-bold leading-tight select-none opacity-90 glow-cyan">
+ _   ___          __     _      _____ _   _ _  ________ _____  
+| \ | \ \        / /\   | |    |_   _| \ | | |/ /  ____|  __ \ 
+|  \| |\ \  /\  / /  \  | |      | | |  \| | ' /| |__  | |__) |
+| . ` | \ \/  \/ / /\ \ | |      | | | . ` |  < |  __| |  _  / 
+| |\  |  \  /\  / ____ \| |____ _| |_| |\  | . \| |____| | \ \ 
+|_| \_|   \/  \/_/    \_\______|_____|_| \_|_|\_\______|_|  \_\
+      </pre>
+      <h1 class="text-2xl sm:text-3xl font-extrabold text-white tracking-wide">
+        Convertisseur Officiel <span class="text-cyan-400">.nwa</span> vers <span class="text-amber-400">.bin</span>
+      </h1>
+      <p class="text-xs sm:text-sm text-slate-400 max-w-2xl mx-auto">
+        Transformez n'importe quel objet ELF relogeable NumWorks EADK (<code class="text-cyan-300 font-mono">.nwa</code>) en binaire exécutable plat (<code class="text-amber-300 font-mono">.bin</code>) prêt à tourner à <strong>60 FPS</strong> sur votre calculatrice !
+      </p>
+    </div>
+
+    <!-- Zone principale : Glisser-Déposer & Inspection -->
+    <div class="ascii-box p-6 sm:p-8 space-y-6">
+      
+      <!-- Zone Drag & Drop -->
+      <div id="drop-zone" class="border-2 border-dashed border-cyan-500/40 hover:border-cyan-400 bg-slate-900/60 hover:bg-cyan-500/5 p-8 rounded-2xl text-center cursor-pointer transition-all group">
+        <input type="file" id="nwa-input" class="hidden" accept=".nwa" />
+        <div class="w-16 h-16 mx-auto rounded-2xl bg-slate-800/80 group-hover:bg-cyan-500/20 group-hover:scale-110 flex items-center justify-center text-cyan-400 text-3xl transition-all mb-3 border border-cyan-500/20 shadow-lg">
+          📥
+        </div>
+        <p class="text-base font-bold text-white group-hover:text-cyan-300 transition-colors">
+          Glissez-déposez votre fichier <span class="font-mono text-cyan-400 bg-cyan-950/60 px-2 py-0.5 rounded border border-cyan-500/30">.nwa</span> ici
+        </p>
+        <p class="text-xs text-slate-400 mt-1">Ou cliquez pour parcourir vos fichiers depuis votre ordinateur</p>
+      </div>
+
+      <!-- Carte d'inspection des Métadonnées ELF (initialement masquée) -->
+      <div id="inspect-card" class="hidden bg-slate-950/80 border border-cyan-500/30 rounded-2xl p-5 space-y-4">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+          <div class="flex items-center gap-3">
+            <span class="text-2xl">⚡</span>
+            <div>
+              <h3 id="app-name-label" class="font-extrabold text-white text-base">Application NWA Détectée</h3>
+              <p id="app-size-label" class="text-xs font-ascii text-slate-400">Taille : 0 Ko</p>
+            </div>
+          </div>
+          <span class="ascii-badge text-emerald-400 border-emerald-500/30 bg-emerald-500/10">ELF ARM32 Valide</span>
+        </div>
+
+        <!-- Détails techniques ASCII -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-ascii">
+          <div class="bg-slate-900/90 p-3 rounded-xl border border-slate-800">
+            <span class="text-slate-500 block text-[10px]">Sections ELF</span>
+            <span id="sec-count-val" class="font-bold text-cyan-300 text-sm">--</span>
+          </div>
+          <div class="bg-slate-900/90 p-3 rounded-xl border border-slate-800">
+            <span class="text-slate-500 block text-[10px]">Icône (.rodata)</span>
+            <span id="icon-size-val" class="font-bold text-purple-300 text-sm">--</span>
+          </div>
+          <div class="bg-slate-900/90 p-3 rounded-xl border border-slate-800">
+            <span class="text-slate-500 block text-[10px]">Adresse Flash</span>
+            <span class="font-bold text-amber-300 text-sm font-mono">0x90180000</span>
+          </div>
+          <div class="bg-slate-900/90 p-3 rounded-xl border border-slate-800">
+            <span class="text-slate-500 block text-[10px]">Adresse RAM</span>
+            <span class="font-bold text-emerald-300 text-sm font-mono">0x240118A4</span>
+          </div>
+        </div>
+
+        <!-- Actions de conversion -->
+        <div class="flex flex-col sm:flex-row gap-3 pt-2">
+          <button id="convert-btn" class="flex-1 py-3 px-6 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-black font-extrabold text-sm shadow-lg shadow-cyan-500/25 active:scale-98 transition-all flex items-center justify-center gap-2">
+            <span>⚙️</span> Lier & Compiler en .bin
+          </button>
+        </div>
+
+        <!-- Progression de la liaison -->
+        <div id="link-progress-container" class="hidden space-y-2 pt-2">
+          <div class="flex justify-between text-xs font-ascii">
+            <span id="link-status-text" class="text-cyan-300">Liaison WebAssembly en cours...</span>
+            <span class="text-slate-400 animate-pulse">GNU ld.wasm</span>
+          </div>
+          <div class="w-full h-2 bg-slate-900 rounded-full overflow-hidden border border-slate-800">
+            <div id="link-bar" class="h-full bg-cyan-400 rounded-full transition-all duration-300 w-1/3 animate-pulse"></div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Résultat de conversion réussie (initialement masqué) -->
+      <div id="result-card" class="hidden bg-emerald-950/30 border border-emerald-500/40 rounded-2xl p-6 space-y-4">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xl border border-emerald-500/30">
+            ✓
+          </div>
+          <div>
+            <h4 class="font-extrabold text-white text-base">Binaire .bin prêt pour NumWorks !</h4>
+            <p id="result-size-text" class="text-xs text-emerald-300 font-ascii">Signature EADK 0xDEC0BEBA valide</p>
+          </div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-3">
+          <!-- Télécharger .bin -->
+          <button id="download-bin-btn" class="flex-1 py-3 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-extrabold text-xs transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20">
+            <span>💾</span> Télécharger le fichier .bin
+          </button>
+
+          <!-- Ajouter directement au Pack EquaLib -->
+          <button id="send-to-pack-btn" class="flex-1 py-3 px-4 rounded-xl bg-nw-yellow hover:bg-nw-yellowHover text-black font-extrabold text-xs transition-all flex items-center justify-center gap-2 shadow-lg shadow-amber-500/20">
+            <span>🎯</span> Ajouter à mon Pack EquaLib
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Section Terminal / CLI locale -->
+    <div class="ascii-box p-6 space-y-4">
+      <div class="flex items-center justify-between pb-2 border-b border-slate-800">
+        <h3 class="text-sm font-extrabold text-white flex items-center gap-2">
+          <span>💻</span> Méthode Ligne de Commande Locale (CLI)
+        </h3>
+        <span class="ascii-badge">Option Développeur</span>
+      </div>
+
+      <p class="text-xs text-slate-400">
+        Si vous préférez convertir votre fichier localement dans votre terminal VSCode ou PowerShell, utilisez la commande suivante :
+      </p>
+
+      <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 flex items-center justify-between font-ascii text-xs text-cyan-300 overflow-x-auto">
+        <code id="cli-cmd-text">node tools/convert_nwa_to_bin.js mon_application.nwa</code>
+        <button id="copy-cmd-btn" class="ml-3 px-3 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs shrink-0 transition-colors">
+          Copier
+        </button>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ==================== FOOTER ==================== -->
+  <footer class="relative z-20 border-t border-slate-800/80 bg-slate-950 py-6 text-center text-xs text-slate-500">
+    <div class="max-w-7xl mx-auto px-4 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-2 text-slate-400">
+        <span>EquaLib Studio</span>
+        <span>•</span>
+        <span>CameleonGamer & Gemini (Google DeepMind)</span>
+      </div>
+      <div class="font-ascii text-slate-500">
+        [ Model: NumWorks N0120 & N0110 • STM32H725 @ 550MHz ]
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="nwa_linker.js?v=24"></script>
+  <script src="crt_math.js?v=24"></script>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const dropZone = document.getElementById('drop-zone');
+      const nwaInput = document.getElementById('nwa-input');
+      const inspectCard = document.getElementById('inspect-card');
+      const resultCard = document.getElementById('result-card');
+      const appNameLabel = document.getElementById('app-name-label');
+      const appSizeLabel = document.getElementById('app-size-label');
+      const secCountVal = document.getElementById('sec-count-val');
+      const iconSizeVal = document.getElementById('icon-size-val');
+      const convertBtn = document.getElementById('convert-btn');
+      const progressContainer = document.getElementById('link-progress-container');
+      const linkBar = document.getElementById('link-bar');
+      const linkStatusText = document.getElementById('link-status-text');
+      const downloadBinBtn = document.getElementById('download-bin-btn');
+      const sendToPackBtn = document.getElementById('send-to-pack-btn');
+      const copyCmdBtn = document.getElementById('copy-cmd-btn');
+      const cliCmdText = document.getElementById('cli-cmd-text');
+
+      let currentFile = null;
+      let currentBytes = null;
+      let currentMetadata = null;
+      let convertedBinBytes = null;
+
+      // Gestion du Drag & Drop
+      dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('border-cyan-400', 'bg-cyan-500/10');
+      });
+
+      dropZone.addEventListener('dragleave', () => {
+        dropZone.classList.remove('border-cyan-400', 'bg-cyan-500/10');
+      });
+
+      dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('border-cyan-400', 'bg-cyan-500/10');
+        if (e.dataTransfer.files.length > 0) {
+          loadFile(e.dataTransfer.files[0]);
+        }
+      });
+
+      dropZone.addEventListener('click', () => nwaInput.click());
+      nwaInput.addEventListener('change', () => {
+        if (nwaInput.files.length > 0) {
+          loadFile(nwaInput.files[0]);
+        }
+      });
+
+      async function loadFile(file) {
+        currentFile = file;
+        const ab = await file.arrayBuffer();
+        currentBytes = new Uint8Array(ab);
+
+        try {
+          currentMetadata = EquaLibLinker.parseNwaMetadata(currentBytes);
+          appNameLabel.textContent = currentMetadata.appName || file.name.replace(/\.nwa$/i, '');
+          appSizeLabel.textContent = `Taille : ${(file.size / 1024).toFixed(1)} Ko (${file.size} octets)`;
+          secCountVal.textContent = currentMetadata.sectionCount;
+          iconSizeVal.textContent = currentMetadata.iconSize > 0 ? `${currentMetadata.iconSize} octets` : 'Non fournie';
+
+          cliCmdText.textContent = `node tools/convert_nwa_to_bin.js "${file.name}"`;
+
+          inspectCard.classList.remove('hidden');
+          resultCard.classList.add('hidden');
+          inspectCard.scrollIntoView({ behavior: 'smooth' });
+        } catch (err) {
+          alert("Erreur lors de l'analyse du fichier : " + err.message);
+        }
+      }
+
+      // Bouton de conversion
+      convertBtn.addEventListener('click', async () => {
+        if (!currentBytes) return;
+
+        convertBtn.disabled = true;
+        progressContainer.classList.remove('hidden');
+        linkBar.style.width = '40%';
+        linkStatusText.textContent = 'Liaison ELF avec ld.wasm...';
+
+        try {
+          convertedBinBytes = await EquaLibLinker.convertNwaToBin(currentBytes, {
+            flashStart: '0x90180000',
+            ldWasmUrl: 'toolchain/ld.wasm',
+            objcopyWasmUrl: 'toolchain/objcopy.wasm'
+          });
+
+          linkBar.style.width = '100%';
+          linkStatusText.textContent = 'Conversion terminée avec succès !';
+
+          setTimeout(() => {
+            progressContainer.classList.add('hidden');
+            resultCard.classList.remove('hidden');
+            document.getElementById('result-size-text').textContent = 
+              `Binaire généré : ${(convertedBinBytes.length / 1024).toFixed(1)} Ko • Signature EADK 0xDEC0BEBA vérifiée`;
+            resultCard.scrollIntoView({ behavior: 'smooth' });
+            convertBtn.disabled = false;
+          }, 400);
+
+        } catch (err) {
+          console.error("Erreur linkage :", err);
+          alert("Erreur lors de la compilation/liaison : " + err.message);
+          progressContainer.classList.add('hidden');
+          convertBtn.disabled = false;
+        }
+      });
+
+      // Télécharger .bin
+      downloadBinBtn.addEventListener('click', () => {
+        if (!convertedBinBytes || !currentFile) return;
+        const binName = currentFile.name.replace(/\.nwa$/i, '.bin');
+        const blob = new Blob([convertedBinBytes], { type: 'application/octet-stream' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = binName;
+        a.click();
+        URL.revokeObjectURL(url);
+      });
+
+      // Ajouter directement au pack
+      sendToPackBtn.addEventListener('click', () => {
+        if (!convertedBinBytes || !currentFile) return;
+        const binName = currentFile.name.replace(/\.nwa$/i, '');
+        
+        // Stockage temporaire dans sessionStorage pour index.html
+        const b64 = btoa(String.fromCharCode.apply(null, convertedBinBytes));
+        sessionStorage.setItem('equalib_imported_app', JSON.stringify({
+          name: currentMetadata ? currentMetadata.appName : binName,
+          filename: currentFile.name.replace(/\.nwa$/i, '.bin'),
+          b64Data: b64
+        }));
+
+        window.location.href = 'index.html?imported=1';
+      });
+
+      // Copier commande CLI
+      copyCmdBtn.addEventListener('click', () => {
+        navigator.clipboard.writeText(cliCmdText.textContent);
+        copyCmdBtn.textContent = 'Copié !';
+        setTimeout(() => copyCmdBtn.textContent = 'Copier', 2000);
+      });
+
+    });
+  </script>
+
+</body>
+</html>

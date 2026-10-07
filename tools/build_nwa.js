@@ -38,7 +38,7 @@ const mathDir = 'C:/Users/noear/Desktop/projets/MathDS/output';
 const mathObjs = fs.readdirSync(mathDir)
   .filter(f => f.startsWith('smk_') && f.endsWith('.o'))
   .map(f => path.join(mathDir, f));
-const iconObj = path.join(mathDir, 'icon.o');
+const iconObj = fs.existsSync('launcher/icon.o') ? 'launcher/icon.o' : path.join(mathDir, 'icon.o');
 
 const allObjs = [...launcherObjs, ...mathObjs, iconObj];
 console.log(`\nLinking ${allObjs.length} objects into launcher/equalib.nwa...`);

@@ -1,0 +1,153 @@
+/**
+ * EquaLib Cyber-ASCII & CRT Retro Stylesheet
+ * Typographie officielle Arista Pro, effets CRT TV vintage, bordures ASCII & phosphore
+ */
+
+@font-face {
+  font-family: 'Arista Pro';
+  src: url('fonts/arista_pro/Arista-Pro-Bold-trial.ttf') format('truetype');
+  font-weight: bold;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Arista Pro';
+  src: url('fonts/arista_pro/Arista-Pro-Light-trial.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Arista Pro';
+  src: url('fonts/arista_pro/Arista-Pro-Fat-trial.ttf') format('truetype');
+  font-weight: 900;
+  font-style: normal;
+}
+
+:root {
+  --font-arista: 'Arista Pro', system-ui, -apple-system, sans-serif;
+  --font-ascii: 'Courier New', 'Lucida Console', monospace;
+  --color-phosphor-cyan: #38bdf8;
+  --color-phosphor-purple: #c084fc;
+}
+
+body {
+  font-family: var(--font-arista);
+  background-color: #030712;
+  color: #f1f5f9;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* Police ASCII pour les bannières, formules et blocs de code */
+.font-ascii {
+  font-family: var(--font-ascii) !important;
+}
+
+.font-arista {
+  font-family: var(--font-arista) !important;
+}
+
+/* ==================== EFFETS CRT VINTAGE TV ==================== */
+
+/* 1. Lignes de balayage CRT (Scanlines) */
+.crt-scanlines {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 40;
+  background: linear-gradient(
+    rgba(18, 16, 16, 0) 50%,
+    rgba(0, 0, 0, 0.38) 50%
+  ),
+  linear-gradient(
+    90deg,
+    rgba(255, 0, 0, 0.025),
+    rgba(0, 255, 0, 0.015),
+    rgba(0, 0, 255, 0.025)
+  );
+  background-size: 100% 3px, 6px 100%;
+}
+
+/* 2. Vignette et courbure de tube cathodique (CRT Vignette) */
+.crt-vignette {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 41;
+  box-shadow: 
+    inset 0 0 120px rgba(0, 0, 0, 0.85),
+    inset 0 0 50px rgba(0, 0, 0, 0.95);
+}
+
+/* 3. Lueur subtile de phosphore cathodique */
+.glow-cyan {
+  text-shadow: 0 0 8px rgba(56, 189, 248, 0.7), 0 0 16px rgba(56, 189, 248, 0.3);
+}
+
+.glow-purple {
+  text-shadow: 0 0 8px rgba(192, 132, 252, 0.7), 0 0 16px rgba(192, 132, 252, 0.3);
+}
+
+.glow-box-cyan {
+  box-shadow: 0 0 20px rgba(56, 189, 248, 0.2), inset 0 0 15px rgba(56, 189, 248, 0.05);
+}
+
+.glow-box-purple {
+  box-shadow: 0 0 20px rgba(192, 132, 252, 0.2), inset 0 0 15px rgba(192, 132, 252, 0.05);
+}
+
+/* ==================== CADRES ET BORDURES ASCII ==================== */
+
+.ascii-box {
+  background: rgba(15, 23, 42, 0.88);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  border-radius: 16px;
+  position: relative;
+  transition: all 0.25s ease;
+}
+
+.ascii-box:hover {
+  border-color: rgba(56, 189, 248, 0.6);
+  box-shadow: 0 0 25px rgba(56, 189, 248, 0.15);
+}
+
+.ascii-badge {
+  font-family: var(--font-ascii);
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  background: rgba(56, 189, 248, 0.1);
+  color: #7dd3fc;
+}
+
+/* Ruban de formules mathématiques défilant subtilement */
+.math-ticker {
+  font-family: var(--font-ascii);
+  letter-spacing: 0.12em;
+  opacity: 0.7;
+}
+
+/* Scrollbar cyberpunk rétro */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #030712;
+}
+::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 4px;
+  border: 1px solid rgba(56, 189, 248, 0.2);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #38bdf8;
+}

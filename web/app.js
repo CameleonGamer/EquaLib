@@ -174,6 +174,35 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Présélection par défaut (les apps natives recommandées)
     const defaults = catalogApps.filter(a => a.recommended);
     defaults.forEach(a => addAppToSelection(a));
+
+    // Vérification d'une application envoyée depuis converter.html
+    const pendingAppStr = sessionStorage.getItem('equalib_imported_app');
+    if (pendingAppStr) {
+      sessionStorage.removeItem('equalib_imported_app');
+      try {
+        const pApp = JSON.parse(pendingAppStr);
+        const binaryStr = atob(pApp.b64Data);
+        const u8 = new Uint8Array(binaryStr.length);
+        for (let i = 0; i < binaryStr.length; i++) u8[i] = binaryStr.charCodeAt(i);
+        const importedConverted = {
+          id: 'custom_' + Date.now(),
+          name: pApp.name || 'App Convertie',
+          author: 'Converti depuis NWA',
+          version: 'Natif',
+          size_kb: Math.max(1, Math.round(u8.byteLength / 1024)),
+          category: 'Natif ARM',
+          format: 'BIN',
+          description: `Application convertie depuis ${pApp.filename}`,
+          icon_initial: '⚡',
+          color: '#10B981',
+          data: u8
+        };
+        addAppToSelection(importedConverted);
+        showToast(`✓ "${importedConverted.name}" ajouté avec succès depuis le convertisseur !`, 'success');
+      } catch (e) {
+        console.error('Erreur importation converter.html :', e);
+      }
+    }
   } catch (err) {
     console.error('Erreur chargement bases de données :', err);
     showToast('Erreur lors du chargement des applications', 'error');
