@@ -7,26 +7,24 @@ int snprintf(char* buf, unsigned int max, const char* fmt, ...);
 int strcmp(const char* s1, const char* s2);
 size_t strlen(const char* s);
 char* strcpy(char* dest, const char* src);
+void eq_display_draw_string(const char* text, eadk_point_t point, bool large, eadk_color_t text_color, eadk_color_t background_color);
 
 /* ========================================================================= */
-/*                          ENVIRONNEMENT PYTHON                             */
+/*                          ENVIRONNEMENT PYTHON HYPER-LEGER                 */
 /* ========================================================================= */
 
-#define MAX_VARS       128
-#define MAX_FUNCS      32
-#define MAX_LINES      512
-#define MAX_CALL_STACK 16
-#define MAX_LIST_ITEMS 64
-#define CONSOLE_ROWS   14
-#define CONSOLE_COLS   45
+#define MAX_VARS       32
+#define MAX_FUNCS      8
+#define MAX_LINES      160
+#define CONSOLE_ROWS   12
+#define CONSOLE_COLS   42
 
 typedef enum {
     PY_NONE,
     PY_BOOL,
     PY_INT,
     PY_FLOAT,
-    PY_STR,
-    PY_LIST
+    PY_STR
 } py_type_t;
 
 typedef struct py_val {
@@ -35,22 +33,18 @@ typedef struct py_val {
         bool b;
         int32_t i;
         float f;
-        char str[48];
-        struct {
-            int32_t items[MAX_LIST_ITEMS];
-            int count;
-        } list;
+        char str[32];
     } u;
 } py_val_t;
 
 typedef struct {
-    char name[24];
+    char name[16];
     py_val_t val;
 } py_var_t;
 
 typedef struct {
-    char name[24];
-    char args[6][16];
+    char name[16];
+    char args[4][12];
     int arg_count;
     int start_line;
     int end_line;
@@ -70,6 +64,12 @@ typedef struct {
 } py_vm_t;
 
 static py_vm_t s_vm;
+
+/* Indexation des lignes directement depuis la Flash sans duplication en RAM */
+static const char* s_script_lines_ptr[MAX_LINES];
+static uint16_t s_line_lens[MAX_LINES];
+static uint8_t s_line_indents[MAX_LINES];
+static int s_line_count = 0;
 
 /* Console virtuelle */
 static char s_console[CONSOLE_ROWS][CONSOLE_COLS + 1];
@@ -149,7 +149,7 @@ static void vm_set_var(const char* name, py_val_t val) {
     if (s_vm.var_count < MAX_VARS) {
         int idx = s_vm.var_count++;
         int c = 0;
-        while (name[c] && c < 23) {
+        while (name[c] && c < 15) {
             s_vm.vars[idx].name[c] = name[c];
             c++;
         }
@@ -216,7 +216,6 @@ static uint16_t val_to_color(py_val_t v) {
 
 static py_val_t eval_expr(const char** expr);
 
-/* Analyse d'une liste d'arguments séparés par des virgules */
 static int parse_args(const char* str, py_val_t* args, int max_args) {
     int count = 0;
     const char* p = str;
@@ -232,7 +231,19 @@ static int parse_args(const char* str, py_val_t* args, int max_args) {
 }
 
 static void execute_line(const char* line_text);
-static const char* s_script_lines_ptr[MAX_LINES];
+
+static void get_line_copy(int index, char* buf, int max_len) {
+    if (index < 0 || index >= s_line_count || !s_script_lines_ptr[index]) {
+        buf[0] = '\0';
+        return;
+    }
+    int len = s_line_lens[index];
+    if (len >= max_len) len = max_len - 1;
+    for (int i = 0; i < len; i++) {
+        buf[i] = s_script_lines_ptr[index][i];
+    }
+    buf[len] = '\0';
+}
 
 static py_val_t call_builtin(const char* name, const char* arg_str) {
     py_val_t ret;
@@ -242,7 +253,7 @@ static py_val_t call_builtin(const char* name, const char* arg_str) {
     for (int i = 0; i < 6; i++) args[i].type = PY_NONE;
     int argc = parse_args(arg_str, args, 6);
 
-    /* --- Fonctions utilisateur (définies via def) --- */
+    /* Fonctions utilisateur (définies via def) */
     for (int f = 0; f < s_vm.func_count; f++) {
         if (strcmp(name, s_vm.funcs[f].name) == 0) {
             for (int a = 0; a < s_vm.funcs[f].arg_count && a < argc; a++) {
@@ -251,16 +262,16 @@ static py_val_t call_builtin(const char* name, const char* arg_str) {
             int start = s_vm.funcs[f].start_line;
             int end = s_vm.funcs[f].end_line;
             for (int l = start; l < end && !s_vm.should_return && !s_vm.exit_requested; l++) {
-                if (s_script_lines_ptr[l]) {
-                    execute_line(s_script_lines_ptr[l]);
-                }
+                char fn_buf[128];
+                get_line_copy(l, fn_buf, sizeof(fn_buf));
+                execute_line(fn_buf);
             }
             s_vm.should_return = false;
             return s_vm.return_val;
         }
     }
 
-    /* --- Module kandinsky --- */
+    /* Module kandinsky */
     if (strcmp(name, "fill_rect") == 0 || strcmp(name, "kd.fill_rect") == 0 || strcmp(name, "kandinsky.fill_rect") == 0) {
         s_has_graphics = true;
         int x = val_to_int(args[0]);
@@ -318,12 +329,11 @@ static py_val_t call_builtin(const char* name, const char* arg_str) {
         return ret;
     }
 
-    /* --- Module ion --- */
+    /* Module ion */
     if (strcmp(name, "keydown") == 0 || strcmp(name, "ion.keydown") == 0) {
         int k = val_to_int(args[0]);
         eadk_keyboard_state_t state = eadk_keyboard_scan();
 
-        /* Raccourci panique Var ou Home */
         if (eadk_keyboard_key_down(state, eadk_key_var)) {
             s_vm.panic_triggered = true;
         }
@@ -336,7 +346,7 @@ static py_val_t call_builtin(const char* name, const char* arg_str) {
         return ret;
     }
 
-    /* --- Module time --- */
+    /* Module time */
     if (strcmp(name, "sleep") == 0 || strcmp(name, "time.sleep") == 0) {
         float sec = (args[0].type == PY_FLOAT) ? args[0].u.f : (float)val_to_int(args[0]);
         uint32_t ms = (uint32_t)(sec * 1000.0f);
@@ -351,7 +361,7 @@ static py_val_t call_builtin(const char* name, const char* arg_str) {
         return ret;
     }
 
-    /* --- Module random --- */
+    /* Module random */
     if (strcmp(name, "randint") == 0 || strcmp(name, "random.randint") == 0) {
         int a = val_to_int(args[0]);
         int b = val_to_int(args[1]);
@@ -364,34 +374,33 @@ static py_val_t call_builtin(const char* name, const char* arg_str) {
         return ret;
     }
 
-    /* --- print(...) --- */
+    /* print(...) */
     if (strcmp(name, "print") == 0) {
         char buf[64] = "";
-        char tmp[48];
+        char tmp[32];
         int pos = 0;
         for (int i = 0; i < argc; i++) {
             val_to_str(args[i], tmp, sizeof(tmp));
             int l = 0;
-            while (tmp[l] && pos < 62) {
+            while (tmp[l] && pos < 60) {
                 buf[pos++] = tmp[l++];
             }
-            if (i < argc - 1 && pos < 62) buf[pos++] = ' ';
+            if (i < argc - 1 && pos < 60) buf[pos++] = ' ';
         }
         buf[pos] = '\0';
         console_print(buf);
         return ret;
     }
 
-    /* --- len(...) --- */
+    /* len(...) */
     if (strcmp(name, "len") == 0) {
         ret.type = PY_INT;
-        if (args[0].type == PY_LIST) ret.u.i = args[0].u.list.count;
-        else if (args[0].type == PY_STR) ret.u.i = (int)strlen(args[0].u.str);
+        if (args[0].type == PY_STR) ret.u.i = (int)strlen(args[0].u.str);
         else ret.u.i = 0;
         return ret;
     }
 
-    /* --- str(...) & int(...) & abs(...) & min/max --- */
+    /* str, int, abs, min, max */
     if (strcmp(name, "str") == 0) {
         ret.type = PY_STR;
         val_to_str(args[0], ret.u.str, sizeof(ret.u.str));
@@ -472,7 +481,7 @@ static py_val_t eval_primary(const char** expr) {
     if (*p == '"' || *p == '\'') {
         char quote = *p++;
         int i = 0;
-        while (*p && *p != quote && i < 47) {
+        while (*p && *p != quote && i < 31) {
             res.u.str[i++] = *p++;
         }
         if (*p == quote) p++;
@@ -502,6 +511,16 @@ static py_val_t eval_primary(const char** expr) {
         }
         id[l] = '\0';
         p = skip_ws(p);
+
+        /* not unaire */
+        if (strcmp(id, "not") == 0) {
+            py_val_t val = eval_primary(&p);
+            bool is_true = (val.type == PY_BOOL) ? val.u.b : (val_to_int(val) != 0);
+            res.type = PY_BOOL;
+            res.u.b = !is_true;
+            *expr = p;
+            return res;
+        }
 
         /* Appel de fonction */
         if (*p == '(') {
@@ -554,6 +573,32 @@ static py_val_t eval_expr(const char** expr) {
     const char* p = skip_ws(*expr);
 
     while (*p) {
+        /* Opérateur and */
+        if (p[0] == 'a' && p[1] == 'n' && p[2] == 'd' && (p[3] == ' ' || p[3] == '\t')) {
+            p = skip_ws(p + 3);
+            *expr = p;
+            py_val_t right = eval_primary(expr);
+            p = skip_ws(*expr);
+            bool li = (left.type == PY_BOOL) ? left.u.b : (val_to_int(left) != 0);
+            bool ri = (right.type == PY_BOOL) ? right.u.b : (val_to_int(right) != 0);
+            left.type = PY_BOOL;
+            left.u.b = (li && ri);
+            continue;
+        }
+
+        /* Opérateur or */
+        if (p[0] == 'o' && p[1] == 'r' && (p[2] == ' ' || p[2] == '\t')) {
+            p = skip_ws(p + 2);
+            *expr = p;
+            py_val_t right = eval_primary(expr);
+            p = skip_ws(*expr);
+            bool li = (left.type == PY_BOOL) ? left.u.b : (val_to_int(left) != 0);
+            bool ri = (right.type == PY_BOOL) ? right.u.b : (val_to_int(right) != 0);
+            left.type = PY_BOOL;
+            left.u.b = (li || ri);
+            continue;
+        }
+
         char op = *p;
         if (op == '+' || op == '-' || op == '*' || op == '/' || op == '<' || op == '>' || op == '=' || op == '!') {
             p++;
@@ -591,17 +636,6 @@ static py_val_t eval_expr(const char** expr) {
 /* ========================================================================= */
 /*                          EXÉCUTION DES LIGNES                             */
 /* ========================================================================= */
-
-static int get_indent(const char* line) {
-    int indent = 0;
-    while (*line) {
-        if (*line == ' ') indent++;
-        else if (*line == '\t') indent += 4;
-        else break;
-        line++;
-    }
-    return indent;
-}
 
 static void execute_single_statement(const char* stmt) {
     const char* p = skip_ws(stmt);
@@ -649,10 +683,10 @@ static void execute_single_statement(const char* stmt) {
     const char* eq = p;
     while (*eq && *eq != '=' && *eq != '(') eq++;
     if (*eq == '=') {
-        char var_name[24];
+        char var_name[16];
         int nl = 0;
         const char* v = p;
-        while (v < eq && *v != ' ' && *v != '\t' && *v != '+' && *v != '-' && nl < 23) {
+        while (v < eq && *v != ' ' && *v != '\t' && *v != '+' && *v != '-' && nl < 15) {
             var_name[nl++] = *v++;
         }
         var_name[nl] = '\0';
@@ -707,43 +741,45 @@ static void execute_line(const char* line_text) {
 static void run_script_engine(const char* script_code, uint32_t script_len) {
     if (!script_code || script_len == 0) return;
 
-    /* Découpage en lignes */
-    static const char* lines[MAX_LINES];
-    static int line_indents[MAX_LINES];
-    static char line_buffers[MAX_LINES][96];
-
-    int line_count = 0;
+    /* Découpage et indexation des lignes directement depuis la mémoire Flash */
+    s_line_count = 0;
     uint32_t pos = 0;
 
-    while (pos < script_len && line_count < MAX_LINES) {
-        int c = 0;
-        while (pos < script_len && script_code[pos] != '\n' && script_code[pos] != '\r' && c < 95) {
-            line_buffers[line_count][c++] = script_code[pos++];
+    while (pos < script_len && s_line_count < MAX_LINES) {
+        while (pos < script_len && (script_code[pos] == '\r' || script_code[pos] == '\n')) {
+            pos++;
         }
-        line_buffers[line_count][c] = '\0';
-        if (pos < script_len && (script_code[pos] == '\n' || script_code[pos] == '\r')) pos++;
+        if (pos >= script_len) break;
 
-        lines[line_count] = line_buffers[line_count];
-        line_indents[line_count] = get_indent(lines[line_count]);
-        line_count++;
-    }
+        const char* line_start = script_code + pos;
+        uint32_t start_pos = pos;
+        while (pos < script_len && script_code[pos] != '\r' && script_code[pos] != '\n') {
+            pos++;
+        }
+        uint32_t len = pos - start_pos;
+        if (len > 120) len = 120;
 
-    for (int i = 0; i < line_count; i++) {
-        s_script_lines_ptr[i] = lines[i];
-    }
-    for (int i = line_count; i < MAX_LINES; i++) {
-        s_script_lines_ptr[i] = NULL;
+        s_script_lines_ptr[s_line_count] = line_start;
+        s_line_lens[s_line_count] = (uint16_t)len;
+
+        int indent = 0;
+        for (uint32_t c = 0; c < len; c++) {
+            if (line_start[c] == ' ') indent++;
+            else if (line_start[c] == '\t') indent += 4;
+            else break;
+        }
+        s_line_indents[s_line_count] = (uint8_t)indent;
+        s_line_count++;
     }
 
     vm_init();
     console_init();
 
-    /* Exécution séquentielle avec boucles et conditions */
     int cur_line = 0;
+    char cur_buf[128];
     uint64_t last_check_ms = eadk_timing_millis();
 
-    while (cur_line < line_count && !s_vm.exit_requested && !s_vm.panic_triggered) {
-        /* Vérification clavier périodique (toutes les 30ms) pour sécurité et réactivité */
+    while (cur_line < s_line_count && !s_vm.exit_requested && !s_vm.panic_triggered) {
         uint64_t now = eadk_timing_millis();
         if (now - last_check_ms >= 30) {
             last_check_ms = now;
@@ -761,28 +797,29 @@ static void run_script_engine(const char* script_code, uint32_t script_len) {
             }
         }
 
-        const char* p = skip_ws(lines[cur_line]);
-        int indent = line_indents[cur_line];
+        get_line_copy(cur_line, cur_buf, sizeof(cur_buf));
+        const char* p = skip_ws(cur_buf);
+        int indent = s_line_indents[cur_line];
 
         /* def function(args): */
         if (p[0] == 'd' && p[1] == 'e' && p[2] == 'f' && p[3] == ' ') {
             p += 4;
             p = skip_ws(p);
-            char fname[24] = "";
+            char fname[16] = "";
             int fl = 0;
-            while (*p && *p != '(' && *p != ' ' && fl < 23) fname[fl++] = *p++;
+            while (*p && *p != '(' && *p != ' ' && fl < 15) fname[fl++] = *p++;
             fname[fl] = '\0';
 
             if (s_vm.func_count < MAX_FUNCS) {
                 int fi = s_vm.func_count++;
                 int c = 0;
-                while (fname[c] && c < 23) { s_vm.funcs[fi].name[c] = fname[c]; c++; }
+                while (fname[c] && c < 15) { s_vm.funcs[fi].name[c] = fname[c]; c++; }
                 s_vm.funcs[fi].name[c] = '\0';
                 s_vm.funcs[fi].arg_count = 0;
                 s_vm.funcs[fi].start_line = cur_line + 1;
 
                 int end = cur_line + 1;
-                while (end < line_count && line_indents[end] > indent) end++;
+                while (end < s_line_count && s_line_indents[end] > indent) end++;
                 s_vm.funcs[fi].end_line = end;
                 cur_line = end;
                 continue;
@@ -805,7 +842,7 @@ static void run_script_engine(const char* script_code, uint32_t script_len) {
                 } else {
                     if (!is_true) {
                         cur_line++;
-                        while (cur_line < line_count && line_indents[cur_line] > indent) {
+                        while (cur_line < s_line_count && s_line_indents[cur_line] > indent) {
                             cur_line++;
                         }
                         continue;
@@ -824,22 +861,21 @@ static void run_script_engine(const char* script_code, uint32_t script_len) {
 
             if (!is_true) {
                 cur_line++;
-                while (cur_line < line_count && line_indents[cur_line] > indent) {
+                while (cur_line < s_line_count && s_line_indents[cur_line] > indent) {
                     cur_line++;
                 }
                 continue;
             }
 
-            /* Trouver la fin du bloc while */
             int block_start = cur_line + 1;
             int block_end = block_start;
-            while (block_end < line_count && line_indents[block_end] > indent) {
+            while (block_end < s_line_count && s_line_indents[block_end] > indent) {
                 block_end++;
             }
 
-            /* Boucle while */
             while (true) {
-                cond_p = p + 6;
+                get_line_copy(cur_line, cur_buf, sizeof(cur_buf));
+                cond_p = skip_ws(cur_buf) + 6;
                 cond = eval_expr(&cond_p);
                 is_true = (cond.type == PY_BOOL) ? cond.u.b : (val_to_int(cond) != 0);
                 if (!is_true || s_vm.exit_requested || s_vm.panic_triggered) break;
@@ -848,7 +884,9 @@ static void run_script_engine(const char* script_code, uint32_t script_len) {
                 s_vm.should_continue = false;
 
                 for (int l = block_start; l < block_end; l++) {
-                    const char* lp = skip_ws(lines[l]);
+                    char blk_buf[128];
+                    get_line_copy(l, blk_buf, sizeof(blk_buf));
+                    const char* lp = skip_ws(blk_buf);
                     if (lp[0] == 'i' && lp[1] == 'f' && lp[2] == ' ') {
                         const char* colon = lp + 3;
                         while (*colon && *colon != ':') colon++;
@@ -862,9 +900,9 @@ static void run_script_engine(const char* script_code, uint32_t script_len) {
                                 continue;
                             } else {
                                 if (!it) {
-                                    int if_indent = line_indents[l];
+                                    int if_indent = s_line_indents[l];
                                     l++;
-                                    while (l < block_end && line_indents[l] > if_indent) l++;
+                                    while (l < block_end && s_line_indents[l] > if_indent) l++;
                                     l--;
                                     continue;
                                 }
@@ -872,7 +910,7 @@ static void run_script_engine(const char* script_code, uint32_t script_len) {
                             }
                         }
                     }
-                    execute_line(lines[l]);
+                    execute_line(blk_buf);
                     if (s_vm.should_break || s_vm.should_return || s_vm.exit_requested) break;
                 }
 
@@ -885,7 +923,7 @@ static void run_script_engine(const char* script_code, uint32_t script_len) {
         }
 
         /* Ligne standard */
-        execute_line(lines[cur_line]);
+        execute_line(cur_buf);
         cur_line++;
     }
 }
@@ -895,27 +933,22 @@ static void run_script_engine(const char* script_code, uint32_t script_len) {
 /* ========================================================================= */
 
 void run_python_app(const char* title, const char* script_code, uint32_t script_len) {
-    /* Debounce */
     while (eadk_keyboard_scan() != 0) {
         eadk_timing_msleep(20);
     }
 
-    /* Barre supérieure officielle EquaLib */
     eadk_rect_t top = {0, 0, EADK_SCREEN_WIDTH, 22};
     eadk_display_push_rect_uniform(top, 0xFE60);
     eadk_point_t pt_title = {10, 5};
     eq_display_draw_string(title ? title : "Application NumWorks", pt_title, false, eadk_color_black, 0xFE60);
 
-    /* Barre inférieure */
     eadk_rect_t bottom = {0, EADK_SCREEN_HEIGHT - 16, EADK_SCREEN_WIDTH, 16};
     eadk_display_push_rect_uniform(bottom, eadk_color_white);
     eadk_point_t pt_help = {8, EADK_SCREEN_HEIGHT - 13};
     eq_display_draw_string("BACK: Quitter vers Hub  |  Var: Furtif Panique", pt_help, false, 0x4208, eadk_color_white);
 
-    /* Exécution du script Python */
     run_script_engine(script_code, script_len);
 
-    /* Attente de sortie si le script s'est terminé mais affiche encore son résultat */
     eadk_keyboard_state_t prev_kbd = 0;
     while (!s_vm.exit_requested) {
         eadk_keyboard_state_t kbd = eadk_keyboard_scan();

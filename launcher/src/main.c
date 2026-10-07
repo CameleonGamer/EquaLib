@@ -29,14 +29,19 @@ static bool s_led_active = false;
 const equalib_manifest_t g_equalib_manifest __attribute__((used, aligned(4), section(".rodata.equalib_manifest"))) = {
     .magic = EQUALIB_MANIFEST_MAGIC,
     .version = 1,
-    .app_count = 5,
+    .app_count = 10,
     .flags = 0,
     .apps = {
         {"mariokart", "1. Mario Kart", "Jeu / Arcade", "Course Mode 7 3D complete pour N0120", APP_TYPE_MARIOKART, {0,0,0}, 0, 0},
         {"periodique", "2. Tableau Periodique", "Chimie", "118 elements, masses et configurations", APP_TYPE_PERIODIC, {0,0,0}, 0, 0},
         {"fiches", "3. Fiches de Cours", "Revision", "Formulaires Maths, Physique et Chimie", APP_TYPE_COURSES, {0,0,0}, 0, 0},
         {"math_solver", "4. Solveur de Maths", "Algebre", "Polynomes 2nd degre, racines et outils", APP_TYPE_MATH_TOOLS, {0,0,0}, 0, 0},
-        {"stealth_calc", "5. Mode Furtif Panique", "Securite", "Fausse calculatrice avec [EXAMEN ACTIF]", APP_TYPE_STEALTH, {0,0,0}, 0, 0}
+        {"stealth_calc", "5. Mode Furtif Panique", "Securite", "Fausse calculatrice avec [EXAMEN ACTIF]", APP_TYPE_STEALTH, {0,0,0}, 0, 0},
+        {"flappy", "6. Flappy Bird", "Jeu / Arcade", "Flappy Bird en C natif fluide a 60 FPS", APP_TYPE_FLAPPY, {0,0,0}, 0, 0},
+        {"2048", "7. 2048 Ultimate", "Jeu / Arcade", "Casse-tete 2048 en C natif 60 FPS", APP_TYPE_2048, {0,0,0}, 0, 0},
+        {"snake", "8. Snake Classic", "Jeu / Arcade", "Serpent retro en C natif 60 FPS", APP_TYPE_SNAKE, {0,0,0}, 0, 0},
+        {"tetris", "9. Tetris NumWorks", "Jeu / Arcade", "Tetris officiel en C natif 60 FPS", APP_TYPE_TETRIS, {0,0,0}, 0, 0},
+        {"demineur", "10. Demineur NW", "Jeu / Arcade", "Demineur complet en C natif 60 FPS", APP_TYPE_MINESWEEPER, {0,0,0}, 0, 0}
     }
 };
 

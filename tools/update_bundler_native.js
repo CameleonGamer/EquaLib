@@ -131,17 +131,27 @@ class EquaLibBundler {
       const isNwa = (app.category === 'NWA') || (app.format === 'NWA') || appIdLower.includes('.nwa') || appNameLower.includes('.nwa');
 
       if (appIdLower === 'mariokart' || appIdLower.includes('mario') || appNameLower.includes('mario')) {
-        appType = 1; // Super Mario Kart natif C complet (issu de MathDS)
+        appType = 1; // Super Mario Kart 3D natif C (issu de MathDS)
       } else if (appIdLower === 'periodique' || appIdLower.includes('periodique')) {
-        appType = 2;
+        appType = 2; // Tableau Périodique natif C
       } else if (appIdLower === 'fiches' || appIdLower.includes('cours')) {
-        appType = 3;
+        appType = 3; // Fiches de cours natives C
       } else if (appIdLower === 'math_solver' || appIdLower.includes('solveur')) {
-        appType = 4;
-      } else if (appIdLower === 'stealth_calc' || appIdLower.includes('furtif')) {
-        appType = 5;
-      } else if ((app.format === 'NWS') || appIdLower.includes('.nws') || appNameLower.includes('.nws') || (app.data && !isNwa)) {
-        appType = 12; // Moteur Python natif pour tout script .nws
+        appType = 4; // Solveur 2nd degré natif C
+      } else if (appIdLower === 'stealth_calc' || appIdLower.includes('furtif') || appIdLower.includes('panique')) {
+        appType = 5; // Mode Furtif Panique natif C
+      } else if (appIdLower === 'comm_flappy' || appIdLower === 'flappy' || appNameLower.includes('flappy')) {
+        appType = 7; // Flappy Bird natif C 60 FPS
+      } else if (appIdLower === 'comm_2048' || appIdLower === '2048' || appNameLower.includes('2048')) {
+        appType = 8; // 2048 Ultimate natif C 60 FPS
+      } else if (appIdLower === 'comm_snake' || appIdLower === 'snake' || appNameLower.includes('snake')) {
+        appType = 9; // Snake Classic natif C 60 FPS
+      } else if (appIdLower === 'comm_tetris' || appIdLower === 'tetris' || appNameLower.includes('tetris')) {
+        appType = 10; // Tetris NumWorks natif C 60 FPS
+      } else if (appIdLower === 'comm_minesweeper' || appIdLower.includes('mine') || appNameLower.includes('démin') || appNameLower.includes('demin')) {
+        appType = 11; // Démineur NumWorks natif C 60 FPS
+      } else if ((app.format === 'NWS') || (app.format === 'PY') || appIdLower.includes('.nws') || appNameLower.includes('.nws') || (app.data && !isNwa)) {
+        appType = 12; // Moteur Python natif pour tout script .nws / .py
       }
 
       u8[entryOffset + 132] = appType;

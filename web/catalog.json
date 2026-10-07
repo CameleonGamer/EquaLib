@@ -60,40 +60,16 @@
     "recommended": true
   },
   {
-    "id": "khicas",
-    "name": "KhiCAS",
-    "author": "Bernard Parisse",
-    "version": "1.8.2",
-    "size_kb": 1420,
-    "category": "Maths",
-    "description": "Système de calcul formel complet (calcul symbolique, intégrales, factorisation).",
-    "icon_initial": "∫",
-    "color": "#8B5CF6",
-    "recommended": false
-  },
-  {
-    "id": "peanut_gb",
-    "name": "Peanut-GB",
-    "author": "Dhole",
-    "version": "1.3",
-    "size_kb": 320,
-    "category": "Jeux / Arcade",
-    "description": "Émulateur GameBoy classique fluide optimisé pour le processeur Cortex-M7 de la N0120.",
-    "icon_initial": "🎮",
-    "color": "#EC4899",
-    "recommended": false
-  },
-  {
     "id": "comm_flappy",
     "name": "Flappy Bird NW",
     "author": "EquaLib Arcade",
     "version": "1.4",
     "size_kb": 25,
     "category": "Jeux / Arcade",
-    "description": "Le célèbre jeu Flappy Bird adapté en C natif fluide pour NumWorks N0120.",
+    "description": "Le célèbre jeu Flappy Bird adapté en C natif 60 FPS pour NumWorks N0120.",
     "icon_initial": "🐦",
     "color": "#EAB308",
-    "recommended": false
+    "recommended": true
   },
   {
     "id": "comm_2048",
@@ -102,10 +78,10 @@
     "version": "2.0",
     "size_kb": 28,
     "category": "Jeux / Arcade",
-    "description": "Le puzzle 2048 en C natif : fusionnez les tuiles avec les flèches directionnelles.",
+    "description": "Le puzzle 2048 en C natif 60 FPS : fusionnez les tuiles avec les flèches directionnelles.",
     "icon_initial": "🔢",
     "color": "#F97316",
-    "recommended": false
+    "recommended": true
   },
   {
     "id": "comm_snake",
@@ -114,10 +90,10 @@
     "version": "1.2",
     "size_kb": 22,
     "category": "Jeux / Arcade",
-    "description": "Le jeu du serpent rétro en C natif avec vitesse progressive et gestion de records.",
+    "description": "Le jeu du serpent rétro en C natif 60 FPS avec vitesse progressive et gestion de records.",
     "icon_initial": "🐍",
     "color": "#22C55E",
-    "recommended": false
+    "recommended": true
   },
   {
     "id": "comm_tetris",
@@ -126,10 +102,10 @@
     "version": "1.5",
     "size_kb": 35,
     "category": "Jeux / Arcade",
-    "description": "Le jeu de briques légendaire avec rotation, chute rapide, lignes et niveaux.",
+    "description": "Le jeu de briques légendaire en C natif 60 FPS avec 7 tétraminos et score.",
     "icon_initial": "🧱",
     "color": "#06B6D4",
-    "recommended": false
+    "recommended": true
   },
   {
     "id": "comm_minesweeper",
@@ -138,9 +114,9 @@
     "version": "1.0",
     "size_kb": 26,
     "category": "Jeux / Arcade",
-    "description": "Démineur complet en C natif avec drapeaux, révélation auto et chrono.",
+    "description": "Démineur complet en C natif 60 FPS avec drapeaux, révélation auto et smiley.",
     "icon_initial": "💣",
     "color": "#EF4444",
-    "recommended": false
+    "recommended": true
   }
 ]

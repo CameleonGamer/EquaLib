@@ -59,21 +59,7 @@
     "source": "GitHub Community",
     "tags": ["tetris", "briques", "retro", "lignes"]
   },
-  {
-    "id": "comm_raycaster",
-    "name": "Raycaster 3D (Wolf-mini)",
-    "author": "NumWorks Devs",
-    "version": "1.1",
-    "size_kb": 45,
-    "category": "Jeux / Arcade",
-    "format": "NWA",
-    "description": "Moteur 3D pseudo-Wolfenstein en raycasting avec textures et labyrinthe navigable.",
-    "icon_initial": "🏰",
-    "color": "#64748B",
-    "download_url": "apps/raycaster.nwa",
-    "source": "EADK Showcase",
-    "tags": ["3d", "doom", "wolfenstein", "fps", "labyrinthe"]
-  },
+
   {
     "id": "comm_minesweeper",
     "name": "Démineur NumWorks",
@@ -298,20 +284,6 @@
     "download_url": "apps/constantes.nws",
     "source": "Science Hub",
     "tags": ["constantes", "physique", "codata", "unites", "planck"]
-  },
-  {
-    "id": "comm_chip8",
-    "name": "CHIP-8 Virtual Machine",
-    "author": "Zardam",
-    "version": "1.1",
-    "size_kb": 65,
-    "category": "Jeux / Arcade",
-    "format": "NWA",
-    "description": "Interpréteur CHIP-8 natif permettant de jouer à Pong, Space Invaders et Tetris rétro.",
-    "icon_initial": "👾",
-    "color": "#D946EF",
-    "download_url": "apps/chip8.nwa",
-    "source": "EADK Store",
-    "tags": ["chip8", "retro", "invaders", "emulateur"]
   }
 ]
+
