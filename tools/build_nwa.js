@@ -12,6 +12,11 @@ const srcFiles = [
   'app_periodic.c',
   'app_math_tools.c',
   'app_text_viewer.c',
+  'app_flappy.c',
+  'app_2048.c',
+  'app_snake.c',
+  'app_tetris.c',
+  'app_minesweeper.c',
   'eq_font.c',
   'mini_libc.c'
 ];

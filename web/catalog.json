@@ -82,5 +82,65 @@
     "icon_initial": "🎮",
     "color": "#EC4899",
     "recommended": false
+  },
+  {
+    "id": "comm_flappy",
+    "name": "Flappy Bird NW",
+    "author": "EquaLib Arcade",
+    "version": "1.4",
+    "size_kb": 25,
+    "category": "Jeux / Arcade",
+    "description": "Le célèbre jeu Flappy Bird adapté en C natif fluide pour NumWorks N0120.",
+    "icon_initial": "🐦",
+    "color": "#EAB308",
+    "recommended": false
+  },
+  {
+    "id": "comm_2048",
+    "name": "2048 Ultimate",
+    "author": "EquaLib Arcade",
+    "version": "2.0",
+    "size_kb": 28,
+    "category": "Jeux / Arcade",
+    "description": "Le puzzle 2048 en C natif : fusionnez les tuiles avec les flèches directionnelles.",
+    "icon_initial": "🔢",
+    "color": "#F97316",
+    "recommended": false
+  },
+  {
+    "id": "comm_snake",
+    "name": "Snake Classic",
+    "author": "EquaLib Arcade",
+    "version": "1.2",
+    "size_kb": 22,
+    "category": "Jeux / Arcade",
+    "description": "Le jeu du serpent rétro en C natif avec vitesse progressive et gestion de records.",
+    "icon_initial": "🐍",
+    "color": "#22C55E",
+    "recommended": false
+  },
+  {
+    "id": "comm_tetris",
+    "name": "Tetris NumWorks",
+    "author": "EquaLib Arcade",
+    "version": "1.5",
+    "size_kb": 35,
+    "category": "Jeux / Arcade",
+    "description": "Le jeu de briques légendaire avec rotation, chute rapide, lignes et niveaux.",
+    "icon_initial": "🧱",
+    "color": "#06B6D4",
+    "recommended": false
+  },
+  {
+    "id": "comm_minesweeper",
+    "name": "Démineur NumWorks",
+    "author": "EquaLib Arcade",
+    "version": "1.0",
+    "size_kb": 26,
+    "category": "Jeux / Arcade",
+    "description": "Démineur complet en C natif avec drapeaux, révélation auto et chrono.",
+    "icon_initial": "💣",
+    "color": "#EF4444",
+    "recommended": false
   }
 ]

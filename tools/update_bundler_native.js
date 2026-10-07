@@ -47,7 +47,7 @@ class EquaLibBundler {
    */
   findManifestOffset(buf) {
     const magic = [0x45, 0x51, 0x41, 0x4C]; // "EQAL"
-    for (let i = 0; i <= buf.length - 16 - 12 * 144; i += 4) {
+    for (let i = 0; i <= buf.length - 16 - 12 * 144; i += 1) {
       if (buf[i] === magic[0] && buf[i+1] === magic[1] && buf[i+2] === magic[2] && buf[i+3] === magic[3]) {
         const version = buf[i+4] | (buf[i+5] << 8) | (buf[i+6] << 16) | (buf[i+7] << 24);
         if (version === 1) {
@@ -127,11 +127,17 @@ class EquaLibBundler {
       // 5. Détermination du type d'application (offset 132)
       let appType = 6; // Type 6: Visionneuse texte / notes / script
       const appIdLower = (app.id || '').toLowerCase();
-      if (appIdLower === 'mariokart') appType = 1;
-      else if (appIdLower === 'periodique') appType = 2;
-      else if (appIdLower === 'fiches') appType = 3;
-      else if (appIdLower === 'math_solver') appType = 4;
-      else if (appIdLower === 'stealth_calc') appType = 5;
+      const appNameLower = (app.name || '').toLowerCase();
+      if (appIdLower === 'mariokart' || appIdLower.includes('mario') || appNameLower.includes('mario')) appType = 1;
+      else if (appIdLower === 'periodique' || appIdLower.includes('period') || appNameLower.includes('périodique') || appNameLower.includes('periodique')) appType = 2;
+      else if (appIdLower === 'fiches' || appIdLower.includes('cours') || appNameLower.includes('fiches')) appType = 3;
+      else if (appIdLower === 'math_solver' || appIdLower.includes('solveur') || appNameLower.includes('solveur')) appType = 4;
+      else if (appIdLower === 'stealth_calc' || appIdLower.includes('stealth') || appNameLower.includes('furtif')) appType = 5;
+      else if (appIdLower.includes('flappy') || appNameLower.includes('flappy')) appType = 7;
+      else if (appIdLower.includes('2048') || appNameLower.includes('2048')) appType = 8;
+      else if (appIdLower.includes('snake') || appNameLower.includes('serpent') || appNameLower.includes('snake')) appType = 9;
+      else if (appIdLower.includes('tetris') || appNameLower.includes('tetris')) appType = 10;
+      else if (appIdLower.includes('minesweeper') || appIdLower.includes('demineur') || appNameLower.includes('démineur') || appNameLower.includes('demineur')) appType = 11;
 
       u8[entryOffset + 132] = appType;
 
@@ -145,6 +151,8 @@ class EquaLibBundler {
               const parsed = JSON.parse(rawStr);
               if (parsed.scripts && parsed.scripts[0] && parsed.scripts[0].text) {
                 scriptText = parsed.scripts[0].text;
+              } else if (parsed.description) {
+                scriptText = '# ' + (parsed.name || app.name) + '\\n\\n' + parsed.description;
               } else {
                 scriptText = rawStr;
               }

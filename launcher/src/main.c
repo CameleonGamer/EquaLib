@@ -334,6 +334,16 @@ int main(int argc, char* argv[]) {
                 run_math_tools_app();
             } else if (type == APP_TYPE_STEALTH) {
                 run_panic_calculator();
+            } else if (type == APP_TYPE_FLAPPY) {
+                run_flappy_app();
+            } else if (type == APP_TYPE_2048) {
+                run_2048_app();
+            } else if (type == APP_TYPE_SNAKE) {
+                run_snake_app();
+            } else if (type == APP_TYPE_TETRIS) {
+                run_tetris_app();
+            } else if (type == APP_TYPE_MINESWEEPER) {
+                run_minesweeper_app();
             } else if (type == APP_TYPE_TEXT_VIEWER) {
                 const char* data_ptr = NULL;
                 if (app->data_size > 0) {

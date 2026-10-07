@@ -11,7 +11,12 @@
 #define APP_TYPE_COURSES     3
 #define APP_TYPE_MATH_TOOLS  4
 #define APP_TYPE_STEALTH     5
-#define APP_TYPE_TEXT_VIEWER 6
+#define APP_TYPE_TEXT_VIEWER  6
+#define APP_TYPE_FLAPPY      7
+#define APP_TYPE_2048        8
+#define APP_TYPE_SNAKE       9
+#define APP_TYPE_TETRIS      10
+#define APP_TYPE_MINESWEEPER 11
 
 #define MAX_MANIFEST_APPS 12
 
