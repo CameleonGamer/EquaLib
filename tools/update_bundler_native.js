@@ -128,7 +128,12 @@ class EquaLibBundler {
       let appType = 6; // Type 6: Visionneuse texte par défaut
       const appIdLower = (app.id || '').toLowerCase();
       const appNameLower = (app.name || '').toLowerCase();
-      const isNwa = (app.category === 'NWA') || (app.format === 'NWA') || appIdLower.includes('.nwa') || appNameLower.includes('.nwa');
+      const isBin = (app.format === 'BIN') || (app.category === 'BIN') || appIdLower.includes('.bin') || appNameLower.includes('.bin');
+      const isNwa = (app.format === 'NWA') || (app.category === 'NWA') || appIdLower.includes('.nwa') || appNameLower.includes('.nwa');
+      const isNative = isBin || isNwa || (app.data && app.data.length >= 4 && (
+        (app.data[0] === 0xBA && app.data[1] === 0xBE && app.data[2] === 0xC0 && app.data[3] === 0xDE) || // 0xDEC0BEBA EADK flat binary
+        (app.data[0] === 0x7F && app.data[1] === 0x45 && app.data[2] === 0x4C && app.data[3] === 0x46)    // \x7fELF relocatable object
+      ));
 
       if (appIdLower === 'mariokart' || appIdLower.includes('mario') || appNameLower.includes('mario')) {
         appType = 1; // Super Mario Kart 3D natif C (issu de MathDS)
@@ -150,14 +155,41 @@ class EquaLibBundler {
         appType = 10; // Tetris NumWorks natif C 60 FPS
       } else if (appIdLower === 'comm_minesweeper' || appIdLower.includes('mine') || appNameLower.includes('démin') || appNameLower.includes('demin')) {
         appType = 11; // Démineur NumWorks natif C 60 FPS
-      } else if ((app.format === 'NWS') || (app.format === 'PY') || appIdLower.includes('.nws') || appNameLower.includes('.nws') || (app.data && !isNwa)) {
+      } else if (isNative) {
+        appType = 13; // Exécutable natif ARM EADK (.bin ou .nwa)
+      } else if ((app.format === 'NWS') || (app.format === 'PY') || appIdLower.includes('.nws') || appNameLower.includes('.nws') || (app.data && !isNative)) {
         appType = 12; // Moteur Python natif pour tout script .nws / .py
       }
 
       u8[entryOffset + 132] = appType;
 
-      // 6. Si type 6 (notes/texte) ou type 12 (script Python exécutable), extraction et injection du code
-      if (appType === 6 || appType === 12) {
+      // 6. Gestion du payload binaire (type 13) vs texte/script (type 6 ou 12)
+      if (appType === 13) {
+        if (app.data && app.data.length > 0) {
+          const binBytes = (app.data instanceof Uint8Array) ? app.data : new Uint8Array(app.data);
+          const pad = (4 - (binBytes.length % 4)) % 4;
+          const totalPayload = new Uint8Array(binBytes.length + pad);
+          totalPayload.set(binBytes, 0);
+
+          const dataOffset = currentExtraOffset;
+          const dataSize = binBytes.length;
+
+          // Écriture de data_offset (offset 136)
+          u8[entryOffset + 136] = dataOffset & 0xFF;
+          u8[entryOffset + 137] = (dataOffset >> 8) & 0xFF;
+          u8[entryOffset + 138] = (dataOffset >> 16) & 0xFF;
+          u8[entryOffset + 139] = (dataOffset >> 24) & 0xFF;
+
+          // Écriture de data_size (offset 140)
+          u8[entryOffset + 140] = dataSize & 0xFF;
+          u8[entryOffset + 141] = (dataSize >> 8) & 0xFF;
+          u8[entryOffset + 142] = (dataSize >> 16) & 0xFF;
+          u8[entryOffset + 143] = (dataSize >> 24) & 0xFF;
+
+          extraPayloads.push(totalPayload);
+          currentExtraOffset += totalPayload.length;
+        }
+      } else if (appType === 6 || appType === 12) {
         let scriptText = '';
         if (app.data) {
           try {

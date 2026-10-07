@@ -437,10 +437,11 @@ document.addEventListener('DOMContentLoaded', async () => {
           author: "Téléchargé du Web",
           version: "Web",
           size_kb: Math.max(1, Math.round(buffer.byteLength / 1024)),
-          category: ext.toUpperCase(),
+          category: (ext === 'bin' || ext === 'nwa') ? 'Natif ARM' : ext.toUpperCase(),
+          format: (ext === 'py' || ext === 'txt') ? 'PY' : ext.toUpperCase(),
           description: `Application téléchargée depuis ${url}`,
-          icon_initial: '🌐',
-          color: "#059669",
+          icon_initial: (ext === 'bin' || ext === 'nwa') ? '⚡' : '🌐',
+          color: (ext === 'bin' || ext === 'nwa') ? "#10B981" : "#059669",
           data: new Uint8Array(buffer)
         };
 
@@ -620,24 +621,25 @@ document.addEventListener('DOMContentLoaded', async () => {
   async function handleCustomFiles(files) {
     for (const file of files) {
       const ext = file.name.split('.').pop().toLowerCase();
-      if (!['nwa', 'nws', 'py', 'json', 'txt'].includes(ext)) {
-        showToast(`Format .${ext} non supporté (utilisez .nws, .py ou .nwa)`, 'error');
+      if (!['nwa', 'bin', 'nws', 'py', 'json', 'txt'].includes(ext)) {
+        showToast(`Format .${ext} non supporté (utilisez .bin, .nwa, .nws ou .py)`, 'error');
         continue;
       }
 
       const buffer = await file.arrayBuffer();
       const format = (ext === 'py' || ext === 'txt') ? 'PY' : ext.toUpperCase();
+      const isNative = (format === 'BIN' || format === 'NWA');
       const customApp = {
         id: 'custom_' + Date.now() + Math.random().toString(36).substr(2, 4),
         name: file.name.replace(/\.[^/.]+$/, ""),
         author: "Fichier importé",
         version: "Custom",
         size_kb: Math.max(1, Math.round(buffer.byteLength / 1024)),
-        category: format,
+        category: isNative ? 'Natif ARM' : format,
         format: format,
         description: `Application importée manuellement (${file.name})`,
-        icon_initial: '📁',
-        color: "#0284C7",
+        icon_initial: isNative ? '⚡' : '📁',
+        color: isNative ? "#10B981" : "#0284C7",
         data: new Uint8Array(buffer)
       };
 
@@ -647,7 +649,13 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
 
       addAppToSelection(customApp);
-      showToast(`"${file.name}" ajouté avec succès à votre Pack !`, 'success');
+      if (format === 'BIN') {
+        showToast(`"${file.name}" (exécutable natif .bin) ajouté avec succès !`, 'success');
+      } else if (format === 'NWA') {
+        showToast(`"${file.name}" (.nwa objet EADK) ajouté au Pack !`, 'success');
+      } else {
+        showToast(`"${file.name}" ajouté avec succès à votre Pack !`, 'success');
+      }
       switchTab('catalog');
     }
   }

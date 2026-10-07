@@ -18,6 +18,7 @@
 #define APP_TYPE_TETRIS      10
 #define APP_TYPE_MINESWEEPER 11
 #define APP_TYPE_PYTHON      12
+#define APP_TYPE_NATIVE_EXEC 13
 
 #define MAX_MANIFEST_APPS 12
 

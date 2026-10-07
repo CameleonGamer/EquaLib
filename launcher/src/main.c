@@ -260,6 +260,91 @@ void run_panic_calculator(void) {
     }
 }
 
+/* Exécution d'une application native externe (.bin / .nwa) */
+void run_native_app(const char* name, const uint8_t* bin_ptr, uint32_t bin_size) {
+    if (!bin_ptr || bin_size < 32) {
+        eadk_display_push_rect_uniform(eadk_screen_rect, 0x0000);
+        eadk_point_t pt = {20, 100};
+        eadk_display_draw_string("Erreur: Binaire introuvable", pt, false, 0xF800, 0x0000);
+        eadk_timing_msleep(2000);
+        return;
+    }
+
+    uint32_t magic1 = *(const uint32_t*)(bin_ptr + 0);
+    uint32_t magic2 = *(const uint32_t*)(bin_ptr + 28);
+
+    /* Format standard EADK Flat Binary (0xDEC0BEBA) */
+    if (magic1 == 0xDEC0BEBA && magic2 == 0xDEC0BEBA) {
+        uint32_t entry_offset = *(const uint32_t*)(bin_ptr + 20);
+        if (entry_offset >= bin_size) {
+            eadk_display_push_rect_uniform(eadk_screen_rect, 0x0000);
+            eadk_point_t pt = {20, 100};
+            eadk_display_draw_string("Erreur: Point d'entree invalide", pt, false, 0xF800, 0x0000);
+            eadk_timing_msleep(2000);
+            return;
+        }
+
+        /* Attendre le relâchement complet des touches avant exécution */
+        while (eadk_keyboard_scan() != 0) {
+            eadk_timing_msleep(20);
+        }
+
+        /* Effacer l'écran en noir */
+        eadk_display_push_rect_uniform(eadk_screen_rect, 0x0000);
+
+        /* Appel du point d'entrée natif ARM Thumb */
+        typedef void (*eadk_app_entry_fn)(void);
+        uint32_t entry_addr = ((uint32_t)bin_ptr + entry_offset) | 1;
+        eadk_app_entry_fn entry = (eadk_app_entry_fn)entry_addr;
+
+        entry();
+
+        /* Attendre le relâchement des touches au retour vers EquaLib */
+        while (eadk_keyboard_scan() != 0) {
+            eadk_timing_msleep(20);
+        }
+        return;
+    }
+
+    /* Détection d'un objet ELF .nwa non lié */
+    if (bin_ptr[0] == 0x7F && bin_ptr[1] == 'E' && bin_ptr[2] == 'L' && bin_ptr[3] == 'F') {
+        eadk_display_push_rect_uniform(eadk_screen_rect, COLOR_CARD_BG);
+        eadk_rect_t bar = {0, 0, EADK_SCREEN_WIDTH, 22};
+        eadk_display_push_rect_uniform(bar, COLOR_NUMWORKS);
+        eadk_point_t pt_title = {8, 5};
+        eadk_display_draw_string(name ? name : "Application NWA", pt_title, false, eadk_color_black, COLOR_NUMWORKS);
+
+        eadk_point_t p1 = {12, 40};
+        eadk_display_draw_string("Application NWA detectee :", p1, false, eadk_color_black, COLOR_CARD_BG);
+        eadk_point_t p2 = {12, 65};
+        eadk_display_draw_string("Ce fichier est un objet ELF non lie.", p2, false, 0x7BEF, COLOR_CARD_BG);
+        eadk_point_t p3 = {12, 95};
+        eadk_display_draw_string("Pour le lancer, convertissez-le :", p3, false, eadk_color_black, COLOR_CARD_BG);
+        eadk_point_t p4 = {12, 120};
+        eadk_display_draw_string("npx nwlink nwa-bin app.nwa app.bin", p4, false, 0x05E0, COLOR_CARD_BG);
+        eadk_point_t p5 = {12, 150};
+        eadk_display_draw_string("Puis importez le .bin sur le site !", p5, false, eadk_color_black, COLOR_CARD_BG);
+        eadk_point_t p6 = {12, 190};
+        eadk_display_draw_string("[Back] : Revenir au Hub", p6, false, 0xD800, COLOR_CARD_BG);
+
+        while (true) {
+            eadk_keyboard_state_t k = eadk_keyboard_scan();
+            if (eadk_keyboard_key_down(k, eadk_key_back) || eadk_keyboard_key_down(k, eadk_key_home)) {
+                break;
+            }
+            eadk_timing_msleep(20);
+        }
+        while (eadk_keyboard_scan() != 0) eadk_timing_msleep(20);
+        return;
+    }
+
+    /* Format binaire inconnu */
+    eadk_display_push_rect_uniform(eadk_screen_rect, 0x0000);
+    eadk_point_t pt = {20, 100};
+    eadk_display_draw_string("Erreur: Format binaire inconnu", pt, false, 0xF800, 0x0000);
+    eadk_timing_msleep(2000);
+}
+
 int main(int argc, char* argv[]) {
     (void)argc;
     (void)argv;
@@ -349,13 +434,23 @@ int main(int argc, char* argv[]) {
                 run_tetris_app();
             } else if (type == APP_TYPE_MINESWEEPER) {
                 run_minesweeper_app();
+            } else if (type == APP_TYPE_NATIVE_EXEC) {
+                const uint8_t* bin_ptr = NULL;
+                if (app->data_size > 0) {
+                    bin_ptr = (const uint8_t*)(0x90180000 + app->data_offset);
+                }
+                run_native_app((const char*)app->name, bin_ptr, app->data_size);
             } else if (type == APP_TYPE_PYTHON || type == APP_TYPE_TEXT_VIEWER) {
                 const char* data_ptr = NULL;
                 if (app->data_size > 0) {
                     data_ptr = (const char*)(0x90180000 + app->data_offset);
                 }
-                /* Détection intelligente : si c'est du code Python, l'exécuter avec le moteur Python */
-                if (type == APP_TYPE_PYTHON || (data_ptr && app->data_size > 0 &&
+                /* Détection intelligente : si c'est un exécutable binaire natif ou ELF */
+                if (data_ptr && app->data_size >= 4 && (
+                    (*(const uint32_t*)data_ptr == 0xDEC0BEBA) ||
+                    (data_ptr[0] == 0x7F && data_ptr[1] == 'E' && data_ptr[2] == 'L' && data_ptr[3] == 'F'))) {
+                    run_native_app((const char*)app->name, (const uint8_t*)data_ptr, app->data_size);
+                } else if (type == APP_TYPE_PYTHON || (data_ptr && app->data_size > 0 &&
                     (data_ptr[0] == '#' || data_ptr[0] == 'i' || data_ptr[0] == 'd' || data_ptr[0] == 'f' || data_ptr[0] == 'k'))) {
                     run_python_app((const char*)app->name, data_ptr, app->data_size);
                 } else {
