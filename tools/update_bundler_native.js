@@ -125,20 +125,24 @@ class EquaLibBundler {
       }
 
       // 5. Détermination du type d'application (offset 132)
-      let appType = 6; // Type 6: Visionneuse texte / notes / script
+      let appType = 6; // Type 6: Visionneuse texte par défaut
       const appIdLower = (app.id || '').toLowerCase();
       const appNameLower = (app.name || '').toLowerCase();
-      if (appIdLower === 'mariokart' || appIdLower.includes('mario') || appNameLower.includes('mario')) appType = 1;
-      else if (appIdLower === 'periodique' || appIdLower.includes('period') || appNameLower.includes('périodique') || appNameLower.includes('periodique')) appType = 2;
-      else if (appIdLower === 'fiches' || appIdLower.includes('cours') || appNameLower.includes('fiches')) appType = 3;
-      else if (appIdLower === 'math_solver' || appIdLower.includes('solveur') || appNameLower.includes('solveur')) appType = 4;
-      else if (appIdLower === 'stealth_calc' || appIdLower.includes('stealth') || appNameLower.includes('furtif')) appType = 5;
-      else if (appIdLower.includes('flappy') || appNameLower.includes('flappy')) appType = 7;
-      else if (appIdLower.includes('2048') || appNameLower.includes('2048')) appType = 8;
-      else if (appIdLower.includes('snake') || appNameLower.includes('serpent') || appNameLower.includes('snake')) appType = 9;
-      else if (appIdLower.includes('tetris') || appNameLower.includes('tetris')) appType = 10;
-      else if (appIdLower.includes('minesweeper') || appIdLower.includes('demineur') || appNameLower.includes('démineur') || appNameLower.includes('demineur')) appType = 11;
-      else if (app.format === 'NWS' || (app.id && app.id.indexOf('.nws') !== -1) || (app.name && app.name.indexOf('.nws') !== -1)) appType = 12; // Type 12: Exécution Python native
+      const isNws = (app.format === 'NWS') || appIdLower.includes('.nws') || appNameLower.includes('.nws') || (app.data && app.data.length > 0);
+
+      if (isNws) {
+        appType = 12; // Toujours le moteur Python natif pour tout fichier .nws ou script importé
+      } else if (appIdLower === 'mariokart' || appIdLower === 'mario') {
+        appType = 1;
+      } else if (appIdLower === 'periodique' || appIdLower.includes('periodique')) {
+        appType = 2;
+      } else if (appIdLower === 'fiches' || appIdLower.includes('cours')) {
+        appType = 3;
+      } else if (appIdLower === 'math_solver' || appIdLower.includes('solveur')) {
+        appType = 4;
+      } else if (appIdLower === 'stealth_calc' || appIdLower.includes('furtif')) {
+        appType = 5;
+      }
 
       u8[entryOffset + 132] = appType;
 

@@ -1,13 +1,13 @@
 {
   "name": "Flappy Bird NW",
-  "description": "Jeu Flappy Bird pour NumWorks",
+  "description": "Jeu Flappy Bird authentique pour NumWorks",
   "author": "Community GitHub",
-  "version": "1.0",
+  "version": "1.4",
   "created_at": "2026-10-01T16:21:13.071Z",
   "scripts": [
     {
       "name": "flappy.py",
-      "text": "# Flappy Bird NumWorks\nimport kandinsky as kd\nimport ion\nimport time\n\ndef run():\n    kd.fill_rect(0, 0, 320, 240, kd.color(135, 206, 235))\n    kd.draw_string(\"Flappy Bird NumWorks\", 60, 40, kd.color(0, 0, 0))\n    kd.draw_string(\"Appuyez sur OK pour sauter\", 40, 100, kd.color(255, 255, 255), kd.color(0, 0, 0))\n    kd.draw_string(\"Appuyez sur Back pour quitter\", 35, 130, kd.color(255, 255, 255), kd.color(0, 0, 0))\n    \n    bird_y = 100\n    vel = 0\n    score = 0\n    \n    while True:\n        if ion.keydown(ion.KEY_BACK):\n            break\n        if ion.keydown(ion.KEY_OK):\n            vel = -6\n        \n        vel += 1\n        bird_y += vel\n        if bird_y < 10: bird_y = 10\n        if bird_y > 220: bird_y = 220\n        \n        kd.fill_rect(50, bird_y, 16, 16, kd.color(255, 200, 0))\n        time.sleep(0.04)\n\nrun()\n"
+      "text": "# Flappy Bird NumWorks\nimport kandinsky as kd\nimport ion\nimport time\n\nkd.fill_rect(0, 0, 320, 240, kd.color(135, 206, 235))\nkd.draw_string(\"Flappy Bird NumWorks\", 60, 40, kd.color(0, 0, 0))\nkd.draw_string(\"OK: Sauter | Back: Quitter\", 40, 100, kd.color(255, 255, 255), kd.color(0, 0, 0))\n\nbird_y = 100\nvel = 0\nscore = 0\npipe_x = 280\npipe_gap = 100\n\nwhile True:\n    if ion.keydown(ion.KEY_BACK):\n        break\n    if ion.keydown(ion.KEY_OK):\n        vel = -5\n    \n    kd.fill_rect(50, bird_y, 16, 16, kd.color(135, 206, 235))\n    vel += 1\n    bird_y += vel\n    if bird_y < 10: bird_y = 10\n    if bird_y > 210: bird_y = 210\n    kd.fill_rect(50, bird_y, 16, 16, kd.color(255, 200, 0))\n    \n    kd.fill_rect(pipe_x, 0, 20, 240, kd.color(135, 206, 235))\n    pipe_x -= 4\n    if pipe_x < -20:\n        pipe_x = 320\n        score += 1\n    kd.fill_rect(pipe_x, 0, 20, pipe_gap - 30, kd.color(34, 139, 34))\n    kd.fill_rect(pipe_x, pipe_gap + 30, 20, 240, kd.color(34, 139, 34))\n    \n    kd.draw_string(str(score), 10, 10, kd.color(255, 255, 255), kd.color(0, 0, 0))\n    time.sleep(0.03)\n"
     }
   ]
 }

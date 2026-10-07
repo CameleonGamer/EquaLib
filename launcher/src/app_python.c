@@ -195,6 +195,25 @@ static uint16_t py_color(int r, int g, int b) {
     return (uint16_t)((((r >> 3) & 0x1F) << 11) | (((g >> 2) & 0x3F) << 5) | ((b >> 3) & 0x1F));
 }
 
+static uint16_t val_to_color(py_val_t v) {
+    if (v.type == PY_INT) return (uint16_t)v.u.i;
+    if (v.type == PY_STR) {
+        const char* s = v.u.str;
+        if (strcmp(s, "black") == 0) return 0x0000;
+        if (strcmp(s, "white") == 0) return 0xFFFF;
+        if (strcmp(s, "red") == 0) return 0xF800;
+        if (strcmp(s, "green") == 0) return 0x07E0;
+        if (strcmp(s, "blue") == 0) return 0x001F;
+        if (strcmp(s, "yellow") == 0) return 0xFFE0;
+        if (strcmp(s, "orange") == 0) return 0xFD20;
+        if (strcmp(s, "purple") == 0) return 0x780F;
+        if (strcmp(s, "gray") == 0 || strcmp(s, "grey") == 0) return 0x8410;
+        if (strcmp(s, "cyan") == 0) return 0x07FF;
+        if (strcmp(s, "magenta") == 0) return 0xF81F;
+    }
+    return 0x0000;
+}
+
 static py_val_t eval_expr(const char** expr);
 
 /* Analyse d'une liste d'arguments séparés par des virgules */
@@ -212,6 +231,9 @@ static int parse_args(const char* str, py_val_t* args, int max_args) {
     return count;
 }
 
+static void execute_line(const char* line_text);
+static const char* s_script_lines_ptr[MAX_LINES];
+
 static py_val_t call_builtin(const char* name, const char* arg_str) {
     py_val_t ret;
     ret.type = PY_NONE;
@@ -220,6 +242,24 @@ static py_val_t call_builtin(const char* name, const char* arg_str) {
     for (int i = 0; i < 6; i++) args[i].type = PY_NONE;
     int argc = parse_args(arg_str, args, 6);
 
+    /* --- Fonctions utilisateur (définies via def) --- */
+    for (int f = 0; f < s_vm.func_count; f++) {
+        if (strcmp(name, s_vm.funcs[f].name) == 0) {
+            for (int a = 0; a < s_vm.funcs[f].arg_count && a < argc; a++) {
+                vm_set_var(s_vm.funcs[f].args[a], args[a]);
+            }
+            int start = s_vm.funcs[f].start_line;
+            int end = s_vm.funcs[f].end_line;
+            for (int l = start; l < end && !s_vm.should_return && !s_vm.exit_requested; l++) {
+                if (s_script_lines_ptr[l]) {
+                    execute_line(s_script_lines_ptr[l]);
+                }
+            }
+            s_vm.should_return = false;
+            return s_vm.return_val;
+        }
+    }
+
     /* --- Module kandinsky --- */
     if (strcmp(name, "fill_rect") == 0 || strcmp(name, "kd.fill_rect") == 0 || strcmp(name, "kandinsky.fill_rect") == 0) {
         s_has_graphics = true;
@@ -227,7 +267,7 @@ static py_val_t call_builtin(const char* name, const char* arg_str) {
         int y = val_to_int(args[1]);
         int w = val_to_int(args[2]);
         int h = val_to_int(args[3]);
-        uint16_t c = (argc >= 5) ? (uint16_t)val_to_int(args[4]) : 0x0000;
+        uint16_t c = (argc >= 5) ? val_to_color(args[4]) : 0x0000;
         if (x < 0) x = 0; if (y < 0) y = 0;
         if (x + w > EADK_SCREEN_WIDTH) w = EADK_SCREEN_WIDTH - x;
         if (y + h > EADK_SCREEN_HEIGHT) h = EADK_SCREEN_HEIGHT - y;
@@ -244,10 +284,28 @@ static py_val_t call_builtin(const char* name, const char* arg_str) {
         val_to_str(args[0], s, sizeof(s));
         int x = val_to_int(args[1]);
         int y = val_to_int(args[2]);
-        uint16_t fg = (argc >= 4) ? (uint16_t)val_to_int(args[3]) : 0x0000;
-        uint16_t bg = (argc >= 5) ? (uint16_t)val_to_int(args[4]) : 0xFFFF;
+        uint16_t fg = (argc >= 4) ? val_to_color(args[3]) : 0x0000;
+        uint16_t bg = (argc >= 5) ? val_to_color(args[4]) : 0xFFFF;
         eadk_point_t pt = {(uint16_t)x, (uint16_t)y};
         eq_display_draw_string(s, pt, false, fg, bg);
+        return ret;
+    }
+
+    if (strcmp(name, "set_pixel") == 0 || strcmp(name, "kd.set_pixel") == 0 || strcmp(name, "kandinsky.set_pixel") == 0) {
+        s_has_graphics = true;
+        int x = val_to_int(args[0]);
+        int y = val_to_int(args[1]);
+        uint16_t c = (argc >= 3) ? val_to_color(args[2]) : 0x0000;
+        if (x >= 0 && x < EADK_SCREEN_WIDTH && y >= 0 && y < EADK_SCREEN_HEIGHT) {
+            eadk_rect_t rect = {(uint16_t)x, (uint16_t)y, 1, 1};
+            eadk_display_push_rect_uniform(rect, c);
+        }
+        return ret;
+    }
+
+    if (strcmp(name, "get_pixel") == 0 || strcmp(name, "kd.get_pixel") == 0 || strcmp(name, "kandinsky.get_pixel") == 0) {
+        ret.type = PY_INT;
+        ret.u.i = 0xFFFF;
         return ret;
     }
 
@@ -330,6 +388,38 @@ static py_val_t call_builtin(const char* name, const char* arg_str) {
         if (args[0].type == PY_LIST) ret.u.i = args[0].u.list.count;
         else if (args[0].type == PY_STR) ret.u.i = (int)strlen(args[0].u.str);
         else ret.u.i = 0;
+        return ret;
+    }
+
+    /* --- str(...) & int(...) & abs(...) & min/max --- */
+    if (strcmp(name, "str") == 0) {
+        ret.type = PY_STR;
+        val_to_str(args[0], ret.u.str, sizeof(ret.u.str));
+        return ret;
+    }
+    if (strcmp(name, "int") == 0) {
+        ret.type = PY_INT;
+        ret.u.i = val_to_int(args[0]);
+        return ret;
+    }
+    if (strcmp(name, "abs") == 0) {
+        ret.type = PY_INT;
+        int32_t val = val_to_int(args[0]);
+        ret.u.i = (val < 0) ? -val : val;
+        return ret;
+    }
+    if (strcmp(name, "min") == 0) {
+        ret.type = PY_INT;
+        int32_t a = val_to_int(args[0]);
+        int32_t b = val_to_int(args[1]);
+        ret.u.i = (a < b) ? a : b;
+        return ret;
+    }
+    if (strcmp(name, "max") == 0) {
+        ret.type = PY_INT;
+        int32_t a = val_to_int(args[0]);
+        int32_t b = val_to_int(args[1]);
+        ret.u.i = (a > b) ? a : b;
         return ret;
     }
 
@@ -513,8 +603,8 @@ static int get_indent(const char* line) {
     return indent;
 }
 
-static void execute_line(const char* line_text) {
-    const char* p = skip_ws(line_text);
+static void execute_single_statement(const char* stmt) {
+    const char* p = skip_ws(stmt);
     if (*p == '\0' || *p == '#') return;
 
     /* Ignorer les imports */
@@ -535,6 +625,24 @@ static void execute_line(const char* line_text) {
         s_vm.return_val = eval_expr(&p);
         s_vm.should_return = true;
         return;
+    }
+
+    /* if inline : if cond: action */
+    if (p[0] == 'i' && p[1] == 'f' && p[2] == ' ') {
+        const char* colon = p + 3;
+        while (*colon && *colon != ':') colon++;
+        if (*colon == ':') {
+            const char* cond_p = p + 3;
+            py_val_t cond = eval_expr(&cond_p);
+            bool is_true = (cond.type == PY_BOOL) ? cond.u.b : (val_to_int(cond) != 0);
+            const char* action = skip_ws(colon + 1);
+            if (*action != '\0') {
+                if (is_true) {
+                    execute_line(action);
+                }
+                return;
+            }
+        }
     }
 
     /* Assignation : var = expr ou var += expr */
@@ -571,6 +679,27 @@ static void execute_line(const char* line_text) {
     eval_expr(&p);
 }
 
+static void execute_line(const char* line_text) {
+    char buf[128];
+    int pos = 0;
+    const char* p = line_text;
+    while (*p) {
+        if (*p == ';') {
+            buf[pos] = '\0';
+            execute_single_statement(buf);
+            pos = 0;
+            p++;
+        } else {
+            if (pos < 127) buf[pos++] = *p;
+            p++;
+        }
+    }
+    if (pos > 0) {
+        buf[pos] = '\0';
+        execute_single_statement(buf);
+    }
+}
+
 /* ========================================================================= */
 /*                          MOTEUR D'EXÉCUTION PRINCIPAL                     */
 /* ========================================================================= */
@@ -597,6 +726,13 @@ static void run_script_engine(const char* script_code, uint32_t script_len) {
         lines[line_count] = line_buffers[line_count];
         line_indents[line_count] = get_indent(lines[line_count]);
         line_count++;
+    }
+
+    for (int i = 0; i < line_count; i++) {
+        s_script_lines_ptr[i] = lines[i];
+    }
+    for (int i = line_count; i < MAX_LINES; i++) {
+        s_script_lines_ptr[i] = NULL;
     }
 
     vm_init();
@@ -628,22 +764,56 @@ static void run_script_engine(const char* script_code, uint32_t script_len) {
         const char* p = skip_ws(lines[cur_line]);
         int indent = line_indents[cur_line];
 
-        /* if condition: */
-        if (p[0] == 'i' && p[1] == 'f' && p[2] == ' ') {
-            p += 3;
-            py_val_t cond = eval_expr(&p);
-            bool is_true = (cond.type == PY_BOOL) ? cond.u.b : (val_to_int(cond) != 0);
+        /* def function(args): */
+        if (p[0] == 'd' && p[1] == 'e' && p[2] == 'f' && p[3] == ' ') {
+            p += 4;
+            p = skip_ws(p);
+            char fname[24] = "";
+            int fl = 0;
+            while (*p && *p != '(' && *p != ' ' && fl < 23) fname[fl++] = *p++;
+            fname[fl] = '\0';
 
-            if (!is_true) {
-                /* Sauter le bloc if */
-                cur_line++;
-                while (cur_line < line_count && line_indents[cur_line] > indent) {
-                    cur_line++;
-                }
+            if (s_vm.func_count < MAX_FUNCS) {
+                int fi = s_vm.func_count++;
+                int c = 0;
+                while (fname[c] && c < 23) { s_vm.funcs[fi].name[c] = fname[c]; c++; }
+                s_vm.funcs[fi].name[c] = '\0';
+                s_vm.funcs[fi].arg_count = 0;
+                s_vm.funcs[fi].start_line = cur_line + 1;
+
+                int end = cur_line + 1;
+                while (end < line_count && line_indents[end] > indent) end++;
+                s_vm.funcs[fi].end_line = end;
+                cur_line = end;
                 continue;
             }
-            cur_line++;
-            continue;
+        }
+
+        /* if condition: */
+        if (p[0] == 'i' && p[1] == 'f' && p[2] == ' ') {
+            const char* colon = p + 3;
+            while (*colon && *colon != ':') colon++;
+            if (*colon == ':') {
+                const char* cond_p = p + 3;
+                py_val_t cond = eval_expr(&cond_p);
+                bool is_true = (cond.type == PY_BOOL) ? cond.u.b : (val_to_int(cond) != 0);
+                const char* inline_act = skip_ws(colon + 1);
+                if (*inline_act != '\0') {
+                    if (is_true) execute_line(inline_act);
+                    cur_line++;
+                    continue;
+                } else {
+                    if (!is_true) {
+                        cur_line++;
+                        while (cur_line < line_count && line_indents[cur_line] > indent) {
+                            cur_line++;
+                        }
+                        continue;
+                    }
+                    cur_line++;
+                    continue;
+                }
+            }
         }
 
         /* while condition: */
@@ -680,17 +850,27 @@ static void run_script_engine(const char* script_code, uint32_t script_len) {
                 for (int l = block_start; l < block_end; l++) {
                     const char* lp = skip_ws(lines[l]);
                     if (lp[0] == 'i' && lp[1] == 'f' && lp[2] == ' ') {
-                        lp += 3;
-                        py_val_t if_c = eval_expr(&lp);
-                        bool it = (if_c.type == PY_BOOL) ? if_c.u.b : (val_to_int(if_c) != 0);
-                        if (!it) {
-                            int if_indent = line_indents[l];
-                            l++;
-                            while (l < block_end && line_indents[l] > if_indent) l++;
-                            l--;
-                            continue;
+                        const char* colon = lp + 3;
+                        while (*colon && *colon != ':') colon++;
+                        if (*colon == ':') {
+                            const char* cp = lp + 3;
+                            py_val_t if_c = eval_expr(&cp);
+                            bool it = (if_c.type == PY_BOOL) ? if_c.u.b : (val_to_int(if_c) != 0);
+                            const char* inline_act = skip_ws(colon + 1);
+                            if (*inline_act != '\0') {
+                                if (it) execute_line(inline_act);
+                                continue;
+                            } else {
+                                if (!it) {
+                                    int if_indent = line_indents[l];
+                                    l++;
+                                    while (l < block_end && line_indents[l] > if_indent) l++;
+                                    l--;
+                                    continue;
+                                }
+                                continue;
+                            }
                         }
-                        continue;
                     }
                     execute_line(lines[l]);
                     if (s_vm.should_break || s_vm.should_return || s_vm.exit_requested) break;
