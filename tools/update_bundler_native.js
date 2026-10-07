@@ -128,12 +128,10 @@ class EquaLibBundler {
       let appType = 6; // Type 6: Visionneuse texte par défaut
       const appIdLower = (app.id || '').toLowerCase();
       const appNameLower = (app.name || '').toLowerCase();
-      const isNws = (app.format === 'NWS') || appIdLower.includes('.nws') || appNameLower.includes('.nws') || (app.data && app.data.length > 0);
+      const isNwa = (app.category === 'NWA') || (app.format === 'NWA') || appIdLower.includes('.nwa') || appNameLower.includes('.nwa');
 
-      if (isNws) {
-        appType = 12; // Toujours le moteur Python natif pour tout fichier .nws ou script importé
-      } else if (appIdLower === 'mariokart' || appIdLower === 'mario') {
-        appType = 1;
+      if (appIdLower === 'mariokart' || appIdLower.includes('mario') || appNameLower.includes('mario')) {
+        appType = 1; // Super Mario Kart natif C complet (issu de MathDS)
       } else if (appIdLower === 'periodique' || appIdLower.includes('periodique')) {
         appType = 2;
       } else if (appIdLower === 'fiches' || appIdLower.includes('cours')) {
@@ -142,6 +140,8 @@ class EquaLibBundler {
         appType = 4;
       } else if (appIdLower === 'stealth_calc' || appIdLower.includes('furtif')) {
         appType = 5;
+      } else if ((app.format === 'NWS') || appIdLower.includes('.nws') || appNameLower.includes('.nws') || (app.data && !isNwa)) {
+        appType = 12; // Moteur Python natif pour tout script .nws
       }
 
       u8[entryOffset + 132] = appType;
