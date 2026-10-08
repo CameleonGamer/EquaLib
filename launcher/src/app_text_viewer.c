@@ -25,6 +25,8 @@ void run_text_viewer_app(const char* title, const char* text_data, uint32_t text
     bool redraw = true;
     eadk_keyboard_state_t prev_kbd = 0;
 
+    bool full_redraw = true;
+
     while (true) {
         eadk_keyboard_state_t kbd = eadk_keyboard_scan();
 
@@ -38,6 +40,7 @@ void run_text_viewer_app(const char* title, const char* text_data, uint32_t text
             run_panic_calculator();
             while (eadk_keyboard_scan() != 0) eadk_timing_msleep(20);
             prev_kbd = 0;
+            full_redraw = true;
             redraw = true;
             continue;
         }
@@ -62,13 +65,25 @@ void run_text_viewer_app(const char* title, const char* text_data, uint32_t text
 
         if (redraw) {
             redraw = false;
-            eadk_display_push_rect_uniform(eadk_screen_rect, COLOR_GRAY_BG);
 
-            /* Barre superieure */
-            eadk_rect_t top = {0, 0, EADK_SCREEN_WIDTH, 22};
-            eadk_display_push_rect_uniform(top, COLOR_NUMWORKS);
-            eadk_point_t pt_title = {10, 5};
-            eadk_display_draw_string(title ? title : "Notes & Scripts", pt_title, false, eadk_color_black, COLOR_NUMWORKS);
+            eadk_display_wait_for_vblank();
+
+            if (full_redraw) {
+                full_redraw = false;
+                eadk_display_push_rect_uniform(eadk_screen_rect, COLOR_GRAY_BG);
+
+                /* Barre superieure */
+                eadk_rect_t top = {0, 0, EADK_SCREEN_WIDTH, 22};
+                eadk_display_push_rect_uniform(top, COLOR_NUMWORKS);
+                eadk_point_t pt_title = {10, 5};
+                eadk_display_draw_string(title ? title : "Notes & Scripts", pt_title, false, eadk_color_black, COLOR_NUMWORKS);
+
+                /* Pied de page */
+                eadk_rect_t bottom = {0, EADK_SCREEN_HEIGHT - 16, EADK_SCREEN_WIDTH, 16};
+                eadk_display_push_rect_uniform(bottom, eadk_color_white);
+                eadk_point_t pt_help = {8, EADK_SCREEN_HEIGHT - 13};
+                eadk_display_draw_string("< >: Page  |  BACK: Hub  |  Var: Furtif", pt_help, false, 0x4208, eadk_color_white);
+            }
 
             /* Boite principale */
             eadk_rect_t box = {10, 28, EADK_SCREEN_WIDTH - 20, 192};
@@ -110,12 +125,6 @@ void run_text_viewer_app(const char* title, const char* text_data, uint32_t text
                 eadk_point_t pt_line = {18, (uint16_t)(36 + l * 18)};
                 eadk_display_draw_string(line_buf, pt_line, false, 0x18C3, COLOR_CARD_BG);
             }
-
-            /* Pied de page */
-            eadk_rect_t bottom = {0, EADK_SCREEN_HEIGHT - 16, EADK_SCREEN_WIDTH, 16};
-            eadk_display_push_rect_uniform(bottom, eadk_color_white);
-            eadk_point_t pt_help = {8, EADK_SCREEN_HEIGHT - 13};
-            eadk_display_draw_string("< >: Page  |  BACK: Hub  |  Var: Furtif", pt_help, false, 0x4208, eadk_color_white);
         }
 
         eadk_timing_msleep(20);

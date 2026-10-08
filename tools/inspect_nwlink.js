@@ -1,13 +1,21 @@
 const fs = require('fs');
-const content = fs.readFileSync('tools/package/dist/index.js', 'utf8');
+const content = fs.readFileSync('C:/Users/noear/AppData/Local/npm-cache/_npx/02573db4bd08bef8/node_modules/nwlink/dist/index.js', 'utf8');
 
-// Cherchons la classe xn et la méthode upload
-const idx = content.indexOf('key:"upload"');
-if (idx !== -1) {
-  console.log('--- key:upload ---');
-  console.log(content.substring(idx - 100, idx + 1500));
+const regex = /"eadk\.o":new Uint8Array\(([^)]+)\)/;
+const match = content.match(regex);
+if (match) {
+  console.log('Expression:', match[1]);
+  const varName = match[1].split('.')[0];
+  console.log('Var name:', varName);
+  const defRegex = new RegExp(varName + '=\\{data:\\[([^\\]]+)\\]\\}');
+  const defMatch = content.match(defRegex);
+  if (defMatch) {
+    const bytes = defMatch[1].split(',').map(Number);
+    console.log('Found eadk.o bytes length:', bytes.length);
+    fs.writeFileSync('tools/nwlink_eadk.o', Buffer.from(bytes));
+  } else {
+    console.log('defMatch not found');
+  }
 } else {
-  const idx2 = content.indexOf('upload(');
-  console.log('--- upload( ---');
-  console.log(content.substring(idx2 - 100, idx2 + 1000));
+  console.log('eadk.o regex not found');
 }

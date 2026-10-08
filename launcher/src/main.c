@@ -260,6 +260,23 @@ void run_panic_calculator(void) {
     }
 }
 
+/* Wrapper d'exécution sécurisé ARM Thumb avec alignement AAPCS et sauvegarde intégrale des registres */
+static void __attribute__((noinline)) call_app_entry_safe(uint32_t entry_addr) {
+    __asm__ volatile (
+        "push {r4-r11, lr}\n"       /* Sauvegarder tous les registres callee-saved */
+        "mov r4, sp\n"              /* Mémoriser le pointeur de pile d'origine */
+        "lsrs r1, r4, #3\n"         /* Aligner la pile sur 8 octets (requis AAPCS Cortex-M) */
+        "lsls r1, r1, #3\n"
+        "mov sp, r1\n"
+        "blx %0\n"                  /* Appel du point d'entrée natif Thumb */
+        "mov sp, r4\n"              /* Restaurer la pile à son adresse exacte */
+        "pop {r4-r11, lr}\n"        /* Restaurer tous les registres */
+        :
+        : "r" (entry_addr)
+        : "r0", "r1", "r2", "r3", "ip", "memory", "cc"
+    );
+}
+
 /* Exécution d'une application native externe (.bin / .nwa) */
 void run_native_app(const char* name, const uint8_t* bin_ptr, uint32_t bin_size) {
     if (!bin_ptr || bin_size < 32) {
@@ -270,13 +287,40 @@ void run_native_app(const char* name, const uint8_t* bin_ptr, uint32_t bin_size)
         return;
     }
 
+    /* Validation stricte des limites de la mémoire Flash externe (N0120 & N0110) */
+    uint32_t ptr_val = (uint32_t)bin_ptr;
+    if (ptr_val < 0x90180000 || ptr_val >= 0x90800000 || (ptr_val + bin_size) > 0x90800000) {
+        eadk_display_push_rect_uniform(eadk_screen_rect, COLOR_CARD_BG);
+        eadk_rect_t bar = {0, 0, EADK_SCREEN_WIDTH, 22};
+        eadk_display_push_rect_uniform(bar, 0xD800);
+        eadk_point_t pt_title = {8, 5};
+        eadk_display_draw_string(name ? name : "Application Native", pt_title, false, eadk_color_white, 0xD800);
+
+        eadk_point_t p1 = {12, 40};
+        eadk_display_draw_string("Erreur: Adresse Flash invalide !", p1, false, 0xD800, COLOR_CARD_BG);
+        eadk_point_t p2 = {12, 70};
+        eadk_display_draw_string("Le binaire se situe hors de la memoire autorisee.", p2, false, eadk_color_black, COLOR_CARD_BG);
+        eadk_point_t p3 = {12, 100};
+        eadk_display_draw_string("Installez votre pack via le bouton Flash USB.", p3, false, 0x05E0, COLOR_CARD_BG);
+        eadk_point_t p4 = {12, 180};
+        eadk_display_draw_string("[Back] : Revenir au Hub", p4, false, 0xD800, COLOR_CARD_BG);
+
+        while (true) {
+            eadk_keyboard_state_t k = eadk_keyboard_scan();
+            if (eadk_keyboard_key_down(k, eadk_key_back) || eadk_keyboard_key_down(k, eadk_key_home)) break;
+            eadk_timing_msleep(20);
+        }
+        while (eadk_keyboard_scan() != 0) eadk_timing_msleep(20);
+        return;
+    }
+
     uint32_t magic1 = *(const uint32_t*)(bin_ptr + 0);
     uint32_t magic2 = *(const uint32_t*)(bin_ptr + 28);
 
     /* Format standard EADK Flat Binary (0xDEC0BEBA) */
     if (magic1 == 0xDEC0BEBA && magic2 == 0xDEC0BEBA) {
         uint32_t entry_offset = *(const uint32_t*)(bin_ptr + 20);
-        if (entry_offset >= bin_size) {
+        if (entry_offset < 32 || entry_offset >= bin_size - 4) {
             eadk_display_push_rect_uniform(eadk_screen_rect, 0x0000);
             eadk_point_t pt = {20, 100};
             eadk_display_draw_string("Erreur: Point d'entree invalide", pt, false, 0xF800, 0x0000);
@@ -290,7 +334,7 @@ void run_native_app(const char* name, const uint8_t* bin_ptr, uint32_t bin_size)
             uint32_t compiled_flash_data = *(const uint32_t*)(bin_ptr + entry_offset + 0x38);
             uint32_t actual_flash_base = (uint32_t)bin_ptr;
             /* Si l'application a ete compilee pour une base Flash differente (ex: 0x90180000 au lieu de l'emplacement reel) */
-            if (compiled_flash_data < actual_flash_base || compiled_flash_data > actual_flash_base + bin_size + 0x1000) {
+            if (compiled_flash_data < actual_flash_base || compiled_flash_data > actual_flash_base + bin_size + 0x2000) {
                 eadk_display_push_rect_uniform(eadk_screen_rect, COLOR_CARD_BG);
                 eadk_rect_t bar = {0, 0, EADK_SCREEN_WIDTH, 22};
                 eadk_display_push_rect_uniform(bar, 0xD800);
@@ -330,12 +374,9 @@ void run_native_app(const char* name, const uint8_t* bin_ptr, uint32_t bin_size)
         /* Effacer l'écran en noir */
         eadk_display_push_rect_uniform(eadk_screen_rect, 0x0000);
 
-        /* Appel du point d'entrée natif ARM Thumb */
-        typedef void (*eadk_app_entry_fn)(void);
+        /* Appel sécurisé du point d'entrée natif ARM Thumb avec sauvegarde intégrale */
         uint32_t entry_addr = ((uint32_t)bin_ptr + entry_offset) | 1;
-        eadk_app_entry_fn entry = (eadk_app_entry_fn)entry_addr;
-
-        entry();
+        call_app_entry_safe(entry_addr);
 
         /* Attendre le relâchement des touches au retour vers EquaLib */
         while (eadk_keyboard_scan() != 0) {
@@ -381,6 +422,32 @@ void run_native_app(const char* name, const uint8_t* bin_ptr, uint32_t bin_size)
     eadk_point_t pt = {20, 100};
     eadk_display_draw_string("Erreur: Format binaire inconnu", pt, false, 0xF800, 0x0000);
     eadk_timing_msleep(2000);
+}
+
+static void draw_hub_card(int app_index, int v_slot, bool is_sel) {
+    int start_y = 28;
+    int card_h = 36;
+    int card_w = EADK_SCREEN_WIDTH - 16;
+    int y = start_y + v_slot * (card_h + 5);
+
+    eadk_rect_t card = {8, (uint16_t)y, (uint16_t)card_w, (uint16_t)card_h};
+    eadk_display_push_rect_uniform(card, is_sel ? COLOR_CARD_SEL : COLOR_CARD_BG);
+
+    if (is_sel) {
+        eadk_rect_t accent = {8, (uint16_t)y, 4, (uint16_t)card_h};
+        eadk_display_push_rect_uniform(accent, COLOR_NUMWORKS);
+    }
+
+    const equalib_manifest_app_t* cur_app = &g_equalib_manifest.apps[app_index];
+
+    eadk_point_t p_name = {20, (uint16_t)(y + 5)};
+    eadk_display_draw_string((const char*)cur_app->name, p_name, false, eadk_color_black, is_sel ? COLOR_CARD_SEL : COLOR_CARD_BG);
+
+    eadk_point_t p_cat = {(uint16_t)(EADK_SCREEN_WIDTH - 110), (uint16_t)(y + 5)};
+    eadk_display_draw_string((const char*)cur_app->category, p_cat, false, COLOR_TEXT_MUTED, is_sel ? COLOR_CARD_SEL : COLOR_CARD_BG);
+
+    eadk_point_t p_desc = {20, (uint16_t)(y + 20)};
+    eadk_display_draw_string((const char*)cur_app->desc, p_desc, false, 0x52AA, is_sel ? COLOR_CARD_SEL : COLOR_CARD_BG);
 }
 
 int main(int argc, char* argv[]) {
@@ -434,19 +501,41 @@ int main(int argc, char* argv[]) {
 
         if (eadk_keyboard_key_down(pressed, eadk_key_down)) {
             if (selected < (int)total_apps - 1) {
+                int old_sel = selected;
+                int old_scroll = scroll_offset;
                 selected++;
                 if (selected >= scroll_offset + 5) {
                     scroll_offset = selected - 4;
                 }
-                redraw = true;
+                eadk_display_wait_for_vblank();
+                if (scroll_offset == old_scroll) {
+                    draw_hub_card(old_sel, old_sel - scroll_offset, false);
+                    draw_hub_card(selected, selected - scroll_offset, true);
+                } else {
+                    for (int v = 0; v < 5 && scroll_offset + v < (int)total_apps; v++) {
+                        int i = scroll_offset + v;
+                        draw_hub_card(i, v, i == selected);
+                    }
+                }
             }
         } else if (eadk_keyboard_key_down(pressed, eadk_key_up)) {
             if (selected > 0) {
+                int old_sel = selected;
+                int old_scroll = scroll_offset;
                 selected--;
                 if (selected < scroll_offset) {
                     scroll_offset = selected;
                 }
-                redraw = true;
+                eadk_display_wait_for_vblank();
+                if (scroll_offset == old_scroll) {
+                    draw_hub_card(old_sel, old_sel - scroll_offset, false);
+                    draw_hub_card(selected, selected - scroll_offset, true);
+                } else {
+                    for (int v = 0; v < 5 && scroll_offset + v < (int)total_apps; v++) {
+                        int i = scroll_offset + v;
+                        draw_hub_card(i, v, i == selected);
+                    }
+                }
             }
         } else if (eadk_keyboard_key_down(pressed, eadk_key_ok) || eadk_keyboard_key_down(pressed, eadk_key_exe)) {
             const equalib_manifest_app_t* app = &g_equalib_manifest.apps[selected];
@@ -510,9 +599,10 @@ int main(int argc, char* argv[]) {
 
         prev_kbd = kbd;
 
-        /* Rendu graphique du Hub */
+        /* Rendu graphique initial ou après retour du Hub */
         if (redraw) {
             redraw = false;
+            eadk_display_wait_for_vblank();
             eadk_display_push_rect_uniform(eadk_screen_rect, COLOR_GRAY_BG);
 
             /* Barre superieure officielle */
@@ -525,10 +615,7 @@ int main(int argc, char* argv[]) {
             /* Indicateur visuel du Mode Examen */
             draw_exam_indicator(EADK_SCREEN_WIDTH - 20, 6, COLOR_NUMWORKS);
 
-            /* Liste des cartes d'applications avec défilement fluide */
-            int start_y = 28;
-            int card_h = 36;
-            int card_w = EADK_SCREEN_WIDTH - 16;
+            /* Liste des cartes d'applications */
             int visible_count = 5;
             if (visible_count > (int)total_apps - scroll_offset) {
                 visible_count = (int)total_apps - scroll_offset;
@@ -536,27 +623,7 @@ int main(int argc, char* argv[]) {
 
             for (int v = 0; v < visible_count; v++) {
                 int i = scroll_offset + v;
-                int y = start_y + v * (card_h + 5);
-                bool is_sel = (i == selected);
-
-                eadk_rect_t card = {8, (uint16_t)y, (uint16_t)card_w, (uint16_t)card_h};
-                eadk_display_push_rect_uniform(card, is_sel ? COLOR_CARD_SEL : COLOR_CARD_BG);
-
-                if (is_sel) {
-                    eadk_rect_t accent = {8, (uint16_t)y, 4, (uint16_t)card_h};
-                    eadk_display_push_rect_uniform(accent, COLOR_NUMWORKS);
-                }
-
-                const equalib_manifest_app_t* cur_app = &g_equalib_manifest.apps[i];
-
-                eadk_point_t p_name = {20, (uint16_t)(y + 5)};
-                eadk_display_draw_string((const char*)cur_app->name, p_name, false, eadk_color_black, is_sel ? COLOR_CARD_SEL : COLOR_CARD_BG);
-
-                eadk_point_t p_cat = {(uint16_t)(EADK_SCREEN_WIDTH - 110), (uint16_t)(y + 5)};
-                eadk_display_draw_string((const char*)cur_app->category, p_cat, false, COLOR_TEXT_MUTED, is_sel ? COLOR_CARD_SEL : COLOR_CARD_BG);
-
-                eadk_point_t p_desc = {20, (uint16_t)(y + 20)};
-                eadk_display_draw_string((const char*)cur_app->desc, p_desc, false, 0x52AA, is_sel ? COLOR_CARD_SEL : COLOR_CARD_BG);
+                draw_hub_card(i, v, i == selected);
             }
 
             /* Pied de page avec raccourcis clairs */

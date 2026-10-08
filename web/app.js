@@ -200,6 +200,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         };
         addAppToSelection(importedConverted);
         showToast(`✓ "${importedConverted.name}" ajouté avec succès au Pack EquaLib !`, 'success');
+        setTimeout(() => {
+          showToast(`⚡ Pour installer votre pack sur votre NumWorks, utilisez le bouton jaune "Installer sur ma NumWorks (Flash USB Direct)" !`, 'info');
+        }, 1200);
       } catch (e) {
         console.error('Erreur importation converter.html :', e);
       }
@@ -716,6 +719,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // ==================== TÉLÉCHARGEMENT & FLASH ====================
   downloadBtn.addEventListener('click', async () => {
+    const hasCustomApps = selectedApps.some(a => a.data && a.data.length > 0);
+    if (hasCustomApps) {
+      const proceed = confirm(
+        "⚠️ Attention Importante :\n\n" +
+        "Votre sélection contient des applications importées personnalisées.\n" +
+        "Le site officiel my.numworks.com ne supporte pas les packs multi-jeux et supprime automatiquement les applications supplémentaires d'un fichier .nwa.\n\n" +
+        "Pour installer TOUTES vos applications (y compris vos jeux importés), nous vous recommandons fortement d'utiliser le bouton jaune '⚡ Installer sur ma NumWorks (Flash USB Direct)' en 1 clic !\n\n" +
+        "Voulez-vous quand même télécharger le fichier .nwa (seuls les jeux intégrés fonctionneront sur my.numworks.com) ?"
+      );
+      if (!proceed) return;
+    }
+
     try {
       showToast(`Génération du binaire natif N0120 avec vos ${selectedApps.length} applications...`, 'info');
       const bundle = await bundler.buildBundle(selectedApps, 'nwa');

@@ -68,6 +68,8 @@ void run_periodic_table_app(void) {
     }
     eadk_keyboard_state_t prev_kbd = 0;
 
+    bool full_redraw = true;
+
     while (true) {
         eadk_keyboard_state_t kbd = eadk_keyboard_scan();
         if (eadk_keyboard_key_down(kbd, eadk_key_home) || eadk_keyboard_key_down(kbd, eadk_key_on_off)) {
@@ -79,6 +81,7 @@ void run_periodic_table_app(void) {
             run_panic_calculator();
             while (eadk_keyboard_scan() != 0) eadk_timing_msleep(20);
             prev_kbd = 0;
+            full_redraw = true;
             redraw = true;
             continue;
         }
@@ -121,13 +124,24 @@ void run_periodic_table_app(void) {
             redraw = false;
             const element_info_t* el = &s_elements[cur_idx];
 
-            eadk_display_push_rect_uniform(eadk_screen_rect, COLOR_GRAY_BG);
+            eadk_display_wait_for_vblank();
 
-            /* Barre superieure */
-            eadk_rect_t top = {0, 0, EADK_SCREEN_WIDTH, 22};
-            eadk_display_push_rect_uniform(top, COLOR_NUMWORKS);
-            eadk_point_t pt_title = {10, 5};
-            eadk_display_draw_string("Tableau Periodique des Elements", pt_title, false, eadk_color_black, COLOR_NUMWORKS);
+            if (full_redraw) {
+                full_redraw = false;
+                eadk_display_push_rect_uniform(eadk_screen_rect, COLOR_GRAY_BG);
+
+                /* Barre superieure */
+                eadk_rect_t top = {0, 0, EADK_SCREEN_WIDTH, 22};
+                eadk_display_push_rect_uniform(top, COLOR_NUMWORKS);
+                eadk_point_t pt_title = {10, 5};
+                eadk_display_draw_string("Tableau Periodique des Elements", pt_title, false, eadk_color_black, COLOR_NUMWORKS);
+
+                /* Barre d'aide en bas */
+                eadk_rect_t bottom = {0, EADK_SCREEN_HEIGHT - 18, EADK_SCREEN_WIDTH, 18};
+                eadk_display_push_rect_uniform(bottom, eadk_color_white);
+                eadk_point_t pt_help = {10, EADK_SCREEN_HEIGHT - 14};
+                eadk_display_draw_string("< > : Naviguer  |  BACK : Retour menu", pt_help, false, 0x4208, eadk_color_white);
+            }
 
             /* Carte principale de l'element */
             eadk_rect_t main_box = {16, 32, EADK_SCREEN_WIDTH - 32, 175};
@@ -176,12 +190,6 @@ void run_periodic_table_app(void) {
             snprintf(nav_str, sizeof(nav_str), "< %d / %d >", cur_idx + 1, (int)ELEM_COUNT);
             eadk_point_t pt_nav = {130, 180};
             eadk_display_draw_string(nav_str, pt_nav, false, 0x7BEF, COLOR_CARD_BG);
-
-            /* Barre d'aide en bas */
-            eadk_rect_t bottom = {0, EADK_SCREEN_HEIGHT - 18, EADK_SCREEN_WIDTH, 18};
-            eadk_display_push_rect_uniform(bottom, eadk_color_white);
-            eadk_point_t pt_help = {10, EADK_SCREEN_HEIGHT - 14};
-            eadk_display_draw_string("< > : Naviguer  |  BACK : Retour menu", pt_help, false, 0x4208, eadk_color_white);
         }
 
         eadk_timing_msleep(20);

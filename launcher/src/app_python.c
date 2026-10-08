@@ -87,6 +87,7 @@ static void console_init(void) {
 static void console_draw(void) {
     if (s_has_graphics) return;
 
+    eadk_display_wait_for_vblank();
     eadk_rect_t bg = {0, 22, EADK_SCREEN_WIDTH, EADK_SCREEN_HEIGHT - 22 - 16};
     eadk_display_push_rect_uniform(bg, 0x18C3);
 
@@ -351,7 +352,21 @@ static py_val_t call_builtin(const char* name, const char* arg_str) {
         float sec = (args[0].type == PY_FLOAT) ? args[0].u.f : (float)val_to_int(args[0]);
         uint32_t ms = (uint32_t)(sec * 1000.0f);
         if (ms == 0) ms = 10;
-        eadk_timing_msleep(ms);
+        uint32_t slept = 0;
+        while (slept < ms && !s_vm.exit_requested && !s_vm.panic_triggered) {
+            uint32_t chunk = (ms - slept > 15) ? 15 : (ms - slept);
+            eadk_timing_msleep(chunk);
+            slept += chunk;
+            eadk_keyboard_state_t st = eadk_keyboard_scan();
+            if (eadk_keyboard_key_down(st, eadk_key_home) || eadk_keyboard_key_down(st, eadk_key_on_off)) {
+                s_vm.exit_requested = true;
+                break;
+            }
+            if (eadk_keyboard_key_down(st, eadk_key_var)) {
+                s_vm.panic_triggered = true;
+                break;
+            }
+        }
         return ret;
     }
 

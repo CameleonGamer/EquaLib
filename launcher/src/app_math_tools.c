@@ -28,6 +28,8 @@ void run_math_tools_app(void) {
     }
     eadk_keyboard_state_t prev_kbd = 0;
 
+    bool full_redraw = true;
+
     while (true) {
         eadk_keyboard_state_t kbd = eadk_keyboard_scan();
         if (eadk_keyboard_key_down(kbd, eadk_key_home) || eadk_keyboard_key_down(kbd, eadk_key_on_off)) {
@@ -39,6 +41,7 @@ void run_math_tools_app(void) {
             run_panic_calculator();
             while (eadk_keyboard_scan() != 0) eadk_timing_msleep(20);
             prev_kbd = 0;
+            full_redraw = true;
             redraw = true;
             continue;
         }
@@ -72,13 +75,24 @@ void run_math_tools_app(void) {
         if (redraw) {
             redraw = false;
 
-            eadk_display_push_rect_uniform(eadk_screen_rect, COLOR_GRAY_BG);
+            eadk_display_wait_for_vblank();
 
-            /* Entete */
-            eadk_rect_t top = {0, 0, EADK_SCREEN_WIDTH, 22};
-            eadk_display_push_rect_uniform(top, COLOR_NUMWORKS);
-            eadk_point_t pt_title = {10, 5};
-            eadk_display_draw_string("Solveur Polynome 2nd Degre", pt_title, false, eadk_color_black, COLOR_NUMWORKS);
+            if (full_redraw) {
+                full_redraw = false;
+                eadk_display_push_rect_uniform(eadk_screen_rect, COLOR_GRAY_BG);
+
+                /* Entete */
+                eadk_rect_t top = {0, 0, EADK_SCREEN_WIDTH, 22};
+                eadk_display_push_rect_uniform(top, COLOR_NUMWORKS);
+                eadk_point_t pt_title = {10, 5};
+                eadk_display_draw_string("Solveur Polynome 2nd Degre", pt_title, false, eadk_color_black, COLOR_NUMWORKS);
+
+                /* Pied de page */
+                eadk_rect_t bottom = {0, EADK_SCREEN_HEIGHT - 16, EADK_SCREEN_WIDTH, 16};
+                eadk_display_push_rect_uniform(bottom, eadk_color_white);
+                eadk_point_t pt_help = {10, EADK_SCREEN_HEIGHT - 13};
+                eadk_display_draw_string("Haut/Bas: Sel  |  +/- : Ajuster  |  BACK: Menu", pt_help, false, 0x4208, eadk_color_white);
+            }
 
             /* Boite principale */
             eadk_rect_t main_box = {16, 32, EADK_SCREEN_WIDTH - 32, 175};
@@ -154,12 +168,6 @@ void run_math_tools_app(void) {
             }
             eadk_point_t pt_sol = {30, 172};
             eadk_display_draw_string(sol_str, pt_sol, true, (delta >= 0) ? 0x0460 : 0xC000, COLOR_CARD_BG);
-
-            /* Pied de page */
-            eadk_rect_t bottom = {0, EADK_SCREEN_HEIGHT - 16, EADK_SCREEN_WIDTH, 16};
-            eadk_display_push_rect_uniform(bottom, eadk_color_white);
-            eadk_point_t pt_help = {10, EADK_SCREEN_HEIGHT - 13};
-            eadk_display_draw_string("Haut/Bas: Sel  |  +/- : Ajuster  |  BACK: Menu", pt_help, false, 0x4208, eadk_color_white);
         }
 
         eadk_timing_msleep(20);
