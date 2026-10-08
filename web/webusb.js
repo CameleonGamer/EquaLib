@@ -399,7 +399,16 @@ class NumWorksWebUSB {
 
     // Protection anti-erreur ELF : si un fichier .nwa brut (non lié en .bin) est passé
     if (uint8[0] === 0x7F && uint8[1] === 0x45 && uint8[2] === 0x4C && uint8[3] === 0x46) {
-      console.warn("[WebUSB] Détection d'un fichier ELF .nwa. Récupération automatique du binaire plat lié .bin...");
+      console.warn("[WebUSB] Détection d'un fichier ELF .nwa. Liaison automatique vers binaire exécutable .bin...");
+      if (typeof EquaLibLinker !== 'undefined' && EquaLibLinker.convertNwaToBin) {
+        const converted = await EquaLibLinker.convertNwaToBin(uint8, {
+          flashStart: '0x' + (targetFlashAddr || DEFAULT_FLASH_ADDR).toString(16),
+          ramStart: '0x24020000',
+          ldWasmUrl: 'toolchain/ld.wasm',
+          objcopyWasmUrl: 'toolchain/objcopy.wasm'
+        });
+        return await this.flashBinary(converted, onProgress, targetFlashAddr);
+      }
       const binResp = await fetch(`equalib_n0120.bin?v=${Date.now()}`);
       if (binResp.ok) {
         return await this.flashBinary(await binResp.arrayBuffer(), onProgress, targetFlashAddr);

@@ -510,14 +510,16 @@
 
           <!-- Boutons d'Action Principaux -->
           <div class="space-y-2.5 pt-2">
-            <button id="download-btn" class="w-full py-4 px-4 rounded-2xl bg-nw-yellow hover:bg-nw-yellowHover active:scale-[0.98] text-black font-extrabold text-sm tracking-wide transition-all shadow-lg shadow-amber-500/25 flex items-center justify-center gap-2 group">
-              <span class="group-hover:translate-y-[-1px] transition-transform">💾</span>
-              <span>Télécharger mon application .nwa (Recommandé)</span>
+            <!-- Bouton Principal Recommandé : Flash USB Direct -->
+            <button id="flash-btn" class="w-full py-4 px-4 rounded-2xl bg-nw-yellow hover:bg-nw-yellowHover active:scale-[0.98] text-black font-extrabold text-sm tracking-wide transition-all shadow-lg shadow-amber-500/25 flex items-center justify-center gap-2 group">
+              <span class="group-hover:scale-110 transition-transform">⚡</span>
+              <span>Installer sur ma NumWorks (Flash USB Direct - Recommandé)</span>
             </button>
 
             <div class="grid grid-cols-2 gap-2">
-              <button id="flash-btn" class="py-2.5 px-3 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 border border-amber-500/40 font-bold text-xs transition-all flex items-center justify-center gap-1.5 shadow-sm active:scale-95 group">
-                <span class="group-hover:scale-110 transition-transform">⚡</span> Flash USB Direct
+              <button id="download-btn" class="py-2.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs transition-all flex items-center justify-center gap-1.5 border border-slate-700 shadow-sm active:scale-95 group">
+                <span class="group-hover:translate-y-[-1px] transition-transform">💾</span>
+                <span>Télécharger .nwa</span>
               </button>
               <button id="download-nws-btn" class="py-2.5 px-3 rounded-xl bg-slate-800/60 hover:bg-slate-800 text-slate-300 font-semibold text-xs transition-all flex items-center justify-center gap-1.5 border border-slate-700">
                 <span>📦</span> Exporter .nws
@@ -530,23 +532,23 @@
         <!-- Guide d'installation pas-à-pas -->
         <div class="p-5 rounded-3xl bg-slate-900 border border-amber-500/30 text-xs text-slate-300 space-y-3">
           <div class="flex items-center gap-2 font-bold text-nw-yellow text-sm">
-            <span>⚡</span> Deux méthodes pour installer EquaLib :
+            <span>⚡</span> Installation de votre Pack EquaLib :
           </div>
           <div class="space-y-3 text-slate-400 pl-1">
-            <div class="p-2.5 rounded-xl bg-slate-950 border border-amber-500/20 space-y-1">
-              <p class="font-bold text-slate-200 text-[11px] flex items-center gap-1.5">
-                <span class="text-amber-400">Option 1 (Direct en 1 clic) :</span> Flash USB WebUSB
+            <div class="p-2.5 rounded-xl bg-slate-950 border border-amber-500/30 space-y-1">
+              <p class="font-bold text-slate-100 text-[11px] flex items-center gap-1.5">
+                <span class="text-amber-400">Méthode Recommandée (1 Clic) :</span> Flash USB Direct
               </p>
               <p class="text-[11px]">
-                Branchez votre calculatrice en USB, cliquez sur <strong>« Flash USB Direct »</strong> puis sélectionnez votre NumWorks. L'application est téléversée et la calculatrice redémarre automatiquement !
+                Branchez votre NumWorks en USB, cliquez sur <strong>« Installer sur ma NumWorks »</strong>. Votre pack personnalisé avec toutes vos applications et jeux externes est compilé, relogé et installé immédiatement !
               </p>
             </div>
             <div class="p-2.5 rounded-xl bg-slate-950 border border-slate-800 space-y-1">
-              <p class="font-bold text-slate-200 text-[11px] flex items-center gap-1.5">
-                <span class="text-emerald-400">Option 2 (Site officiel NumWorks) :</span> Glisser-déposer .nwa
+              <p class="font-bold text-slate-300 text-[11px] flex items-center gap-1.5">
+                <span class="text-cyan-400">Applications .nwa externes :</span>
               </p>
               <p class="text-[11px]">
-                Cliquez sur <strong>« Télécharger mon application .nwa »</strong> puis glissez le fichier sur <a href="https://my.numworks.com/apps" target="_blank" class="text-emerald-400 underline font-bold hover:text-emerald-300">my.numworks.com/apps</a> pour l'installer via l'outil officiel.
+                Glissez directement vos fichiers <strong>.nwa</strong> dans le Pack EquaLib ci-contre. Le système effectue la liaison mémoire automatiquement lors du flash USB. <em>(Pour installer un seul jeu sans EquaLib, utilisez la page Convertisseur)</em>.
               </p>
             </div>
           </div>

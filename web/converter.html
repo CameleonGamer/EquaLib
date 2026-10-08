@@ -174,27 +174,66 @@
       </div>
 
       <!-- Résultat de conversion réussie (initialement masqué) -->
-      <div id="result-card" class="hidden bg-emerald-950/30 border border-emerald-500/40 rounded-2xl p-6 space-y-4">
+      <div id="result-card" class="hidden bg-emerald-950/30 border border-emerald-500/40 rounded-2xl p-6 space-y-5">
         <div class="flex items-center gap-3">
           <div class="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xl border border-emerald-500/30">
             ✓
           </div>
           <div>
-            <h4 class="font-extrabold text-white text-base">Binaire .bin prêt pour NumWorks !</h4>
-            <p id="result-size-text" class="text-xs text-emerald-300 font-ascii">Signature EADK 0xDEC0BEBA valide</p>
+            <h4 class="font-extrabold text-white text-base">Application .bin prête pour NumWorks !</h4>
+            <p id="result-size-text" class="text-xs text-emerald-300 font-ascii">Signature EADK 0xDEC0BEBA valide • Prêt pour Flash</p>
           </div>
         </div>
 
-        <div class="flex flex-col sm:flex-row gap-3">
-          <!-- Télécharger .bin -->
-          <button id="download-bin-btn" class="flex-1 py-3 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-extrabold text-xs transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20">
-            <span>💾</span> Télécharger le fichier .bin
-          </button>
+        <!-- Options d'installation claires -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <!-- Option 1 : Flash USB Direct (Jeu Seul) -->
+          <div class="p-4 rounded-xl bg-slate-900 border border-amber-500/40 space-y-3 flex flex-col justify-between">
+            <div class="space-y-1">
+              <span class="text-[10px] uppercase font-bold text-amber-400 font-ascii">Option 1 • Recommandé pour jouer seul</span>
+              <h5 class="text-xs font-bold text-white">Installer uniquement ce jeu sur la NumWorks</h5>
+              <p class="text-[11px] text-slate-400 leading-normal">
+                Flashe ce jeu directement à la place de l'application externe officielle. Branche ta calculatrice en USB et clique ci-dessous :
+              </p>
+            </div>
+            <button id="flash-standalone-btn" class="w-full py-3 px-3 rounded-xl bg-nw-yellow hover:bg-nw-yellowHover text-black font-extrabold text-xs transition-all flex items-center justify-center gap-2 shadow-lg shadow-amber-500/20 active:scale-95">
+              <span>⚡</span> Flasher ce jeu seul (USB Direct)
+            </button>
+          </div>
 
-          <!-- Ajouter directement au Pack EquaLib -->
-          <button id="send-to-pack-btn" class="flex-1 py-3 px-4 rounded-xl bg-nw-yellow hover:bg-nw-yellowHover text-black font-extrabold text-xs transition-all flex items-center justify-center gap-2 shadow-lg shadow-amber-500/20">
-            <span>🎯</span> Ajouter à mon Pack EquaLib
+          <!-- Option 2 : Ajouter au Pack Multi-Apps EquaLib -->
+          <div class="p-4 rounded-xl bg-slate-900 border border-slate-700 space-y-3 flex flex-col justify-between">
+            <div class="space-y-1">
+              <span class="text-[10px] uppercase font-bold text-cyan-400 font-ascii">Option 2 • Multi-Applications</span>
+              <h5 class="text-xs font-bold text-white">Intégrer dans le Launcher EquaLib</h5>
+              <p class="text-[11px] text-slate-400 leading-normal">
+                Ajoute ce jeu dans le menu EquaLib avec Mario Kart, Tetris, etc. Il sera relogé automatiquement à son adresse dans le pack.
+              </p>
+            </div>
+            <button id="send-to-pack-btn" class="w-full py-3 px-3 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black font-extrabold text-xs transition-all flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/20 active:scale-95">
+              <span>🎯</span> Ajouter à mon Pack EquaLib
+            </button>
+          </div>
+        </div>
+
+        <!-- Option 3 : Télécharger binaire -->
+        <div class="pt-2 border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <p class="text-[11px] text-slate-500">
+            ⚠️ <em>Ne glissez pas de fichier .bin sur my.numworks.com</em> (le site officiel NumWorks n'accepte que les .nwa). Utilisez le bouton Flash USB ci-dessus.
+          </p>
+          <button id="download-bin-btn" class="py-2 px-3 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium text-xs transition-all flex items-center gap-1.5 shrink-0">
+            <span>💾</span> Télécharger .bin (Fichier brut)
           </button>
+        </div>
+
+        <!-- Barre de progression Flash WebUSB pour le jeu seul -->
+        <div id="standalone-flash-progress-container" class="hidden space-y-2 pt-2 border-t border-slate-800">
+          <div class="flex justify-between text-xs font-semibold text-amber-300">
+            <span id="standalone-flash-status-text">Connexion à la NumWorks...</span>
+          </div>
+          <div class="w-full h-2.5 bg-slate-800 rounded-full overflow-hidden">
+            <div id="standalone-flash-bar" class="h-full bg-nw-yellow rounded-full transition-all duration-200" style="width: 0%;"></div>
+          </div>
         </div>
       </div>
 
@@ -238,6 +277,7 @@
   </footer>
 
   <!-- Scripts -->
+  <script src="webusb.js?v=26"></script>
   <script src="nwa_linker.js?v=26"></script>
   <script src="crt_math.js?v=26"></script>
   
@@ -257,8 +297,14 @@
       const linkStatusText = document.getElementById('link-status-text');
       const downloadBinBtn = document.getElementById('download-bin-btn');
       const sendToPackBtn = document.getElementById('send-to-pack-btn');
+      const flashStandaloneBtn = document.getElementById('flash-standalone-btn');
+      const standaloneProgressContainer = document.getElementById('standalone-flash-progress-container');
+      const standaloneFlashBar = document.getElementById('standalone-flash-bar');
+      const standaloneFlashStatus = document.getElementById('standalone-flash-status-text');
       const copyCmdBtn = document.getElementById('copy-cmd-btn');
       const cliCmdText = document.getElementById('cli-cmd-text');
+
+      const usb = new NumWorksWebUSB();
 
       let currentFile = null;
       let currentBytes = null;
@@ -359,6 +405,46 @@
         a.download = binName;
         a.click();
         URL.revokeObjectURL(url);
+      });
+
+      // Flasher l'application seule directement sur la NumWorks
+      flashStandaloneBtn.addEventListener('click', async () => {
+        if (!convertedBinBytes) {
+          alert("Veuillez d'abord convertir votre fichier .nwa en .bin");
+          return;
+        }
+
+        flashStandaloneBtn.disabled = true;
+        standaloneProgressContainer.classList.remove('hidden');
+        standaloneFlashBar.style.width = '0%';
+        standaloneFlashStatus.textContent = 'Connexion à votre NumWorks...';
+
+        try {
+          if (!usb.isConnected) {
+            await usb.connect();
+          }
+
+          standaloneFlashStatus.textContent = 'Téléversement en cours vers votre calculatrice...';
+
+          await usb.flashBinary(convertedBinBytes, (progress) => {
+            const percent = (typeof progress === 'number') ? progress : progress.percent;
+            const msg = (typeof progress === 'object' && progress.message) ? progress.message : `Progression : ${percent}%`;
+            standaloneFlashBar.style.width = `${percent}%`;
+            standaloneFlashStatus.textContent = msg;
+          });
+
+          standaloneFlashBar.style.width = '100%';
+          standaloneFlashStatus.textContent = '✓ Application installée avec succès ! Votre NumWorks redémarre.';
+          setTimeout(() => {
+            alert('🎉 Application installée avec succès ! Votre NumWorks redémarre avec votre jeu.');
+            flashStandaloneBtn.disabled = false;
+          }, 500);
+        } catch (err) {
+          console.error('Erreur flash standalone :', err);
+          alert('Erreur lors du flashage USB : ' + (err.message || err));
+          standaloneProgressContainer.classList.add('hidden');
+          flashStandaloneBtn.disabled = false;
+        }
       });
 
       // Ajouter directement au pack

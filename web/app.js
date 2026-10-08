@@ -680,11 +680,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       addAppToSelection(customApp);
       if (format === 'BIN') {
-        showToast(`"${file.name}" (exécutable natif .bin) ajouté avec succès !`, 'success');
+        showToast(`⚠️ "${file.name}" (.bin) ajouté. Note : pour le multi-pack, importez plutôt le .nwa d'origine pour éviter une erreur d'adresse !`, 'warning');
       } else if (format === 'NWA') {
-        showToast(`"${file.name}" (.nwa objet EADK) ajouté au Pack !`, 'success');
+        showToast(`✓ "${file.name}" (.nwa) ajouté ! Liaison mémoire automatique activée.`, 'success');
       } else {
-        showToast(`"${file.name}" ajouté avec succès à votre Pack !`, 'success');
+        showToast(`✓ "${file.name}" ajouté avec succès à votre Pack !`, 'success');
       }
       switchTab('catalog');
     }
