@@ -379,9 +379,6 @@ void run_snake_app(void) {
                     }
                     snake[0] = new_head;
 
-                    /* Synchronisation VSync matérielle immédiatement avant l'affichage */
-                    eadk_display_wait_for_vblank();
-
                     /* 1. Effacer l'ancienne queue si on n'a pas mangé */
                     if (!ate) {
                         clear_cell_8x8(old_tail.x, old_tail.y);

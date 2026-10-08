@@ -507,7 +507,6 @@ int main(int argc, char* argv[]) {
                 if (selected >= scroll_offset + 5) {
                     scroll_offset = selected - 4;
                 }
-                eadk_display_wait_for_vblank();
                 if (scroll_offset == old_scroll) {
                     draw_hub_card(old_sel, old_sel - scroll_offset, false);
                     draw_hub_card(selected, selected - scroll_offset, true);
@@ -526,7 +525,6 @@ int main(int argc, char* argv[]) {
                 if (selected < scroll_offset) {
                     scroll_offset = selected;
                 }
-                eadk_display_wait_for_vblank();
                 if (scroll_offset == old_scroll) {
                     draw_hub_card(old_sel, old_sel - scroll_offset, false);
                     draw_hub_card(selected, selected - scroll_offset, true);
@@ -602,7 +600,6 @@ int main(int argc, char* argv[]) {
         /* Rendu graphique initial ou après retour du Hub */
         if (redraw) {
             redraw = false;
-            eadk_display_wait_for_vblank();
             eadk_display_push_rect_uniform(eadk_screen_rect, COLOR_GRAY_BG);
 
             /* Barre superieure officielle */

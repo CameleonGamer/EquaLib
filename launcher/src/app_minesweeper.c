@@ -472,7 +472,6 @@ void run_minesweeper_app(void) {
             else if (eadk_keyboard_key_down(pressed, eadk_key_right) && cursor_c < GRID_W - 1) cursor_c++;
 
             if (cursor_r != prev_cursor_r || cursor_c != prev_cursor_c) {
-                eadk_display_wait_for_vblank();
                 draw_cell(prev_cursor_r, prev_cursor_c, &grid[prev_cursor_r][prev_cursor_c], false, false);
                 draw_cell(cursor_r, cursor_c, &grid[cursor_r][cursor_c], true, false);
             }
@@ -494,7 +493,6 @@ void run_minesweeper_app(void) {
                         draw_smiley(SMILEY_LOSE);
 
                         /* Révéler toutes les mines */
-                        eadk_display_wait_for_vblank();
                         for (int r = 0; r < GRID_H; r++) {
                             for (int c = 0; c < GRID_W; c++) {
                                 if (grid[r][c].has_mine) {
@@ -506,7 +504,6 @@ void run_minesweeper_app(void) {
                     } else {
                         grid[cursor_r][cursor_c].is_revealed = true;
                         revealed_count++;
-                        eadk_display_wait_for_vblank();
                         draw_cell(cursor_r, cursor_c, &grid[cursor_r][cursor_c], true, false);
 
                         if (grid[cursor_r][cursor_c].count == 0) {
@@ -529,7 +526,6 @@ void run_minesweeper_app(void) {
                     grid[cursor_r][cursor_c].is_flagged = !grid[cursor_r][cursor_c].is_flagged;
                     if (grid[cursor_r][cursor_c].is_flagged) flags_count++;
                     else flags_count--;
-                    eadk_display_wait_for_vblank();
                     draw_cell(cursor_r, cursor_c, &grid[cursor_r][cursor_c], true, false);
                 }
             }

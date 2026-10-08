@@ -152,8 +152,6 @@ void run_courses_app(void) {
             redraw = false;
             const course_page_t* p = &s_pages[cur_page];
 
-            eadk_display_wait_for_vblank();
-
             if (full_redraw) {
                 full_redraw = false;
                 eadk_display_push_rect_uniform(eadk_screen_rect, COLOR_GRAY_BG);

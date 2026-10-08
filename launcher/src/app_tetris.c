@@ -379,14 +379,12 @@ void run_tetris_app(void) {
             /* 1. Déplacements horizontaux */
             if (eadk_keyboard_key_down(pressed, eadk_key_left)) {
                 if (!check_collision(board, cur_piece, cur_rot, cur_x - 1, cur_y)) {
-                    eadk_display_wait_for_vblank();
                     erase_piece(board, cur_piece, cur_rot, cur_x, cur_y);
                     cur_x--;
                     draw_piece(cur_piece, cur_rot, cur_x, cur_y);
                 }
             } else if (eadk_keyboard_key_down(pressed, eadk_key_right)) {
                 if (!check_collision(board, cur_piece, cur_rot, cur_x + 1, cur_y)) {
-                    eadk_display_wait_for_vblank();
                     erase_piece(board, cur_piece, cur_rot, cur_x, cur_y);
                     cur_x++;
                     draw_piece(cur_piece, cur_rot, cur_x, cur_y);
@@ -398,20 +396,17 @@ void run_tetris_app(void) {
                 eadk_keyboard_key_down(pressed, eadk_key_ok)) {
                 int next_rot = (cur_rot + 1) % 4;
                 if (!check_collision(board, cur_piece, next_rot, cur_x, cur_y)) {
-                    eadk_display_wait_for_vblank();
                     erase_piece(board, cur_piece, cur_rot, cur_x, cur_y);
                     cur_rot = next_rot;
                     draw_piece(cur_piece, cur_rot, cur_x, cur_y);
                 } else if (!check_collision(board, cur_piece, next_rot, cur_x - 1, cur_y)) {
                     /* Wall kick gauche */
-                    eadk_display_wait_for_vblank();
                     erase_piece(board, cur_piece, cur_rot, cur_x, cur_y);
                     cur_x--;
                     cur_rot = next_rot;
                     draw_piece(cur_piece, cur_rot, cur_x, cur_y);
                 } else if (!check_collision(board, cur_piece, next_rot, cur_x + 1, cur_y)) {
                     /* Wall kick droite */
-                    eadk_display_wait_for_vblank();
                     erase_piece(board, cur_piece, cur_rot, cur_x, cur_y);
                     cur_x++;
                     cur_rot = next_rot;
@@ -422,7 +417,6 @@ void run_tetris_app(void) {
             /* 3. Soft Drop (flèche bas) */
             if (eadk_keyboard_key_down(pressed, eadk_key_down)) {
                 if (!check_collision(board, cur_piece, cur_rot, cur_x, cur_y + 1)) {
-                    eadk_display_wait_for_vblank();
                     erase_piece(board, cur_piece, cur_rot, cur_x, cur_y);
                     cur_y++;
                     score += 1;
@@ -439,7 +433,6 @@ void run_tetris_app(void) {
                     drop_dist++;
                 }
                 score += drop_dist * 2;
-                eadk_display_wait_for_vblank();
                 draw_piece(cur_piece, cur_rot, cur_x, cur_y);
                 last_drop_ms = 0; /* Force le verrouillage immédiat */
             }
@@ -453,7 +446,6 @@ void run_tetris_app(void) {
                 last_drop_ms = now;
 
                 if (!check_collision(board, cur_piece, cur_rot, cur_x, cur_y + 1)) {
-                    eadk_display_wait_for_vblank();
                     erase_piece(board, cur_piece, cur_rot, cur_x, cur_y);
                     cur_y++;
                     draw_piece(cur_piece, cur_rot, cur_x, cur_y);
@@ -504,7 +496,6 @@ void run_tetris_app(void) {
 
                         level = 1 + (lines / 10);
 
-                        eadk_display_wait_for_vblank();
                         for (int r = 0; r < BOARD_ROWS; r++) {
                             for (int c = 0; c < BOARD_COLS; c++) {
                                 draw_board_cell(c, r, board[r][c]);

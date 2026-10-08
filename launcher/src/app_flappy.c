@@ -468,13 +468,13 @@ static void draw_pipe_cap(int cx, int cy, int cw, int ch, bool is_top) {
     int src_offset = x1 - cx;
     if (ch > 14) ch = 14;
 
-    uint16_t cap_buf[36 * 14];
+    static uint16_t s_cap_buf[36 * 14];
 
     for (int r = 0; r < ch; r++) {
         const uint16_t* row_src;
         if (r == 0 || r == ch - 1) {
             for (int c = 0; c < act_w; c++) {
-                cap_buf[r * act_w + c] = COLOR_PIPE_BLACK;
+                s_cap_buf[r * act_w + c] = COLOR_PIPE_BLACK;
             }
             continue;
         } else if (is_top && r == ch - 2) {
@@ -485,12 +485,12 @@ static void draw_pipe_cap(int cx, int cy, int cw, int ch, bool is_top) {
             row_src = s_pipe_cap_row;
         }
         for (int c = 0; c < act_w; c++) {
-            cap_buf[r * act_w + c] = row_src[src_offset + c];
+            s_cap_buf[r * act_w + c] = row_src[src_offset + c];
         }
     }
 
     eadk_rect_t rect = {(uint16_t)x1, (uint16_t)cy, (uint16_t)act_w, (uint16_t)ch};
-    eadk_display_push_rect(rect, cap_buf);
+    eadk_display_push_rect(rect, s_cap_buf);
 }
 
 static void draw_full_pipe(const pipe_t* p) {
@@ -708,8 +708,10 @@ static void draw_game_over_scoreboard(int score, int best_score) {
 /* APPLICATION FLAPPY BIRD PRINCIPALE                                        */
 /* ========================================================================= */
 void run_flappy_app(void) {
-    while (eadk_keyboard_scan() != 0) {
+    int k_cycles = 0;
+    while (eadk_keyboard_scan() != 0 && k_cycles < 25) {
         eadk_timing_msleep(20);
+        k_cycles++;
     }
 
     int bird_y = 90 * 10;
@@ -772,10 +774,13 @@ void run_flappy_app(void) {
         /* Mode Panique Furtif universel direct via [Var] */
         if (eadk_keyboard_key_down(kbd, eadk_key_var)) {
             run_panic_calculator();
-            while (eadk_keyboard_scan() != 0) eadk_timing_msleep(20);
+            int p_cycles = 0;
+            while (eadk_keyboard_scan() != 0 && p_cycles < 25) {
+                eadk_timing_msleep(20);
+                p_cycles++;
+            }
             prev_kbd = 0;
             /* Restauration complète du jeu */
-            eadk_display_wait_for_vblank();
             eadk_display_push_rect_uniform(top_bar, 0xFE60);
             eadk_display_draw_string("Flappy Bird Arcade", pt_title, false, eadk_color_black, 0xFE60);
             restore_background_rect(0, PLAY_TOP, EADK_SCREEN_WIDTH, GROUND_Y - PLAY_TOP);
@@ -853,9 +858,6 @@ void run_flappy_app(void) {
                     bird_vy = 0;
                 }
 
-                /* Synchronisation VSync matérielle avant le rendu de la frame */
-                eadk_display_wait_for_vblank();
-
                 /* 2. Tuyaux */
                 for (int i = 0; i < MAX_PIPES; i++) {
                     if (!pipes[i].active) continue;
@@ -931,11 +933,13 @@ void run_flappy_app(void) {
         /* Régulation 60 FPS */
         uint64_t elapsed = eadk_timing_millis() - frame_start;
         if (elapsed < 16) {
-            eadk_timing_usleep((uint32_t)((16 - elapsed) * 1000));
+            eadk_timing_msleep((uint32_t)(16 - elapsed));
         }
     }
 
-    while (eadk_keyboard_scan() != 0) {
+    int exit_cycles = 0;
+    while (eadk_keyboard_scan() != 0 && exit_cycles < 25) {
         eadk_timing_msleep(20);
+        exit_cycles++;
     }
 }

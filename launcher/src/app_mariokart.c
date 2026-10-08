@@ -87,9 +87,6 @@ void run_mariokart_app(void) {
         /* Mise a jour physique et IA */
         smk_game_update(&s_game, &input, (uint32_t)now);
 
-        /* Synchronisation VSync matérielle avant le rendu des bandes */
-        eadk_display_wait_for_vblank();
-
         /* Rendu par bandes pour economiser la RAM de la calculatrice */
         for (int b = 0; b < NUM_BANDS; b++) {
             int band_y = b * RENDER_BAND_HEIGHT;

@@ -87,7 +87,6 @@ static void console_init(void) {
 static void console_draw(void) {
     if (s_has_graphics) return;
 
-    eadk_display_wait_for_vblank();
     eadk_rect_t bg = {0, 22, EADK_SCREEN_WIDTH, EADK_SCREEN_HEIGHT - 22 - 16};
     eadk_display_push_rect_uniform(bg, 0x18C3);
 

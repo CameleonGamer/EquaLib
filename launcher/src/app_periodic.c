@@ -124,8 +124,6 @@ void run_periodic_table_app(void) {
             redraw = false;
             const element_info_t* el = &s_elements[cur_idx];
 
-            eadk_display_wait_for_vblank();
-
             if (full_redraw) {
                 full_redraw = false;
                 eadk_display_push_rect_uniform(eadk_screen_rect, COLOR_GRAY_BG);
