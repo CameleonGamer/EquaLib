@@ -191,6 +191,69 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
+  // Initialisation de l'effet CRT Scanlines (QOL)
+  const crtToggleBtn = document.getElementById('crt-toggle-btn');
+  const crtIcon = document.getElementById('crt-icon');
+  const savedCrt = localStorage.getItem('equalib_crt_effect');
+  if (savedCrt === 'off') {
+    document.body.classList.add('crt-off');
+    if (crtIcon) crtIcon.textContent = '📺❌';
+  }
+  if (crtToggleBtn) {
+    crtToggleBtn.addEventListener('click', () => {
+      window.soundFx?.playClick();
+      const isOff = document.body.classList.toggle('crt-off');
+      localStorage.setItem('equalib_crt_effect', isOff ? 'off' : 'on');
+      if (crtIcon) crtIcon.textContent = isOff ? '📺❌' : '📺';
+      showToast(isOff ? 'Mode Ultra-Net activé (Scanlines désactivées)' : 'Effet rétro CRT vintage activé', 'info');
+    });
+  }
+
+  // Agrandissement / Mode plein écran du simulateur (QOL)
+  const simBtnExpand = document.getElementById('sim-btn-expand');
+  const simCalculatorContainer = document.getElementById('sim-calculator-container');
+  let simIsExpanded = false;
+  if (simBtnExpand && simCalculatorContainer) {
+    simBtnExpand.addEventListener('click', () => {
+      window.soundFx?.playClick();
+      simIsExpanded = !simIsExpanded;
+      if (simIsExpanded) {
+        simCalculatorContainer.classList.remove('max-w-[340px]');
+        simCalculatorContainer.classList.add('max-w-[460px]', 'scale-105', 'z-20');
+        simBtnExpand.textContent = '⛶❌';
+        simBtnExpand.title = 'Réduire le simulateur';
+        showToast('Simulateur agrandi pour un meilleur confort de jeu !', 'info');
+      } else {
+        simCalculatorContainer.classList.remove('max-w-[460px]', 'scale-105', 'z-20');
+        simCalculatorContainer.classList.add('max-w-[340px]');
+        simBtnExpand.textContent = '⛶';
+        simBtnExpand.title = 'Agrandir le simulateur';
+      }
+    });
+  }
+
+  // Raccourci clavier global pour la recherche (/ ou Ctrl+K) & Touche Échap (QOL)
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
+        document.activeElement.blur();
+      }
+      closeAppDetails();
+      if (webusbHelpModal) {
+        webusbHelpModal.classList.add('hidden');
+        webusbHelpModal.classList.remove('flex');
+      }
+      return;
+    }
+
+    if ((e.key === '/' || (e.ctrlKey && e.key.toLowerCase() === 'k')) && !['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
+      e.preventDefault();
+      switchTab('catalog');
+      catalogSearchInput?.focus();
+      catalogSearchInput?.select();
+    }
+  });
+
   // Initialisation de la modale d'aide WebUSB
   if (helpModalBtn && webusbHelpModal) {
     helpModalBtn.addEventListener('click', () => {
@@ -427,6 +490,129 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
+  // ==================== TRI DU CATALOGUE (QOL) ====================
+  let currentSortMode = 'recommended';
+  const catalogSort = document.getElementById('catalog-sort');
+  if (catalogSort) {
+    catalogSort.addEventListener('change', (e) => {
+      window.soundFx?.playClick();
+      currentSortMode = e.target.value;
+      renderCatalog();
+    });
+  }
+
+  // ==================== PACKS PRÉDÉFINIS EN 1 CLIC (QOL) ====================
+  const presetArcadeBtn = document.getElementById('preset-arcade-btn');
+  const presetBacBtn = document.getElementById('preset-bac-btn');
+  const presetAllBtn = document.getElementById('preset-all-btn');
+
+  if (presetArcadeBtn) {
+    presetArcadeBtn.addEventListener('click', () => {
+      const arcadeIds = ['mariokart', 'flappy', '2048', 'snake'];
+      selectedApps = catalogApps.filter(a => arcadeIds.includes(a.id)).map(a => ({...a}));
+      window.soundFx?.playSuccess();
+      updateUI();
+      renderCatalog();
+      renderCommunitySearch();
+      showToast('🎮 Pack Arcade appliqué (Mario Kart, Flappy, 2048, Snake) !', 'success');
+    });
+  }
+
+  if (presetBacBtn) {
+    presetBacBtn.addEventListener('click', () => {
+      const bacIds = ['periodique', 'fiches', 'math_solver', 'stealth_calc'];
+      selectedApps = catalogApps.filter(a => bacIds.includes(a.id)).map(a => ({...a}));
+      window.soundFx?.playSuccess();
+      updateUI();
+      renderCatalog();
+      renderCommunitySearch();
+      showToast('🎓 Pack Bac & Sup appliqué (Tableau, Fiches, Solveur, Furtif) !', 'success');
+    });
+  }
+
+  if (presetAllBtn) {
+    presetAllBtn.addEventListener('click', () => {
+      selectedApps = catalogApps.filter(a => a.recommended).map(a => ({...a}));
+      window.soundFx?.playSuccess();
+      updateUI();
+      renderCatalog();
+      renderCommunitySearch();
+      showToast('⭐ Pack Complet recommandé appliqué !', 'success');
+    });
+  }
+
+  // ==================== EXPORT & IMPORT DE LA CONFIG DU PACK (QOL) ====================
+  const btnExportPack = document.getElementById('btn-export-pack');
+  const btnImportPack = document.getElementById('btn-import-pack');
+  const importPackFile = document.getElementById('import-pack-file');
+
+  if (btnExportPack) {
+    btnExportPack.addEventListener('click', () => {
+      if (selectedApps.length === 0) {
+        showToast('Votre pack est vide. Ajoutez des applications d\'abord !', 'warning');
+        return;
+      }
+      const config = {
+        app: 'EquaLib',
+        version: '3.5',
+        exportedAt: new Date().toISOString(),
+        apps: selectedApps.map(a => ({
+          id: a.id,
+          name: a.name,
+          category: a.category,
+          size_kb: a.size_kb
+        }))
+      };
+      const jsonBlob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(jsonBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'equalib_pack_config.json';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      window.soundFx?.playSuccess();
+      showToast('✓ Configuration du pack exportée (equalib_pack_config.json) !', 'success');
+    });
+  }
+
+  if (btnImportPack && importPackFile) {
+    btnImportPack.addEventListener('click', () => {
+      window.soundFx?.playClick();
+      importPackFile.click();
+    });
+
+    importPackFile.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      try {
+        const text = await file.text();
+        const config = JSON.parse(text);
+        if (!config.apps || !Array.isArray(config.apps)) {
+          throw new Error('Format de configuration JSON invalide');
+        }
+        selectedApps = [];
+        config.apps.forEach(cfgApp => {
+          const match = catalogApps.find(a => a.id === cfgApp.id) || communityApps.find(a => a.id === cfgApp.id);
+          if (match && selectedApps.length < 12 && !selectedApps.some(s => s.id === match.id)) {
+            selectedApps.push({...match});
+          }
+        });
+        window.soundFx?.playSuccess();
+        updateUI();
+        renderCatalog();
+        renderCommunitySearch();
+        showToast(`✓ Pack restauré : ${selectedApps.length} application(s) configurée(s) !`, 'success');
+      } catch (err) {
+        window.soundFx?.playHit();
+        showToast(`Erreur importation pack : ${err.message}`, 'error');
+      } finally {
+        importPackFile.value = '';
+      }
+    });
+  }
+
   // ==================== CHARGEMENT DES BASES DE DONNÉES ====================
   try {
     const [catRes, commRes] = await Promise.all([
@@ -496,6 +682,24 @@ document.addEventListener('DOMContentLoaded', async () => {
              (app.author && app.author.toLowerCase().includes(q));
     });
 
+    // Tri dynamique selon la sélection utilisateur (QOL)
+    filtered.sort((a, b) => {
+      if (currentSortMode === 'name_asc') {
+        return (a.name || '').localeCompare(b.name || '');
+      } else if (currentSortMode === 'name_desc') {
+        return (b.name || '').localeCompare(a.name || '');
+      } else if (currentSortMode === 'size_asc') {
+        return (a.size_kb || 0) - (b.size_kb || 0);
+      } else if (currentSortMode === 'size_desc') {
+        return (b.size_kb || 0) - (a.size_kb || 0);
+      } else {
+        const recA = a.recommended ? 1 : 0;
+        const recB = b.recommended ? 1 : 0;
+        if (recB !== recA) return recB - recA;
+        return (a.name || '').localeCompare(b.name || '');
+      }
+    });
+
     if (catalogCountLabel) {
       catalogCountLabel.textContent = `${filtered.length} application${filtered.length > 1 ? 's' : ''} disponible${filtered.length > 1 ? 's' : ''}`;
     }
@@ -514,7 +718,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     filtered.forEach(app => {
       const isSelected = selectedApps.some(s => s.id === app.id);
       const card = document.createElement('div');
-      card.className = `p-4 rounded-2xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+      card.className = `hover-lift p-4 rounded-2xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
         isSelected 
           ? 'bg-slate-900 border-amber-500/50 ring-1 ring-amber-500/20' 
           : 'bg-slate-900 border-slate-800 hover:border-slate-700'
@@ -913,12 +1117,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     memoryPercent.textContent = `${percent}%`;
     memoryProgressBar.style.width = `${percent}%`;
 
+    const slotsRemainingText = document.getElementById('slots-remaining-text');
+    if (slotsRemainingText) {
+      const freeSlots = Math.max(0, 12 - selectedApps.length);
+      slotsRemainingText.textContent = `${freeSlots} slot${freeSlots > 1 ? 's' : ''} libre${freeSlots > 1 ? 's' : ''}`;
+      if (freeSlots === 0) {
+        slotsRemainingText.className = 'text-red-400 font-bold';
+      } else if (freeSlots <= 2) {
+        slotsRemainingText.className = 'text-amber-400 font-bold';
+      } else {
+        slotsRemainingText.className = 'text-emerald-400';
+      }
+    }
+
     if (percent > 90) {
-      memoryProgressBar.className = 'h-full transition-all rounded-full bg-red-500';
+      memoryProgressBar.className = 'h-full transition-all rounded-full bg-red-500 shadow-sm shadow-red-500/50';
     } else if (percent > 70) {
-      memoryProgressBar.className = 'h-full transition-all rounded-full bg-amber-500';
+      memoryProgressBar.className = 'h-full transition-all rounded-full bg-amber-500 shadow-sm shadow-amber-500/50';
     } else {
-      memoryProgressBar.className = 'h-full transition-all rounded-full bg-emerald-500';
+      memoryProgressBar.className = 'h-full transition-all rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/50';
     }
   }
 

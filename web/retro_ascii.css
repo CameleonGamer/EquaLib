@@ -151,3 +151,73 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: #38bdf8;
 }
+
+/* Désactivation optionnelle des scanlines CRT pour lisibilité maximale (QOL) */
+body.crt-off .crt-scanlines,
+body.crt-off .crt-vignette {
+  display: none !important;
+}
+
+/* ==================== TOUCHES & BOUTONS TACTILES NUMWORKS ==================== */
+.nw-key-btn {
+  box-shadow: 0 3px 0 #020617, 0 4px 6px rgba(0,0,0,0.5);
+  transition: all 0.08s ease;
+}
+.nw-key-btn:active {
+  transform: translateY(2px) !important;
+  box-shadow: 0 1px 0 #020617, 0 1px 3px rgba(0,0,0,0.5) !important;
+}
+
+.nw-yellow-btn {
+  box-shadow: 0 3px 0 #b45309, 0 4px 8px rgba(245, 158, 11, 0.25);
+  transition: all 0.08s ease;
+}
+.nw-yellow-btn:active {
+  transform: translateY(2px) !important;
+  box-shadow: 0 1px 0 #b45309, 0 1px 3px rgba(245, 158, 11, 0.25) !important;
+}
+
+/* ==================== COQUE RÉALISTE NUMWORKS N0120 ==================== */
+.nw-shell {
+  background: linear-gradient(160deg, #ffffff 0%, #f1f5f9 60%, #e2e8f0 100%);
+  box-shadow: 
+    0 25px 40px -12px rgba(0, 0, 0, 0.7),
+    0 0 0 1px rgba(255, 255, 255, 0.6) inset,
+    0 3px 6px rgba(0, 0, 0, 0.08) inset;
+  border: 1px solid #cbd5e1;
+}
+
+/* ==================== BADGES & TOUCHES CLAVIER (KBD) ==================== */
+.kbd-key {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5px 6px;
+  font-size: 10px;
+  font-family: var(--font-ascii);
+  font-weight: 700;
+  color: #94a3b8;
+  background: #090d16;
+  border: 1px solid #334155;
+  border-bottom: 2px solid #1e293b;
+  border-radius: 5px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.4);
+}
+
+/* ==================== MICRO-INTERACTIONS & SURVOL CARTE ==================== */
+.hover-lift {
+  transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.2s cubic-bezier(0.2, 0, 0, 1), border-color 0.2s ease;
+}
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 0 18px rgba(56, 189, 248, 0.12);
+}
+
+/* Animation douce pour les badges en avant */
+@keyframes badge-glow {
+  0%, 100% { border-color: rgba(56, 189, 248, 0.35); box-shadow: 0 0 8px rgba(56, 189, 248, 0.1); }
+  50% { border-color: rgba(56, 189, 248, 0.8); box-shadow: 0 0 16px rgba(56, 189, 248, 0.3); }
+}
+.glow-pulse {
+  animation: badge-glow 2.5s infinite;
+}

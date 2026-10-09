@@ -35,7 +35,7 @@
   </script>
 
   <!-- Feuille de style Cyber-ASCII & CRT avec police Arista Pro -->
-  <link rel="stylesheet" href="retro_ascii.css?v=25">
+  <link rel="stylesheet" href="retro_ascii.css?v=37">
 </head>
 <body class="min-h-screen text-slate-100 flex flex-col justify-between selection:bg-cyan-500 selection:text-black">
 
@@ -73,6 +73,12 @@
         <button id="sound-toggle-btn" class="px-2.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-xs text-slate-300 font-ascii flex items-center gap-1.5 transition-all cursor-pointer" title="Activer / Désactiver les sons rétro 8-bit">
           <span id="sound-icon">🔊</span>
           <span class="hidden md:inline text-[11px]">Son</span>
+        </button>
+
+        <!-- Bouton Effet CRT TV Scanlines (QOL) -->
+        <button id="crt-toggle-btn" class="px-2.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-xs text-slate-300 font-ascii flex items-center gap-1.5 transition-all cursor-pointer" title="Activer / Désactiver l'effet CRT vintage (Lignes TV)">
+          <span id="crt-icon">📺</span>
+          <span class="hidden md:inline text-[11px]">CRT</span>
         </button>
 
         <nav class="flex items-center gap-2 font-ascii text-xs">
@@ -288,10 +294,10 @@
   </footer>
 
   <!-- Scripts -->
-  <script src="sound_fx.js?v=36"></script>
-  <script src="webusb.js?v=36"></script>
-  <script src="nwa_linker.js?v=36"></script>
-  <script src="crt_math.js?v=36"></script>
+  <script src="sound_fx.js?v=37"></script>
+  <script src="webusb.js?v=37"></script>
+  <script src="nwa_linker.js?v=37"></script>
+  <script src="crt_math.js?v=37"></script>
   
   <script>
     document.addEventListener('DOMContentLoaded', () => {
@@ -303,6 +309,23 @@
         soundToggleBtn.addEventListener('click', () => {
           const isMuted = window.soundFx.toggleMute();
           soundIcon.textContent = isMuted ? '🔇' : '🔊';
+        });
+      }
+
+      // Contrôle de l'effet CRT Scanlines (QOL)
+      const crtToggleBtn = document.getElementById('crt-toggle-btn');
+      const crtIcon = document.getElementById('crt-icon');
+      const savedCrt = localStorage.getItem('equalib_crt_effect');
+      if (savedCrt === 'off') {
+        document.body.classList.add('crt-off');
+        if (crtIcon) crtIcon.textContent = '📺❌';
+      }
+      if (crtToggleBtn) {
+        crtToggleBtn.addEventListener('click', () => {
+          window.soundFx?.playClick();
+          const isOff = document.body.classList.toggle('crt-off');
+          localStorage.setItem('equalib_crt_effect', isOff ? 'off' : 'on');
+          if (crtIcon) crtIcon.textContent = isOff ? '📺❌' : '📺';
         });
       }
 
