@@ -67,15 +67,23 @@
         </a>
       </div>
 
-      <!-- Navigation entre Hub et Convertisseur -->
-      <nav class="flex items-center gap-2 font-ascii text-xs">
-        <a href="index.html" class="px-4 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800/60 border border-slate-700/50 transition-all flex items-center gap-2">
-          <span>🎯</span> Hub Applications
-        </a>
-        <a href="converter.html" class="px-4 py-2 rounded-xl bg-cyan-500/15 text-cyan-300 border border-cyan-400/50 shadow-sm flex items-center gap-2 font-bold">
-          <span>⚡</span> Convertisseur NWA → BIN
-        </a>
-      </nav>
+      <!-- Navigation entre Hub et Convertisseur & Son -->
+      <div class="flex items-center gap-3">
+        <!-- Bouton Son 8-bit -->
+        <button id="sound-toggle-btn" class="px-2.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-xs text-slate-300 font-ascii flex items-center gap-1.5 transition-all cursor-pointer" title="Activer / Désactiver les sons rétro 8-bit">
+          <span id="sound-icon">🔊</span>
+          <span class="hidden md:inline text-[11px]">Son</span>
+        </button>
+
+        <nav class="flex items-center gap-2 font-ascii text-xs">
+          <a href="index.html" class="px-4 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800/60 border border-slate-700/50 transition-all flex items-center gap-2">
+            <span>🎯</span> Hub Applications
+          </a>
+          <a href="converter.html" class="px-4 py-2 rounded-xl bg-cyan-500/15 text-cyan-300 border border-cyan-400/50 shadow-sm flex items-center gap-2 font-bold">
+            <span>⚡</span> Convertisseur NWA → BIN
+          </a>
+        </nav>
+      </div>
 
     </div>
 
@@ -280,12 +288,24 @@
   </footer>
 
   <!-- Scripts -->
-  <script src="webusb.js?v=35"></script>
-  <script src="nwa_linker.js?v=35"></script>
-  <script src="crt_math.js?v=35"></script>
+  <script src="sound_fx.js?v=36"></script>
+  <script src="webusb.js?v=36"></script>
+  <script src="nwa_linker.js?v=36"></script>
+  <script src="crt_math.js?v=36"></script>
   
   <script>
     document.addEventListener('DOMContentLoaded', () => {
+      // Contrôle du son
+      const soundToggleBtn = document.getElementById('sound-toggle-btn');
+      const soundIcon = document.getElementById('sound-icon');
+      if (soundToggleBtn && soundIcon && window.soundFx) {
+        soundIcon.textContent = window.soundFx.isMuted ? '🔇' : '🔊';
+        soundToggleBtn.addEventListener('click', () => {
+          const isMuted = window.soundFx.toggleMute();
+          soundIcon.textContent = isMuted ? '🔇' : '🔊';
+        });
+      }
+
       const dropZone = document.getElementById('drop-zone');
       const nwaInput = document.getElementById('nwa-input');
       const inspectCard = document.getElementById('inspect-card');
@@ -356,7 +376,9 @@
           inspectCard.classList.remove('hidden');
           resultCard.classList.add('hidden');
           inspectCard.scrollIntoView({ behavior: 'smooth' });
+          window.soundFx?.playClick();
         } catch (err) {
+          window.soundFx?.playHit();
           alert("Erreur lors de l'analyse du fichier : " + err.message);
         }
       }
@@ -369,6 +391,7 @@
         progressContainer.classList.remove('hidden');
         linkBar.style.width = '40%';
         linkStatusText.textContent = 'Liaison ELF avec ld.wasm...';
+        window.soundFx?.playClick();
 
         try {
           convertedBinBytes = await EquaLibLinker.convertNwaToBin(currentBytes, {
@@ -387,10 +410,12 @@
               `Binaire généré : ${(convertedBinBytes.length / 1024).toFixed(1)} Ko • Signature EADK 0xDEC0BEBA vérifiée`;
             resultCard.scrollIntoView({ behavior: 'smooth' });
             convertBtn.disabled = false;
+            window.soundFx?.playSuccess();
           }, 400);
 
         } catch (err) {
           console.error("Erreur linkage :", err);
+          window.soundFx?.playHit();
           alert("Erreur lors de la compilation/liaison : " + err.message);
           progressContainer.classList.add('hidden');
           convertBtn.disabled = false;
@@ -408,6 +433,7 @@
         a.download = binName;
         a.click();
         URL.revokeObjectURL(url);
+        window.soundFx?.playSuccess();
       });
 
       // Flasher l'application seule directement sur la NumWorks
@@ -438,12 +464,14 @@
 
           standaloneFlashBar.style.width = '100%';
           standaloneFlashStatus.textContent = '✓ Application installée avec succès ! Votre NumWorks redémarre.';
+          window.soundFx?.playSuccess();
           setTimeout(() => {
             alert('🎉 Application installée avec succès ! Votre NumWorks redémarre avec votre jeu.');
             flashStandaloneBtn.disabled = false;
           }, 500);
         } catch (err) {
           console.error('Erreur flash standalone :', err);
+          window.soundFx?.playHit();
           alert('Erreur lors du flashage USB : ' + (err.message || err));
           standaloneProgressContainer.classList.add('hidden');
           flashStandaloneBtn.disabled = false;
@@ -453,6 +481,7 @@
       // Ajouter directement au pack
       sendToPackBtn.addEventListener('click', () => {
         if (!currentBytes || !currentFile) return;
+        window.soundFx?.playScore();
         const appName = currentMetadata ? currentMetadata.appName : currentFile.name.replace(/\.nwa$/i, '');
         
         // Stockage temporaire dans sessionStorage pour index.html
@@ -476,6 +505,7 @@
 
       // Copier commande CLI
       copyCmdBtn.addEventListener('click', () => {
+        window.soundFx?.playClick();
         navigator.clipboard.writeText(cliCmdText.textContent);
         copyCmdBtn.textContent = 'Copié !';
         setTimeout(() => copyCmdBtn.textContent = 'Copier', 2000);

@@ -106,6 +106,18 @@
           <span>GitHub</span>
         </a>
 
+        <!-- Bouton Son 8-bit -->
+        <button id="sound-toggle-btn" class="px-2.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-xs text-slate-300 font-ascii flex items-center gap-1.5 transition-all cursor-pointer" title="Activer / Désactiver les sons rétro 8-bit">
+          <span id="sound-icon">🔊</span>
+          <span class="hidden md:inline text-[11px]">Son</span>
+        </button>
+
+        <!-- Bouton Guide & Dépannage USB -->
+        <button id="help-modal-btn" class="px-2.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-xs text-slate-300 font-ascii flex items-center gap-1.5 transition-all cursor-pointer" title="Guide & Aide de connexion USB">
+          <span>❓</span>
+          <span class="hidden md:inline text-[11px]">Aide</span>
+        </button>
+
         <div id="connection-badge" class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-900 border border-slate-800 text-xs font-semibold text-slate-300 font-ascii">
           <span id="connection-dot" class="w-2.5 h-2.5 rounded-full bg-slate-500"></span>
           <span id="connection-text">Non connectée</span>
@@ -238,14 +250,37 @@
 
               </div>
 
-              <!-- Commandes interactives du simulateur -->
-              <div class="mt-3 flex gap-2">
-                <button id="sim-btn-exam" class="flex-1 py-1.5 px-2 rounded-lg bg-neutral-200 hover:bg-neutral-300 text-neutral-800 text-[11px] font-bold transition-all border border-neutral-300 flex items-center justify-center gap-1">
-                  <span>🚨</span> Tester LED 1Hz
-                </button>
-                <button id="sim-btn-panic" class="flex-1 py-1.5 px-2 rounded-lg bg-neutral-200 hover:bg-neutral-300 text-neutral-800 text-[11px] font-bold transition-all border border-neutral-300 flex items-center justify-center gap-1">
-                  <span>🛡️</span> Double Back
-                </button>
+              <!-- Clavier / Commandes interactives de la NumWorks simulée -->
+              <div class="mt-3 pt-2.5 border-t border-slate-300">
+                <div class="flex items-center justify-between gap-2.5">
+                  <!-- D-PAD DIRECTIONNEL -->
+                  <div class="grid grid-cols-3 gap-1 w-24">
+                    <div></div>
+                    <button id="sim-dpad-up" class="w-7 h-7 bg-neutral-800 hover:bg-neutral-700 active:bg-amber-500 rounded text-white text-[10px] font-bold flex items-center justify-center shadow transition-all cursor-pointer" title="Haut">▲</button>
+                    <div></div>
+                    <button id="sim-dpad-left" class="w-7 h-7 bg-neutral-800 hover:bg-neutral-700 active:bg-amber-500 rounded text-white text-[10px] font-bold flex items-center justify-center shadow transition-all cursor-pointer" title="Gauche">◀</button>
+                    <button id="sim-dpad-ok" class="w-7 h-7 bg-amber-500 hover:bg-amber-400 active:scale-95 rounded text-black text-[9px] font-extrabold flex items-center justify-center shadow transition-all cursor-pointer" title="OK / Lancer">OK</button>
+                    <button id="sim-dpad-right" class="w-7 h-7 bg-neutral-800 hover:bg-neutral-700 active:bg-amber-500 rounded text-white text-[10px] font-bold flex items-center justify-center shadow transition-all cursor-pointer" title="Droite">▶</button>
+                    <div></div>
+                    <button id="sim-dpad-down" class="w-7 h-7 bg-neutral-800 hover:bg-neutral-700 active:bg-amber-500 rounded text-white text-[10px] font-bold flex items-center justify-center shadow transition-all cursor-pointer" title="Bas">▼</button>
+                    <div></div>
+                  </div>
+
+                  <!-- TOUCHES FONCTIONS -->
+                  <div class="flex-1 flex flex-col gap-1.5">
+                    <div class="flex gap-1.5">
+                      <button id="sim-dpad-back" class="flex-1 py-1.5 px-2 rounded-lg bg-neutral-300 hover:bg-neutral-400 active:scale-95 text-neutral-800 text-[10px] font-bold flex items-center justify-center gap-1 shadow-sm transition-all cursor-pointer" title="Retour au menu Hub">
+                        <span>↩</span> BACK
+                      </button>
+                      <button id="sim-btn-panic" class="flex-1 py-1.5 px-2 rounded-lg bg-indigo-100 hover:bg-indigo-200 text-indigo-900 text-[10px] font-bold flex items-center justify-center gap-1 shadow-sm transition-all cursor-pointer" title="Mode Furtif">
+                        <span>🛡️</span> Furtif
+                      </button>
+                    </div>
+                    <button id="sim-btn-exam" class="w-full py-1.5 px-2 rounded-lg bg-red-100 hover:bg-red-200 text-red-800 text-[10px] font-bold flex items-center justify-center gap-1 shadow-sm transition-all cursor-pointer" title="Clignotement LED 1 Hz">
+                      <span>🚨</span> Tester LED Examen (1Hz)
+                    </button>
+                  </div>
+                </div>
               </div>
 
             </div>
@@ -311,6 +346,13 @@
                 📐 Maths
               </button>
             </div>
+          </div>
+
+          <!-- Barre de recherche en direct dans le catalogue -->
+          <div class="relative">
+            <input type="text" id="catalog-search-input" placeholder="Filtrer les applications (ex: Mario, Flappy, 2048, chimie, fiches...)" class="w-full bg-slate-900 border border-slate-800 focus:border-amber-400 focus:ring-1 focus:ring-amber-400 text-xs text-white rounded-xl pl-9 pr-9 py-2.5 placeholder:text-slate-500 font-medium transition-all">
+            <span class="absolute left-3 top-2.5 text-slate-400 text-xs">🔍</span>
+            <button id="catalog-search-clear" class="hidden absolute right-2.5 top-2 px-1.5 py-0.5 text-[10px] text-slate-400 hover:text-white rounded bg-slate-800 cursor-pointer">✕</button>
           </div>
 
           <!-- Liste des Cartes d'Applications du Catalogue -->
@@ -445,9 +487,13 @@
               </h3>
               <p class="text-xs text-slate-400">Applications chargées dans le lanceur</p>
             </div>
-            <span id="app-count-badge" class="px-3 py-1 rounded-full bg-slate-800 border border-slate-700 font-mono text-xs font-extrabold text-nw-yellow">
-              0 / 12
-            </span>
+            <div class="flex items-center gap-1.5">
+              <button id="btn-pack-defaults" class="text-[10px] text-amber-300 hover:text-black hover:bg-amber-400 font-bold px-2 py-1 rounded-lg bg-amber-500/15 border border-amber-500/30 transition-all active:scale-95 cursor-pointer" title="Restaurer la sélection recommandée">↺ Défaut</button>
+              <button id="btn-pack-clear" class="text-[10px] text-red-400 hover:text-white hover:bg-red-500 font-bold px-2 py-1 rounded-lg bg-red-500/15 border border-red-500/30 transition-all active:scale-95 cursor-pointer" title="Vider le pack">🗑️ Vider</button>
+              <span id="app-count-badge" class="px-2.5 py-1 rounded-full bg-slate-800 border border-slate-700 font-mono text-xs font-extrabold text-nw-yellow">
+                0 / 12
+              </span>
+            </div>
           </div>
 
           <!-- Jauge de Stockage Flash QSPI -->
@@ -592,14 +638,114 @@
     </div>
   </footer>
 
+  <!-- ==================== MODAL 1 : DÉTAILS DE L'APPLICATION & COMMANDES ==================== -->
+  <div id="app-details-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700/80 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-5 animate-in fade-in zoom-in duration-200">
+      
+      <!-- En-tête du modal -->
+      <div class="flex items-start justify-between gap-4 pb-4 border-b border-slate-800">
+        <div class="flex items-center gap-3.5">
+          <div id="modal-app-icon" class="w-14 h-14 rounded-2xl flex items-center justify-center font-bold text-2xl text-white shadow-lg shrink-0 bg-amber-500">
+            📦
+          </div>
+          <div>
+            <div class="flex items-center gap-2 flex-wrap">
+              <h3 id="modal-app-name" class="font-extrabold text-white text-lg">Nom App</h3>
+              <span id="modal-app-cat" class="text-[10px] px-2.5 py-0.5 rounded-full bg-slate-800 border border-slate-700 text-slate-300 font-semibold">Catégorie</span>
+            </div>
+            <p id="modal-app-meta" class="text-xs text-slate-400 font-mono mt-0.5">v1.0 • 45 Ko • Par Auteur</p>
+          </div>
+        </div>
+        <button id="modal-close-btn" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition-all cursor-pointer">✕</button>
+      </div>
+
+      <!-- Description -->
+      <div class="space-y-1.5">
+        <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400">Description</h4>
+        <p id="modal-app-desc" class="text-xs text-slate-300 leading-relaxed bg-slate-950 p-3 rounded-xl border border-slate-800">
+          Description complète de l'application.
+        </p>
+      </div>
+
+      <!-- Commandes et touches sur la NumWorks -->
+      <div class="space-y-1.5">
+        <h4 class="text-xs font-bold uppercase tracking-wider text-nw-yellow flex items-center gap-1.5">
+          <span>🕹️</span> Commandes sur votre NumWorks N0120
+        </h4>
+        <div id="modal-app-controls" class="space-y-1 text-xs text-slate-300 bg-slate-950 p-3 rounded-xl border border-slate-800 font-mono">
+          <!-- Injecté dynamiquement -->
+        </div>
+      </div>
+
+      <!-- Boutons d'action -->
+      <div class="pt-2 flex gap-3">
+        <button id="modal-toggle-pack-btn" class="flex-1 py-3 px-4 rounded-xl bg-nw-yellow hover:bg-nw-yellowHover text-black font-extrabold text-xs transition-all shadow-md active:scale-95 flex items-center justify-center gap-2 cursor-pointer">
+          <span>+ Ajouter à mon Pack</span>
+        </button>
+        <button id="modal-cancel-btn" class="py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs transition-all cursor-pointer">
+          Fermer
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ==================== MODAL 2 : AIDE & DÉPANNAGE WEBUSB ==================== -->
+  <div id="webusb-help-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700/80 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-5 animate-in fade-in zoom-in duration-200">
+      
+      <div class="flex items-center justify-between pb-4 border-b border-slate-800">
+        <div class="flex items-center gap-2.5">
+          <span class="text-2xl">🔌</span>
+          <div>
+            <h3 class="font-extrabold text-white text-base">Assistant de Connexion USB</h3>
+            <p class="text-xs text-slate-400">NumWorks N0120 (STM32H725 @ 550 MHz)</p>
+          </div>
+        </div>
+        <button id="help-close-btn" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition-all cursor-pointer">✕</button>
+      </div>
+
+      <div class="space-y-3 text-xs text-slate-300 leading-relaxed">
+        <div class="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-1">
+          <p class="font-bold text-nw-yellow">1. Navigateurs compatibles</p>
+          <p class="text-slate-400">Utilisez <strong>Google Chrome</strong>, <strong>Microsoft Edge</strong>, <strong>Brave</strong> ou <strong>Opera</strong>. Firefox et Safari ne supportent pas le protocole WebUSB.</p>
+        </div>
+
+        <div class="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-1">
+          <p class="font-bold text-nw-yellow">2. Câble USB-C Data</p>
+          <p class="text-slate-400">Assurez-vous d'utiliser un câble USB capable de transférer des données (pas un simple câble de chargeur sans broches data).</p>
+        </div>
+
+        <div class="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-1">
+          <p class="font-bold text-nw-yellow">3. Autorisation du navigateur</p>
+          <p class="text-slate-400">Lorsque la fenêtre pop-up s'ouvre, sélectionnez <strong>« NumWorks Calculator »</strong> puis cliquez sur <strong>« Connexion »</strong>.</p>
+        </div>
+
+        <div class="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-1">
+          <p class="font-bold text-nw-yellow">4. Calculatrice figée ou bloquée ?</p>
+          <p class="text-slate-400">Appuyez brièvement sur le bouton <strong>RESET</strong> avec une pointe à l'arrière de la calculatrice pour la débloquer instantanément.</p>
+        </div>
+      </div>
+
+      <div class="pt-2">
+        <button id="help-ok-btn" class="w-full py-3 rounded-xl bg-nw-yellow hover:bg-nw-yellowHover text-black font-extrabold text-xs transition-all active:scale-95 cursor-pointer">
+          J'ai compris !
+        </button>
+      </div>
+
+    </div>
+  </div>
+
   <!-- Toast notifications container -->
   <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
   <!-- Scripts -->
-  <script src="nwa_linker.js?v=35"></script>
-  <script src="bundler.js?v=35"></script>
-  <script src="webusb.js?v=35"></script>
-  <script src="crt_math.js?v=35"></script>
-  <script src="app.js?v=35"></script>
+  <script src="sound_fx.js?v=36"></script>
+  <script src="sim_engine.js?v=36"></script>
+  <script src="nwa_linker.js?v=36"></script>
+  <script src="bundler.js?v=36"></script>
+  <script src="webusb.js?v=36"></script>
+  <script src="crt_math.js?v=36"></script>
+  <script src="app.js?v=36"></script>
 </body>
 </html>

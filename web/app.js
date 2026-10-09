@@ -3,6 +3,74 @@
  * Orchestre l'interface utilisateur, le catalogue, la recherche internet (.nws), les imports et les actions de téléchargement/flash
  */
 
+// Guide des touches et astuces de chaque application sur NumWorks N0120
+const APP_DETAILS_MAP = {
+  'mariokart': {
+    controls: [
+      { key: 'Flèches Gauche / Droite', desc: 'Braquer et diriger le kart' },
+      { key: 'OK ou Flèche Haut', desc: 'Accélérer plein gaz' },
+      { key: 'Flèche Bas', desc: 'Freiner / Dérapage' },
+      { key: 'Back', desc: 'Quitter et revenir au Hub' }
+    ],
+    tips: 'Moteur 3D Mode 7 temps réel optimisé pour le microcontrôleur STM32H725 @ 550 MHz.'
+  },
+  'periodique': {
+    controls: [
+      { key: 'Flèches Directionnelles', desc: 'Se déplacer sur la grille des éléments' },
+      { key: 'Touche OK', desc: 'Ouvrir la fiche d\'information détaillée' },
+      { key: 'Back', desc: 'Revenir au tableau ou au Hub' }
+    ],
+    tips: 'Répertoire complet des 118 éléments chimiques IUPAC (masse atomique, électronégativité, configurations).'
+  },
+  'fiches': {
+    controls: [
+      { key: 'Flèche Droite / Gauche', desc: 'Page suivante / précédente' },
+      { key: 'Flèche Haut / Bas', desc: 'Défilement vertical du cours' },
+      { key: 'Back', desc: 'Revenir au menu Hub' }
+    ],
+    tips: 'Formules complètes de Terminale et Supérieur : dérivées, intégrales, trigonométrie, optique, chimie.'
+  },
+  'math_solver': {
+    controls: [
+      { key: 'Pavé Numérique', desc: 'Saisie des coefficients (a, b, c)' },
+      { key: 'Touche OK', desc: 'Résolution instantanée et affichage des racines' },
+      { key: 'Back', desc: 'Retour au Hub' }
+    ],
+    tips: 'Calcule le discriminant Δ, les racines réelles et complexes, ainsi que la forme canonique avec étapes.'
+  },
+  'stealth_calc': {
+    controls: [
+      { key: 'Double appui sur Back', desc: 'Bascule immédiate en mode fausse calculatrice officielle' },
+      { key: 'Shift + Home', desc: 'Combinaison secrète pour réouvrir le Hub EquaLib' }
+    ],
+    tips: 'Affiche un historique de calculs crédible et le tag [EXAMEN ACTIF] pour une discrétion absolue.'
+  },
+  'flappy': {
+    controls: [
+      { key: 'Touche OK ou Flèche Haut', desc: 'Battre des ailes (Sauter / Flap)' },
+      { key: 'Back', desc: 'Quitter vers le Hub EquaLib' }
+    ],
+    tips: '60 FPS synchronisés sur le bus d\'affichage LTDC. Double-buffering sans scintillement ni lag !'
+  },
+  '2048': {
+    controls: [
+      { key: 'Flèches Directionnelles', desc: 'Faire glisser et fusionner les tuiles' },
+      { key: 'Pavé 8, 2, 4, 6', desc: 'Contrôles alternatifs une main' },
+      { key: 'OK', desc: 'Recommencer une partie après Game Over' },
+      { key: 'Back', desc: 'Retour au Hub' }
+    ],
+    tips: 'Gardez votre plus grande tuile calée dans un angle pour maximiser vos chances d\'atteindre 2048.'
+  },
+  'snake': {
+    controls: [
+      { key: 'Flèches Directionnelles', desc: 'Diriger le serpent' },
+      { key: 'OK', desc: 'Rejouer' },
+      { key: 'Back', desc: 'Quitter vers le Hub' }
+    ],
+    tips: 'La vitesse s\'ajuste progressivement selon le score. Attention aux collisions contre les murs !'
+  }
+};
+
 document.addEventListener('DOMContentLoaded', async () => {
   // Constantes
   const MAX_FLASH_BYTES = 4.0 * 1024 * 1024; // 4.0 Mo alloués aux applications externes
@@ -13,6 +81,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   let selectedApps = [];
   let activeCategory = 'ALL';
   let searchQuery = '';
+  let catalogSearchText = '';
   
   const usb = new NumWorksWebUSB();
   const bundler = new EquaLibBundler();
@@ -26,6 +95,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   const memoryText = document.getElementById('memory-text');
   const memoryPercent = document.getElementById('memory-percent');
   const catalogCountLabel = document.getElementById('catalog-count-label');
+  const catalogSearchInput = document.getElementById('catalog-search-input');
+  const catalogSearchClear = document.getElementById('catalog-search-clear');
+  const btnPackDefaults = document.getElementById('btn-pack-defaults');
+  const btnPackClear = document.getElementById('btn-pack-clear');
 
   // Éléments du DOM - Onglets
   const tabBtnCatalog = document.getElementById('tab-btn-catalog');
@@ -46,7 +119,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const importUrlInput = document.getElementById('import-url-input');
   const importUrlBtn = document.getElementById('import-url-btn');
 
-  // Boutons et contrôles de Flash
+  // Boutons et contrôles de Flash & USB
   const connectBtn = document.getElementById('connect-btn');
   const connectionDot = document.getElementById('connection-dot');
   const connectionText = document.getElementById('connection-text');
@@ -67,6 +140,27 @@ document.addEventListener('DOMContentLoaded', async () => {
   const dropZone = document.getElementById('drop-zone');
   const fileInput = document.getElementById('file-input');
 
+  // Boutons audio & aide USB
+  const soundToggleBtn = document.getElementById('sound-toggle-btn');
+  const soundIcon = document.getElementById('sound-icon');
+  const helpModalBtn = document.getElementById('help-modal-btn');
+  const webusbHelpModal = document.getElementById('webusb-help-modal');
+  const helpCloseBtn = document.getElementById('help-close-btn');
+  const helpOkBtn = document.getElementById('help-ok-btn');
+
+  // Modale détails d'application
+  const appDetailsModal = document.getElementById('app-details-modal');
+  const modalCloseBtn = document.getElementById('modal-close-btn');
+  const modalCancelBtn = document.getElementById('modal-cancel-btn');
+  const modalTogglePackBtn = document.getElementById('modal-toggle-pack-btn');
+  const modalAppName = document.getElementById('modal-app-name');
+  const modalAppCat = document.getElementById('modal-app-cat');
+  const modalAppMeta = document.getElementById('modal-app-meta');
+  const modalAppDesc = document.getElementById('modal-app-desc');
+  const modalAppControls = document.getElementById('modal-app-controls');
+  const modalAppIcon = document.getElementById('modal-app-icon');
+  let currentModalApp = null;
+
   // Simulateur virtuel NumWorks
   const simLed = document.getElementById('sim-led');
   const simExamTag = document.getElementById('sim-exam-tag');
@@ -78,8 +172,132 @@ document.addEventListener('DOMContentLoaded', async () => {
   let simExamActive = false;
   let simPanicActive = false;
 
+  let simulator = null;
+  try {
+    if (typeof NumWorksSimulator !== 'undefined') {
+      simulator = new NumWorksSimulator('sim-screen');
+    }
+  } catch (e) {
+    console.warn('Simulateur virtuel :', e);
+  }
+
+  // Initialisation du bouton de son
+  if (soundToggleBtn && soundIcon && window.soundFx) {
+    soundIcon.textContent = window.soundFx.isMuted ? '🔇' : '🔊';
+    soundToggleBtn.addEventListener('click', () => {
+      const isMuted = window.soundFx.toggleMute();
+      soundIcon.textContent = isMuted ? '🔇' : '🔊';
+      showToast(isMuted ? 'Sons 8-bit désactivés' : 'Sons 8-bit activés', 'info');
+    });
+  }
+
+  // Initialisation de la modale d'aide WebUSB
+  if (helpModalBtn && webusbHelpModal) {
+    helpModalBtn.addEventListener('click', () => {
+      window.soundFx?.playClick();
+      webusbHelpModal.classList.remove('hidden');
+      webusbHelpModal.classList.add('flex');
+    });
+    const closeHelp = () => {
+      window.soundFx?.playClick();
+      webusbHelpModal.classList.add('hidden');
+      webusbHelpModal.classList.remove('flex');
+    };
+    helpCloseBtn?.addEventListener('click', closeHelp);
+    helpOkBtn?.addEventListener('click', closeHelp);
+    webusbHelpModal.addEventListener('click', (e) => {
+      if (e.target === webusbHelpModal) closeHelp();
+    });
+  }
+
+  // Initialisation de la modale de détails d'application
+  function openAppDetails(app) {
+    if (!app || !appDetailsModal) return;
+    currentModalApp = app;
+    window.soundFx?.playClick();
+
+    modalAppName.textContent = app.name;
+    modalAppCat.textContent = app.category;
+    modalAppMeta.textContent = `v${app.version || '1.0'} • ${app.size_kb} Ko • Par ${app.author || 'Inconnu'}`;
+    modalAppDesc.textContent = app.description || 'Application optimisée pour NumWorks N0120.';
+    modalAppIcon.textContent = app.icon_initial || '📦';
+    modalAppIcon.style.backgroundColor = app.color || '#F59E0B';
+
+    const isSelected = selectedApps.some(s => s.id === app.id);
+    if (isSelected) {
+      modalTogglePackBtn.innerHTML = `<span>✕ Retirer du Pack</span>`;
+      modalTogglePackBtn.className = 'flex-1 py-3 px-4 rounded-xl bg-red-500 hover:bg-red-400 text-white font-extrabold text-xs transition-all shadow-md active:scale-95 flex items-center justify-center gap-2 cursor-pointer';
+    } else {
+      modalTogglePackBtn.innerHTML = `<span>+ Ajouter à mon Pack</span>`;
+      modalTogglePackBtn.className = 'flex-1 py-3 px-4 rounded-xl bg-nw-yellow hover:bg-nw-yellowHover text-black font-extrabold text-xs transition-all shadow-md active:scale-95 flex items-center justify-center gap-2 cursor-pointer';
+    }
+
+    const keyDetails = APP_DETAILS_MAP[app.id] || {
+      controls: [
+        { key: 'Flèches Directionnelles', desc: 'Navigation dans l\'application' },
+        { key: 'Touche OK', desc: 'Valider / Action principale' },
+        { key: 'Touche Back', desc: 'Quitter et revenir au Hub' }
+      ],
+      tips: 'Compatible avec le Hub multi-applications EquaLib sur STM32H725.'
+    };
+
+    let controlsHtml = '';
+    keyDetails.controls.forEach(ctrl => {
+      controlsHtml += `
+        <div class="flex items-center justify-between py-1 border-b border-slate-800 last:border-b-0">
+          <span class="text-amber-400 font-bold">${ctrl.key}</span>
+          <span class="text-slate-300 text-[11px] text-right">${ctrl.desc}</span>
+        </div>
+      `;
+    });
+    if (keyDetails.tips) {
+      controlsHtml += `
+        <div class="mt-2 pt-2 border-t border-slate-800 text-[10px] text-slate-400 italic">
+          💡 ${keyDetails.tips}
+        </div>
+      `;
+    }
+    modalAppControls.innerHTML = controlsHtml;
+
+    appDetailsModal.classList.remove('hidden');
+    appDetailsModal.classList.add('flex');
+  }
+
+  function closeAppDetails() {
+    window.soundFx?.playClick();
+    appDetailsModal?.classList.add('hidden');
+    appDetailsModal?.classList.remove('flex');
+    currentModalApp = null;
+  }
+
+  modalCloseBtn?.addEventListener('click', closeAppDetails);
+  modalCancelBtn?.addEventListener('click', closeAppDetails);
+  appDetailsModal?.addEventListener('click', (e) => {
+    if (e.target === appDetailsModal) closeAppDetails();
+  });
+
+  modalTogglePackBtn?.addEventListener('click', () => {
+    if (!currentModalApp) return;
+    const isSelected = selectedApps.some(s => s.id === currentModalApp.id);
+    if (isSelected) {
+      const idx = selectedApps.findIndex(s => s.id === currentModalApp.id);
+      if (idx !== -1) {
+        selectedApps.splice(idx, 1);
+        window.soundFx?.playHit();
+        showToast(`"${currentModalApp.name}" retiré du pack`, 'info');
+      }
+    } else {
+      addAppToSelection(currentModalApp);
+    }
+    updateUI();
+    renderCatalog();
+    renderCommunitySearch();
+    closeAppDetails();
+  });
+
   // ==================== GESTION DES ONGLETS ====================
   function switchTab(target) {
+    window.soundFx?.playClick();
     [tabBtnCatalog, tabBtnSearch, tabBtnImport].forEach(btn => {
       btn.className = 'flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all text-slate-300 hover:text-white hover:bg-slate-800 flex items-center justify-center gap-1.5';
     });
@@ -148,6 +366,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const catPills = document.querySelectorAll('.cat-pill');
   catPills.forEach(pill => {
     pill.addEventListener('click', () => {
+      window.soundFx?.playClick();
       catPills.forEach(p => {
         p.classList.remove('bg-nw-yellow', 'text-black');
         p.classList.add('bg-slate-800', 'text-slate-300');
@@ -158,6 +377,55 @@ document.addEventListener('DOMContentLoaded', async () => {
       renderCatalog();
     });
   });
+
+  // Recherche en direct dans le catalogue
+  if (catalogSearchInput) {
+    catalogSearchInput.addEventListener('input', (e) => {
+      catalogSearchText = e.target.value.toLowerCase().trim();
+      if (catalogSearchText.length > 0) {
+        catalogSearchClear?.classList.remove('hidden');
+      } else {
+        catalogSearchClear?.classList.add('hidden');
+      }
+      renderCatalog();
+    });
+  }
+
+  if (catalogSearchClear) {
+    catalogSearchClear.addEventListener('click', () => {
+      window.soundFx?.playClick();
+      catalogSearchInput.value = '';
+      catalogSearchText = '';
+      catalogSearchClear.classList.add('hidden');
+      renderCatalog();
+      catalogSearchInput.focus();
+    });
+  }
+
+  // ==================== RESTAURATION DU PACK & VIDAGE ====================
+  if (btnPackDefaults) {
+    btnPackDefaults.addEventListener('click', () => {
+      const defaults = catalogApps.filter(a => a.recommended);
+      selectedApps = defaults.map(a => ({...a}));
+      window.soundFx?.playSuccess();
+      updateUI();
+      renderCatalog();
+      renderCommunitySearch();
+      showToast('Pack restauré avec les applications recommandées !', 'success');
+    });
+  }
+
+  if (btnPackClear) {
+    btnPackClear.addEventListener('click', () => {
+      if (selectedApps.length === 0) return;
+      selectedApps = [];
+      window.soundFx?.playHit();
+      updateUI();
+      renderCatalog();
+      renderCommunitySearch();
+      showToast('Votre Pack EquaLib a été vidé.', 'info');
+    });
+  }
 
   // ==================== CHARGEMENT DES BASES DE DONNÉES ====================
   try {
@@ -216,12 +484,31 @@ document.addEventListener('DOMContentLoaded', async () => {
   function renderCatalog() {
     catalogList.innerHTML = '';
     
-    const filtered = (activeCategory === 'ALL')
-      ? catalogApps
-      : catalogApps.filter(a => a.category.toLowerCase().includes(activeCategory.toLowerCase()));
+    const filtered = catalogApps.filter(app => {
+      const matchCat = (activeCategory === 'ALL') || 
+        app.category.toLowerCase().includes(activeCategory.toLowerCase());
+      if (!matchCat) return false;
+      if (!catalogSearchText) return true;
+      const q = catalogSearchText;
+      return (app.name && app.name.toLowerCase().includes(q)) ||
+             (app.description && app.description.toLowerCase().includes(q)) ||
+             (app.category && app.category.toLowerCase().includes(q)) ||
+             (app.author && app.author.toLowerCase().includes(q));
+    });
 
     if (catalogCountLabel) {
       catalogCountLabel.textContent = `${filtered.length} application${filtered.length > 1 ? 's' : ''} disponible${filtered.length > 1 ? 's' : ''}`;
+    }
+
+    if (filtered.length === 0) {
+      catalogList.innerHTML = `
+        <div class="text-center py-8 bg-slate-900/60 rounded-2xl border border-slate-800 space-y-2">
+          <div class="text-2xl">🔍</div>
+          <p class="text-xs font-semibold text-slate-300">Aucune application trouvée pour « ${catalogSearchText} »</p>
+          <p class="text-[11px] text-slate-500">Essayez un autre mot-clé ou effacez la recherche.</p>
+        </div>
+      `;
+      return;
     }
 
     filtered.forEach(app => {
@@ -234,13 +521,13 @@ document.addEventListener('DOMContentLoaded', async () => {
       }`;
 
       card.innerHTML = `
-        <div class="flex items-center gap-3.5">
-          <div class="w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl text-white shadow-md shrink-0" style="background-color: ${app.color || '#F59E0B'}">
+        <div class="flex items-center gap-3.5 min-w-0 cursor-pointer app-info-trigger flex-1" title="Cliquez pour afficher les commandes et détails">
+          <div class="w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl text-white shadow-md shrink-0 hover:scale-105 transition-transform" style="background-color: ${app.color || '#F59E0B'}">
             ${app.icon_initial || '📦'}
           </div>
-          <div class="space-y-0.5">
+          <div class="space-y-0.5 min-w-0 flex-1">
             <div class="flex items-center gap-2 flex-wrap">
-              <h4 class="font-bold text-slate-100 text-sm">${app.name}</h4>
+              <h4 class="font-bold text-slate-100 text-sm hover:text-amber-300 transition-colors">${app.name}</h4>
               <span class="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 border border-slate-700 text-slate-300 font-semibold">${app.category}</span>
             </div>
             <p class="text-xs text-slate-400 line-clamp-1 leading-normal">${app.description}</p>
@@ -253,18 +540,31 @@ document.addEventListener('DOMContentLoaded', async () => {
             </div>
           </div>
         </div>
-        <button class="add-btn px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 ${
-          isSelected 
-            ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 cursor-default' 
-            : 'bg-nw-yellow hover:bg-nw-yellowHover text-black shadow-md shadow-amber-500/10 active:scale-95'
-        }">
-          ${isSelected ? '✓ Inclus' : '+ Ajouter'}
-        </button>
+        <div class="flex items-center gap-2 shrink-0">
+          <button class="info-btn p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white text-xs transition-all cursor-pointer" title="Voir les contrôles et touches NumWorks">
+            ℹ️
+          </button>
+          <button class="add-btn px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 ${
+            isSelected 
+              ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 cursor-default' 
+              : 'bg-nw-yellow hover:bg-nw-yellowHover text-black shadow-md shadow-amber-500/10 active:scale-95 cursor-pointer'
+          }">
+            ${isSelected ? '✓ Inclus' : '+ Ajouter'}
+          </button>
+        </div>
       `;
+
+      // Clic pour ouvrir la modale détaillée
+      card.querySelector('.app-info-trigger')?.addEventListener('click', () => openAppDetails(app));
+      card.querySelector('.info-btn')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        openAppDetails(app);
+      });
 
       const btn = card.querySelector('.add-btn');
       if (!isSelected) {
-        btn.addEventListener('click', () => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
           addAppToSelection(app);
           renderCatalog();
           renderCommunitySearch();
@@ -494,12 +794,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   // ==================== GESTION DE LA SÉLECTION (LE PACK) ====================
   function addAppToSelection(app) {
     if (selectedApps.length >= 12) {
+      window.soundFx?.playHit();
       showToast('Limite atteinte (maximum 12 applications par bundle)', 'warning');
       return;
     }
     if (selectedApps.some(s => s.id === app.id)) return;
 
     selectedApps.push({...app});
+    window.soundFx?.playScore();
     updateUI();
   }
 
@@ -517,25 +819,28 @@ document.addEventListener('DOMContentLoaded', async () => {
         const item = document.createElement('div');
         item.className = 'p-3 bg-slate-950 rounded-xl border border-slate-800 hover:border-slate-700 flex items-center justify-between shadow-sm transition-all';
         item.innerHTML = `
-          <div class="flex items-center gap-3 min-w-0">
+          <div class="flex items-center gap-3 min-w-0 cursor-pointer app-pack-info flex-1" title="Voir les détails et contrôles de cette application">
             <span class="font-mono text-xs text-amber-500 font-extrabold w-4">${idx + 1}.</span>
-            <div class="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm text-white shrink-0" style="background-color: ${app.color || '#475569'}">
+            <div class="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm text-white shrink-0 hover:scale-105 transition-transform" style="background-color: ${app.color || '#475569'}">
               ${app.icon_initial || '📦'}
             </div>
-            <div class="min-w-0">
-              <p class="text-xs font-bold text-slate-200 truncate">${app.name}</p>
+            <div class="min-w-0 flex-1">
+              <p class="text-xs font-bold text-slate-200 truncate hover:text-amber-300 transition-colors">${app.name}</p>
               <p class="text-[10px] font-mono text-slate-500">${app.size_kb} Ko • ${app.category}</p>
             </div>
           </div>
           <div class="flex items-center gap-1 shrink-0 ml-2">
-            <button class="up-btn p-1.5 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-slate-200 text-xs" title="Monter" ${idx === 0 ? 'disabled style="opacity:0.2"' : ''}>▲</button>
-            <button class="down-btn p-1.5 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-slate-200 text-xs" title="Descendre" ${idx === selectedApps.length - 1 ? 'disabled style="opacity:0.2"' : ''}>▼</button>
-            <button class="del-btn p-1.5 hover:bg-red-500/20 rounded-lg text-red-400 hover:text-red-300 ml-1 text-xs" title="Supprimer">✕</button>
+            <button class="up-btn p-1.5 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-slate-200 text-xs transition-colors cursor-pointer" title="Monter" ${idx === 0 ? 'disabled style="opacity:0.2"' : ''}>▲</button>
+            <button class="down-btn p-1.5 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-slate-200 text-xs transition-colors cursor-pointer" title="Descendre" ${idx === selectedApps.length - 1 ? 'disabled style="opacity:0.2"' : ''}>▼</button>
+            <button class="del-btn p-1.5 hover:bg-red-500/20 rounded-lg text-red-400 hover:text-red-300 ml-1 text-xs transition-colors cursor-pointer" title="Supprimer du pack">✕</button>
           </div>
         `;
 
+        item.querySelector('.app-pack-info')?.addEventListener('click', () => openAppDetails(app));
+
         item.querySelector('.up-btn')?.addEventListener('click', () => {
           if (idx > 0) {
+            window.soundFx?.playClick();
             const temp = selectedApps[idx];
             selectedApps[idx] = selectedApps[idx - 1];
             selectedApps[idx - 1] = temp;
@@ -545,6 +850,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         item.querySelector('.down-btn')?.addEventListener('click', () => {
           if (idx < selectedApps.length - 1) {
+            window.soundFx?.playClick();
             const temp = selectedApps[idx];
             selectedApps[idx] = selectedApps[idx + 1];
             selectedApps[idx + 1] = temp;
@@ -553,6 +859,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
 
         item.querySelector('.del-btn')?.addEventListener('click', () => {
+          window.soundFx?.playHit();
           selectedApps.splice(idx, 1);
           updateUI();
           renderCatalog();
@@ -619,6 +926,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     appCountBadge.textContent = `${selectedApps.length} / 12`;
     renderSelection();
     updateMemoryUsage();
+    simulator?.updatePack(selectedApps);
   }
 
   // ==================== GLISSER-DÉPOSER LOCAL ====================
@@ -742,15 +1050,18 @@ document.addEventListener('DOMContentLoaded', async () => {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
+      window.soundFx?.playSuccess();
       showToast(`✓ Fichier equalib_n0120.nwa téléchargé avec vos ${selectedApps.length} applications !`, 'success');
     } catch (err) {
       console.error("Erreur téléchargement .nwa :", err);
+      window.soundFx?.playHit();
       showToast(`Erreur lors de la génération du fichier .nwa : ${err.message}`, 'error');
     }
   });
 
   downloadNwsBtn.addEventListener('click', async () => {
     if (selectedApps.length === 0) {
+      window.soundFx?.playHit();
       showToast('Veuillez ajouter au moins une application', 'warning');
       return;
     }
@@ -765,8 +1076,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
+      window.soundFx?.playSuccess();
       showToast('Sauvegarde equalib_backup.nws téléchargée !', 'success');
     } catch (err) {
+      window.soundFx?.playHit();
       showToast('Erreur lors de la création du fichier .nws', 'error');
     }
   });
@@ -781,8 +1094,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         const slotText = res.flashAddress ? ` - Slot 0x${res.flashAddress.toString(16)}` : '';
         modelText.textContent = `${res.model} (${res.mode})${slotText}`;
         connectBtn.innerHTML = '<span>✕</span> <span class="hidden sm:inline">Déconnecter</span>';
+        window.soundFx?.playClick();
         showToast(`NumWorks détectée (${res.model} - ${res.mode}) !`, 'success');
       } catch (e) {
+        window.soundFx?.playHit();
         showToast(e.message || 'Échec de connexion USB', 'error');
         return;
       }
@@ -810,9 +1125,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       connectionDot.className = 'w-2.5 h-2.5 rounded-full bg-slate-500';
       connectionText.textContent = 'Installé ✓';
       connectBtn.innerHTML = '<span>🔌</span> <span class="hidden sm:inline">Connecter</span>';
+      window.soundFx?.playSuccess();
       showToast(`🎉 Installation réussie ! Votre NumWorks démarre avec vos ${selectedApps.length} applications.`, 'success');
     } catch (err) {
       console.error('[Flash] Erreur :', err);
+      window.soundFx?.playHit();
       showToast(err.message || 'Erreur lors du téléversement USB', 'error');
     } finally {
       flashBtn.disabled = false;
