@@ -26,6 +26,13 @@
   let targetMouseX = -1000, targetMouseY = -1000;
   const ILLUMINATION_RADIUS = 160; // Rayon d'illumination de la souris
 
+  // Paramètres de la vague d'ambiance
+  const WAVE_LENGTH = 720;       // Étalement de la crête de vague en pixels
+  const WAVE_SPEED = 0.92;       // Vitesse angulaire : cycle complet en ~6.8 secondes (lent mais fluide)
+  const WAVE_DIR_X = 0.80;       // Direction oblique douce (~36°)
+  const WAVE_DIR_Y = 0.60;
+  const WAVE_BOOST_MAX = 0.12;   // Illumination très subtile à peine visible (+0.12 d'opacité max)
+
   // Grille de symboles
   let grid = [];
 
@@ -41,8 +48,8 @@
           x: c * CELL_SIZE + CELL_SIZE / 2,
           y: r * CELL_SIZE + CELL_SIZE / 2,
           char: symbol,
-          baseOpacity: 0.16 + Math.random() * 0.12, // Sombre mais visible par défaut
-          currentOpacity: 0.2,
+          baseOpacity: 0.13 + Math.random() * 0.09, // Phosphore tamisé au repos
+          currentOpacity: 0.16,
           glow: 0,
           colorType: Math.random() < 0.25 ? 'accent' : 'cyan' // Nuances bleutées / cyan / violette
         });
@@ -58,44 +65,66 @@
   }
 
   // Animation loop
-  function draw() {
+  function draw(timestamp) {
+    if (!timestamp) timestamp = performance.now();
+    const timeSec = timestamp * 0.001;
+
     // Interpolation fluide de la souris
     mouseX += (targetMouseX - mouseX) * 0.15;
     mouseY += (targetMouseY - mouseY) * 0.15;
 
     ctx.clearRect(0, 0, width, height);
 
-    ctx.font = '13px "Courier New", monospace';
+    ctx.font = '13px "JetBrains Mono", monospace';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
     const radiusSq = ILLUMINATION_RADIUS * ILLUMINATION_RADIUS;
+    const waveFreq = (Math.PI * 2) / WAVE_LENGTH;
+    const wavePhaseTime = timeSec * WAVE_SPEED;
 
     for (let i = 0; i < grid.length; i++) {
       const p = grid[i];
+
+      // 1. Calcul de l'onde de vague se propageant en continu
+      // Trajectoire diagonale fluide avec légère ondulation organique
+      const waveCoord = (p.x * WAVE_DIR_X + p.y * WAVE_DIR_Y) + 36 * Math.sin(p.y * 0.004 + timeSec * 0.5);
+      const phase = waveCoord * waveFreq - wavePhaseTime;
+      const sinWave = Math.sin(phase);
+      
+      // Crête douce en cloche : actif sur la phase positive, nul sur le creux
+      const waveFactor = sinWave > 0 ? Math.pow(sinWave, 2.5) : 0;
+      const waveBoost = waveFactor * WAVE_BOOST_MAX;
+      const waveGlow = waveFactor * 0.22; // Halo très léger sur la crête
+
+      // 2. Interaction avec la souris
       const dx = p.x - mouseX;
       const dy = p.y - mouseY;
       const distSq = dx * dx + dy * dy;
 
-      let targetOpacity = p.baseOpacity;
-      let targetGlow = 0;
+      let mouseBoost = 0;
+      let mouseGlow = 0;
 
       if (distSq < radiusSq) {
         const dist = Math.sqrt(distSq);
         const norm = 1 - dist / ILLUMINATION_RADIUS;
-        // Illumination vive quand la souris approche
-        targetOpacity = p.baseOpacity + norm * (1.0 - p.baseOpacity);
-        targetGlow = Math.pow(norm, 1.6);
+        // Illumination vive sous le curseur
+        mouseBoost = norm * (1.0 - p.baseOpacity);
+        mouseGlow = Math.pow(norm, 1.6);
       }
 
-      // Transition progressive
-      p.currentOpacity += (targetOpacity - p.currentOpacity) * 0.2;
-      p.glow += (targetGlow - p.glow) * 0.2;
+      // Combinaison : l'effet de souris est prioritaire, la vague prend le relais en fond
+      const targetOpacity = Math.min(1.0, p.baseOpacity + Math.max(waveBoost, mouseBoost));
+      const targetGlow = Math.max(waveGlow, mouseGlow);
 
-      ctx.save();
+      // Transition douce pour éviter tout clignotement
+      p.currentOpacity += (targetOpacity - p.currentOpacity) * 0.22;
+      p.glow += (targetGlow - p.glow) * 0.22;
+
+      // 3. Rendu optimisé sans save/restore systématique
       if (p.glow > 0.05) {
-        // Caractère illuminé sous le curseur
-        ctx.shadowBlur = Math.round(p.glow * 14);
+        // Caractère illuminé (par la vague ou par la souris)
+        ctx.shadowBlur = Math.round(p.glow * 13);
         if (p.colorType === 'accent') {
           ctx.shadowColor = '#C084FC'; // Violet néon
           ctx.fillStyle = 'rgba(216, 180, 254, ' + p.currentOpacity.toFixed(2) + ')';
@@ -104,17 +133,16 @@
           ctx.fillStyle = 'rgba(186, 230, 253, ' + p.currentOpacity.toFixed(2) + ')';
         }
       } else {
-        // Caractère sombre au repos (phosphore tamisé)
+        // Caractère au repos tamisé (phosphore discret)
         ctx.shadowBlur = 0;
         if (p.colorType === 'accent') {
-          ctx.fillStyle = 'rgba(147, 51, 234, ' + p.currentOpacity.toFixed(2) + ')';
+          ctx.fillStyle = 'rgba(168, 85, 247, ' + p.currentOpacity.toFixed(2) + ')';
         } else {
           ctx.fillStyle = 'rgba(56, 189, 248, ' + p.currentOpacity.toFixed(2) + ')';
         }
       }
 
       ctx.fillText(p.char, p.x, p.y);
-      ctx.restore();
     }
 
     requestAnimationFrame(draw);
