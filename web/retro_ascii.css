@@ -63,6 +63,13 @@
   --color-phosphor-purple: #c084fc;
 }
 
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 5rem;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
 body {
   font-family: var(--font-main);
   background-color: #030712;
