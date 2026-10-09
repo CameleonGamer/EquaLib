@@ -1,38 +1,70 @@
 /**
  * EquaLib Cyber-ASCII & CRT Retro Stylesheet
- * Typographie officielle Arista Pro, effets CRT TV vintage, bordures ASCII & phosphore
+ * Typographie moderne Outfit & JetBrains Mono, effets CRT TV vintage, bordures ASCII & phosphore
  */
 
+/* Import Google Fonts pour Outfit et JetBrains Mono */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+/* Fallbacks locaux hors-ligne garantissant un affichage instantané sans connexion */
 @font-face {
-  font-family: 'Arista Pro';
-  src: url('fonts/arista_pro/Arista-Pro-Bold-trial.ttf') format('truetype');
-  font-weight: bold;
+  font-family: 'Outfit';
+  src: url('fonts/outfit/Outfit-Regular.ttf') format('truetype');
+  font-weight: 400;
   font-style: normal;
+  font-display: swap;
 }
 
 @font-face {
-  font-family: 'Arista Pro';
-  src: url('fonts/arista_pro/Arista-Pro-Light-trial.ttf') format('truetype');
-  font-weight: normal;
+  font-family: 'Outfit';
+  src: url('fonts/outfit/Outfit-SemiBold.ttf') format('truetype');
+  font-weight: 600;
   font-style: normal;
+  font-display: swap;
 }
 
 @font-face {
-  font-family: 'Arista Pro';
-  src: url('fonts/arista_pro/Arista-Pro-Fat-trial.ttf') format('truetype');
-  font-weight: 900;
+  font-family: 'Outfit';
+  src: url('fonts/outfit/Outfit-Bold.ttf') format('truetype');
+  font-weight: 700;
   font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Outfit';
+  src: url('fonts/outfit/Outfit-ExtraBold.ttf') format('truetype');
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: url('fonts/jetbrains_mono/JetBrainsMono-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: url('fonts/jetbrains_mono/JetBrainsMono-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
 }
 
 :root {
-  --font-arista: 'Arista Pro', system-ui, -apple-system, sans-serif;
-  --font-ascii: 'Courier New', 'Lucida Console', monospace;
+  --font-main: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-ascii: 'JetBrains Mono', 'Cascadia Code', 'Fira Code', 'Courier New', monospace;
+  --font-arista: var(--font-main);
   --color-phosphor-cyan: #38bdf8;
   --color-phosphor-purple: #c084fc;
 }
 
 body {
-  font-family: var(--font-arista);
+  font-family: var(--font-main);
   background-color: #030712;
   color: #f1f5f9;
   overflow-x: hidden;
