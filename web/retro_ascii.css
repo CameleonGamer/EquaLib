@@ -479,3 +479,86 @@ body.hide-tooltips [data-shortcut-hint] {
 .sim-gallery-card:hover {
   transform: translateY(-1px);
 }
+
+/* ==================== GROS BANDEAU DÉFILANT ROUGE RUBY (BETA) ==================== */
+.ruby-beta-banner {
+  background: linear-gradient(90deg, #850e29 0%, #b80d38 25%, #9b111e 50%, #b80d38 75%, #850e29 100%);
+  border-bottom: 2px solid #000000;
+  border-top: 1px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 4px 14px rgba(155, 17, 30, 0.45);
+  overflow: hidden;
+  position: relative;
+  z-index: 40;
+  user-select: none;
+  width: 100%;
+}
+
+.ruby-beta-marquee-track {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+  animation: ruby-marquee 26s linear infinite;
+}
+
+.ruby-beta-marquee-track:hover {
+  animation-play-state: paused;
+}
+
+.ruby-beta-item {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 0.6rem 1.5rem;
+  white-space: nowrap;
+}
+
+.ruby-beta-badge {
+  background-color: #000000;
+  color: #facc15;
+  border: 1.5px solid #facc15;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 900;
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  padding: 0.2rem 0.65rem;
+  border-radius: 4px;
+  box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.6);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.ruby-beta-text-main {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 800;
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+  text-transform: uppercase;
+}
+
+.ruby-beta-text-sub {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 600;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  color: #fecdd3;
+  text-transform: uppercase;
+}
+
+.ruby-beta-separator {
+  color: #fda4af;
+  font-size: 0.75rem;
+  opacity: 0.75;
+}
+
+@keyframes ruby-marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
