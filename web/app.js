@@ -61,6 +61,119 @@ const APP_DETAILS_MAP = {
       { key: 'Back', desc: 'Quitter vers le Hub' }
     ],
     tips: 'La vitesse s\'ajuste progressivement selon le score. Attention aux collisions contre les murs !'
+  },
+  'comm_snake': {
+    controls: [
+      { key: 'Flèches Directionnelles', desc: 'Diriger le serpent' },
+      { key: 'OK', desc: 'Rejouer' },
+      { key: 'Back', desc: 'Quitter vers le Hub' }
+    ],
+    tips: 'La vitesse s\'ajuste progressivement selon le score.'
+  },
+  'comm_tetris': {
+    controls: [
+      { key: 'Flèches Gauche / Droite', desc: 'Déplacer la pièce' },
+      { key: 'Flèche Haut ou OK', desc: 'Pivoter la pièce' },
+      { key: 'Flèche Bas', desc: 'Descente rapide' },
+      { key: 'Back', desc: 'Quitter vers le Hub' }
+    ],
+    tips: 'Complétez des lignes complètes pour marquer des points et vider la grille.'
+  },
+  'comm_minesweeper': {
+    controls: [
+      { key: 'Flèches Directionnelles', desc: 'Déplacer le curseur' },
+      { key: 'Touche OK', desc: 'Révéler la case' },
+      { key: 'Toolbox / Shift', desc: 'Poser ou retirer un drapeau' },
+      { key: 'Back', desc: 'Quitter vers le Hub' }
+    ],
+    tips: 'Le premier clic n\'est jamais une mine. Observez bien les chiffres voisins !'
+  },
+  'pong': {
+    controls: [
+      { key: 'Souris / Tactile', desc: 'Déplacement instantané de la raquette' },
+      { key: 'Flèches Haut / Bas (Z/S)', desc: 'Monter et descendre la raquette' },
+      { key: 'Touche OK / Espace', desc: 'Recommencer une manche' },
+      { key: 'Back', desc: 'Retour au Hub' }
+    ],
+    tips: 'Premier joueur à 7 points remporte le match arcade ! Les rebonds sur les bords de raquette créent des angles vifs.'
+  },
+  'comm_pong': {
+    controls: [
+      { key: 'Souris / Tactile', desc: 'Déplacement instantané de la raquette' },
+      { key: 'Flèches Haut / Bas (Z/S)', desc: 'Monter et descendre la raquette' },
+      { key: 'Touche OK', desc: 'Recommencer une manche' },
+      { key: 'Back', desc: 'Retour au Hub' }
+    ],
+    tips: 'Premier joueur à 7 points remporte le match arcade !'
+  },
+  'dino': {
+    controls: [
+      { key: 'Clic Écran / Espace / OK', desc: 'Sauter par-dessus les obstacles' },
+      { key: 'Flèche Haut (Z/W)', desc: 'Sauter' },
+      { key: 'Flèche Bas (S)', desc: 'Se baisser sous les ptérodactyles' },
+      { key: 'Back', desc: 'Retour au Hub' }
+    ],
+    tips: 'Le score augmente au fil de la course. Les ptérodactyles apparaissent après 120 points.'
+  },
+  'comm_dino': {
+    controls: [
+      { key: 'Clic Écran / Espace / OK', desc: 'Sauter par-dessus les obstacles' },
+      { key: 'Flèche Bas (S)', desc: 'Se baisser sous les ptérodactyles' },
+      { key: 'Back', desc: 'Retour au Hub' }
+    ],
+    tips: 'Le score augmente au fil de la course.'
+  },
+  'space_invaders': {
+    controls: [
+      { key: 'Souris / ◄ ► (Q/D)', desc: 'Déplacer le canon laser' },
+      { key: 'Clic / OK / Espace', desc: 'Tirer un missile' },
+      { key: 'Boutons Écran', desc: 'Commandes tactiles rapides' },
+      { key: 'Back', desc: 'Retour au Hub' }
+    ],
+    tips: 'Abritez-vous derrière les 3 bunkers verts ! Détruisez tous les aliens avant qu\'ils n\'atteignent le sol.'
+  },
+  'comm_space_invaders': {
+    controls: [
+      { key: 'Souris / ◄ ► (Q/D)', desc: 'Déplacer le canon laser' },
+      { key: 'Clic / OK / Espace', desc: 'Tirer un missile' },
+      { key: 'Back', desc: 'Retour au Hub' }
+    ],
+    tips: 'Abritez-vous derrière les 3 bunkers verts !'
+  },
+  'breakout': {
+    controls: [
+      { key: 'Souris / ◄ ► (Q/D)', desc: 'Déplacer la raquette' },
+      { key: 'Clic / OK / Espace', desc: 'Lancer la balle' },
+      { key: 'Boutons Écran', desc: 'Lancer et diriger' },
+      { key: 'Back', desc: 'Retour au Hub' }
+    ],
+    tips: 'Cliquez ou appuyez sur OK pour lancer la balle ! Visez les angles pour envoyer la balle au-dessus des briques.'
+  },
+  'comm_breakout': {
+    controls: [
+      { key: 'Souris / ◄ ► (Q/D)', desc: 'Déplacer la raquette' },
+      { key: 'Clic / OK / Espace', desc: 'Lancer la balle' },
+      { key: 'Back', desc: 'Retour au Hub' }
+    ],
+    tips: 'Cliquez ou appuyez sur OK pour lancer la balle !'
+  },
+  'puissance4': {
+    controls: [
+      { key: 'Clic Colonne / 1 à 7', desc: 'Lâcher directement le jeton dans la colonne' },
+      { key: '◄ ► (Q/D)', desc: 'Choisir la colonne' },
+      { key: 'OK / Espace / Bas', desc: 'Lâcher le jeton' },
+      { key: 'Back', desc: 'Retour au Hub' }
+    ],
+    tips: 'Alignez 4 jetons horizontalement, verticalement ou en diagonale. L\'IA réfléchit et tente de vous bloquer !'
+  },
+  'comm_puissance4': {
+    controls: [
+      { key: 'Clic Colonne / 1 à 7', desc: 'Lâcher directement le jeton' },
+      { key: '◄ ► (Q/D)', desc: 'Choisir la colonne' },
+      { key: 'OK / Espace / Bas', desc: 'Lâcher le jeton' },
+      { key: 'Back', desc: 'Retour au Hub' }
+    ],
+    tips: 'Alignez 4 jetons horizontalement, verticalement ou en diagonale.'
   }
 };
 

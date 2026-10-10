@@ -322,6 +322,8 @@ describe('5. Simulateur Virtuel et Jeux NumWorks', () => {
         strokeRect: () => {},
         fillText: () => {},
         beginPath: () => {},
+        moveTo: () => {},
+        lineTo: () => {},
         arc: () => {},
         fill: () => {},
         stroke: () => {},
@@ -329,7 +331,8 @@ describe('5. Simulateur Virtuel et Jeux NumWorks', () => {
         createRadialGradient: () => ({ addColorStop: () => {} })
       }),
       querySelectorAll: () => []
-    })
+    }),
+    querySelectorAll: () => []
   };
   global.requestAnimationFrame = (cb) => 1;
   global.cancelAnimationFrame = () => {};

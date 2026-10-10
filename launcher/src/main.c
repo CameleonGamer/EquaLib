@@ -118,9 +118,29 @@ enum {
 };
 
 /* État persistant du Launcher */
+#define EQUALIB_SETTINGS_MAGIC 0x51455453 /* "STEQ" */
+
+typedef struct {
+    uint32_t magic;
+    int theme;
+    int view_mode;
+    int tooltips;
+    uint32_t checksum;
+} eq_persistent_settings_t;
+
+static eq_persistent_settings_t g_saved_settings __attribute__((section(".bss")));
+
 static int g_current_theme = 0;      /* 0 = Classique, 1 = Sakura, 2 = Hacker, 3 = Abeille, 4 = Mario, 5 = GameBoy */
 static int g_view_mode = VIEW_MODE_GALLERY; /* Mode Galerie d'images carrées par défaut */
 static bool g_show_tooltips = true;  /* Affichage des raccourcis en bas d'écran */
+
+static void save_persistent_settings(void) {
+    g_saved_settings.magic = EQUALIB_SETTINGS_MAGIC;
+    g_saved_settings.theme = g_current_theme;
+    g_saved_settings.view_mode = g_view_mode;
+    g_saved_settings.tooltips = g_show_tooltips ? 1 : 0;
+    g_saved_settings.checksum = (uint32_t)(g_saved_settings.theme ^ g_saved_settings.view_mode ^ g_saved_settings.tooltips ^ 0xA5A5);
+}
 
 /* Manifeste dynamique stocké en flash (.rodata), modifiable à chaud lors du packaging */
 const equalib_manifest_t g_equalib_manifest __attribute__((used, aligned(4), section(".rodata.equalib_manifest"))) = {
@@ -623,6 +643,7 @@ static void run_settings_screen(void) {
             redraw = false;
             if (g_current_theme < 0 || g_current_theme >= 6) g_current_theme = 0;
             if (g_view_mode != VIEW_MODE_GALLERY && g_view_mode != VIEW_MODE_LIST) g_view_mode = VIEW_MODE_GALLERY;
+            save_persistent_settings();
 
             const theme_t* th = &g_themes[g_current_theme];
 
@@ -678,6 +699,7 @@ static void run_settings_screen(void) {
         eadk_timing_msleep(20);
     }
 
+    save_persistent_settings();
     while (eadk_keyboard_scan() != 0) eadk_timing_msleep(20);
 }
 
@@ -686,10 +708,21 @@ int main(int argc, char* argv[]) {
     (void)argc;
     (void)argv;
 
-    /* Protection BSS & DATA non initialisés par l'OS Epsilon de NumWorks */
-    g_current_theme = 0;
-    g_view_mode = VIEW_MODE_GALLERY;
-    g_show_tooltips = true;
+    /* Restauration de l'état persistant si valide, sinon initialisation par défaut */
+    uint32_t expected_chk = (uint32_t)(g_saved_settings.theme ^ g_saved_settings.view_mode ^ g_saved_settings.tooltips ^ 0xA5A5);
+    if (g_saved_settings.magic == EQUALIB_SETTINGS_MAGIC &&
+        g_saved_settings.checksum == expected_chk &&
+        g_saved_settings.theme >= 0 && g_saved_settings.theme < 6 &&
+        (g_saved_settings.view_mode == VIEW_MODE_GALLERY || g_saved_settings.view_mode == VIEW_MODE_LIST)) {
+        g_current_theme = g_saved_settings.theme;
+        g_view_mode = g_saved_settings.view_mode;
+        g_show_tooltips = (g_saved_settings.tooltips != 0);
+    } else {
+        g_current_theme = 0;
+        g_view_mode = VIEW_MODE_GALLERY;
+        g_show_tooltips = true;
+        save_persistent_settings();
+    }
 
     while (eadk_keyboard_scan() != 0) {
         eadk_timing_msleep(20);

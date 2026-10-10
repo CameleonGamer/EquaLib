@@ -2,6 +2,24 @@
  * EquaLib Interactive Virtual NumWorks Simulator
  * Moteur de simulation en direct des jeux et applications pour le web
  */
+function safeStorageGet(key, def = null) {
+  try {
+    if (typeof localStorage !== 'undefined') {
+      const v = localStorage.getItem(key);
+      return v !== null ? v : def;
+    }
+  } catch (_) {}
+  return def;
+}
+
+function safeStorageSet(key, val) {
+  try {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(key, val);
+    }
+  } catch (_) {}
+}
+
 class NumWorksSimulator {
   constructor(containerId) {
     this.container = document.getElementById(containerId);
@@ -30,13 +48,36 @@ class NumWorksSimulator {
       { id: 'settings', name: '12. Paramètres & Thèmes', cat: 'Options', type: 'SETTINGS', icon: '⚙️' }
     ];
 
-    this.displayMode = (window.userSettings && window.userSettings.displayMode) || 'gallery';
-    this.theme = (window.userSettings && window.userSettings.theme) || 'default';
-    this.showTooltips = (window.userSettings && window.userSettings.showTooltips !== undefined) ? window.userSettings.showTooltips : true;
+    let savedSettings = null;
+    try {
+      const raw = safeStorageGet('equalib_user_settings');
+      if (raw) savedSettings = JSON.parse(raw);
+    } catch (_) {}
+
+    this.displayMode = (savedSettings && savedSettings.displayMode) || (window.userSettings && window.userSettings.displayMode) || 'gallery';
+    this.theme = (savedSettings && savedSettings.theme) || safeStorageGet('equalib_theme') || (window.userSettings && window.userSettings.theme) || 'default';
+    this.showTooltips = (savedSettings && savedSettings.showTooltips !== undefined) ? savedSettings.showTooltips : ((window.userSettings && window.userSettings.showTooltips !== undefined) ? window.userSettings.showTooltips : true);
     this.settingsSubIndex = 0;
 
     this.gameLoopId = null;
     this.init();
+  }
+
+  saveCurrentSettings() {
+    try {
+      const cfg = {
+        displayMode: this.displayMode,
+        theme: this.theme,
+        showTooltips: this.showTooltips
+      };
+      safeStorageSet('equalib_user_settings', JSON.stringify(cfg));
+      safeStorageSet('equalib_theme', this.theme);
+      if (window.userSettings) {
+        window.userSettings.displayMode = this.displayMode;
+        window.userSettings.theme = this.theme;
+        window.userSettings.showTooltips = this.showTooltips;
+      }
+    } catch (_) {}
   }
 
   init() {
@@ -48,6 +89,7 @@ class NumWorksSimulator {
   bindTouchGestures() {
     let startX = 0;
     let startY = 0;
+    let isMouseDown = false;
     if (!this.content) return;
 
     this.content.addEventListener('touchstart', (e) => {
@@ -61,43 +103,61 @@ class NumWorksSimulator {
       if (!e.changedTouches || !e.changedTouches[0]) return;
       const dx = e.changedTouches[0].clientX - startX;
       const dy = e.changedTouches[0].clientY - startY;
-      const absX = Math.abs(dx);
-      const absY = Math.abs(dy);
-
-      if (Math.max(absX, absY) > 25) {
-        if (absX > absY) {
-          if (dx > 0) this.handleInput('RIGHT');
-          else this.handleInput('LEFT');
-        } else {
-          if (dy > 0) this.handleInput('DOWN');
-          else this.handleInput('UP');
-        }
-      }
+      this.triggerSwipe(dx, dy);
     }, { passive: true });
+
+    this.content.addEventListener('mousedown', (e) => {
+      isMouseDown = true;
+      startX = e.clientX;
+      startY = e.clientY;
+    });
+
+    this.content.addEventListener('mouseup', (e) => {
+      if (!isMouseDown) return;
+      isMouseDown = false;
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
+      this.triggerSwipe(dx, dy);
+    });
+  }
+
+  triggerSwipe(dx, dy) {
+    const absX = Math.abs(dx);
+    const absY = Math.abs(dy);
+    if (Math.max(absX, absY) > 20) {
+      if (absX > absY) {
+        if (dx > 0) this.handleInput('RIGHT');
+        else this.handleInput('LEFT');
+      } else {
+        if (dy > 0) this.handleInput('DOWN');
+        else this.handleInput('UP');
+      }
+    }
   }
 
   bindControls() {
     window.addEventListener('keydown', (e) => {
       if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+      const keyL = (e.key || '').toLowerCase();
 
       if (this.currentView === 'MENU') {
-        if (e.key === 'ArrowUp') { e.preventDefault(); this.handleInput('UP'); }
-        else if (e.key === 'ArrowDown') { e.preventDefault(); this.handleInput('DOWN'); }
-        else if (e.key === 'ArrowLeft') { e.preventDefault(); this.handleInput('LEFT'); }
-        else if (e.key === 'ArrowRight') { e.preventDefault(); this.handleInput('RIGHT'); }
+        if (e.key === 'ArrowUp' || keyL === 'z' || keyL === 'w') { e.preventDefault(); this.handleInput('UP'); }
+        else if (e.key === 'ArrowDown' || keyL === 's') { e.preventDefault(); this.handleInput('DOWN'); }
+        else if (e.key === 'ArrowLeft' || keyL === 'q' || keyL === 'a') { e.preventDefault(); this.handleInput('LEFT'); }
+        else if (e.key === 'ArrowRight' || keyL === 'd') { e.preventDefault(); this.handleInput('RIGHT'); }
         else if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); this.launchSelected(); }
-        else if (e.key.toLowerCase() === 't' || e.key.toLowerCase() === 'p') { e.preventDefault(); this.launchApp('SETTINGS'); }
+        else if (keyL === 't' || keyL === 'p') { e.preventDefault(); this.launchApp('SETTINGS'); }
       } else if (this.currentView === 'SETTINGS') {
-        if (e.key === 'ArrowUp') { e.preventDefault(); this.settingsMove(-1); }
-        else if (e.key === 'ArrowDown') { e.preventDefault(); this.settingsMove(1); }
-        else if (e.key === 'ArrowLeft') { e.preventDefault(); this.settingsChange(-1); }
-        else if (e.key === 'ArrowRight') { e.preventDefault(); this.settingsChange(1); }
+        if (e.key === 'ArrowUp' || keyL === 'z' || keyL === 'w') { e.preventDefault(); this.settingsMove(-1); }
+        else if (e.key === 'ArrowDown' || keyL === 's') { e.preventDefault(); this.settingsMove(1); }
+        else if (e.key === 'ArrowLeft' || keyL === 'q' || keyL === 'a') { e.preventDefault(); this.settingsChange(-1); }
+        else if (e.key === 'ArrowRight' || keyL === 'd') { e.preventDefault(); this.settingsChange(1); }
         else if (e.key === 'Enter' || e.key === ' ' || e.key === 'Escape' || e.key === 'Backspace') {
           e.preventDefault();
           this.returnToMenu();
         }
       } else if (this.currentView === 'FLAPPY') {
-        if (e.key === ' ' || e.key === 'ArrowUp' || e.key === 'Enter') {
+        if (e.key === ' ' || e.key === 'ArrowUp' || e.key === 'Enter' || keyL === 'z' || keyL === 'w') {
           e.preventDefault();
           this.flappyFlap();
         } else if (e.key === 'Escape' || e.key === 'Backspace') {
@@ -105,18 +165,27 @@ class NumWorksSimulator {
           this.returnToMenu();
         }
       } else if (this.currentView === 'SNAKE') {
-        if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+        if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) || ['z','s','q','d','w','a'].includes(keyL)) {
           e.preventDefault();
-          this.snakeChangeDir(e.key);
+          let dir = e.key;
+          if (keyL === 'z' || keyL === 'w') dir = 'ArrowUp';
+          else if (keyL === 's') dir = 'ArrowDown';
+          else if (keyL === 'q' || keyL === 'a') dir = 'ArrowLeft';
+          else if (keyL === 'd') dir = 'ArrowRight';
+          this.snakeChangeDir(dir);
         } else if (e.key === 'Escape' || e.key === 'Backspace') {
           e.preventDefault();
           this.returnToMenu();
         }
       } else if (this.currentView === '2048') {
-        if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', '8', '2', '4', '6'].includes(e.key)) {
+        if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', '8', '2', '4', '6'].includes(e.key) || ['z','s','q','d','w','a'].includes(keyL)) {
           e.preventDefault();
-          const dirMap = { 'ArrowUp': 'UP', 'ArrowDown': 'DOWN', 'ArrowLeft': 'LEFT', 'ArrowRight': 'RIGHT', '8': 'UP', '2': 'DOWN', '4': 'LEFT', '6': 'RIGHT' };
-          this.slide2048(dirMap[e.key] || e.key);
+          let dir = 'UP';
+          if (e.key === 'ArrowUp' || e.key === '8' || keyL === 'z' || keyL === 'w') dir = 'UP';
+          else if (e.key === 'ArrowDown' || e.key === '2' || keyL === 's') dir = 'DOWN';
+          else if (e.key === 'ArrowLeft' || e.key === '4' || keyL === 'q' || keyL === 'a') dir = 'LEFT';
+          else if (e.key === 'ArrowRight' || e.key === '6' || keyL === 'd') dir = 'RIGHT';
+          this.slide2048(dir);
         } else if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
           this.restart2048?.();
@@ -125,32 +194,35 @@ class NumWorksSimulator {
           this.returnToMenu();
         }
       } else if (this.currentView === 'PONG') {
-        if (e.key === 'ArrowUp' || e.key === 'w' || e.key === '8') { e.preventDefault(); this.pongMove(-1); }
-        else if (e.key === 'ArrowDown' || e.key === 's' || e.key === '2') { e.preventDefault(); this.pongMove(1); }
+        if (e.key === 'ArrowUp' || keyL === 'z' || keyL === 'w' || e.key === '8') { e.preventDefault(); this.pongMove(-1); }
+        else if (e.key === 'ArrowDown' || keyL === 's' || e.key === '2') { e.preventDefault(); this.pongMove(1); }
         else if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); this.pongRestart?.(); }
         else if (e.key === 'Escape' || e.key === 'Backspace') { e.preventDefault(); this.returnToMenu(); }
       } else if (this.currentView === 'DINO') {
-        if (e.key === ' ' || e.key === 'ArrowUp' || e.key === 'Enter' || e.key === '8') { e.preventDefault(); this.dinoJump?.(); }
-        else if (e.key === 'ArrowDown' || e.key === '2') { e.preventDefault(); this.dinoDuck?.(true); }
+        if (e.key === ' ' || e.key === 'ArrowUp' || e.key === 'Enter' || e.key === '8' || keyL === 'z' || keyL === 'w') { e.preventDefault(); this.dinoJump?.(); }
+        else if (e.key === 'ArrowDown' || e.key === '2' || keyL === 's') { e.preventDefault(); this.dinoDuck?.(true); }
         else if (e.key === 'Escape' || e.key === 'Backspace') { e.preventDefault(); this.returnToMenu(); }
       } else if (this.currentView === 'SPACE_INVADERS') {
-        if (e.key === 'ArrowLeft' || e.key === '4') { e.preventDefault(); this.invadersMove?.(-1); }
-        else if (e.key === 'ArrowRight' || e.key === '6') { e.preventDefault(); this.invadersMove?.(1); }
-        else if (e.key === ' ' || e.key === 'Enter' || e.key === 'ArrowUp') { e.preventDefault(); this.invadersShoot?.(); }
+        if (e.key === 'ArrowLeft' || e.key === '4' || keyL === 'q' || keyL === 'a') { e.preventDefault(); this.invadersMove?.(-1); }
+        else if (e.key === 'ArrowRight' || e.key === '6' || keyL === 'd') { e.preventDefault(); this.invadersMove?.(1); }
+        else if (e.key === ' ' || e.key === 'Enter' || e.key === 'ArrowUp' || keyL === 'z' || keyL === 'w') { e.preventDefault(); this.invadersShoot?.(); }
         else if (e.key === 'Escape' || e.key === 'Backspace') { e.preventDefault(); this.returnToMenu(); }
       } else if (this.currentView === 'BREAKOUT') {
-        if (e.key === 'ArrowLeft' || e.key === '4') { e.preventDefault(); this.breakoutMove?.(-1); }
-        else if (e.key === 'ArrowRight' || e.key === '6') { e.preventDefault(); this.breakoutMove?.(1); }
-        else if (e.key === ' ' || e.key === 'Enter' || e.key === 'ArrowUp') { e.preventDefault(); this.breakoutLaunch?.(); }
+        if (e.key === 'ArrowLeft' || e.key === '4' || keyL === 'q' || keyL === 'a') { e.preventDefault(); this.breakoutMove?.(-1); }
+        else if (e.key === 'ArrowRight' || e.key === '6' || keyL === 'd') { e.preventDefault(); this.breakoutMove?.(1); }
+        else if (e.key === ' ' || e.key === 'Enter' || e.key === 'ArrowUp' || keyL === 'z' || keyL === 'w') { e.preventDefault(); this.breakoutLaunch?.(); }
         else if (e.key === 'Escape' || e.key === 'Backspace') { e.preventDefault(); this.returnToMenu(); }
       } else if (this.currentView === 'PUISSANCE4') {
-        if (e.key === 'ArrowLeft' || e.key === '4') { e.preventDefault(); this.p4Move?.(-1); }
-        else if (e.key === 'ArrowRight' || e.key === '6') { e.preventDefault(); this.p4Move?.(1); }
-        else if (e.key === ' ' || e.key === 'Enter' || e.key === 'ArrowDown') { e.preventDefault(); this.p4Drop?.(); }
+        if (['1', '2', '3', '4', '5', '6', '7'].includes(e.key)) {
+          e.preventDefault();
+          this.p4DropCol?.(parseInt(e.key, 10) - 1);
+        } else if (e.key === 'ArrowLeft' || keyL === 'q' || keyL === 'a') { e.preventDefault(); this.p4Move?.(-1); }
+        else if (e.key === 'ArrowRight' || keyL === 'd') { e.preventDefault(); this.p4Move?.(1); }
+        else if (e.key === ' ' || e.key === 'Enter' || e.key === 'ArrowDown' || keyL === 's') { e.preventDefault(); this.p4Drop?.(); }
         else if (e.key === 'Escape' || e.key === 'Backspace') { e.preventDefault(); this.returnToMenu(); }
       } else if (this.currentView === 'COURSES') {
-        if (e.key === 'ArrowRight') { e.preventDefault(); this.nextCoursePage(1); }
-        else if (e.key === 'ArrowLeft') { e.preventDefault(); this.nextCoursePage(-1); }
+        if (e.key === 'ArrowRight' || keyL === 'd') { e.preventDefault(); this.nextCoursePage(1); }
+        else if (e.key === 'ArrowLeft' || keyL === 'q' || keyL === 'a') { e.preventDefault(); this.nextCoursePage(-1); }
         else if (e.key === 'Escape' || e.key === 'Backspace') { e.preventDefault(); this.returnToMenu(); }
       } else {
         if (e.key === 'Escape' || e.key === 'Backspace') {
@@ -161,7 +233,8 @@ class NumWorksSimulator {
     });
 
     window.addEventListener('keyup', (e) => {
-      if (this.currentView === 'DINO' && (e.key === 'ArrowDown' || e.key === '2')) {
+      const keyL = (e.key || '').toLowerCase();
+      if (this.currentView === 'DINO' && (e.key === 'ArrowDown' || e.key === '2' || keyL === 's')) {
         this.dinoDuck?.(false);
       }
     });
@@ -412,8 +485,10 @@ class NumWorksSimulator {
       this.showTooltips = !this.showTooltips;
       if (window.userSettings) {
         window.userSettings.showTooltips = this.showTooltips;
-        document.body.classList.toggle('hide-tooltips', !this.showTooltips);
       }
+      document.body.classList.toggle('hide-tooltips', !this.showTooltips);
+      const settingToggle = document.getElementById('setting-tooltips-toggle');
+      if (settingToggle) settingToggle.checked = this.showTooltips;
     } else if (this.settingsSubIndex === 2) {
       const themesList = ['default', 'sakura', 'hacker', 'bee', 'mario', 'gameboy'];
       let curIdx = themesList.indexOf(this.theme);
@@ -422,7 +497,13 @@ class NumWorksSimulator {
       this.theme = themesList[nextIdx];
       if (typeof window.setAppTheme === 'function') {
         window.setAppTheme(this.theme);
+      } else if (typeof window.setThemeBg === 'function') {
+        window.setThemeBg(this.theme);
       }
+    }
+    this.saveCurrentSettings();
+    if (typeof window.saveUserSettings === 'function') {
+      window.saveUserSettings();
     }
     this.startSettingsScreen();
   }
@@ -554,40 +635,67 @@ class NumWorksSimulator {
   }
 
   syncWithPack(pack) {
-    if (!pack || pack.length === 0) return;
-    this.apps = pack.map((app, i) => {
-      let icon = app.icon_initial || '📦';
-      const nameL = (app.name || '').toLowerCase();
-      const idL = (app.id || '').toLowerCase();
-      let type = app.type || 'GENERIC';
-      if (idL.includes('mario') || nameL.includes('mario')) { type = 'MARIO'; icon = '🏎️'; }
-      else if (idL.includes('period') || nameL.includes('period')) { type = 'PERIODIC'; icon = '🧪'; }
-      else if (idL.includes('cours') || idL.includes('fiche') || nameL.includes('cours') || nameL.includes('fiche')) { type = 'COURSES'; icon = '📚'; }
-      else if (idL.includes('flappy') || nameL.includes('flappy')) { type = 'FLAPPY'; icon = '🐦'; }
-      else if (idL.includes('2048') || nameL.includes('2048')) { type = '2048'; icon = '🔢'; }
-      else if (idL.includes('snake') || nameL.includes('snake')) { type = 'SNAKE'; icon = '🐍'; }
-      else if (idL.includes('pong') || nameL.includes('pong')) { type = 'PONG'; icon = '🏓'; }
-      else if (idL.includes('dino') || nameL.includes('dino')) { type = 'DINO'; icon = '🦖'; }
-      else if (idL.includes('invader') || nameL.includes('space') || nameL.includes('invader')) { type = 'SPACE_INVADERS'; icon = '👾'; }
-      else if (idL.includes('breakout') || idL.includes('brique') || nameL.includes('brique')) { type = 'BREAKOUT'; icon = '🧱'; }
-      else if (idL.includes('puissance') || nameL.includes('puissance')) { type = 'PUISSANCE4'; icon = '🟡'; }
-      return {
-        id: app.id,
-        name: `${i + 1}. ${app.name}`,
-        cat: (app.category || 'Arcade').split('/')[0].trim(),
-        type: type,
-        icon: icon
-      };
-    });
-    this.apps.push({
-      id: 'settings',
-      name: `${this.apps.length + 1}. Paramètres`,
-      cat: 'Options',
-      type: 'SETTINGS',
-      icon: '⚙️'
-    });
+    if (!pack || pack.length === 0) {
+      this.apps = [
+        { id: 'mariokart', name: '1. Mario Kart', cat: 'Arcade', type: 'MARIO', icon: '🏎️' },
+        { id: 'periodique', name: '2. Tableau Périodique', cat: 'Chimie', type: 'PERIODIC', icon: '🧪' },
+        { id: 'fiches', name: '3. Fiches de Cours', cat: 'Révision', type: 'COURSES', icon: '📚' },
+        { id: 'flappy', name: '4. Flappy Bird', cat: 'Arcade', type: 'FLAPPY', icon: '🐦' },
+        { id: '2048', name: '5. 2048 Ultimate', cat: 'Arcade', type: '2048', icon: '🔢' },
+        { id: 'snake', name: '6. Snake Classic', cat: 'Arcade', type: 'SNAKE', icon: '🐍' },
+        { id: 'pong', name: '7. Pong Retro', cat: 'Arcade', type: 'PONG', icon: '🏓' },
+        { id: 'dino', name: '8. Chrome Dino', cat: 'Arcade', type: 'DINO', icon: '🦖' },
+        { id: 'space_invaders', name: '9. Space Invaders', cat: 'Arcade', type: 'SPACE_INVADERS', icon: '👾' },
+        { id: 'breakout', name: '10. Casse-Briques', cat: 'Arcade', type: 'BREAKOUT', icon: '🧱' },
+        { id: 'puissance4', name: '11. Puissance 4', cat: 'Arcade', type: 'PUISSANCE4', icon: '🟡' },
+        { id: 'settings', name: '12. Paramètres & Thèmes', cat: 'Options', type: 'SETTINGS', icon: '⚙️' }
+      ];
+    } else {
+      this.apps = pack.map((app, i) => {
+        let icon = app.icon_initial || '📦';
+        const nameL = (app.name || '').toLowerCase();
+        const idL = (app.id || '').toLowerCase();
+        let type = app.type || 'GENERIC';
+
+        if (idL.includes('mario') || nameL.includes('mario')) { type = 'MARIO'; icon = '🏎️'; }
+        else if (idL.includes('period') || nameL.includes('period')) { type = 'PERIODIC'; icon = '🧪'; }
+        else if (idL.includes('cours') || idL.includes('fiche') || nameL.includes('cours') || nameL.includes('fiche')) { type = 'COURSES'; icon = '📚'; }
+        else if (idL.includes('math') || nameL.includes('math') || nameL.includes('solveur')) { type = 'GENERIC'; icon = '📐'; }
+        else if (idL.includes('flappy') || nameL.includes('flappy')) { type = 'FLAPPY'; icon = '🐦'; }
+        else if (idL.includes('2048') || nameL.includes('2048')) { type = '2048'; icon = '🔢'; }
+        else if (idL.includes('snake') || nameL.includes('snake')) { type = 'SNAKE'; icon = '🐍'; }
+        else if (idL.includes('tetris') || nameL.includes('tetris')) { type = 'GENERIC'; icon = '🧱'; }
+        else if (idL.includes('mine') || nameL.includes('mine') || nameL.includes('demineur')) { type = 'GENERIC'; icon = '💣'; }
+        else if (idL.includes('pong') || nameL.includes('pong')) { type = 'PONG'; icon = '🏓'; }
+        else if (idL.includes('dino') || nameL.includes('dino')) { type = 'DINO'; icon = '🦖'; }
+        else if (idL.includes('invader') || nameL.includes('space') || nameL.includes('invader')) { type = 'SPACE_INVADERS'; icon = '👾'; }
+        else if (idL.includes('breakout') || idL.includes('brique') || nameL.includes('brique')) { type = 'BREAKOUT'; icon = '🧱'; }
+        else if (idL.includes('puissance') || nameL.includes('puissance') || idL.includes('connect4') || nameL.includes('connect4')) { type = 'PUISSANCE4'; icon = '🟡'; }
+
+        return {
+          id: app.id,
+          name: `${i + 1}. ${app.name.replace(/^[0-9]+\.\s*/, '')}`,
+          cat: (app.category || 'Arcade').split('/')[0].trim(),
+          type: type,
+          icon: icon
+        };
+      });
+
+      this.apps.push({
+        id: 'settings',
+        name: `${this.apps.length + 1}. Paramètres & Thèmes`,
+        cat: 'Options',
+        type: 'SETTINGS',
+        icon: '⚙️'
+      });
+    }
+
     if (this.selectedIndex >= this.apps.length) this.selectedIndex = 0;
     if (this.currentView === 'MENU') this.renderMenu();
+  }
+
+  updatePack(selectedApps) {
+    this.syncWithPack(selectedApps);
   }
 
   // ==================== MINI JEU FLAPPY BIRD ====================
@@ -729,10 +837,7 @@ class NumWorksSimulator {
       [0, 0, 0, 0]
     ];
     let score = 0;
-    let bestScore = 0;
-    try {
-      bestScore = parseInt(localStorage.getItem('equalib_2048_best') || '0', 10) || 0;
-    } catch (_) {}
+    let bestScore = parseInt(safeStorageGet('equalib_2048_best', '0'), 10) || 0;
     let isGameOver = false;
 
     const spawnTile = () => {
@@ -782,17 +887,17 @@ class NumWorksSimulator {
         0: 'bg-[#cdc1b4] text-transparent',
         2: 'bg-[#eee4da] text-[#776e65]',
         4: 'bg-[#ede0c8] text-[#776e65]',
-        8: 'bg-[#f2b179] text-white',
-        16: 'bg-[#f59563] text-white',
-        32: 'bg-[#f67c5f] text-white',
-        64: 'bg-[#e95937] text-white',
-        128: 'bg-[#edcf72] text-white text-[9px]',
-        256: 'bg-[#edcc61] text-white text-[9px]',
-        512: 'bg-[#edc850] text-white text-[9px]',
-        1024: 'bg-[#edc53f] text-white text-[8px]',
-        2048: 'bg-[#edc22e] text-white text-[8px]'
+        8: 'bg-[#f2b179] text-white font-black',
+        16: 'bg-[#f59563] text-white font-black',
+        32: 'bg-[#f67c5f] text-white font-black',
+        64: 'bg-[#e95937] text-white font-black',
+        128: 'bg-[#edcf72] text-white text-[9px] font-black',
+        256: 'bg-[#edcc61] text-white text-[9px] font-black',
+        512: 'bg-[#edc850] text-white text-[9px] font-black',
+        1024: 'bg-[#edc53f] text-white text-[8px] font-black',
+        2048: 'bg-[#edc22e] text-white text-[8px] font-black shadow-lg shadow-amber-500/50'
       };
-      return styles[val] || 'bg-[#3c3a32] text-white text-[7px]';
+      return styles[val] || 'bg-[#3c3a32] text-white text-[7px] font-black';
     };
 
     const render = () => {
@@ -802,7 +907,7 @@ class NumWorksSimulator {
           const val = grid[r][c];
           const style = getTileStyle(val);
           cellsHtml += `
-            <div class="h-8 rounded flex items-center justify-center font-bold text-[10px] ${style} shadow-sm transition-all duration-75 select-none">
+            <div class="h-8 rounded flex items-center justify-center font-bold text-[10px] ${style} shadow-sm transition-all select-none border border-black/5">
               ${val > 0 ? val : ''}
             </div>
           `;
@@ -810,32 +915,49 @@ class NumWorksSimulator {
       }
 
       this.content.innerHTML = `
-        <div class="flex flex-col justify-between h-full bg-[#faf8ef] p-2 rounded relative select-none">
+        <div class="flex flex-col justify-between h-full bg-[#faf8ef] p-1.5 rounded relative select-none" id="sim-2048-container">
           <div class="flex justify-between items-center text-[10px] font-bold text-slate-800">
-            <span class="text-amber-700 tracking-wider font-black">2048</span>
+            <span class="text-amber-700 tracking-wider font-black text-xs">2048</span>
             <div class="flex gap-1">
               <span class="bg-[#bbada0] text-white px-1.5 py-0.5 rounded text-[8px]">Score: ${score}</span>
-              <span class="bg-[#8f7a66] text-white px-1.5 py-0.5 rounded text-[8px]">Best: ${bestScore}</span>
+              <span class="bg-[#8f7a66] text-white px-1.5 py-0.5 rounded text-[8px]">Max: ${bestScore}</span>
             </div>
           </div>
-          <div class="grid grid-cols-4 gap-1.5 bg-[#bbada0] p-1.5 rounded-lg my-1">
+          <div class="grid grid-cols-4 gap-1 bg-[#bbada0] p-1 rounded-lg my-0.5 cursor-grab active:cursor-grabbing" id="sim-2048-grid">
             ${cellsHtml}
           </div>
+          <!-- Commandes tactiles directes (Zéro freeze) -->
+          <div class="flex items-center justify-between gap-1 text-[8px]">
+            <button class="flex-1 py-0.5 bg-[#8f7a66] hover:bg-[#776e65] active:scale-95 text-white font-bold rounded cursor-pointer btn-2048-nav" data-dir="LEFT">◀</button>
+            <button class="flex-1 py-0.5 bg-[#8f7a66] hover:bg-[#776e65] active:scale-95 text-white font-bold rounded cursor-pointer btn-2048-nav" data-dir="UP">▲</button>
+            <button class="flex-1 py-0.5 bg-[#8f7a66] hover:bg-[#776e65] active:scale-95 text-white font-bold rounded cursor-pointer btn-2048-nav" data-dir="DOWN">▼</button>
+            <button class="flex-1 py-0.5 bg-[#8f7a66] hover:bg-[#776e65] active:scale-95 text-white font-bold rounded cursor-pointer btn-2048-nav" data-dir="RIGHT">▶</button>
+          </div>
           ${isGameOver ? `
-            <div class="absolute inset-0 bg-[#eee4da]/90 backdrop-blur-[1px] flex flex-col items-center justify-center rounded z-10">
-              <div class="text-sm font-extrabold text-[#776e65] mb-1">GAME OVER !</div>
+            <div class="absolute inset-0 bg-[#eee4da]/95 backdrop-blur-[2px] flex flex-col items-center justify-center rounded z-10">
+              <div class="text-xs font-black text-[#776e65] mb-1">GAME OVER !</div>
               <div class="text-[9px] text-[#8f7a66] mb-2 font-bold">Score Final : ${score}</div>
               <button onclick="window.simulator.restart2048()" class="px-3 py-1 bg-[#8f7a66] hover:bg-[#776e65] text-white text-[9px] font-bold rounded shadow transition cursor-pointer">
                 Rejouer (OK)
               </button>
             </div>
           ` : `
-            <div class="text-[8px] text-slate-500 text-center font-medium">
-              Flèches / Swipe : Glisser • Back : Hub
+            <div class="text-[7px] text-slate-500 text-center font-medium">
+              Flèches / ZQSD / Glisser • Back : Hub
             </div>
           `}
         </div>
       `;
+
+      // Liaison des boutons de contrôle tactiles directs
+      const navBtns = this.content.querySelectorAll('.btn-2048-nav');
+      navBtns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const d = btn.getAttribute('data-dir');
+          if (d) this.slide2048(d);
+        });
+      });
     };
 
     const slideRow = (row) => {
@@ -862,7 +984,7 @@ class NumWorksSimulator {
       if (isGameOver) return;
       window.soundFx?.playClick?.();
 
-      const d = dir.toUpperCase();
+      const d = (dir || '').toUpperCase();
       let moved = false;
       let gained = 0;
       const newGrid = [
@@ -912,7 +1034,7 @@ class NumWorksSimulator {
         score += gained;
         if (score > bestScore) {
           bestScore = score;
-          try { localStorage.setItem('equalib_2048_best', String(bestScore)); } catch (_) {}
+          safeStorageSet('equalib_2048_best', String(bestScore));
         }
         spawnTile();
         if (!canMove()) {
@@ -1005,15 +1127,23 @@ class NumWorksSimulator {
     this.topbar.style.backgroundColor = '#6366f1';
 
     this.content.innerHTML = `
-      <div class="w-full h-full flex flex-col justify-between bg-[#0a0c12] p-1 rounded relative">
-        <canvas id="pong-cvs" width="280" height="150" class="w-full h-full block rounded"></canvas>
-        <div id="pong-overlay" class="hidden absolute inset-0 bg-black/75 flex flex-col items-center justify-center text-white text-center rounded">
-          <div id="pong-msg" class="font-black text-xs text-cyan-400 mb-1">VICTOIRE !</div>
-          <button onclick="window.simulator.pongRestart()" class="px-3 py-1 bg-cyan-600 hover:bg-cyan-500 text-white text-[9px] font-bold rounded shadow transition cursor-pointer">
-            Rejouer (OK)
+      <div class="w-full h-full flex flex-col justify-between bg-[#070913] p-1 rounded relative select-none">
+        <canvas id="pong-cvs" width="300" height="175" class="w-full h-full block rounded cursor-ns-resize"></canvas>
+        <div id="pong-overlay" class="hidden absolute inset-0 bg-black/85 flex flex-col items-center justify-center text-white text-center rounded z-10">
+          <div id="pong-msg" class="font-black text-sm text-cyan-400 mb-1 drop-shadow">VICTOIRE !</div>
+          <div class="text-[9px] text-slate-300 mb-2">Premier à 7 points gagne le match !</div>
+          <button id="pong-restart-btn" class="px-4 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white text-[10px] font-bold rounded shadow transition cursor-pointer">
+            Rejouer (OK / Espace)
           </button>
         </div>
-        <div class="text-[8px] text-slate-400 text-center">▲▼ : Raquette • Back : Hub</div>
+        <div class="flex items-center justify-between px-1 text-[8px] text-slate-400">
+          <span>Souris / ▲▼: Raquette</span>
+          <div class="flex items-center gap-1">
+            <button id="pong-up-btn" class="px-2 py-0.5 bg-slate-800 hover:bg-slate-700 text-white rounded font-bold cursor-pointer">▲</button>
+            <button id="pong-down-btn" class="px-2 py-0.5 bg-slate-800 hover:bg-slate-700 text-white rounded font-bold cursor-pointer">▼</button>
+          </div>
+          <button id="pong-back-btn" class="px-1.5 py-0.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded cursor-pointer">Hub</button>
+        </div>
       </div>
     `;
 
@@ -1021,98 +1151,176 @@ class NumWorksSimulator {
     const ctx = canvas.getContext('2d');
     const overlay = document.getElementById('pong-overlay');
     const msgEl = document.getElementById('pong-msg');
+    const restartBtn = document.getElementById('pong-restart-btn');
+    const upBtn = document.getElementById('pong-up-btn');
+    const downBtn = document.getElementById('pong-down-btn');
+    const backBtn = document.getElementById('pong-back-btn');
 
-    let p1Y = 55;
-    let cpuY = 55;
-    let bx = 140;
-    let by = 75;
-    let bvx = 3.0;
-    let bvy = 1.8;
+    let p1Y = 70;
+    let cpuY = 70;
+    const paddleH = 34;
+    const paddleW = 6;
+    let bx = 150;
+    let by = 88;
+    let bvx = 3.2;
+    let bvy = 2.0;
     let s1 = 0;
     let sc = 0;
     let gameOver = false;
+    let trail = [];
 
     this.pongMove = (dir) => {
-      p1Y = Math.max(10, Math.min(105, p1Y + dir * 12));
+      p1Y = Math.max(6, Math.min(canvas.height - paddleH - 6, p1Y + dir * 14));
     };
 
     this.pongRestart = () => {
       s1 = 0;
       sc = 0;
-      bx = 140;
-      by = 75;
-      bvx = 3.0;
+      bx = canvas.width / 2;
+      by = canvas.height / 2;
+      bvx = (Math.random() < 0.5 ? 3.2 : -3.2);
+      bvy = (Math.random() * 2.4 - 1.2);
+      if (Math.abs(bvy) < 1.2) bvy = (bvy >= 0 ? 1.4 : -1.4);
+      trail = [];
       gameOver = false;
       overlay.classList.add('hidden');
     };
 
+    if (restartBtn) restartBtn.addEventListener('click', () => this.pongRestart());
+    if (upBtn) upBtn.addEventListener('click', () => this.pongMove(-1));
+    if (downBtn) downBtn.addEventListener('click', () => this.pongMove(1));
+    if (backBtn) backBtn.addEventListener('click', () => this.returnToMenu());
+
+    const updateMousePaddle = (clientY) => {
+      const rect = canvas.getBoundingClientRect();
+      const scaleY = canvas.height / rect.height;
+      const targetY = (clientY - rect.top) * scaleY - paddleH / 2;
+      p1Y = Math.max(6, Math.min(canvas.height - paddleH - 6, targetY));
+    };
+
+    canvas.addEventListener('mousemove', (e) => {
+      if (!gameOver) updateMousePaddle(e.clientY);
+    });
+
+    canvas.addEventListener('touchmove', (e) => {
+      e.preventDefault();
+      if (!gameOver && e.touches[0]) updateMousePaddle(e.touches[0].clientY);
+    }, { passive: false });
+
+    canvas.addEventListener('click', () => {
+      if (gameOver) this.pongRestart();
+    });
+
     const loop = () => {
       if (!gameOver) {
+        trail.push({ x: bx, y: by });
+        if (trail.length > 5) trail.shift();
+
         bx += bvx;
         by += bvy;
 
-        if (by <= 4 || by >= canvas.height - 10) bvy = -bvy;
+        if (by <= 4) {
+          by = 4;
+          bvy = Math.abs(bvy);
+        } else if (by >= canvas.height - 10) {
+          by = canvas.height - 10;
+          bvy = -Math.abs(bvy);
+        }
 
+        const cpuCenter = cpuY + paddleH / 2;
         if (bvx > 0 && bx > 90) {
-          if (cpuY + 20 < by - 4) cpuY += 2.4;
-          else if (cpuY + 20 > by + 4) cpuY -= 2.4;
+          const diff = by + 3 - cpuCenter;
+          const cpuSpeed = Math.min(2.8, Math.max(-2.8, diff * 0.18));
+          cpuY += cpuSpeed;
+        } else {
+          const centerDiff = (canvas.height / 2) - cpuCenter;
+          cpuY += centerDiff * 0.04;
         }
+        cpuY = Math.max(6, Math.min(canvas.height - paddleH - 6, cpuY));
 
-        // Collision P1 (x = 12)
-        if (bvx < 0 && bx <= 18 && bx >= 8 && by + 6 >= p1Y && by <= p1Y + 36) {
-          bx = 18;
-          bvx = Math.min(5.5, -bvx * 1.05);
-          bvy = ((by - (p1Y + 18)) / 18) * 3.5;
+        if (bvx < 0 && bx <= 12 + paddleW && bx >= 8 && by + 6 >= p1Y && by <= p1Y + paddleH) {
+          bx = 12 + paddleW;
+          bvx = Math.min(6.2, Math.abs(bvx) * 1.06);
+          const rel = ((by + 3) - (p1Y + paddleH / 2)) / (paddleH / 2);
+          bvy = rel * 3.8;
+          if (Math.abs(bvy) < 1.4) bvy = (bvy >= 0 ? 1.4 : -1.4);
           window.soundFx?.playClick?.();
         }
 
-        // Collision CPU (x = 262)
-        if (bvx > 0 && bx >= 256 && bx <= 266 && by + 6 >= cpuY && by <= cpuY + 36) {
-          bx = 256;
-          bvx = -Math.min(5.5, Math.abs(bvx) * 1.05);
-          bvy = ((by - (cpuY + 18)) / 18) * 3.5;
+        const cpuX = canvas.width - 18;
+        if (bvx > 0 && bx + 6 >= cpuX && bx <= cpuX + paddleW + 4 && by + 6 >= cpuY && by <= cpuY + paddleH) {
+          bx = cpuX - 6;
+          bvx = -Math.min(6.2, Math.abs(bvx) * 1.06);
+          const rel = ((by + 3) - (cpuY + paddleH / 2)) / (paddleH / 2);
+          bvy = rel * 3.8;
+          if (Math.abs(bvy) < 1.4) bvy = (bvy >= 0 ? 1.4 : -1.4);
           window.soundFx?.playClick?.();
         }
 
-        if (bx < 0) {
+        if (bx < -10) {
           sc++;
-          bx = 140;
-          by = 75;
-          bvx = 3.0;
-          if (sc >= 7) { gameOver = true; msgEl.textContent = 'DEFAITE !'; msgEl.className = 'font-black text-xs text-red-400 mb-1'; overlay.classList.remove('hidden'); }
-        } else if (bx > canvas.width) {
+          window.soundFx?.playHit?.();
+          bx = canvas.width / 2;
+          by = canvas.height / 2;
+          bvx = 3.2;
+          bvy = (Math.random() * 2 - 1) * 2;
+          if (Math.abs(bvy) < 1.2) bvy = 1.4;
+          trail = [];
+          if (sc >= 7) {
+            gameOver = true;
+            msgEl.textContent = 'DÉFAITE ! (CPU GAGNE)';
+            msgEl.className = 'font-black text-sm text-red-400 mb-1 drop-shadow';
+            overlay.classList.remove('hidden');
+          }
+        } else if (bx > canvas.width + 10) {
           s1++;
-          bx = 140;
-          by = 75;
-          bvx = -3.0;
-          if (s1 >= 7) { gameOver = true; msgEl.textContent = 'VICTOIRE !'; msgEl.className = 'font-black text-xs text-emerald-400 mb-1'; overlay.classList.remove('hidden'); }
+          window.soundFx?.playScore?.();
+          bx = canvas.width / 2;
+          by = canvas.height / 2;
+          bvx = -3.2;
+          bvy = (Math.random() * 2 - 1) * 2;
+          if (Math.abs(bvy) < 1.2) bvy = -1.4;
+          trail = [];
+          if (s1 >= 7) {
+            gameOver = true;
+            msgEl.textContent = 'VICTOIRE ÉCLATANTE !';
+            msgEl.className = 'font-black text-sm text-cyan-400 mb-1 drop-shadow';
+            overlay.classList.remove('hidden');
+          }
         }
       }
 
-      ctx.fillStyle = '#0a0c12';
+      ctx.fillStyle = '#070913';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // Filet central
-      ctx.fillStyle = '#374151';
-      for (let y = 0; y < canvas.height; y += 12) {
-        ctx.fillRect(139, y, 2, 6);
+      ctx.fillStyle = '#1e293b';
+      for (let y = 4; y < canvas.height; y += 14) {
+        ctx.fillRect(canvas.width / 2 - 1, y, 2, 7);
       }
 
-      // Raquettes
-      ctx.fillStyle = '#00e5ff';
-      ctx.fillRect(10, p1Y, 6, 36);
-      ctx.fillStyle = '#ff4757';
-      ctx.fillRect(264, cpuY, 6, 36);
+      trail.forEach((t, i) => {
+        ctx.fillStyle = `rgba(0, 240, 255, ${(i + 1) * 0.12})`;
+        ctx.fillRect(t.x, t.y, 6, 6);
+      });
 
-      // Balle
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(bx, by, 6, 6);
 
-      // Score
-      ctx.fillStyle = '#94a3b8';
-      ctx.font = 'bold 11px monospace';
-      ctx.fillText(`${s1}`, 110, 16);
-      ctx.fillText(`${sc}`, 160, 16);
+      ctx.fillStyle = '#00f0ff';
+      ctx.fillRect(12, p1Y, paddleW, paddleH);
+      ctx.fillStyle = '#e0f2fe';
+      ctx.fillRect(13, p1Y + 2, 2, paddleH - 4);
+
+      ctx.fillStyle = '#ff2a6d';
+      ctx.fillRect(canvas.width - 18, cpuY, paddleW, paddleH);
+      ctx.fillStyle = '#ffe4e6';
+      ctx.fillRect(canvas.width - 17, cpuY + 2, 2, paddleH - 4);
+
+      ctx.fillStyle = '#38bdf8';
+      ctx.font = 'bold 16px monospace';
+      ctx.fillText(`${s1}`, canvas.width / 2 - 40, 22);
+      ctx.fillStyle = '#fb7185';
+      ctx.fillText(`${sc}`, canvas.width / 2 + 30, 22);
 
       this.gameLoopId = requestAnimationFrame(loop);
     };
@@ -1126,37 +1334,54 @@ class NumWorksSimulator {
     this.topbar.style.backgroundColor = '#78716c';
 
     this.content.innerHTML = `
-      <div class="w-full h-full flex flex-col justify-between bg-[#f7f7f7] p-1 rounded relative cursor-pointer" id="dino-wrap">
-        <canvas id="dino-cvs" width="280" height="150" class="w-full h-full block rounded"></canvas>
-        <div id="dino-overlay" class="hidden absolute inset-0 bg-black/60 flex flex-col items-center justify-center text-white text-center rounded">
-          <div class="font-black text-xs text-slate-100 mb-1">G A M E   O V E R</div>
-          <button onclick="window.simulator.dinoRestart()" class="px-3 py-1 bg-slate-700 hover:bg-slate-600 text-white text-[9px] font-bold rounded shadow transition cursor-pointer">
-            Rejouer (OK)
+      <div class="w-full h-full flex flex-col justify-between bg-[#f7f7f7] p-1 rounded relative select-none" id="dino-wrap">
+        <canvas id="dino-cvs" width="300" height="175" class="w-full h-full block rounded cursor-pointer"></canvas>
+        <div id="dino-overlay" class="hidden absolute inset-0 bg-black/70 flex flex-col items-center justify-center text-white text-center rounded z-10">
+          <div class="font-black text-sm text-amber-400 mb-1 drop-shadow">G A M E   O V E R</div>
+          <div id="dino-final-score" class="text-[9px] text-slate-200 mb-2">Score : 0</div>
+          <button id="dino-restart-btn" class="px-4 py-1.5 bg-slate-700 hover:bg-slate-600 text-white text-[10px] font-bold rounded shadow transition cursor-pointer">
+            Rejouer (OK / Espace)
           </button>
         </div>
-        <div class="text-[8px] text-slate-500 text-center">OK / Espace : Sauter • Bas : Baisser • Back : Hub</div>
+        <div class="flex items-center justify-between px-1 text-[8px] text-slate-500">
+          <span>Clic / Espace : Sauter • S : Baisser</span>
+          <div class="flex items-center gap-1">
+            <button id="dino-jump-btn" class="px-2.5 py-0.5 bg-slate-300 hover:bg-slate-400 text-slate-900 rounded font-bold cursor-pointer">⬆️ Sauter</button>
+            <button id="dino-duck-btn" class="px-2.5 py-0.5 bg-slate-300 hover:bg-slate-400 text-slate-900 rounded font-bold cursor-pointer">⬇️ Baisser</button>
+          </div>
+          <button id="dino-back-btn" class="px-1.5 py-0.5 bg-slate-300 hover:bg-slate-400 text-slate-700 rounded cursor-pointer">Hub</button>
+        </div>
       </div>
     `;
 
     const canvas = document.getElementById('dino-cvs');
     const ctx = canvas.getContext('2d');
     const overlay = document.getElementById('dino-overlay');
+    const finalScoreEl = document.getElementById('dino-final-score');
+    const restartBtn = document.getElementById('dino-restart-btn');
+    const jumpBtn = document.getElementById('dino-jump-btn');
+    const duckBtn = document.getElementById('dino-duck-btn');
+    const backBtn = document.getElementById('dino-back-btn');
 
-    let dinoY = 110;
+    const groundY = 145;
+    let dinoY = groundY - 26;
     let velY = 0;
     let onGround = true;
     let ducking = false;
     let score = 0;
-    let hiScore = 0;
-    let obstacles = [{ x: 300, type: 0 }];
-    let gameOver = false;
-    let speed = 4.0;
+    let hiScore = parseInt(safeStorageGet('equalib_dino_hi', '0'), 10) || 0;
+    let speed = 3.8;
     let tick = 0;
+    let gameOver = false;
+
+    let obstacles = [
+      { x: 380, type: 0 }
+    ];
 
     this.dinoJump = () => {
       if (gameOver) { this.dinoRestart(); return; }
       if (onGround) {
-        velY = -8.5;
+        velY = -8.6;
         onGround = false;
         window.soundFx?.playClick?.();
       }
@@ -1167,93 +1392,162 @@ class NumWorksSimulator {
     };
 
     this.dinoRestart = () => {
-      dinoY = 110;
+      dinoY = groundY - 26;
       velY = 0;
       onGround = true;
+      ducking = false;
       score = 0;
-      speed = 4.0;
-      obstacles = [{ x: 300, type: 0 }];
+      speed = 3.8;
+      tick = 0;
+      obstacles = [{ x: 380, type: 0 }];
       gameOver = false;
       overlay.classList.add('hidden');
     };
 
-    document.getElementById('dino-wrap').addEventListener('click', () => this.dinoJump());
+    if (restartBtn) restartBtn.addEventListener('click', () => this.dinoRestart());
+    if (jumpBtn) jumpBtn.addEventListener('click', () => this.dinoJump());
+    if (duckBtn) {
+      duckBtn.addEventListener('mousedown', () => this.dinoDuck(true));
+      duckBtn.addEventListener('mouseup', () => this.dinoDuck(false));
+      duckBtn.addEventListener('touchstart', (e) => { e.preventDefault(); this.dinoDuck(true); });
+      duckBtn.addEventListener('touchend', () => this.dinoDuck(false));
+    }
+    if (backBtn) backBtn.addEventListener('click', () => this.returnToMenu());
+    canvas.addEventListener('click', () => this.dinoJump());
 
     const loop = () => {
       tick++;
+
       if (!gameOver) {
         if (!onGround) {
-          velY += 0.65;
+          velY += 0.58;
           dinoY += velY;
-          if (dinoY >= 110) {
-            dinoY = 110;
+          if (dinoY >= groundY - 26) {
+            dinoY = groundY - 26;
             velY = 0;
             onGround = true;
           }
         }
 
+        if (tick % 6 === 0) {
+          score++;
+          if (score > hiScore) {
+            hiScore = score;
+            safeStorageSet('equalib_dino_hi', hiScore.toString());
+          }
+          if (speed < 7.2) speed += 0.003;
+        }
+
         obstacles.forEach(o => {
           o.x -= speed;
-          if (o.x < -20) {
-            o.x = canvas.width + Math.floor(Math.random() * 80) + 40;
-            o.type = Math.random() < 0.3 ? 1 : 0;
-            score += 10;
-            if (score > hiScore) hiScore = score;
-            if (speed < 7.5) speed += 0.05;
-          }
+          const dW = ducking ? 28 : 18;
+          const dH = ducking ? 14 : 26;
+          const dY = ducking ? groundY - 14 : dinoY;
+          const dX = 35;
 
-          // Hitbox
-          const dW = ducking ? 20 : 14;
-          const dH = ducking ? 10 : 20;
-          const dY = ducking ? dinoY + 10 : dinoY;
-          const oW = o.type === 0 ? 10 : 16;
-          const oH = o.type === 0 ? 20 : 16;
-          const oY = o.type === 0 ? 110 : (Math.random() < 0.5 ? 95 : 110);
+          const oW = (o.type === 0 ? 12 : 20);
+          const oH = (o.type === 0 ? 24 : 14);
+          const oY = (o.type === 0 ? groundY - 24 : groundY - 36);
 
-          if (30 < o.x + oW && 30 + dW > o.x && dY < oY + oH && dY + dH > oY) {
+          if (dX < o.x + oW && dX + dW > o.x && dY < oY + oH && dY + dH > oY) {
             gameOver = true;
             window.soundFx?.playHit?.();
+            if (finalScoreEl) finalScoreEl.textContent = `Score final : ${score} (Record : ${hiScore})`;
             overlay.classList.remove('hidden');
           }
         });
+
+        if (obstacles.length > 0 && obstacles[0].x < -30) {
+          obstacles.shift();
+        }
+
+        const lastObstacle = obstacles[obstacles.length - 1];
+        if (!lastObstacle || lastObstacle.x < canvas.width - (160 + Math.random() * 100)) {
+          const isPtero = (score > 120 && Math.random() < 0.35);
+          obstacles.push({
+            x: canvas.width + 30,
+            type: isPtero ? 1 : 0
+          });
+        }
       }
 
-      ctx.fillStyle = '#f7f7f7';
+      ctx.fillStyle = '#f8fafc';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // Sol
-      ctx.fillStyle = '#535353';
-      ctx.fillRect(0, 130, canvas.width, 2);
-
-      // Nuages
-      ctx.fillStyle = '#d4d4d4';
-      ctx.fillRect((280 - (tick % 280)), 30, 24, 6);
-      ctx.fillRect((140 - (tick % 280) + 280) % 280, 50, 28, 6);
-
-      // Dino
-      ctx.fillStyle = '#535353';
-      if (ducking && onGround) {
-        ctx.fillRect(30, dinoY + 10, 22, 10);
-      } else {
-        ctx.fillRect(30, dinoY, 14, 20);
-        ctx.fillRect(38, dinoY - 4, 8, 8); // tête
+      ctx.fillStyle = '#64748b';
+      ctx.fillRect(0, groundY, canvas.width, 2);
+      for (let x = 0; x < canvas.width; x += 16) {
+        const offset = ((x - (tick * speed) % 16) + 16) % 16;
+        ctx.fillStyle = '#94a3b8';
+        ctx.fillRect(x + offset, groundY + 4, 3, 1);
+        if (x % 32 === 0) ctx.fillRect(x + offset + 6, groundY + 8, 5, 1);
       }
 
-      // Obstacles
+      ctx.fillStyle = '#cbd5e1';
+      const c1X = (320 - (tick * 0.4) % 360);
+      const c2X = (160 - (tick * 0.4) % 360 + 360) % 360;
+      ctx.fillRect(c1X, 28, 30, 8);
+      ctx.fillRect(c1X + 8, 22, 16, 6);
+      ctx.fillRect(c2X, 48, 26, 7);
+
+      ctx.fillStyle = '#334155';
+      const dX = 35;
+      if (ducking && onGround) {
+        ctx.fillRect(dX, groundY - 14, 28, 12);
+        ctx.fillRect(dX + 26, groundY - 12, 6, 6);
+        ctx.fillStyle = '#f8fafc';
+        ctx.fillRect(dX + 28, groundY - 10, 2, 2);
+      } else {
+        ctx.fillRect(dX + 4, dinoY + 4, 14, 18);
+        ctx.fillRect(dX + 12, dinoY, 12, 10);
+        ctx.fillRect(dX + 16, dinoY + 2, 8, 4);
+        ctx.fillStyle = '#f8fafc';
+        ctx.fillRect(dX + 18, dinoY + 2, 2, 2);
+        ctx.fillStyle = '#334155';
+        ctx.fillRect(dX + 14, dinoY + 12, 4, 3);
+        ctx.fillRect(dX, dinoY + 8, 4, 6);
+        ctx.fillRect(dX - 2, dinoY + 6, 3, 4);
+
+        if (onGround) {
+          const legFrame = Math.floor(tick / 4) % 2;
+          if (legFrame === 0) {
+            ctx.fillRect(dX + 6, dinoY + 22, 3, 4);
+            ctx.fillRect(dX + 13, dinoY + 20, 3, 3);
+          } else {
+            ctx.fillRect(dX + 6, dinoY + 20, 3, 3);
+            ctx.fillRect(dX + 13, dinoY + 22, 3, 4);
+          }
+        } else {
+          ctx.fillRect(dX + 6, dinoY + 21, 3, 3);
+          ctx.fillRect(dX + 12, dinoY + 21, 3, 3);
+        }
+      }
+
       obstacles.forEach(o => {
         if (o.type === 0) {
-          ctx.fillStyle = '#22c55e';
-          ctx.fillRect(o.x, 110, 10, 20);
+          ctx.fillStyle = '#16a34a';
+          ctx.fillRect(o.x + 4, groundY - 24, 5, 24);
+          ctx.fillRect(o.x, groundY - 18, 4, 3);
+          ctx.fillRect(o.x, groundY - 22, 3, 7);
+          ctx.fillRect(o.x + 9, groundY - 14, 4, 3);
+          ctx.fillRect(o.x + 10, groundY - 18, 3, 7);
         } else {
-          ctx.fillStyle = '#ef4444';
-          ctx.fillRect(o.x, 95, 14, 8); // Ptéro
+          ctx.fillStyle = '#dc2626';
+          const pY = groundY - 36;
+          const wingUp = (Math.floor(tick / 6) % 2 === 0);
+          ctx.fillRect(o.x + 4, pY + 4, 14, 6);
+          ctx.fillRect(o.x, pY + 2, 5, 4);
+          if (wingUp) {
+            ctx.fillRect(o.x + 8, pY - 6, 6, 10);
+          } else {
+            ctx.fillRect(o.x + 8, pY + 6, 6, 8);
+          }
         }
       });
 
-      // Score
-      ctx.fillStyle = '#535353';
-      ctx.font = 'bold 9px monospace';
-      ctx.fillText(`HI ${String(hiScore).padStart(5, '0')}  ${String(score).padStart(5, '0')}`, 170, 15);
+      ctx.fillStyle = '#475569';
+      ctx.font = 'bold 11px monospace';
+      ctx.fillText(`HI ${String(hiScore).padStart(5, '0')}  ${String(score).padStart(5, '0')}`, canvas.width - 130, 18);
 
       this.gameLoopId = requestAnimationFrame(loop);
     };
@@ -1267,15 +1561,24 @@ class NumWorksSimulator {
     this.topbar.style.backgroundColor = '#10b981';
 
     this.content.innerHTML = `
-      <div class="w-full h-full flex flex-col justify-between bg-[#050610] p-1 rounded relative">
-        <canvas id="invaders-cvs" width="280" height="150" class="w-full h-full block rounded"></canvas>
-        <div id="invaders-overlay" class="hidden absolute inset-0 bg-black/80 flex flex-col items-center justify-center text-white text-center rounded">
-          <div id="invaders-msg" class="font-black text-xs text-emerald-400 mb-1">VICTOIRE !</div>
-          <button onclick="window.simulator.invadersRestart()" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white text-[9px] font-bold rounded shadow transition cursor-pointer">
-            Rejouer (OK)
+      <div class="w-full h-full flex flex-col justify-between bg-[#04060d] p-1 rounded relative select-none">
+        <canvas id="invaders-cvs" width="300" height="175" class="w-full h-full block rounded cursor-crosshair"></canvas>
+        <div id="invaders-overlay" class="hidden absolute inset-0 bg-black/85 flex flex-col items-center justify-center text-white text-center rounded z-10">
+          <div id="invaders-msg" class="font-black text-sm text-emerald-400 mb-1 drop-shadow">VICTOIRE !</div>
+          <div id="invaders-score-final" class="text-[9px] text-slate-300 mb-2">Score : 0</div>
+          <button id="invaders-restart-btn" class="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold rounded shadow transition cursor-pointer">
+            Rejouer (OK / Espace)
           </button>
         </div>
-        <div class="text-[8px] text-slate-400 text-center">◄ ► : Vaisseau • OK / Espace : Tirer • Back : Hub</div>
+        <div class="flex items-center justify-between px-1 text-[8px] text-slate-400">
+          <span>Souris / ◄►: Canon • Clic / OK: Tirer</span>
+          <div class="flex items-center gap-1">
+            <button id="invaders-left-btn" class="px-2 py-0.5 bg-slate-800 hover:bg-slate-700 text-white rounded font-bold cursor-pointer">◀</button>
+            <button id="invaders-fire-btn" class="px-2.5 py-0.5 bg-emerald-700 hover:bg-emerald-600 text-white rounded font-bold cursor-pointer">🔴 Tir</button>
+            <button id="invaders-right-btn" class="px-2 py-0.5 bg-slate-800 hover:bg-slate-700 text-white rounded font-bold cursor-pointer">▶</button>
+          </div>
+          <button id="invaders-back-btn" class="px-1.5 py-0.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded cursor-pointer">Hub</button>
+        </div>
       </div>
     `;
 
@@ -1283,122 +1586,253 @@ class NumWorksSimulator {
     const ctx = canvas.getContext('2d');
     const overlay = document.getElementById('invaders-overlay');
     const msgEl = document.getElementById('invaders-msg');
+    const finalScoreEl = document.getElementById('invaders-score-final');
+    const restartBtn = document.getElementById('invaders-restart-btn');
+    const leftBtn = document.getElementById('invaders-left-btn');
+    const rightBtn = document.getElementById('invaders-right-btn');
+    const fireBtn = document.getElementById('invaders-fire-btn');
+    const backBtn = document.getElementById('invaders-back-btn');
 
-    let canX = 130;
+    let canX = 140;
+    const canW = 20;
     let bullet = null;
+    let alienBombs = [];
     let alienDir = 1;
-    let alienX = 20;
-    let alienY = 20;
+    let alienX = 25;
+    let alienY = 24;
+    let alienSpeedX = 4;
     let score = 0;
     let gameOver = false;
+    let tick = 0;
+
+    let bunkers = [
+      { x: 45, y: 130, hp: 4 },
+      { x: 135, y: 130, hp: 4 },
+      { x: 225, y: 130, hp: 4 }
+    ];
 
     let aliens = [];
     const initAliens = () => {
       aliens = [];
       for (let r = 0; r < 3; r++) {
         for (let c = 0; c < 6; c++) {
-          aliens.push({ r, c, alive: true });
+          aliens.push({ r, c, alive: true, pts: (3 - r) * 10 });
         }
       }
     };
     initAliens();
 
     this.invadersMove = (dir) => {
-      canX = Math.max(10, Math.min(canvas.width - 26, canX + dir * 12));
+      canX = Math.max(10, Math.min(canvas.width - canW - 10, canX + dir * 14));
     };
 
     this.invadersShoot = () => {
       if (gameOver) { this.invadersRestart(); return; }
       if (!bullet) {
-        bullet = { x: canX + 7, y: 130 };
+        bullet = { x: canX + canW / 2 - 1, y: 150 };
         window.soundFx?.playClick?.();
       }
     };
 
     this.invadersRestart = () => {
-      canX = 130;
+      canX = 140;
       bullet = null;
+      alienBombs = [];
       alienDir = 1;
-      alienX = 20;
-      alienY = 20;
+      alienX = 25;
+      alienY = 24;
+      alienSpeedX = 4;
       score = 0;
       gameOver = false;
+      tick = 0;
+      bunkers = [
+        { x: 45, y: 130, hp: 4 },
+        { x: 135, y: 130, hp: 4 },
+        { x: 225, y: 130, hp: 4 }
+      ];
       initAliens();
       overlay.classList.add('hidden');
     };
 
-    let tick = 0;
+    if (restartBtn) restartBtn.addEventListener('click', () => this.invadersRestart());
+    if (leftBtn) leftBtn.addEventListener('click', () => this.invadersMove(-1));
+    if (rightBtn) rightBtn.addEventListener('click', () => this.invadersMove(1));
+    if (fireBtn) fireBtn.addEventListener('click', () => this.invadersShoot());
+    if (backBtn) backBtn.addEventListener('click', () => this.returnToMenu());
+
+    canvas.addEventListener('mousemove', (e) => {
+      if (gameOver) return;
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const targetX = (e.clientX - rect.left) * scaleX - canW / 2;
+      canX = Math.max(10, Math.min(canvas.width - canW - 10, targetX));
+    });
+
+    canvas.addEventListener('touchmove', (e) => {
+      e.preventDefault();
+      if (gameOver || !e.touches[0]) return;
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const targetX = (e.touches[0].clientX - rect.left) * scaleX - canW / 2;
+      canX = Math.max(10, Math.min(canvas.width - canW - 10, targetX));
+    }, { passive: false });
+
+    canvas.addEventListener('click', () => this.invadersShoot());
+
     const loop = () => {
       tick++;
+
       if (!gameOver) {
-        if (tick % 20 === 0) {
-          alienX += alienDir * 6;
-          if (alienX > 80 || alienX < 10) {
+        const aliveCount = aliens.filter(a => a.alive).length;
+        const moveInterval = Math.max(6, Math.floor(aliveCount * 1.5));
+
+        if (tick % moveInterval === 0) {
+          alienX += alienDir * alienSpeedX;
+          if (alienX > 90 || alienX < 15) {
             alienDir = -alienDir;
-            alienY += 6;
+            alienY += 7;
           }
         }
 
+        if (tick % 45 === 0 && aliveCount > 0 && alienBombs.length < 3) {
+          const livingAliens = aliens.filter(a => a.alive);
+          const shooter = livingAliens[Math.floor(Math.random() * livingAliens.length)];
+          const sx = alienX + shooter.c * 32 + 8;
+          const sy = alienY + shooter.r * 18 + 12;
+          alienBombs.push({ x: sx, y: sy });
+        }
+
         if (bullet) {
-          bullet.y -= 5;
-          if (bullet.y < 0) bullet = null;
+          bullet.y -= 6;
+          if (bullet.y < 4) bullet = null;
           else {
             aliens.forEach(a => {
-              if (a.alive) {
-                const ax = alienX + a.c * 28;
-                const ay = alienY + a.r * 16;
-                if (bullet && bullet.x >= ax && bullet.x <= ax + 18 && bullet.y >= ay && bullet.y <= ay + 12) {
+              if (a.alive && bullet) {
+                const ax = alienX + a.c * 32;
+                const ay = alienY + a.r * 18;
+                if (bullet.x >= ax && bullet.x <= ax + 20 && bullet.y >= ay && bullet.y <= ay + 14) {
                   a.alive = false;
                   bullet = null;
-                  score += 20;
+                  score += a.pts;
                   window.soundFx?.playScore?.();
+                }
+              }
+            });
+
+            bunkers.forEach(b => {
+              if (b.hp > 0 && bullet) {
+                if (bullet.x >= b.x && bullet.x <= b.x + 28 && bullet.y >= b.y && bullet.y <= b.y + 12) {
+                  b.hp--;
+                  bullet = null;
                 }
               }
             });
           }
         }
 
-        const aliveCount = aliens.filter(a => a.alive).length;
+        alienBombs.forEach((b, idx) => {
+          b.y += 3.2;
+
+          bunkers.forEach(bk => {
+            if (bk.hp > 0 && b.x >= bk.x && b.x <= bk.x + 28 && b.y >= bk.y && b.y <= bk.y + 12) {
+              bk.hp--;
+              alienBombs.splice(idx, 1);
+            }
+          });
+
+          if (b && b.x >= canX && b.x <= canX + canW && b.y >= 152 && b.y <= 164) {
+            gameOver = true;
+            window.soundFx?.playHit?.();
+            msgEl.textContent = 'VAISSEAU DÉTRUIT !';
+            msgEl.className = 'font-black text-sm text-red-400 mb-1 drop-shadow';
+            if (finalScoreEl) finalScoreEl.textContent = `Score final : ${score}`;
+            overlay.classList.remove('hidden');
+          }
+
+          if (b && b.y > canvas.height) {
+            alienBombs.splice(idx, 1);
+          }
+        });
+
         if (aliveCount === 0) {
           gameOver = true;
-          msgEl.textContent = 'VICTOIRE !';
-          msgEl.className = 'font-black text-xs text-emerald-400 mb-1';
+          msgEl.textContent = 'TERRE SAUVÉE ! VICTOIRE !';
+          msgEl.className = 'font-black text-sm text-emerald-400 mb-1 drop-shadow';
+          if (finalScoreEl) finalScoreEl.textContent = `Score final : ${score}`;
           overlay.classList.remove('hidden');
-        } else if (aliens.some(a => a.alive && (alienY + a.r * 16 >= 125))) {
+        } else if (aliens.some(a => a.alive && (alienY + a.r * 18 >= 134))) {
           gameOver = true;
-          msgEl.textContent = 'GAME OVER !';
-          msgEl.className = 'font-black text-xs text-red-400 mb-1';
+          msgEl.textContent = 'INVASION RÉUSSIE ! GAME OVER';
+          msgEl.className = 'font-black text-sm text-red-400 mb-1 drop-shadow';
+          if (finalScoreEl) finalScoreEl.textContent = `Score final : ${score}`;
           overlay.classList.remove('hidden');
         }
       }
 
-      ctx.fillStyle = '#050610';
+      ctx.fillStyle = '#04060d';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // Canon Joueur
-      ctx.fillStyle = '#22c55e';
-      ctx.fillRect(canX, 136, 16, 8);
-      ctx.fillRect(canX + 6, 131, 4, 5);
-
-      // Tir
-      if (bullet) {
-        ctx.fillStyle = '#facc15';
-        ctx.fillRect(bullet.x, bullet.y, 2, 6);
+      ctx.fillStyle = 'rgba(255,255,255,0.4)';
+      for (let i = 0; i < 20; i++) {
+        const sx = (i * 47 + tick * 0.2) % canvas.width;
+        const sy = (i * 29) % (canvas.height - 30);
+        ctx.fillRect(sx, sy, 1, 1);
       }
 
-      // Aliens
-      aliens.forEach(a => {
-        if (a.alive) {
-          const ax = alienX + a.c * 28;
-          const ay = alienY + a.r * 16;
-          ctx.fillStyle = a.r === 0 ? '#facc15' : (a.r === 1 ? '#06b6d4' : '#ef4444');
-          ctx.fillRect(ax + 2, ay, 14, 10);
+      bunkers.forEach(b => {
+        if (b.hp > 0) {
+          ctx.fillStyle = b.hp === 4 ? '#22c55e' : (b.hp === 3 ? '#84cc16' : (b.hp === 2 ? '#eab308' : '#ef4444'));
+          ctx.fillRect(b.x, b.y, 28, 10);
+          ctx.fillRect(b.x + 4, b.y - 3, 20, 3);
+          ctx.fillStyle = '#04060d';
+          ctx.fillRect(b.x + 9, b.y + 4, 10, 6);
         }
       });
 
+      ctx.fillStyle = '#22c55e';
+      ctx.fillRect(canX, 154, canW, 7);
+      ctx.fillRect(canX + 4, 150, 12, 4);
+      ctx.fillRect(canX + 8, 146, 4, 4);
+
+      if (bullet) {
+        ctx.fillStyle = '#facc15';
+        ctx.fillRect(bullet.x, bullet.y, 2, 7);
+      }
+
+      ctx.fillStyle = '#f43f5e';
+      alienBombs.forEach(b => {
+        ctx.fillRect(b.x, b.y, 2, 5);
+      });
+
+      const animFrame = Math.floor(tick / 15) % 2;
+      aliens.forEach(a => {
+        if (a.alive) {
+          const ax = alienX + a.c * 32;
+          const ay = alienY + a.r * 18;
+          ctx.fillStyle = (a.r === 0 ? '#facc15' : (a.r === 1 ? '#06b6d4' : '#ec4899'));
+
+          ctx.fillRect(ax + 3, ay + 2, 14, 8);
+          ctx.fillRect(ax + 5, ay, 2, 2);
+          ctx.fillRect(ax + 13, ay, 2, 2);
+          if (animFrame === 0) {
+            ctx.fillRect(ax + 1, ay + 6, 2, 4);
+            ctx.fillRect(ax + 17, ay + 6, 2, 4);
+          } else {
+            ctx.fillRect(ax + 4, ay + 10, 2, 3);
+            ctx.fillRect(ax + 14, ay + 10, 2, 3);
+          }
+          ctx.fillStyle = '#04060d';
+          ctx.fillRect(ax + 6, ay + 4, 2, 2);
+          ctx.fillRect(ax + 12, ay + 4, 2, 2);
+        }
+      });
+
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(0, 166, canvas.width, 2);
+
       ctx.fillStyle = '#94a3b8';
-      ctx.font = 'bold 9px monospace';
-      ctx.fillText(`Score: ${score}`, 6, 12);
+      ctx.font = 'bold 10px monospace';
+      ctx.fillText(`SCORE: ${score}`, 10, 14);
 
       this.gameLoopId = requestAnimationFrame(loop);
     };
@@ -1412,15 +1846,24 @@ class NumWorksSimulator {
     this.topbar.style.backgroundColor = '#f59e0b';
 
     this.content.innerHTML = `
-      <div class="w-full h-full flex flex-col justify-between bg-[#0a0c18] p-1 rounded relative">
-        <canvas id="breakout-cvs" width="280" height="150" class="w-full h-full block rounded"></canvas>
-        <div id="breakout-overlay" class="hidden absolute inset-0 bg-black/80 flex flex-col items-center justify-center text-white text-center rounded">
-          <div id="breakout-msg" class="font-black text-xs text-amber-400 mb-1">VICTOIRE !</div>
-          <button onclick="window.simulator.breakoutRestart()" class="px-3 py-1 bg-amber-600 hover:bg-amber-500 text-white text-[9px] font-bold rounded shadow transition cursor-pointer">
-            Rejouer (OK)
+      <div class="w-full h-full flex flex-col justify-between bg-[#080914] p-1 rounded relative select-none">
+        <canvas id="breakout-cvs" width="300" height="175" class="w-full h-full block rounded cursor-pointer"></canvas>
+        <div id="breakout-overlay" class="hidden absolute inset-0 bg-black/85 flex flex-col items-center justify-center text-white text-center rounded z-10">
+          <div id="breakout-msg" class="font-black text-sm text-amber-400 mb-1 drop-shadow">VICTOIRE !</div>
+          <div id="breakout-score-final" class="text-[9px] text-slate-300 mb-2">Score : 0</div>
+          <button id="breakout-restart-btn" class="px-4 py-1.5 bg-amber-600 hover:bg-amber-500 text-white text-[10px] font-bold rounded shadow transition cursor-pointer">
+            Rejouer (OK / Espace)
           </button>
         </div>
-        <div class="text-[8px] text-slate-400 text-center">◄ ► : Raquette • OK : Lancer • Back : Hub</div>
+        <div class="flex items-center justify-between px-1 text-[8px] text-slate-400">
+          <span>Souris / ◄►: Raquette • Clic / OK: Lancer</span>
+          <div class="flex items-center gap-1">
+            <button id="breakout-left-btn" class="px-2 py-0.5 bg-slate-800 hover:bg-slate-700 text-white rounded font-bold cursor-pointer">◀</button>
+            <button id="breakout-launch-btn" class="px-2.5 py-0.5 bg-amber-700 hover:bg-amber-600 text-white rounded font-bold cursor-pointer">🚀 Lancer</button>
+            <button id="breakout-right-btn" class="px-2 py-0.5 bg-slate-800 hover:bg-slate-700 text-white rounded font-bold cursor-pointer">▶</button>
+          </div>
+          <button id="breakout-back-btn" class="px-1.5 py-0.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded cursor-pointer">Hub</button>
+        </div>
       </div>
     `;
 
@@ -1428,82 +1871,138 @@ class NumWorksSimulator {
     const ctx = canvas.getContext('2d');
     const overlay = document.getElementById('breakout-overlay');
     const msgEl = document.getElementById('breakout-msg');
+    const finalScoreEl = document.getElementById('breakout-score-final');
+    const restartBtn = document.getElementById('breakout-restart-btn');
+    const launchBtn = document.getElementById('breakout-launch-btn');
+    const leftBtn = document.getElementById('breakout-left-btn');
+    const rightBtn = document.getElementById('breakout-right-btn');
+    const backBtn = document.getElementById('breakout-back-btn');
 
-    let padX = 120;
-    let bx = 138;
-    let by = 132;
-    let bvx = 2.4;
+    let padX = 125;
+    const padW = 46;
+    const padH = 7;
+    let bx = padX + padW / 2;
+    let by = 150;
+    let bvx = 2.6;
     let bvy = -2.8;
     let attached = true;
     let lives = 3;
     let score = 0;
     let gameOver = false;
+    let autoLaunchTimer = 0;
 
     let bricks = [];
     const initBricks = () => {
       bricks = [];
       const cols = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#06b6d4'];
       for (let r = 0; r < 5; r++) {
-        for (let c = 0; c < 7; c++) {
-          bricks.push({ r, c, col: cols[r], alive: true });
+        for (let c = 0; c < 8; c++) {
+          bricks.push({ r, c, col: cols[r], alive: true, pts: (5 - r) * 10 });
         }
       }
     };
     initBricks();
 
     this.breakoutMove = (dir) => {
-      padX = Math.max(6, Math.min(canvas.width - 46, padX + dir * 14));
-      if (attached) bx = padX + 17;
+      padX = Math.max(8, Math.min(canvas.width - padW - 8, padX + dir * 16));
+      if (attached) bx = padX + padW / 2;
+      autoLaunchTimer++;
+      if (attached && autoLaunchTimer > 12) {
+        this.breakoutLaunch();
+      }
     };
 
     this.breakoutLaunch = () => {
       if (gameOver) { this.breakoutRestart(); return; }
       if (attached) {
         attached = false;
-        bvx = (Math.random() < 0.5 ? 2.2 : -2.2);
-        bvy = -2.8;
+        bvx = (Math.random() < 0.5 ? 2.5 : -2.5);
+        bvy = -3.0;
+        window.soundFx?.playClick?.();
       }
     };
 
     this.breakoutRestart = () => {
-      padX = 120;
-      bx = 138;
-      by = 132;
+      padX = 125;
+      bx = padX + padW / 2;
+      by = 150;
       attached = true;
       lives = 3;
       score = 0;
       gameOver = false;
+      autoLaunchTimer = 0;
       initBricks();
       overlay.classList.add('hidden');
     };
 
+    if (restartBtn) restartBtn.addEventListener('click', () => this.breakoutRestart());
+    if (launchBtn) launchBtn.addEventListener('click', () => this.breakoutLaunch());
+    if (leftBtn) leftBtn.addEventListener('click', () => this.breakoutMove(-1));
+    if (rightBtn) rightBtn.addEventListener('click', () => this.breakoutMove(1));
+    if (backBtn) backBtn.addEventListener('click', () => this.returnToMenu());
+
+    canvas.addEventListener('click', () => {
+      if (attached) this.breakoutLaunch();
+      else if (gameOver) this.breakoutRestart();
+    });
+
+    canvas.addEventListener('mousemove', (e) => {
+      if (gameOver) return;
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const targetX = (e.clientX - rect.left) * scaleX - padW / 2;
+      padX = Math.max(8, Math.min(canvas.width - padW - 8, targetX));
+      if (attached) bx = padX + padW / 2;
+    });
+
+    canvas.addEventListener('touchmove', (e) => {
+      e.preventDefault();
+      if (gameOver || !e.touches[0]) return;
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const targetX = (e.touches[0].clientX - rect.left) * scaleX - padW / 2;
+      padX = Math.max(8, Math.min(canvas.width - padW - 8, targetX));
+      if (attached) bx = padX + padW / 2;
+    }, { passive: false });
+
+    let tick = 0;
     const loop = () => {
+      tick++;
+
       if (!gameOver) {
         if (!attached) {
           bx += bvx;
           by += bvy;
 
-          if (bx <= 2 || bx >= canvas.width - 6) bvx = -bvx;
-          if (by <= 16) bvy = -bvy;
+          if (bx <= 4) {
+            bx = 4;
+            bvx = Math.abs(bvx);
+          } else if (bx >= canvas.width - 10) {
+            bx = canvas.width - 10;
+            bvx = -Math.abs(bvx);
+          }
 
-          // Paddle hit
-          if (bvy > 0 && by + 6 >= 136 && by <= 142 && bx + 6 >= padX && bx <= padX + 40) {
-            by = 130;
-            const rel = ((bx + 3) - (padX + 20)) / 20;
-            bvx = rel * 3.8;
-            bvy = -Math.max(2.2, Math.sqrt(Math.max(4, 16 - bvx * bvx)));
+          if (by <= 18) {
+            by = 18;
+            bvy = Math.abs(bvy);
+          }
+
+          if (bvy > 0 && by + 6 >= 156 && by <= 162 && bx + 6 >= padX && bx <= padX + padW) {
+            by = 150;
+            const rel = ((bx + 3) - (padX + padW / 2)) / (padW / 2);
+            bvx = rel * 4.2;
+            bvy = -Math.max(2.4, Math.sqrt(Math.max(4, 20 - bvx * bvx)));
             window.soundFx?.playClick?.();
           }
 
-          // Brick collision
           bricks.forEach(b => {
             if (b.alive) {
-              const rx = 12 + b.c * 37;
-              const ry = 24 + b.r * 12;
-              if (bx + 6 >= rx && bx <= rx + 33 && by + 6 >= ry && by <= ry + 9) {
+              const rx = 10 + b.c * 35;
+              const ry = 26 + b.r * 11;
+              if (bx + 6 >= rx && bx <= rx + 32 && by + 6 >= ry && by <= ry + 8) {
                 b.alive = false;
                 bvy = -bvy;
-                score += (5 - b.r) * 10;
+                score += b.pts;
                 window.soundFx?.playScore?.();
               }
             }
@@ -1511,48 +2010,67 @@ class NumWorksSimulator {
 
           if (by > canvas.height) {
             lives--;
+            window.soundFx?.playHit?.();
             attached = true;
-            bx = padX + 17;
-            by = 132;
+            autoLaunchTimer = 0;
+            bx = padX + padW / 2;
+            by = 150;
             if (lives <= 0) {
               gameOver = true;
               msgEl.textContent = 'GAME OVER !';
-              msgEl.className = 'font-black text-xs text-red-400 mb-1';
+              msgEl.className = 'font-black text-sm text-red-400 mb-1 drop-shadow';
+              if (finalScoreEl) finalScoreEl.textContent = `Score final : ${score}`;
               overlay.classList.remove('hidden');
             }
           }
 
           if (bricks.every(b => !b.alive)) {
             gameOver = true;
-            msgEl.textContent = 'VICTOIRE !';
-            msgEl.className = 'font-black text-xs text-emerald-400 mb-1';
+            msgEl.textContent = 'TABLEAU VIDÉ ! VICTOIRE !';
+            msgEl.className = 'font-black text-sm text-amber-400 mb-1 drop-shadow';
+            if (finalScoreEl) finalScoreEl.textContent = `Score final : ${score}`;
             overlay.classList.remove('hidden');
           }
         }
       }
 
-      ctx.fillStyle = '#0a0c18';
+      ctx.fillStyle = '#080914';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // Briques
       bricks.forEach(b => {
         if (b.alive) {
+          const rx = 10 + b.c * 35;
+          const ry = 26 + b.r * 11;
           ctx.fillStyle = b.col;
-          ctx.fillRect(12 + b.c * 37, 24 + b.r * 12, 33, 9);
+          ctx.fillRect(rx, ry, 32, 8);
+          ctx.fillStyle = 'rgba(255,255,255,0.3)';
+          ctx.fillRect(rx, ry, 32, 2);
+          ctx.fillStyle = 'rgba(0,0,0,0.3)';
+          ctx.fillRect(rx, ry + 6, 32, 2);
         }
       });
 
-      // Raquette
-      ctx.fillStyle = '#e2e8f0';
-      ctx.fillRect(padX, 136, 40, 6);
+      ctx.fillStyle = '#f8fafc';
+      ctx.fillRect(padX, 156, padW, padH);
+      ctx.fillStyle = '#38bdf8';
+      ctx.fillRect(padX + 2, 157, padW - 4, 2);
 
-      // Balle
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(bx, by, 6, 6);
 
+      if (attached && !gameOver) {
+        ctx.fillStyle = (Math.floor(tick / 18) % 2 === 0) ? '#facc15' : '#e2e8f0';
+        ctx.font = 'bold 9px monospace';
+        ctx.fillText('[ CLIQUEZ ou OK : LANCER LA BALLE ]', 45, 142);
+      }
+
       ctx.fillStyle = '#cbd5e1';
-      ctx.font = 'bold 9px monospace';
-      ctx.fillText(`Score: ${score}  Vies: ${lives}`, 10, 12);
+      ctx.font = 'bold 10px monospace';
+      ctx.fillText(`SCORE: ${score}`, 10, 14);
+
+      let heartStr = '';
+      for (let i = 0; i < lives; i++) heartStr += '❤️ ';
+      ctx.fillText(heartStr, canvas.width - 70, 14);
 
       this.gameLoopId = requestAnimationFrame(loop);
     };
@@ -1566,15 +2084,28 @@ class NumWorksSimulator {
     this.topbar.style.backgroundColor = '#3b82f6';
 
     this.content.innerHTML = `
-      <div class="w-full h-full flex flex-col justify-between bg-[#0e1630] p-1 rounded relative">
-        <canvas id="p4-cvs" width="280" height="150" class="w-full h-full block rounded"></canvas>
-        <div id="p4-overlay" class="hidden absolute inset-0 bg-black/80 flex flex-col items-center justify-center text-white text-center rounded">
-          <div id="p4-msg" class="font-black text-xs text-yellow-400 mb-1">VICTOIRE !</div>
-          <button onclick="window.simulator.p4Restart()" class="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white text-[9px] font-bold rounded shadow transition cursor-pointer">
-            Rejouer (OK)
+      <div class="w-full h-full flex flex-col justify-between bg-[#0b132b] p-1 rounded relative select-none">
+        <canvas id="p4-cvs" width="300" height="165" class="w-full h-full block rounded cursor-pointer"></canvas>
+        <div id="p4-overlay" class="hidden absolute inset-0 bg-black/85 flex flex-col items-center justify-center text-white text-center rounded z-10">
+          <div id="p4-msg" class="font-black text-sm text-yellow-400 mb-1 drop-shadow">VICTOIRE !</div>
+          <div class="text-[9px] text-slate-300 mb-2">Alignement de 4 jetons réussi !</div>
+          <button id="p4-restart-btn" class="px-4 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-bold rounded shadow transition cursor-pointer">
+            Rejouer (OK / Espace)
           </button>
         </div>
-        <div class="text-[8px] text-slate-300 text-center">◄ ► : Choisir colonne • OK / Bas : Lâcher • Back : Hub</div>
+        <div class="flex items-center justify-between px-1 text-[8px] text-slate-300 pt-0.5">
+          <span id="p4-turn-status" class="font-bold text-yellow-400">À votre tour (Jaune)</span>
+          <div class="flex items-center gap-0.5" id="p4-cols-bar">
+            <button class="p4-col-btn px-1.5 py-0.5 bg-slate-800 hover:bg-slate-700 text-white rounded font-mono font-bold cursor-pointer" data-col="0">1</button>
+            <button class="p4-col-btn px-1.5 py-0.5 bg-slate-800 hover:bg-slate-700 text-white rounded font-mono font-bold cursor-pointer" data-col="1">2</button>
+            <button class="p4-col-btn px-1.5 py-0.5 bg-slate-800 hover:bg-slate-700 text-white rounded font-mono font-bold cursor-pointer" data-col="2">3</button>
+            <button class="p4-col-btn px-1.5 py-0.5 bg-slate-800 hover:bg-slate-700 text-white rounded font-mono font-bold cursor-pointer" data-col="3">4</button>
+            <button class="p4-col-btn px-1.5 py-0.5 bg-slate-800 hover:bg-slate-700 text-white rounded font-mono font-bold cursor-pointer" data-col="4">5</button>
+            <button class="p4-col-btn px-1.5 py-0.5 bg-slate-800 hover:bg-slate-700 text-white rounded font-mono font-bold cursor-pointer" data-col="5">6</button>
+            <button class="p4-col-btn px-1.5 py-0.5 bg-slate-800 hover:bg-slate-700 text-white rounded font-mono font-bold cursor-pointer" data-col="6">7</button>
+          </div>
+          <button id="p4-back-btn" class="px-1.5 py-0.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded cursor-pointer">Hub</button>
+        </div>
       </div>
     `;
 
@@ -1582,6 +2113,10 @@ class NumWorksSimulator {
     const ctx = canvas.getContext('2d');
     const overlay = document.getElementById('p4-overlay');
     const msgEl = document.getElementById('p4-msg');
+    const statusEl = document.getElementById('p4-turn-status');
+    const restartBtn = document.getElementById('p4-restart-btn');
+    const backBtn = document.getElementById('p4-back-btn');
+    const colBtns = (this.content && this.content.querySelectorAll) ? this.content.querySelectorAll('.p4-col-btn') : (typeof document !== 'undefined' && document.querySelectorAll ? document.querySelectorAll('.p4-col-btn') : []);
 
     let board = [
       [0,0,0,0,0,0,0],
@@ -1592,31 +2127,41 @@ class NumWorksSimulator {
       [0,0,0,0,0,0,0]
     ];
     let selCol = 3;
-    let curPlayer = 1; // 1: Jaune, 2: Rouge (IA)
+    let curPlayer = 1;
     let gameOver = false;
+    let droppingPiece = null;
+    let winLine = null;
 
     const checkWin = (p) => {
       for (let r = 0; r < 6; r++) {
         for (let c = 0; c < 4; c++) {
-          if (board[r][c] === p && board[r][c+1] === p && board[r][c+2] === p && board[r][c+3] === p) return true;
+          if (board[r][c] === p && board[r][c+1] === p && board[r][c+2] === p && board[r][c+3] === p) {
+            return [{r,c}, {r,c:c+1}, {r,c:c+2}, {r,c:c+3}];
+          }
         }
       }
       for (let r = 0; r < 3; r++) {
         for (let c = 0; c < 7; c++) {
-          if (board[r][c] === p && board[r+1][c] === p && board[r+2][c] === p && board[r+3][c] === p) return true;
+          if (board[r][c] === p && board[r+1][c] === p && board[r+2][c] === p && board[r+3][c] === p) {
+            return [{r,c}, {r:r+1,c}, {r:r+2,c}, {r:r+3,c}];
+          }
         }
       }
       for (let r = 0; r < 3; r++) {
         for (let c = 0; c < 4; c++) {
-          if (board[r][c] === p && board[r+1][c+1] === p && board[r+2][c+2] === p && board[r+3][c+3] === p) return true;
+          if (board[r][c] === p && board[r+1][c+1] === p && board[r+2][c+2] === p && board[r+3][c+3] === p) {
+            return [{r,c}, {r:r+1,c:c+1}, {r:r+2,c:c+2}, {r:r+3,c:c+3}];
+          }
         }
       }
       for (let r = 3; r < 6; r++) {
         for (let c = 0; c < 4; c++) {
-          if (board[r][c] === p && board[r-1][c+1] === p && board[r-2][c+2] === p && board[r-3][c+3] === p) return true;
+          if (board[r][c] === p && board[r-1][c+1] === p && board[r-2][c+2] === p && board[r-3][c+3] === p) {
+            return [{r,c}, {r:r-1,c:c+1}, {r:r-2,c:c+2}, {r:r-3,c:c+3}];
+          }
         }
       }
-      return false;
+      return null;
     };
 
     const getLowest = (c) => {
@@ -1627,75 +2172,85 @@ class NumWorksSimulator {
     };
 
     this.p4Move = (dir) => {
-      if (gameOver || curPlayer !== 1) return;
+      if (gameOver || curPlayer !== 1 || droppingPiece) return;
       selCol = Math.max(0, Math.min(6, selCol + dir));
       window.soundFx?.playClick?.();
-      render();
+    };
+
+    this.p4DropCol = (c) => {
+      if (gameOver || curPlayer !== 1 || droppingPiece) return;
+      selCol = c;
+      this.p4Drop();
     };
 
     this.p4Drop = () => {
-      if (gameOver || curPlayer !== 1) return;
+      if (gameOver || curPlayer !== 1 || droppingPiece) return;
       const targetR = getLowest(selCol);
       if (targetR !== -1) {
-        board[targetR][selCol] = 1;
         window.soundFx?.playClick?.();
-        if (checkWin(1)) {
-          gameOver = true;
-          msgEl.textContent = 'VOUS AVEZ GAGNE !';
-          msgEl.className = 'font-black text-xs text-yellow-400 mb-1';
-          overlay.classList.remove('hidden');
-          render();
-          return;
-        }
-        curPlayer = 2;
-        render();
+        droppingPiece = {
+          col: selCol,
+          targetR: targetR,
+          currentY: 10,
+          vy: 2.0,
+          player: 1
+        };
+      }
+    };
 
-        setTimeout(() => {
-          if (gameOver) return;
-          // Tour de l'IA intelligente
-          let aiCol = 3;
-          // 1. Victoire immédiate
+    const runAiTurn = () => {
+      if (gameOver) return;
+      if (statusEl) {
+        statusEl.textContent = "🤖 L'IA réfléchit...";
+        statusEl.className = 'font-bold text-red-400';
+      }
+
+      setTimeout(() => {
+        if (gameOver) return;
+        let aiCol = -1;
+        for (let c = 0; c < 7; c++) {
+          const r = getLowest(c);
+          if (r !== -1) {
+            board[r][c] = 2;
+            if (checkWin(2)) { aiCol = c; }
+            board[r][c] = 0;
+            if (aiCol !== -1) break;
+          }
+        }
+
+        if (aiCol === -1) {
           for (let c = 0; c < 7; c++) {
             const r = getLowest(c);
             if (r !== -1) {
-              board[r][c] = 2;
-              if (checkWin(2)) { aiCol = c; board[r][c] = 0; break; }
+              board[r][c] = 1;
+              if (checkWin(1)) { aiCol = c; }
               board[r][c] = 0;
+              if (aiCol !== -1) break;
             }
           }
-          // 2. Bloquer joueur
-          if (aiCol === 3) {
-            for (let c = 0; c < 7; c++) {
-              const r = getLowest(c);
-              if (r !== -1) {
-                board[r][c] = 1;
-                if (checkWin(1)) { aiCol = c; board[r][c] = 0; break; }
-                board[r][c] = 0;
-              }
-            }
-          }
-          // 3. Choix préférentiel
-          if (getLowest(aiCol) === -1) {
-            const prefs = [3, 2, 4, 1, 5, 0, 6];
-            for (const p of prefs) {
-              if (getLowest(p) !== -1) { aiCol = p; break; }
-            }
-          }
+        }
 
-          const aiR = getLowest(aiCol);
-          if (aiR !== -1) {
-            board[aiR][aiCol] = 2;
-            if (checkWin(2)) {
-              gameOver = true;
-              msgEl.textContent = "L'IA A GAGNE !";
-              msgEl.className = 'font-black text-xs text-red-400 mb-1';
-              overlay.classList.remove('hidden');
+        if (aiCol === -1) {
+          const prefs = [3, 2, 4, 1, 5, 0, 6];
+          for (const p of prefs) {
+            if (getLowest(p) !== -1) {
+              aiCol = p;
+              break;
             }
           }
-          curPlayer = 1;
-          render();
-        }, 350);
-      }
+        }
+
+        if (aiCol !== -1) {
+          const targetR = getLowest(aiCol);
+          droppingPiece = {
+            col: aiCol,
+            targetR: targetR,
+            currentY: 10,
+            vy: 2.0,
+            player: 2
+          };
+        }
+      }, 350);
     };
 
     this.p4Restart = () => {
@@ -1710,38 +2265,177 @@ class NumWorksSimulator {
       selCol = 3;
       curPlayer = 1;
       gameOver = false;
+      droppingPiece = null;
+      winLine = null;
+      if (statusEl) {
+        statusEl.textContent = 'À votre tour (Jaune)';
+        statusEl.className = 'font-bold text-yellow-400';
+      }
       overlay.classList.add('hidden');
-      render();
     };
 
-    const render = () => {
-      ctx.fillStyle = '#0e1630';
+    if (restartBtn) restartBtn.addEventListener('click', () => this.p4Restart());
+    if (backBtn) backBtn.addEventListener('click', () => this.returnToMenu());
+
+    colBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const c = parseInt(btn.getAttribute('data-col'), 10);
+        this.p4DropCol(c);
+      });
+    });
+
+    canvas.addEventListener('click', (e) => {
+      if (gameOver) { this.p4Restart(); return; }
+      if (curPlayer !== 1 || droppingPiece) return;
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const clickX = (e.clientX - rect.left) * scaleX;
+      const col = Math.floor((clickX - 30) / 34);
+      if (col >= 0 && col <= 6) {
+        this.p4DropCol(col);
+      }
+    });
+
+    canvas.addEventListener('mousemove', (e) => {
+      if (gameOver || curPlayer !== 1 || droppingPiece) return;
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const clickX = (e.clientX - rect.left) * scaleX;
+      const col = Math.floor((clickX - 30) / 34);
+      if (col >= 0 && col <= 6 && col !== selCol) {
+        selCol = col;
+      }
+    });
+
+    let tick = 0;
+    const loop = () => {
+      tick++;
+
+      if (droppingPiece) {
+        droppingPiece.vy += 0.8;
+        droppingPiece.currentY += droppingPiece.vy;
+        const targetY = 32 + droppingPiece.targetR * 21;
+
+        if (droppingPiece.currentY >= targetY) {
+          board[droppingPiece.targetR][droppingPiece.col] = droppingPiece.player;
+          const p = droppingPiece.player;
+          droppingPiece = null;
+
+          const win = checkWin(p);
+          if (win) {
+            gameOver = true;
+            winLine = win;
+            window.soundFx?.playScore?.();
+            if (p === 1) {
+              msgEl.textContent = 'VOUS AVEZ GAGNÉ ! 🏆';
+              msgEl.className = 'font-black text-sm text-yellow-400 mb-1 drop-shadow';
+            } else {
+              msgEl.textContent = "L'IA A GAGNÉ !";
+              msgEl.className = 'font-black text-sm text-red-400 mb-1 drop-shadow';
+            }
+            overlay.classList.remove('hidden');
+          } else {
+            const isFull = board[0].every(val => val !== 0);
+            if (isFull) {
+              gameOver = true;
+              msgEl.textContent = 'MATCH NUL !';
+              msgEl.className = 'font-black text-sm text-slate-300 mb-1 drop-shadow';
+              overlay.classList.remove('hidden');
+            } else if (p === 1) {
+              curPlayer = 2;
+              runAiTurn();
+            } else {
+              curPlayer = 1;
+              if (statusEl) {
+                statusEl.textContent = 'À votre tour (Jaune)';
+                statusEl.className = 'font-bold text-yellow-400';
+              }
+            }
+          }
+        }
+      }
+
+      ctx.fillStyle = '#0b132b';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // Curseur joueur
-      const cx = 35 + selCol * 30 + 10;
-      ctx.fillStyle = curPlayer === 1 ? '#facc15' : '#ef4444';
-      ctx.fillRect(cx - 5, 6, 10, 8);
-
-      // Grille bleue
-      ctx.fillStyle = '#1d4ed8';
-      ctx.fillRect(25, 18, 230, 126);
-
-      // Jetons
-      for (let r = 0; r < 6; r++) {
-        for (let c = 0; c < 7; c++) {
-          const x = 35 + c * 30;
-          const y = 24 + r * 19;
-          const val = board[r][c];
-          ctx.fillStyle = val === 0 ? '#0e1630' : (val === 1 ? '#facc15' : '#ef4444');
+      if (curPlayer === 1 && !droppingPiece && !gameOver) {
+        const cx = 30 + selCol * 34 + 17;
+        const bounce = Math.sin(tick * 0.15) * 2;
+        ctx.fillStyle = '#facc15';
+        ctx.beginPath();
+        ctx.arc(cx, 14 + bounce, 7, 0, Math.PI * 2);
+        ctx.fill();
+        if (ctx.moveTo && ctx.lineTo) {
           ctx.beginPath();
-          ctx.arc(x + 10, y + 8, 8, 0, Math.PI * 2);
+          ctx.moveTo(cx - 4, 22 + bounce);
+          ctx.lineTo(cx + 4, 22 + bounce);
+          ctx.lineTo(cx, 26 + bounce);
           ctx.fill();
         }
       }
+
+      ctx.fillStyle = '#1e40af';
+      ctx.fillRect(25, 26, 250, 134);
+      ctx.strokeStyle = '#3b82f6';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(25, 26, 250, 134);
+
+      for (let r = 0; r < 6; r++) {
+        for (let c = 0; c < 7; c++) {
+          const x = 30 + c * 34 + 17;
+          const y = 32 + r * 21 + 10;
+          const val = board[r][c];
+
+          ctx.beginPath();
+          ctx.arc(x, y, 9, 0, Math.PI * 2);
+          if (val === 0) {
+            ctx.fillStyle = '#0b132b';
+          } else if (val === 1) {
+            ctx.fillStyle = '#facc15';
+          } else {
+            ctx.fillStyle = '#ef4444';
+          }
+          ctx.fill();
+
+          if (val !== 0) {
+            ctx.beginPath();
+            ctx.arc(x - 3, y - 3, 3, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(255,255,255,0.4)';
+            ctx.fill();
+          }
+        }
+      }
+
+      if (droppingPiece) {
+        const x = 30 + droppingPiece.col * 34 + 17;
+        const y = droppingPiece.currentY;
+        ctx.beginPath();
+        ctx.arc(x, y, 9, 0, Math.PI * 2);
+        ctx.fillStyle = droppingPiece.player === 1 ? '#facc15' : '#ef4444';
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(x - 3, y - 3, 3, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255,255,255,0.4)';
+        ctx.fill();
+      }
+
+      if (winLine && winLine.length === 4) {
+        ctx.strokeStyle = (Math.floor(tick / 8) % 2 === 0) ? '#ffffff' : '#4ade80';
+        ctx.lineWidth = 4;
+        if (ctx.moveTo && ctx.lineTo) {
+          ctx.beginPath();
+          const pStart = winLine[0];
+          const pEnd = winLine[3];
+          ctx.moveTo(30 + pStart.c * 34 + 17, 32 + pStart.r * 21 + 10);
+          ctx.lineTo(30 + pEnd.c * 34 + 17, 32 + pEnd.r * 21 + 10);
+          ctx.stroke();
+        }
+      }
+
+      this.gameLoopId = requestAnimationFrame(loop);
     };
 
-    render();
+    loop();
   }
 
   // ==================== FICHES DE COURS & FORMULAIRES ====================
@@ -1917,55 +2611,6 @@ class NumWorksSimulator {
     loop();
   }
 
-  updatePack(selectedApps) {
-    if (!selectedApps || selectedApps.length === 0) {
-      this.apps = [
-        { id: 'mariokart', name: '1. Mario Kart', cat: 'Arcade', type: 'MARIO' },
-        { id: 'periodique', name: '2. Tableau Périodique', cat: 'Chimie', type: 'PERIODIC' },
-        { id: 'fiches', name: '3. Fiches de Cours', cat: 'Révision', type: 'COURSES' },
-        { id: 'flappy', name: '4. Flappy Bird', cat: 'Arcade', type: 'FLAPPY' },
-        { id: '2048', name: '5. 2048 Ultimate', cat: 'Arcade', type: '2048' },
-        { id: 'snake', name: '6. Snake Classic', cat: 'Arcade', type: 'SNAKE' },
-        { id: 'pong', name: '7. Pong Retro', cat: 'Arcade', type: 'PONG' },
-        { id: 'dino', name: '8. Chrome Dino', cat: 'Arcade', type: 'DINO' },
-        { id: 'space_invaders', name: '9. Space Invaders', cat: 'Arcade', type: 'SPACE_INVADERS' },
-        { id: 'breakout', name: '10. Casse-Briques', cat: 'Arcade', type: 'BREAKOUT' },
-        { id: 'puissance4', name: '11. Puissance 4', cat: 'Arcade', type: 'PUISSANCE4' }
-      ];
-    } else {
-      this.apps = selectedApps.map((a, i) => {
-        let t = 'GENERIC';
-        const id = (a.id || '').toLowerCase();
-        const nm = (a.name || '').toLowerCase();
-        if (id.includes('flappy') || nm.includes('flappy')) t = 'FLAPPY';
-        else if (id.includes('2048') || nm.includes('2048')) t = '2048';
-        else if (id.includes('snake') || nm.includes('snake')) t = 'SNAKE';
-        else if (id.includes('pong') || nm.includes('pong')) t = 'PONG';
-        else if (id.includes('dino') || nm.includes('dino')) t = 'DINO';
-        else if (id.includes('space') || nm.includes('space') || id.includes('invader') || nm.includes('invader')) t = 'SPACE_INVADERS';
-        else if (id.includes('breakout') || nm.includes('breakout') || id.includes('brique') || nm.includes('brique')) t = 'BREAKOUT';
-        else if (id.includes('puissance') || nm.includes('puissance') || id.includes('connect4') || nm.includes('connect4')) t = 'PUISSANCE4';
-        else if (id.includes('mario') || nm.includes('mario')) t = 'MARIO';
-        else if (id.includes('period') || nm.includes('tableau') || nm.includes('chimie')) t = 'PERIODIC';
-        else if (id.includes('fiche') || nm.includes('cours') || nm.includes('revision')) t = 'COURSES';
-
-        return {
-          id: a.id,
-          name: `${i + 1}. ${a.name}`,
-          cat: (a.category || 'App').split('/')[0].trim(),
-          type: t
-        };
-      });
-    }
-
-    if (this.selectedIndex >= this.apps.length) {
-      this.selectedIndex = Math.max(0, this.apps.length - 1);
-    }
-
-    if (this.currentView === 'MENU') {
-      this.renderMenu();
-    }
-  }
 
   startGenericPreview(type) {
     this.title.textContent = 'EquaLib Application';

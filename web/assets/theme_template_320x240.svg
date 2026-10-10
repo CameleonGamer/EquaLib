@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 240" width="320" height="240">
+  <defs>
+    <style>
+      .label-title { font-family: monospace; font-size: 10px; font-weight: bold; fill: #ffffff; }
+      .label-sub { font-family: monospace; font-size: 8px; fill: #94a3b8; }
+      .label-zone { font-family: monospace; font-size: 9px; font-weight: bold; }
+      .grid-box { fill: #1e293b; stroke: #38bdf8; stroke-width: 1.5; stroke-dasharray: 4,2; rx: 6px; }
+      .grid-num { font-family: monospace; font-size: 14px; font-weight: bold; fill: #38bdf8; text-anchor: middle; }
+      .grid-txt { font-family: monospace; font-size: 8px; fill: #cbd5e1; text-anchor: middle; }
+    </style>
+  </defs>
+
+  <!-- Fond Principal LCD 320x240 -->
+  <rect x="0" y="0" width="320" height="240" fill="#0b0f19"/>
+
+  <!-- ==================== ZONE 1 : TOP BAR (y: 0 - 22) ==================== -->
+  <rect x="0" y="0" width="320" height="22" fill="#d97706" opacity="0.9"/>
+  <rect x="0" y="21" width="320" height="1" fill="#f59e0b"/>
+  <text x="8" y="15" class="label-title">⚡ EQUALIB HUB [TOP BAR]</text>
+  <text x="260" y="15" class="label-sub" fill="#fef3c7">H: 22px</text>
+
+  <!-- ==================== ZONE 2 : GRILLE GALERIE (y: 22 - 188) ==================== -->
+  <!-- Fond discret pour la zone galerie -->
+  <rect x="0" y="22" width="320" height="166" fill="#0f172a" opacity="0.6"/>
+  <text x="8" y="34" class="label-zone" fill="#38bdf8">ZONE GALERIE (3x2 Tuiles) • y: 22 à 188 (H: 166px)</text>
+
+  <!-- Tuile 1 -->
+  <rect x="12" y="40" width="90" height="66" class="grid-box"/>
+  <text x="57" y="70" class="grid-num">1</text>
+  <text x="57" y="94" class="grid-txt">App 1 (90x66)</text>
+
+  <!-- Tuile 2 -->
+  <rect x="115" y="40" width="90" height="66" class="grid-box"/>
+  <text x="160" y="70" class="grid-num">2</text>
+  <text x="160" y="94" class="grid-txt">App 2 (90x66)</text>
+
+  <!-- Tuile 3 -->
+  <rect x="218" y="40" width="90" height="66" class="grid-box"/>
+  <text x="263" y="70" class="grid-num">3</text>
+  <text x="263" y="94" class="grid-txt">App 3 (90x66)</text>
+
+  <!-- Tuile 4 -->
+  <rect x="12" y="114" width="90" height="66" class="grid-box"/>
+  <text x="57" y="144" class="grid-num">4</text>
+  <text x="57" y="168" class="grid-txt">App 4 (90x66)</text>
+
+  <!-- Tuile 5 -->
+  <rect x="115" y="114" width="90" height="66" class="grid-box"/>
+  <text x="160" y="144" class="grid-num">5</text>
+  <text x="160" y="168" class="grid-txt">App 5 (90x66)</text>
+
+  <!-- Tuile 6 -->
+  <rect x="218" y="114" width="90" height="66" class="grid-box"/>
+  <text x="263" y="144" class="grid-num">6</text>
+  <text x="263" y="168" class="grid-txt">App 6 (90x66)</text>
+
+  <!-- ==================== ZONE 3 : DOCK APPLI ACTIVE (y: 188 - 218) ==================== -->
+  <rect x="10" y="188" width="300" height="28" fill="#1e293b" stroke="#f59e0b" stroke-width="1.5" rx="5px"/>
+  <text x="20" y="206" class="label-zone" fill="#f59e0b">📦 DOCK ACTIF : Nom de l'App Sélectionnée</text>
+  <text x="265" y="206" class="label-sub" fill="#fde68a">H: 30px</text>
+
+  <!-- ==================== ZONE 4 : RACCOURCIS / TOOLTIPS (y: 218 - 240) ==================== -->
+  <rect x="0" y="218" width="320" height="22" fill="#030712" opacity="0.95"/>
+  <rect x="0" y="218" width="320" height="1" fill="#334155"/>
+  <text x="160" y="233" class="label-sub" fill="#94a3b8" text-anchor="middle">▲▼◀▶ : Naviguer | OK : Lancer | Back : Hub  [TOOLTIPS y: 218-240]</text>
+
+  <!-- Quadrillage de sécurité externe (Bordures de l'écran 320x240) -->
+  <rect x="0" y="0" width="320" height="240" fill="none" stroke="#ef4444" stroke-width="1" opacity="0.6"/>
+</svg>
