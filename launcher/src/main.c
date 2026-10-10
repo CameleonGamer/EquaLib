@@ -146,7 +146,7 @@ static void save_persistent_settings(void) {
 const equalib_manifest_t g_equalib_manifest __attribute__((used, aligned(4), section(".rodata.equalib_manifest"))) = {
     .magic = EQUALIB_MANIFEST_MAGIC,
     .version = 1,
-    .app_count = 10,
+    .app_count = 14,
     .flags = 0,
     .apps = {
         {"mariokart", "1. Mario Kart", "Jeu / Arcade", "Course Mode 7 3D complete pour N0120", APP_TYPE_MARIOKART, {0,0,0}, 0, 0},
@@ -158,7 +158,11 @@ const equalib_manifest_t g_equalib_manifest __attribute__((used, aligned(4), sec
         {"snake", "7. Snake Classic", "Jeu / Arcade", "Serpent retro en C natif 60 FPS", APP_TYPE_SNAKE, {0,0,0}, 0, 0},
         {"tetris", "8. Tetris NumWorks", "Jeu / Arcade", "Tetris officiel en C natif 60 FPS", APP_TYPE_TETRIS, {0,0,0}, 0, 0},
         {"demineur", "9. Demineur NW", "Jeu / Arcade", "Demineur complet en C natif 60 FPS", APP_TYPE_MINESWEEPER, {0,0,0}, 0, 0},
-        {"settings", "10. Parametres", "Options", "Themes, mode galerie et reglages", APP_TYPE_SETTINGS, {0,0,0}, 0, 0}
+        {"pong", "10. Pong Retro", "Jeu / Arcade", "Pong retro 60 FPS avec IA et score a 7", APP_TYPE_PONG, {0,0,0}, 0, 0},
+        {"dino", "11. Chrome Dino", "Jeu / Arcade", "Runner T-Rex 60 FPS avec sauts et obstacles", APP_TYPE_DINO, {0,0,0}, 0, 0},
+        {"space_invaders", "12. Space Invaders", "Jeu / Arcade", "Space Invaders arcade avec aliens et lasers", APP_TYPE_SPACE_INVADERS, {0,0,0}, 0, 0},
+        {"breakout", "13. Casse-Briques", "Jeu / Arcade", "Casse-briques retro avec briques colorees", APP_TYPE_BREAKOUT, {0,0,0}, 0, 0},
+        {"settings", "14. Parametres", "Options", "Themes, mode galerie et reglages", APP_TYPE_SETTINGS, {0,0,0}, 0, 0}
     }
 };
 
@@ -410,6 +414,60 @@ static void draw_app_icon(uint8_t app_type, int cx, int cy, uint16_t accent_col)
         eadk_display_push_rect_uniform(tooth_l, 0x7BEF);
         eadk_display_push_rect_uniform(tooth_r, 0x7BEF);
         eadk_display_push_rect_uniform(hole, 0xFFFF);
+    } else if (app_type == APP_TYPE_PONG) {
+        /* Deux raquettes et une balle rétro */
+        eadk_rect_t p1 = {(uint16_t)(cx - 8), (uint16_t)(cy - 7), 3, 14};
+        eadk_rect_t p2 = {(uint16_t)(cx + 5), (uint16_t)(cy - 3), 3, 14};
+        eadk_rect_t ball = {(uint16_t)(cx - 1), (uint16_t)(cy - 2), 3, 3};
+        eadk_display_push_rect_uniform(p1, 0x3DFE);
+        eadk_display_push_rect_uniform(p2, 0xFA80);
+        eadk_display_push_rect_uniform(ball, 0xFFFF);
+    } else if (app_type == APP_TYPE_DINO) {
+        /* Petit T-Rex pixel */
+        eadk_rect_t head = {(uint16_t)(cx - 1), (uint16_t)(cy - 8), 8, 6};
+        eadk_rect_t eye = {(uint16_t)(cx + 1), (uint16_t)(cy - 7), 2, 2};
+        eadk_rect_t body = {(uint16_t)(cx - 6), (uint16_t)(cy - 2), 10, 8};
+        eadk_rect_t arm = {(uint16_t)(cx + 2), (uint16_t)(cy), 3, 2};
+        eadk_rect_t leg1 = {(uint16_t)(cx - 4), (uint16_t)(cy + 6), 2, 4};
+        eadk_rect_t leg2 = {(uint16_t)(cx), (uint16_t)(cy + 6), 2, 4};
+        eadk_display_push_rect_uniform(head, 0x52AA);
+        eadk_display_push_rect_uniform(eye, 0xFFFF);
+        eadk_display_push_rect_uniform(body, 0x52AA);
+        eadk_display_push_rect_uniform(arm, 0x52AA);
+        eadk_display_push_rect_uniform(leg1, 0x52AA);
+        eadk_display_push_rect_uniform(leg2, 0x52AA);
+    } else if (app_type == APP_TYPE_SPACE_INVADERS) {
+        /* Alien Space Invaders vert pixel */
+        eadk_rect_t body = {(uint16_t)(cx - 6), (uint16_t)(cy - 4), 12, 8};
+        eadk_rect_t eye1 = {(uint16_t)(cx - 4), (uint16_t)(cy - 2), 2, 2};
+        eadk_rect_t eye2 = {(uint16_t)(cx + 2), (uint16_t)(cy - 2), 2, 2};
+        eadk_rect_t ant1 = {(uint16_t)(cx - 5), (uint16_t)(cy - 7), 2, 3};
+        eadk_rect_t ant2 = {(uint16_t)(cx + 3), (uint16_t)(cy - 7), 2, 3};
+        eadk_rect_t leg1 = {(uint16_t)(cx - 7), (uint16_t)(cy + 4), 3, 3};
+        eadk_rect_t leg2 = {(uint16_t)(cx + 4), (uint16_t)(cy + 4), 3, 3};
+        eadk_display_push_rect_uniform(body, 0x07E0);
+        eadk_display_push_rect_uniform(eye1, 0x0000);
+        eadk_display_push_rect_uniform(eye2, 0x0000);
+        eadk_display_push_rect_uniform(ant1, 0x07E0);
+        eadk_display_push_rect_uniform(ant2, 0x07E0);
+        eadk_display_push_rect_uniform(leg1, 0x07E0);
+        eadk_display_push_rect_uniform(leg2, 0x07E0);
+    } else if (app_type == APP_TYPE_BREAKOUT) {
+        /* Casse-briques : briques colorées, raquette et balle */
+        eadk_rect_t b1 = {(uint16_t)(cx - 8), (uint16_t)(cy - 8), 5, 3};
+        eadk_rect_t b2 = {(uint16_t)(cx - 2), (uint16_t)(cy - 8), 5, 3};
+        eadk_rect_t b3 = {(uint16_t)(cx + 4), (uint16_t)(cy - 8), 5, 3};
+        eadk_rect_t b4 = {(uint16_t)(cx - 5), (uint16_t)(cy - 4), 5, 3};
+        eadk_rect_t b5 = {(uint16_t)(cx + 1), (uint16_t)(cy - 4), 5, 3};
+        eadk_rect_t pad = {(uint16_t)(cx - 8), (uint16_t)(cy + 6), 16, 3};
+        eadk_rect_t ball = {(uint16_t)(cx - 1), (uint16_t)(cy + 1), 3, 3};
+        eadk_display_push_rect_uniform(b1, 0xF800);
+        eadk_display_push_rect_uniform(b2, 0xFA80);
+        eadk_display_push_rect_uniform(b3, 0xFFE0);
+        eadk_display_push_rect_uniform(b4, 0x07E0);
+        eadk_display_push_rect_uniform(b5, 0x3DFE);
+        eadk_display_push_rect_uniform(pad, 0xFFFF);
+        eadk_display_push_rect_uniform(ball, 0xFFFF);
     } else {
         /* Application générique / Boîte d'outils */
         eadk_rect_t box = {(uint16_t)(cx - 7), (uint16_t)(cy - 7), 14, 14};
@@ -819,6 +877,10 @@ int main(int argc, char* argv[]) {
             else if (type == APP_TYPE_SNAKE) run_snake_app();
             else if (type == APP_TYPE_TETRIS) run_tetris_app();
             else if (type == APP_TYPE_MINESWEEPER) run_minesweeper_app();
+            else if (type == APP_TYPE_PONG) run_pong_app();
+            else if (type == APP_TYPE_DINO) run_dino_app();
+            else if (type == APP_TYPE_SPACE_INVADERS) run_space_invaders_app();
+            else if (type == APP_TYPE_BREAKOUT) run_breakout_app();
             else if (type == APP_TYPE_SETTINGS) run_settings_screen();
             else if (type == APP_TYPE_NATIVE_EXEC) {
                 const uint8_t* bin_ptr = (app->data_size > 0) ? (const uint8_t*)(0x90180000 + app->data_offset) : NULL;

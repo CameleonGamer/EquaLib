@@ -2,11 +2,15 @@
 #include <stdint.h>
 #include <stdarg.h>
 
+__attribute__((optimize("no-tree-loop-distribute-patterns")))
 size_t strlen(const char* s) {
-    size_t len = 0;
     if (!s) return 0;
-    while (s[len]) len++;
-    return len;
+    const char* p = s;
+    while (*p) {
+        __asm__ volatile("" : "+r"(p));
+        p++;
+    }
+    return (size_t)(p - s);
 }
 
 char* strcpy(char* dest, const char* src) {

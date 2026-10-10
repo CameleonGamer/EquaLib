@@ -20,8 +20,12 @@
 #define APP_TYPE_PYTHON      12
 #define APP_TYPE_NATIVE_EXEC 13
 #define APP_TYPE_SETTINGS    14
+#define APP_TYPE_PONG        15
+#define APP_TYPE_DINO        16
+#define APP_TYPE_SPACE_INVADERS 17
+#define APP_TYPE_BREAKOUT    18
 
-#define MAX_MANIFEST_APPS 12
+#define MAX_MANIFEST_APPS 16
 
 #pragma pack(push, 1)
 

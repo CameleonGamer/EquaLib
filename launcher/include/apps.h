@@ -15,5 +15,9 @@ void run_snake_app(void);
 void run_tetris_app(void);
 void run_minesweeper_app(void);
 void run_python_app(const char* title, const char* script_code, uint32_t script_len);
+void run_pong_app(void);
+void run_dino_app(void);
+void run_space_invaders_app(void);
+void run_breakout_app(void);
 
 #endif // EQUALIB_APPS_H

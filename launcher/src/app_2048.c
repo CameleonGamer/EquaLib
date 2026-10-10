@@ -123,10 +123,8 @@ static void draw_tile(int r, int c, int val) {
 
         /* Texte du nombre centré */
         char val_str[12];
-        snprintf(val_str, sizeof(val_str), "%d", val);
-
-        int str_len = 0;
-        while (val_str[str_len]) str_len++;
+        int str_len = snprintf(val_str, sizeof(val_str), "%d", val);
+        if (str_len < 0) str_len = 0;
 
         bool use_large = (str_len <= 2);
         int char_w = use_large ? 12 : 6;

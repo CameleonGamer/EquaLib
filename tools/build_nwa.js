@@ -17,6 +17,10 @@ const srcFiles = [
   'app_snake.c',
   'app_tetris.c',
   'app_minesweeper.c',
+  'app_pong.c',
+  'app_dino.c',
+  'app_space_invaders.c',
+  'app_breakout.c',
   'app_python.c',
   'eq_font.c',
   'mini_libc.c'
@@ -27,7 +31,7 @@ for (const file of srcFiles) {
   const oPath = path.join('launcher/src', file.replace('.c', '.o'));
   console.log(`Compiling ${cPath}...`);
   execSync(
-    `arm-none-eabi-gcc -mthumb -mfloat-abi=hard -mcpu=cortex-m7 -mfpu=fpv5-sp-d16 -DPLATFORM_DEVICE=1 -Os -Ilauncher/include -IC:/Users/noear/Desktop/projets/MathDS/src -fno-exceptions -fno-unwind-tables -fdata-sections -ffunction-sections -c "${cPath}" -o "${oPath}"`,
+    `arm-none-eabi-gcc -mthumb -mfloat-abi=hard -mcpu=cortex-m7 -mfpu=fpv5-sp-d16 -DPLATFORM_DEVICE=1 -Os -ffreestanding -fno-builtin -Ilauncher/include -IC:/Users/noear/Desktop/projets/MathDS/src -fno-exceptions -fno-unwind-tables -fdata-sections -ffunction-sections -c "${cPath}" -o "${oPath}"`,
     { stdio: 'inherit' }
   );
 }

@@ -241,14 +241,14 @@ describe('3. Algorithmes Mathématiques de la Roue Chromatique', () => {
 });
 
 // -------------------------------------------------------------
-// SUITE 4: Logique de Sélection, Limite à 12 Apps & Dock
+// SUITE 4: Logique de Sélection, Limite à 16 Apps & Dock
 // -------------------------------------------------------------
 describe('4. Pack d\'Applications et Dock Flottant', () => {
   let selectedApps = [];
   const catalog = JSON.parse(fs.readFileSync('web/catalog.json', 'utf8'));
 
   function addApp(app) {
-    if (selectedApps.length >= 12) return false;
+    if (selectedApps.length >= 16) return false;
     if (selectedApps.some(s => s.id === app.id)) return false;
     selectedApps.push({ ...app });
     return true;
@@ -263,16 +263,16 @@ describe('4. Pack d\'Applications et Dock Flottant', () => {
     return false;
   }
 
-  it('Ajout d\'applications et respect de la limite stricte de 12', () => {
+  it('Ajout d\'applications et respect de la limite stricte de 16', () => {
     selectedApps = [];
     catalog.forEach(app => addApp(app));
-    assert.strictEqual(selectedApps.length, Math.min(12, catalog.length));
+    assert.strictEqual(selectedApps.length, Math.min(16, catalog.length));
 
-    // Tentative d'ajout au-delà de 12
-    for (let i = 0; i < 20; i++) {
+    // Tentative d'ajout au-delà de 16
+    for (let i = 0; i < 25; i++) {
       addApp({ id: 'dummy_' + i, name: 'Dummy', size_kb: 10 });
     }
-    assert.strictEqual(selectedApps.length, 12, 'Le pack ne doit jamais dépasser 12 applications');
+    assert.strictEqual(selectedApps.length, 16, 'Le pack ne doit jamais dépasser 16 applications');
   });
 
   it('Suppression et bascule dynamique des statuts d\'application', () => {
@@ -280,7 +280,7 @@ describe('4. Pack d\'Applications et Dock Flottant', () => {
     assert(selectedApps.some(s => s.id === firstId));
     removeApp(firstId);
     assert(!selectedApps.some(s => s.id === firstId));
-    assert.strictEqual(selectedApps.length, 11);
+    assert.strictEqual(selectedApps.length, 15);
   });
 
   it('Dock d\'application active retourne les bonnes informations', () => {

@@ -1180,7 +1180,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         selectedApps = [];
         config.apps.forEach(cfgApp => {
           const match = catalogApps.find(a => a.id === cfgApp.id) || communityApps.find(a => a.id === cfgApp.id);
-          if (match && selectedApps.length < 12 && !selectedApps.some(s => s.id === match.id)) {
+          if (match && selectedApps.length < 16 && !selectedApps.some(s => s.id === match.id)) {
             selectedApps.push({...match});
           }
         });
@@ -1757,9 +1757,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // ==================== GESTION DE LA SÉLECTION (LE PACK) ====================
   function addAppToSelection(app) {
-    if (selectedApps.length >= 12) {
+    if (selectedApps.length >= 16) {
       window.soundFx?.playHit();
-      showToast('Limite atteinte (maximum 12 applications par bundle)', 'warning');
+      showToast('Limite atteinte (maximum 16 applications par bundle)', 'warning');
       return;
     }
     if (selectedApps.some(s => s.id === app.id)) return;
@@ -1902,7 +1902,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const slotsRemainingText = document.getElementById('slots-remaining-text');
     if (slotsRemainingText) {
-      const freeSlots = Math.max(0, 12 - selectedApps.length);
+      const freeSlots = Math.max(0, 16 - selectedApps.length);
       slotsRemainingText.textContent = `${freeSlots} slot${freeSlots > 1 ? 's' : ''} libre${freeSlots > 1 ? 's' : ''}`;
       if (freeSlots === 0) {
         slotsRemainingText.className = 'text-red-400 font-bold';
@@ -1923,7 +1923,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   function updateUI() {
-    appCountBadge.textContent = `${selectedApps.length} / 12`;
+    appCountBadge.textContent = `${selectedApps.length} / 16`;
     renderSelection();
     updateMemoryUsage();
     simulator?.updatePack(selectedApps);

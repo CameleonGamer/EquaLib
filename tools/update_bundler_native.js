@@ -73,7 +73,7 @@ class EquaLibBundler {
       return u8;
     }
 
-    const selectedList = apps.slice(0, 12);
+    const selectedList = apps.slice(0, 16);
     const count = selectedList.length;
 
     // Mise à jour de app_count
@@ -82,9 +82,9 @@ class EquaLibBundler {
     u8[offset + 10] = (count >> 16) & 0xFF;
     u8[offset + 11] = (count >> 24) & 0xFF;
 
-    // Nettoyage de la table des 12 apps (12 * 144 = 1728 octets)
+    // Nettoyage de la table des 16 apps (16 * 144 = 2304 octets)
     const appsStart = offset + 16;
-    u8.fill(0, appsStart, appsStart + 12 * 144);
+    u8.fill(0, appsStart, appsStart + 16 * 144);
 
     let extraPayloads = [];
     let currentExtraOffset = u8.length; // offset relatif au début du slot flash 0x90180000
@@ -150,6 +150,14 @@ class EquaLibBundler {
         appType = 10; // Tetris NumWorks natif C 60 FPS
       } else if (appIdLower === 'comm_minesweeper' || appIdLower.includes('mine') || appNameLower.includes('démin') || appNameLower.includes('demin')) {
         appType = 11; // Démineur NumWorks natif C 60 FPS
+      } else if (appIdLower === 'pong' || appIdLower === 'comm_pong' || appNameLower.includes('pong')) {
+        appType = 15; // Pong Retro Arcade natif C 60 FPS
+      } else if (appIdLower === 'dino' || appIdLower === 'comm_dino' || appNameLower.includes('dino')) {
+        appType = 16; // Chrome Dino Runner natif C 60 FPS
+      } else if (appIdLower === 'space_invaders' || appIdLower === 'comm_space_invaders' || appNameLower.includes('invader')) {
+        appType = 17; // Space Invaders Retro natif C 60 FPS
+      } else if (appIdLower === 'breakout' || appIdLower === 'comm_breakout' || appNameLower.includes('brique') || appNameLower.includes('breakout')) {
+        appType = 18; // Casse-Briques Breakout natif C 60 FPS
       } else if (isNative) {
         appType = 13; // Exécutable natif ARM EADK (.bin ou .nwa)
       } else if ((app.format === 'NWS') || (app.format === 'PY') || appIdLower.includes('.nws') || appNameLower.includes('.nws') || (app.data && !isNative)) {
