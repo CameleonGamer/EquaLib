@@ -444,6 +444,19 @@ class NumWorksSimulator {
     this.screen.style.backgroundColor = pal.bg;
     this.content.style.backgroundColor = pal.bg;
 
+    if (!this.apps || this.apps.length === 0) {
+      this.apps = [
+        { id: 'mariokart', name: '1. Mario Kart', cat: 'Arcade', type: 'MARIO', icon: '🏎️' },
+        { id: 'periodique', name: '2. Tableau Périodique', cat: 'Chimie', type: 'PERIODIC', icon: '🧪' },
+        { id: 'fiches', name: '3. Fiches de Cours', cat: 'Révision', type: 'COURSES', icon: '📚' },
+        { id: 'flappy', name: '4. Flappy Bird', cat: 'Arcade', type: 'FLAPPY', icon: '🐦' },
+        { id: '2048', name: '5. 2048 Ultimate', cat: 'Arcade', type: '2048', icon: '🔢' },
+        { id: 'snake', name: '6. Snake Classic', cat: 'Arcade', type: 'SNAKE', icon: '🐍' }
+      ];
+    }
+    if (this.selectedIndex < 0) this.selectedIndex = 0;
+    if (this.selectedIndex >= this.apps.length) this.selectedIndex = Math.max(0, this.apps.length - 1);
+
     const selApp = this.apps[this.selectedIndex] || this.apps[0];
     let html = '';
 

@@ -38,11 +38,11 @@ static const theme_t g_themes[6] = {
         .screen_bg = 0xF7BE,   /* Gris/Creme Epsilon */
         .card_bg = 0xFFFF,     /* Blanc pur */
         .card_sel = 0xFFF0,    /* Blanc/ambre clair */
-        .accent = 0xFE60,      /* Jaune or */
-        .text_primary = 0x0000,/* Noir */
-        .text_muted = 0x7BEF,  /* Gris moyen */
-        .dock_bg = 0xFFFF,
-        .dock_border = 0xFE60
+        .accent = 0xD340,      /* Ambre dore soutenu #D97706 */
+        .text_primary = 0x0000,/* Noir pur */
+        .text_muted = 0x632C,  /* Gris moyen ardoise */
+        .dock_bg = 0xFFFF,     /* Blanc pur */
+        .dock_border = 0xFE60  /* Bordure jaune NumWorks */
     },
     /* 1: Sakura (Fleurs roses & pétales) */
     {
@@ -53,7 +53,7 @@ static const theme_t g_themes[6] = {
         .card_sel = 0xFEDF,    /* Rose poudré */
         .accent = 0xF814,      /* Magenta sakura */
         .text_primary = 0x4808,/* Prune fonce */
-        .text_muted = 0xD373,  /* Rose doux */
+        .text_muted = 0x9810,  /* Rose moyen */
         .dock_bg = 0xFFFF,
         .dock_border = 0xFBAE
     },
@@ -92,7 +92,7 @@ static const theme_t g_themes[6] = {
         .card_sel = 0xFDAB,    /* Rouge pastel clair */
         .accent = 0xE8A2,      /* Rouge Mario */
         .text_primary = 0x0000,/* Noir */
-        .text_muted = 0xC8A2,  /* Rouge brique */
+        .text_muted = 0x8800,  /* Rouge brique */
         .dock_bg = 0xFFFF,
         .dock_border = 0xE8A2
     },
@@ -346,8 +346,38 @@ static void draw_app_icon(uint8_t app_type, int cx, int cy, uint16_t accent_col)
         eadk_display_push_rect_uniform(fuse, 0x8BE0);
         eadk_display_push_rect_uniform(spark, 0xF800);
         eadk_display_push_rect_uniform(glint, 0xFFFF);
-    } else {
-        /* Engrenage / Options */
+    } else if (app_type == APP_TYPE_PYTHON) {
+        /* Logo Python bleu & jaune */
+        eadk_rect_t py_top = {(uint16_t)(cx - 6), (uint16_t)(cy - 8), 12, 7};
+        eadk_rect_t py_bot = {(uint16_t)(cx - 6), (uint16_t)(cy), 12, 7};
+        eadk_rect_t eye_t = {(uint16_t)(cx - 3), (uint16_t)(cy - 6), 2, 2};
+        eadk_rect_t eye_b = {(uint16_t)(cx + 2), (uint16_t)(cy + 3), 2, 2};
+        eadk_display_push_rect_uniform(py_top, 0x341F); /* Bleu Python */
+        eadk_display_push_rect_uniform(py_bot, 0xFDE0); /* Jaune Python */
+        eadk_display_push_rect_uniform(eye_t, 0xFFFF);
+        eadk_display_push_rect_uniform(eye_b, 0x0000);
+    } else if (app_type == APP_TYPE_NATIVE_EXEC) {
+        /* Puce ARM / Processeur avec broches */
+        eadk_rect_t chip = {(uint16_t)(cx - 7), (uint16_t)(cy - 7), 14, 14};
+        eadk_rect_t pin_l = {(uint16_t)(cx - 10), (uint16_t)(cy - 5), 3, 10};
+        eadk_rect_t pin_r = {(uint16_t)(cx + 7), (uint16_t)(cy - 5), 3, 10};
+        eadk_rect_t core = {(uint16_t)(cx - 3), (uint16_t)(cy - 3), 6, 6};
+        eadk_display_push_rect_uniform(chip, 0x2124);
+        eadk_display_push_rect_uniform(pin_l, 0xFDE0);
+        eadk_display_push_rect_uniform(pin_r, 0xFDE0);
+        eadk_display_push_rect_uniform(core, 0x07E0);
+    } else if (app_type == APP_TYPE_TEXT_VIEWER) {
+        /* Document texte */
+        eadk_rect_t doc = {(uint16_t)(cx - 7), (uint16_t)(cy - 9), 14, 18};
+        eadk_rect_t l1 = {(uint16_t)(cx - 5), (uint16_t)(cy - 6), 10, 2};
+        eadk_rect_t l2 = {(uint16_t)(cx - 5), (uint16_t)(cy - 2), 10, 2};
+        eadk_rect_t l3 = {(uint16_t)(cx - 5), (uint16_t)(cy + 2), 7, 2};
+        eadk_display_push_rect_uniform(doc, 0xFFFF);
+        eadk_display_push_rect_uniform(l1, 0x3DFE);
+        eadk_display_push_rect_uniform(l2, 0x3DFE);
+        eadk_display_push_rect_uniform(l3, 0x3DFE);
+    } else if (app_type == APP_TYPE_SETTINGS) {
+        /* Engrenage Paramètres */
         eadk_rect_t center = {(uint16_t)(cx - 5), (uint16_t)(cy - 5), 10, 10};
         eadk_rect_t tooth_t = {(uint16_t)(cx - 2), (uint16_t)(cy - 8), 4, 3};
         eadk_rect_t tooth_b = {(uint16_t)(cx - 2), (uint16_t)(cy + 5), 4, 3};
@@ -360,11 +390,20 @@ static void draw_app_icon(uint8_t app_type, int cx, int cy, uint16_t accent_col)
         eadk_display_push_rect_uniform(tooth_l, 0x7BEF);
         eadk_display_push_rect_uniform(tooth_r, 0x7BEF);
         eadk_display_push_rect_uniform(hole, 0xFFFF);
+    } else {
+        /* Application générique / Boîte d'outils */
+        eadk_rect_t box = {(uint16_t)(cx - 7), (uint16_t)(cy - 7), 14, 14};
+        eadk_rect_t top = {(uint16_t)(cx - 5), (uint16_t)(cy - 9), 10, 3};
+        eadk_rect_t inner = {(uint16_t)(cx - 4), (uint16_t)(cy - 4), 8, 8};
+        eadk_display_push_rect_uniform(box, 0xFE60);
+        eadk_display_push_rect_uniform(top, 0xD340);
+        eadk_display_push_rect_uniform(inner, 0xFFFF);
     }
 }
 
 /* ==================== RENDU DU MODE GALERIE (TUILES CARRÉES) ==================== */
 static void draw_gallery_card(int app_index, int col, int row, bool is_sel, const theme_t* theme) {
+    if (app_index < 0 || app_index >= (int)g_equalib_manifest.app_count) return;
     int card_w = 88;
     int card_h = 70;
     int x = 16 + col * (card_w + 12);
@@ -374,7 +413,7 @@ static void draw_gallery_card(int app_index, int col, int row, bool is_sel, cons
     eadk_rect_t card = {(uint16_t)x, (uint16_t)y, (uint16_t)card_w, (uint16_t)card_h};
     eadk_display_push_rect_uniform(card, is_sel ? theme->card_sel : theme->card_bg);
 
-    /* Bordure : 2px lumineux si sélectionné, sinon bordure fine */
+    /* Bordure : 2px lumineuse si sélectionné, sinon 1px discrète */
     uint16_t border_col = is_sel ? theme->accent : theme->screen_bg;
     eadk_rect_t b_top = {(uint16_t)x, (uint16_t)y, (uint16_t)card_w, (uint16_t)(is_sel ? 2 : 1)};
     eadk_rect_t b_bot = {(uint16_t)x, (uint16_t)(y + card_h - (is_sel ? 2 : 1)), (uint16_t)card_w, (uint16_t)(is_sel ? 2 : 1)};
@@ -391,26 +430,37 @@ static void draw_gallery_card(int app_index, int col, int row, bool is_sel, cons
     const equalib_manifest_app_t* app = &g_equalib_manifest.apps[app_index];
     draw_app_icon(app->app_type, icon_cx, icon_cy, theme->accent);
 
-    /* Nom court de l'application sous l'icône */
+    /* Nom court de l'application sous l'icône : retire uniquement le numéro d'ordre '1. ', '2. ', etc. */
+    const char* p = (const char*)app->name;
+    while (*p >= '0' && *p <= '9') p++;
+    if (*p == '.' || *p == ' ') {
+        while (*p == '.' || *p == ' ') p++;
+    } else {
+        p = (const char*)app->name;
+    }
+    if (*p == '\0') p = (const char*)app->name;
+
     char short_name[14];
-    const char* full_name = (const char*)app->name;
-    const char* p = full_name;
-    while (*p && (*p == ' ' || (*p >= '0' && *p <= '9') || *p == '.')) p++;
     int sn_i = 0;
     while (*p && sn_i < 12) {
         short_name[sn_i++] = *p++;
     }
     short_name[sn_i] = '\0';
+    if (sn_i == 0) {
+        short_name[0] = 'A'; short_name[1] = 'p'; short_name[2] = 'p'; short_name[3] = '\0';
+        sn_i = 3;
+    }
 
-    int txt_len = (int)strlen(short_name);
-    int txt_x = x + (card_w - txt_len * 7) / 2;
+    int txt_len = sn_i;
+    int txt_x = x + (card_w - txt_len * 6) / 2;
     if (txt_x < x + 3) txt_x = x + 3;
     eadk_point_t p_lbl = {(uint16_t)txt_x, (uint16_t)(y + 52)};
-    eadk_display_draw_string(short_name, p_lbl, false, is_sel ? theme->accent : theme->text_primary, is_sel ? theme->card_sel : theme->card_bg);
+    eadk_display_draw_string(short_name, p_lbl, false, theme->text_primary, is_sel ? theme->card_sel : theme->card_bg);
 }
 
 /* ==================== RENDU DU MODE LISTE ==================== */
 static void draw_list_card(int app_index, int v_slot, bool is_sel, const theme_t* theme) {
+    if (app_index < 0 || app_index >= (int)g_equalib_manifest.app_count) return;
     int start_y = 28;
     int card_h = 34;
     int card_w = EADK_SCREEN_WIDTH - 16;
@@ -430,10 +480,10 @@ static void draw_list_card(int app_index, int v_slot, bool is_sel, const theme_t
     draw_app_icon(cur_app->app_type, 22, y + 17, theme->accent);
 
     eadk_point_t p_name = {36, (uint16_t)(y + 4)};
-    eadk_display_draw_string((const char*)cur_app->name, p_name, false, is_sel ? theme->accent : theme->text_primary, is_sel ? theme->card_sel : theme->card_bg);
+    eadk_display_draw_string((const char*)cur_app->name, p_name, false, theme->text_primary, is_sel ? theme->card_sel : theme->card_bg);
 
     eadk_point_t p_cat = {(uint16_t)(EADK_SCREEN_WIDTH - 110), (uint16_t)(y + 4)};
-    eadk_display_draw_string((const char*)cur_app->category, p_cat, false, theme->text_muted, is_sel ? theme->card_sel : theme->card_bg);
+    eadk_display_draw_string((const char*)cur_app->category, p_cat, false, theme->accent, is_sel ? theme->card_sel : theme->card_bg);
 
     eadk_point_t p_desc = {36, (uint16_t)(y + 19)};
     eadk_display_draw_string((const char*)cur_app->desc, p_desc, false, theme->text_muted, is_sel ? theme->card_sel : theme->card_bg);
@@ -441,6 +491,9 @@ static void draw_list_card(int app_index, int v_slot, bool is_sel, const theme_t
 
 /* ==================== BANDEAU ACTIF BAS AU CENTRE ==================== */
 static void draw_bottom_active_dock(int app_index, const theme_t* theme) {
+    if (app_index < 0 || app_index >= (int)g_equalib_manifest.app_count) {
+        app_index = 0;
+    }
     const equalib_manifest_app_t* app = &g_equalib_manifest.apps[app_index];
     int dock_x = 16;
     int dock_y = 188;
@@ -451,27 +504,45 @@ static void draw_bottom_active_dock(int app_index, const theme_t* theme) {
     eadk_rect_t dock = {(uint16_t)dock_x, (uint16_t)dock_y, (uint16_t)dock_w, (uint16_t)dock_h};
     eadk_display_push_rect_uniform(dock, theme->dock_bg);
 
-    /* Bordure lumineuse */
-    eadk_rect_t d_top = {(uint16_t)dock_x, (uint16_t)dock_y, (uint16_t)dock_w, 1};
-    eadk_rect_t d_bot = {(uint16_t)dock_x, (uint16_t)(dock_y + dock_h - 1), (uint16_t)dock_w, 1};
-    eadk_rect_t d_lft = {(uint16_t)dock_x, (uint16_t)dock_y, 1, (uint16_t)dock_h};
-    eadk_rect_t d_rgt = {(uint16_t)(dock_x + dock_w - 1), (uint16_t)dock_y, 1, (uint16_t)dock_h};
+    /* Bordure lumineuse nette 2px */
+    eadk_rect_t d_top = {(uint16_t)dock_x, (uint16_t)dock_y, (uint16_t)dock_w, 2};
+    eadk_rect_t d_bot = {(uint16_t)dock_x, (uint16_t)(dock_y + dock_h - 2), (uint16_t)dock_w, 2};
+    eadk_rect_t d_lft = {(uint16_t)dock_x, (uint16_t)dock_y, 2, (uint16_t)dock_h};
+    eadk_rect_t d_rgt = {(uint16_t)(dock_x + dock_w - 2), (uint16_t)dock_y, 2, (uint16_t)dock_h};
     eadk_display_push_rect_uniform(d_top, theme->dock_border);
     eadk_display_push_rect_uniform(d_bot, theme->dock_border);
     eadk_display_push_rect_uniform(d_lft, theme->dock_border);
     eadk_display_push_rect_uniform(d_rgt, theme->dock_border);
 
-    /* Nom de l'application à gauche */
-    eadk_point_t p_app = {(uint16_t)(dock_x + 10), (uint16_t)(dock_y + 5)};
-    eadk_display_draw_string((const char*)app->name, p_app, false, theme->accent, theme->dock_bg);
+    /* Nom de l'application à gauche avec contraste maximal (text_primary) */
+    char safe_name[33];
+    int ni = 0;
+    while (app->name[ni] && ni < 32) {
+        safe_name[ni] = app->name[ni];
+        ni++;
+    }
+    safe_name[ni] = '\0';
+    if (ni == 0) {
+        safe_name[0] = 'A'; safe_name[1] = 'p'; safe_name[2] = 'p'; safe_name[3] = '\0';
+        ni = 3;
+    }
 
-    /* Catégorie alignée à droite (si elle ne chevauche pas le nom) */
-    int name_len = (int)strlen((const char*)app->name);
-    int cat_len = (int)strlen((const char*)app->category);
-    int cat_x = dock_x + dock_w - (cat_len * 7) - 10;
-    if (cat_x > dock_x + 10 + (name_len * 7) + 10) {
-        eadk_point_t p_cat = {(uint16_t)cat_x, (uint16_t)(dock_y + 5)};
-        eadk_display_draw_string((const char*)app->category, p_cat, false, theme->text_muted, theme->dock_bg);
+    eadk_point_t p_app = {(uint16_t)(dock_x + 8), (uint16_t)(dock_y + 8)};
+    eadk_display_draw_string(safe_name, p_app, false, theme->text_primary, theme->dock_bg);
+
+    /* Catégorie alignée à droite */
+    char safe_cat[21];
+    int ci = 0;
+    while (app->category[ci] && ci < 20) {
+        safe_cat[ci] = app->category[ci];
+        ci++;
+    }
+    safe_cat[ci] = '\0';
+    int cat_len = ci;
+    int cat_x = dock_x + dock_w - (cat_len * 6) - 8;
+    if (cat_x > dock_x + 8 + (ni * 6) + 8) {
+        eadk_point_t p_cat = {(uint16_t)cat_x, (uint16_t)(dock_y + 8)};
+        eadk_display_draw_string(safe_cat, p_cat, false, theme->accent, theme->dock_bg);
     }
 }
 
@@ -499,6 +570,10 @@ static void draw_theme_decorations(const theme_t* theme) {
 /* ==================== MENU DES PARAMÈTRES & THÈMES ==================== */
 static void run_settings_screen(void) {
     while (eadk_keyboard_scan() != 0) eadk_timing_msleep(20);
+
+    /* Contrôle d'intégrité mémoire */
+    if (g_current_theme < 0 || g_current_theme >= 6) g_current_theme = 0;
+    if (g_view_mode != VIEW_MODE_GALLERY && g_view_mode != VIEW_MODE_LIST) g_view_mode = VIEW_MODE_GALLERY;
 
     int sel_item = 0;
     bool redraw = true;
@@ -546,6 +621,9 @@ static void run_settings_screen(void) {
 
         if (redraw) {
             redraw = false;
+            if (g_current_theme < 0 || g_current_theme >= 6) g_current_theme = 0;
+            if (g_view_mode != VIEW_MODE_GALLERY && g_view_mode != VIEW_MODE_LIST) g_view_mode = VIEW_MODE_GALLERY;
+
             const theme_t* th = &g_themes[g_current_theme];
 
             /* Fond et barre */
@@ -608,13 +686,18 @@ int main(int argc, char* argv[]) {
     (void)argc;
     (void)argv;
 
+    /* Protection BSS & DATA non initialisés par l'OS Epsilon de NumWorks */
+    g_current_theme = 0;
+    g_view_mode = VIEW_MODE_GALLERY;
+    g_show_tooltips = true;
+
     while (eadk_keyboard_scan() != 0) {
         eadk_timing_msleep(20);
     }
 
     uint32_t total_apps = g_equalib_manifest.app_count;
     if (g_equalib_manifest.magic != EQUALIB_MANIFEST_MAGIC || total_apps == 0 || total_apps > MAX_MANIFEST_APPS) {
-        total_apps = 5;
+        total_apps = 10;
     }
 
     int selected = 0;
@@ -623,6 +706,12 @@ int main(int argc, char* argv[]) {
     eadk_keyboard_state_t prev_kbd = 0;
 
     while (true) {
+        /* Sanitarisation stricte à chaque itération */
+        if (g_current_theme < 0 || g_current_theme >= 6) g_current_theme = 0;
+        if (g_view_mode != VIEW_MODE_GALLERY && g_view_mode != VIEW_MODE_LIST) g_view_mode = VIEW_MODE_GALLERY;
+        if (selected < 0) selected = 0;
+        if (selected >= (int)total_apps) selected = (int)total_apps - 1;
+
         eadk_keyboard_state_t kbd = eadk_keyboard_scan();
         eadk_keyboard_state_t pressed = kbd & ~prev_kbd;
 
@@ -725,6 +814,11 @@ int main(int argc, char* argv[]) {
         /* Rendu graphique complet */
         if (redraw) {
             redraw = false;
+            if (g_current_theme < 0 || g_current_theme >= 6) g_current_theme = 0;
+            if (g_view_mode != VIEW_MODE_GALLERY && g_view_mode != VIEW_MODE_LIST) g_view_mode = VIEW_MODE_GALLERY;
+            if (selected < 0) selected = 0;
+            if (selected >= (int)total_apps) selected = (int)total_apps - 1;
+
             const theme_t* cur_th = &g_themes[g_current_theme];
 
             /* Fond général de l'écran LCD */
