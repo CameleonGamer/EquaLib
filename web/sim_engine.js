@@ -452,29 +452,29 @@ class NumWorksSimulator {
       const pageStart = page * 6;
       const visibleApps = this.apps.slice(pageStart, pageStart + 6);
 
-      html += `<div class="grid grid-cols-3 gap-1 mb-1">`;
+      html += `<div class="grid grid-cols-3 gap-1 mb-0.5">`;
       visibleApps.forEach((app, relIdx) => {
         const absIdx = pageStart + relIdx;
         const isSel = (absIdx === this.selectedIndex);
         html += `
-          <div class="sim-item sim-gallery-card cursor-pointer p-1 rounded-lg border text-center flex flex-col items-center justify-between transition-all select-none"
+          <div class="sim-item sim-gallery-card cursor-pointer p-0.5 rounded-lg border text-center flex flex-col items-center justify-between transition-all select-none"
             data-index="${absIdx}"
-            style="background-color: ${isSel ? pal.cardSel : pal.card}; border-color: ${isSel ? pal.border : 'rgba(0,0,0,0.1)'}; ${isSel ? 'box-shadow: 0 0 8px ' + pal.border + '66; transform: scale(1.02);' : ''} height: 50px;">
-            <span class="text-base leading-none">${app.icon}</span>
-            <span class="text-[9px] font-bold truncate max-w-full leading-tight" style="color: ${isSel ? pal.border : pal.text}">${app.name.replace(/^[0-9]+\.\s*/, '')}</span>
+            style="background-color: ${isSel ? pal.cardSel : pal.card}; border-color: ${isSel ? pal.border : 'rgba(0,0,0,0.1)'}; ${isSel ? 'box-shadow: 0 0 6px ' + pal.border + '66; transform: scale(1.02);' : ''} height: 44px;">
+            <span class="text-sm leading-none mt-0.5">${app.icon}</span>
+            <span class="text-[8px] font-bold truncate max-w-full leading-tight mb-0.5" style="color: ${isSel ? pal.border : pal.text}">${app.name.replace(/^[0-9]+\.\s*/, '')}</span>
           </div>
         `;
       });
       html += `</div>`;
 
       html += `
-        <div class="flex justify-between items-center text-[8px] px-1" style="color: ${pal.descText}">
+        <div class="flex justify-between items-center text-[7px] px-1 py-0.5" style="color: ${pal.descText}">
           <span>Page ${page + 1}/${Math.ceil(this.apps.length / 6)}</span>
           <span>${pal.badge}</span>
         </div>
       `;
     } else {
-      html += `<div class="space-y-1 overflow-y-auto max-h-[110px] pr-1">`;
+      html += `<div class="space-y-1 overflow-y-auto max-h-[105px] pr-1">`;
       this.apps.forEach((app, idx) => {
         const isSel = idx === this.selectedIndex;
         html += `
@@ -482,13 +482,13 @@ class NumWorksSimulator {
             isSel 
               ? 'font-bold shadow-sm' 
               : 'hover:opacity-80'
-          } text-[10px] flex justify-between items-center transition-all border"
+          } text-[9px] flex justify-between items-center transition-all border"
             data-index="${idx}"
             style="background-color: ${isSel ? pal.cardSel : pal.card}; border-color: ${isSel ? pal.border : 'rgba(0,0,0,0.1)'};">
             <span class="truncate flex items-center gap-1" style="color: ${isSel ? pal.border : pal.text}">
               <span>${app.icon}</span> ${app.name}
             </span>
-            <span class="text-[9px] shrink-0 ml-1 font-mono" style="color: ${pal.descText}">${app.cat}</span>
+            <span class="text-[8px] shrink-0 ml-1 font-mono" style="color: ${pal.descText}">${app.cat}</span>
           </div>
         `;
       });
@@ -497,13 +497,13 @@ class NumWorksSimulator {
 
     /* BANDEAU EN BAS AU CENTRE : APPLI ACTIVE */
     html += `
-      <div class="sim-bottom-dock p-1.5 rounded-lg border shadow-sm flex items-center justify-between text-[10px] select-none transition-all mt-1"
+      <div class="sim-bottom-dock p-1 rounded-md border shadow-sm flex items-center justify-between text-[9px] select-none transition-all mt-0.5"
         style="background-color: ${pal.card}; border-color: ${pal.border};">
-        <div class="flex items-center gap-1.5 min-w-0">
-          <span class="text-sm shrink-0">${selApp.icon || '📦'}</span>
+        <div class="flex items-center gap-1 min-w-0">
+          <span class="text-xs shrink-0">${selApp.icon || '📦'}</span>
           <span class="font-extrabold truncate" style="color: ${pal.text}">${selApp.name}</span>
         </div>
-        <span class="text-[9px] px-1.5 py-0.2 rounded font-mono font-bold shrink-0 ml-1 border"
+        <span class="text-[8px] px-1 py-0.2 rounded font-mono font-bold shrink-0 ml-1 border"
           style="background-color: ${pal.border}22; color: ${pal.border}; border-color: ${pal.border}55;">${selApp.cat}</span>
       </div>
     `;
@@ -511,13 +511,20 @@ class NumWorksSimulator {
     /* RACCOURCIS / TOOLTIPS AU BAS DE L'ÉCRAN */
     if (this.showTooltips) {
       html += `
-        <div class="text-[8px] text-center truncate pt-0.5" style="color: ${pal.descText}">
+        <div class="text-[7px] text-center truncate pt-0.5" style="color: ${pal.descText}">
           ▲▼◀▶: Naviguer | OK: Lancer | Back: Hub
         </div>
       `;
     }
 
     this.content.innerHTML = html;
+
+    if (this.displayMode === 'list') {
+      const activeItem = this.content.querySelector(`.sim-item[data-index="${this.selectedIndex}"]`);
+      if (activeItem && typeof activeItem.scrollIntoView === 'function') {
+        activeItem.scrollIntoView({ block: 'nearest' });
+      }
+    }
 
     const items = this.content.querySelectorAll('.sim-item');
     items.forEach(el => {
@@ -531,6 +538,43 @@ class NumWorksSimulator {
         }
       });
     });
+  }
+
+  syncWithPack(pack) {
+    if (!pack || pack.length === 0) return;
+    this.apps = pack.map((app, i) => {
+      let icon = app.icon_initial || '📦';
+      const nameL = (app.name || '').toLowerCase();
+      const idL = (app.id || '').toLowerCase();
+      let type = app.type || 'GENERIC';
+      if (idL.includes('mario') || nameL.includes('mario')) { type = 'MARIO'; icon = '🏎️'; }
+      else if (idL.includes('period') || nameL.includes('period')) { type = 'PERIODIC'; icon = '🧪'; }
+      else if (idL.includes('cours') || idL.includes('fiche') || nameL.includes('cours') || nameL.includes('fiche')) { type = 'COURSES'; icon = '📚'; }
+      else if (idL.includes('flappy') || nameL.includes('flappy')) { type = 'FLAPPY'; icon = '🐦'; }
+      else if (idL.includes('2048') || nameL.includes('2048')) { type = '2048'; icon = '🔢'; }
+      else if (idL.includes('snake') || nameL.includes('snake')) { type = 'SNAKE'; icon = '🐍'; }
+      else if (idL.includes('pong') || nameL.includes('pong')) { type = 'PONG'; icon = '🏓'; }
+      else if (idL.includes('dino') || nameL.includes('dino')) { type = 'DINO'; icon = '🦖'; }
+      else if (idL.includes('invader') || nameL.includes('space') || nameL.includes('invader')) { type = 'SPACE_INVADERS'; icon = '👾'; }
+      else if (idL.includes('breakout') || idL.includes('brique') || nameL.includes('brique')) { type = 'BREAKOUT'; icon = '🧱'; }
+      else if (idL.includes('puissance') || nameL.includes('puissance')) { type = 'PUISSANCE4'; icon = '🟡'; }
+      return {
+        id: app.id,
+        name: `${i + 1}. ${app.name}`,
+        cat: (app.category || 'Arcade').split('/')[0].trim(),
+        type: type,
+        icon: icon
+      };
+    });
+    this.apps.push({
+      id: 'settings',
+      name: `${this.apps.length + 1}. Paramètres`,
+      cat: 'Options',
+      type: 'SETTINGS',
+      icon: '⚙️'
+    });
+    if (this.selectedIndex >= this.apps.length) this.selectedIndex = 0;
+    if (this.currentView === 'MENU') this.renderMenu();
   }
 
   // ==================== MINI JEU FLAPPY BIRD ====================

@@ -126,7 +126,7 @@ static bool g_show_tooltips = true;  /* Affichage des raccourcis en bas d'écran
 const equalib_manifest_t g_equalib_manifest __attribute__((used, aligned(4), section(".rodata.equalib_manifest"))) = {
     .magic = EQUALIB_MANIFEST_MAGIC,
     .version = 1,
-    .app_count = 9,
+    .app_count = 10,
     .flags = 0,
     .apps = {
         {"mariokart", "1. Mario Kart", "Jeu / Arcade", "Course Mode 7 3D complete pour N0120", APP_TYPE_MARIOKART, {0,0,0}, 0, 0},
@@ -137,7 +137,8 @@ const equalib_manifest_t g_equalib_manifest __attribute__((used, aligned(4), sec
         {"2048", "6. 2048 Ultimate", "Jeu / Arcade", "Casse-tete 2048 en C natif 60 FPS", APP_TYPE_2048, {0,0,0}, 0, 0},
         {"snake", "7. Snake Classic", "Jeu / Arcade", "Serpent retro en C natif 60 FPS", APP_TYPE_SNAKE, {0,0,0}, 0, 0},
         {"tetris", "8. Tetris NumWorks", "Jeu / Arcade", "Tetris officiel en C natif 60 FPS", APP_TYPE_TETRIS, {0,0,0}, 0, 0},
-        {"demineur", "9. Demineur NW", "Jeu / Arcade", "Demineur complet en C natif 60 FPS", APP_TYPE_MINESWEEPER, {0,0,0}, 0, 0}
+        {"demineur", "9. Demineur NW", "Jeu / Arcade", "Demineur complet en C natif 60 FPS", APP_TYPE_MINESWEEPER, {0,0,0}, 0, 0},
+        {"settings", "10. Parametres", "Options", "Themes, mode galerie et reglages", APP_TYPE_SETTINGS, {0,0,0}, 0, 0}
     }
 };
 
@@ -442,9 +443,9 @@ static void draw_list_card(int app_index, int v_slot, bool is_sel, const theme_t
 static void draw_bottom_active_dock(int app_index, const theme_t* theme) {
     const equalib_manifest_app_t* app = &g_equalib_manifest.apps[app_index];
     int dock_x = 16;
-    int dock_y = 186;
+    int dock_y = 188;
     int dock_w = 288;
-    int dock_h = 28;
+    int dock_h = 24;
 
     /* Fond du dock */
     eadk_rect_t dock = {(uint16_t)dock_x, (uint16_t)dock_y, (uint16_t)dock_w, (uint16_t)dock_h};
@@ -460,17 +461,18 @@ static void draw_bottom_active_dock(int app_index, const theme_t* theme) {
     eadk_display_push_rect_uniform(d_lft, theme->dock_border);
     eadk_display_push_rect_uniform(d_rgt, theme->dock_border);
 
-    /* Nom de l'application en bas au centre */
-    eadk_point_t p_app = {(uint16_t)(dock_x + 8), (uint16_t)(dock_y + 4)};
+    /* Nom de l'application à gauche */
+    eadk_point_t p_app = {(uint16_t)(dock_x + 10), (uint16_t)(dock_y + 5)};
     eadk_display_draw_string((const char*)app->name, p_app, false, theme->accent, theme->dock_bg);
 
-    /* Catégorie à droite */
-    eadk_point_t p_cat = {(uint16_t)(dock_x + dock_w - 95), (uint16_t)(dock_y + 4)};
-    eadk_display_draw_string((const char*)app->category, p_cat, false, theme->text_muted, theme->dock_bg);
-
-    /* Petite description */
-    eadk_point_t p_desc = {(uint16_t)(dock_x + 8), (uint16_t)(dock_y + 16)};
-    eadk_display_draw_string((const char*)app->desc, p_desc, false, theme->text_primary, theme->dock_bg);
+    /* Catégorie alignée à droite (si elle ne chevauche pas le nom) */
+    int name_len = (int)strlen((const char*)app->name);
+    int cat_len = (int)strlen((const char*)app->category);
+    int cat_x = dock_x + dock_w - (cat_len * 7) - 10;
+    if (cat_x > dock_x + 10 + (name_len * 7) + 10) {
+        eadk_point_t p_cat = {(uint16_t)cat_x, (uint16_t)(dock_y + 5)};
+        eadk_display_draw_string((const char*)app->category, p_cat, false, theme->text_muted, theme->dock_bg);
+    }
 }
 
 /* ==================== DÉCORATIONS VISUELLES DES THÈMES ==================== */
@@ -695,6 +697,7 @@ int main(int argc, char* argv[]) {
             else if (type == APP_TYPE_SNAKE) run_snake_app();
             else if (type == APP_TYPE_TETRIS) run_tetris_app();
             else if (type == APP_TYPE_MINESWEEPER) run_minesweeper_app();
+            else if (type == APP_TYPE_SETTINGS) run_settings_screen();
             else if (type == APP_TYPE_NATIVE_EXEC) {
                 const uint8_t* bin_ptr = (app->data_size > 0) ? (const uint8_t*)(0x90180000 + app->data_offset) : NULL;
                 run_native_app((const char*)app->name, bin_ptr, app->data_size);

@@ -1725,32 +1725,55 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   function updateSimulatorPreview() {
-    if (!simMenu) return;
-    simMenu.innerHTML = '';
-
-    if (selectedApps.length === 0) {
-      simMenu.innerHTML = '<div class="text-[9px] text-slate-400 p-2 text-center">Aucune app dans le pack</div>';
+    if (simulator && typeof simulator.syncWithPack === 'function') {
+      simulator.syncWithPack(selectedApps);
       return;
     }
 
-    selectedApps.slice(0, 5).forEach((app, i) => {
-      const row = document.createElement('div');
-      const isFirst = (i === 0);
-      row.className = isFirst
-        ? 'p-1 rounded bg-amber-200 border-l-4 border-amber-600 text-[10px] font-bold text-slate-900 flex justify-between'
-        : 'p-1 rounded bg-white text-[10px] text-slate-700 flex justify-between border border-slate-200';
-      row.innerHTML = `
-        <span class="truncate pr-1">${i + 1}. ${app.name}</span>
-        <span class="text-[9px] ${isFirst ? 'text-slate-600' : 'text-slate-400'} shrink-0">${app.category.split('/')[0]}</span>
-      `;
-      simMenu.appendChild(row);
-    });
+    const simContent = document.getElementById('sim-content');
+    if (!simContent) return;
 
-    if (selectedApps.length > 5) {
-      const more = document.createElement('div');
-      more.className = 'text-[8px] text-slate-400 text-center';
-      more.textContent = `+ ${selectedApps.length - 5} autre(s) application(s)...`;
-      simMenu.appendChild(more);
+    if (selectedApps.length === 0) {
+      simContent.innerHTML = '<div class="text-[9px] text-slate-400 p-2 text-center">Aucune app dans le pack</div>';
+      return;
+    }
+
+    const isGallery = (userSettings.displayMode === 'gallery');
+    if (isGallery) {
+      const pageApps = selectedApps.slice(0, 6);
+      let html = `<div id="sim-menu" class="grid grid-cols-3 gap-1 mb-0.5">`;
+      pageApps.forEach((app, i) => {
+        html += `
+          <div class="sim-item sim-gallery-card p-0.5 rounded-lg border text-center flex flex-col items-center justify-between select-none ${i === 0 ? 'bg-amber-500/20 border-amber-500 shadow-sm' : 'bg-white border-slate-200'}" style="height: 44px;">
+            <span class="text-sm leading-none mt-0.5">${app.icon_initial || '📦'}</span>
+            <span class="text-[8px] font-bold truncate max-w-full leading-tight mb-0.5 ${i === 0 ? 'text-amber-700' : 'text-slate-800'}">${app.name}</span>
+          </div>
+        `;
+      });
+      html += `</div>`;
+      const topApp = pageApps[0];
+      html += `
+        <div class="sim-bottom-dock p-1 rounded-md border shadow-sm flex items-center justify-between text-[9px] select-none bg-white border-amber-500 mt-0.5">
+          <div class="flex items-center gap-1 min-w-0">
+            <span class="text-xs shrink-0">${topApp.icon_initial || '📦'}</span>
+            <span class="font-extrabold truncate text-slate-900">${topApp.name}</span>
+          </div>
+          <span class="text-[8px] px-1 py-0.2 rounded font-mono font-bold shrink-0 ml-1 border bg-amber-500/20 text-amber-600 border-amber-500/40">${topApp.category || 'Arcade'}</span>
+        </div>
+      `;
+      simContent.innerHTML = html;
+    } else {
+      let html = `<div id="sim-menu" class="space-y-1 overflow-y-auto max-h-[105px] pr-1">`;
+      selectedApps.forEach((app, i) => {
+        html += `
+          <div class="p-1 rounded ${i === 0 ? 'bg-amber-200 border-l-4 border-amber-600 font-bold text-slate-900' : 'bg-white text-slate-700 border border-slate-200'} text-[9px] flex justify-between items-center">
+            <span class="truncate pr-1">${i + 1}. ${app.name}</span>
+            <span class="text-[8px] ${i === 0 ? 'text-slate-600' : 'text-slate-400'} shrink-0">${app.category.split('/')[0]}</span>
+          </div>
+        `;
+      });
+      html += `</div>`;
+      simContent.innerHTML = html;
     }
   }
 
