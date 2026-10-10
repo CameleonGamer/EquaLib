@@ -22,7 +22,7 @@ LDFLAGS ?= $(TARGET_ARCH) \
            -Wl,--gc-sections \
            -nostdlib
 
-SRCS = src/main.c src/ui.c src/exam_sim.c src/dispatcher.c
+SRCS = src/main.c src/app_mariokart.c src/app_courses.c src/app_periodic.c src/app_math_tools.c src/app_text_viewer.c src/app_flappy.c src/app_2048.c src/app_snake.c src/app_tetris.c src/app_minesweeper.c src/app_python.c src/eq_font.c src/mini_libc.c
 OBJS = $(SRCS:.c=.o)
 TARGET = build/equalib.nwa
 TARGET_ELF = build/equalib.elf

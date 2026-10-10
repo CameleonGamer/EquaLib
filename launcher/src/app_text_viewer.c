@@ -35,16 +35,6 @@ void run_text_viewer_app(const char* title, const char* text_data, uint32_t text
             break;
         }
 
-        /* Mode Panique Furtif universel */
-        if (eadk_keyboard_key_down(kbd, eadk_key_var)) {
-            run_panic_calculator();
-            while (eadk_keyboard_scan() != 0) eadk_timing_msleep(20);
-            prev_kbd = 0;
-            full_redraw = true;
-            redraw = true;
-            continue;
-        }
-
         eadk_keyboard_state_t pressed = kbd & ~prev_kbd;
 
         if (eadk_keyboard_key_down(pressed, eadk_key_back)) {
@@ -80,7 +70,7 @@ void run_text_viewer_app(const char* title, const char* text_data, uint32_t text
                 eadk_rect_t bottom = {0, EADK_SCREEN_HEIGHT - 16, EADK_SCREEN_WIDTH, 16};
                 eadk_display_push_rect_uniform(bottom, eadk_color_white);
                 eadk_point_t pt_help = {8, EADK_SCREEN_HEIGHT - 13};
-                eadk_display_draw_string("< >: Page  |  BACK: Hub  |  Var: Furtif", pt_help, false, 0x4208, eadk_color_white);
+                eadk_display_draw_string("< >: Page  |  BACK: Hub", pt_help, false, 0x4208, eadk_color_white);
             }
 
             /* Boite principale */

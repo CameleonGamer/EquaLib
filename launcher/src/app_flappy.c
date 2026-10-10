@@ -234,7 +234,7 @@ static void draw_initial_scene(void) {
     /* Barre d'aide inférieure */
     draw_clamped_rect(0, EADK_SCREEN_HEIGHT - 16, EADK_SCREEN_WIDTH, 16, eadk_color_white);
     eadk_point_t pt_ctrl = {20, EADK_SCREEN_HEIGHT - 13};
-    eadk_display_draw_string("OK / HAUT : Voler  |  BACK : Hub  |  Var : Furtif", pt_ctrl, false, 0x4208, eadk_color_white);
+    eadk_display_draw_string("OK / HAUT : Voler  |  BACK : Hub", pt_ctrl, false, 0x4208, eadk_color_white);
 }
 
 static void draw_score(int score, int best_score) {
@@ -336,24 +336,6 @@ void run_flappy_app(void) {
         if (eadk_keyboard_key_down(kbd, eadk_key_home) ||
             eadk_keyboard_key_down(kbd, eadk_key_on_off)) {
             break;
-        }
-
-        /* Mode Panique Furtif [Var] */
-        if (eadk_keyboard_key_down(kbd, eadk_key_var)) {
-            run_panic_calculator();
-            int p_cycles = 0;
-            while (eadk_keyboard_scan() != 0 && p_cycles < 25) {
-                eadk_timing_msleep(20);
-                p_cycles++;
-            }
-            prev_kbd = 0;
-            draw_initial_scene();
-            draw_score(score, best_score);
-            for (int i = 0; i < MAX_PIPES; i++) {
-                draw_pipe(&pipes[i]);
-            }
-            draw_bird(bird_y / 10, 1);
-            continue;
         }
 
         eadk_keyboard_state_t pressed = kbd & ~prev_kbd;

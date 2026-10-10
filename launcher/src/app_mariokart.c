@@ -28,14 +28,6 @@ void run_mariokart_app(void) {
         uint64_t now = eadk_timing_millis();
         eadk_keyboard_state_t kbd = eadk_keyboard_scan();
 
-        /* Mode Panique Furtif universel direct depuis Mario Kart via [Var] */
-        if (eadk_keyboard_key_down(kbd, eadk_key_var)) {
-            run_panic_calculator();
-            while (eadk_keyboard_scan() != 0) {
-                eadk_timing_msleep(20);
-            }
-            break; // Sortie sécurisée vers le Hub
-        }
 
         /* Quitter Mario Kart et revenir au menu EquaLib avec Back depuis le menu titre */
         if (eadk_keyboard_key_down(kbd, eadk_key_home) ||

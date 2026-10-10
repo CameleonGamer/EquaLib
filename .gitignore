@@ -9,3 +9,11 @@ launcher/build/
 node_modules/
 .DS_Store
 Thumbs.db
+__pycache__/
+*.pyc
+tools/*.nwa
+tools/inspect_*.js
+tools/test_link*
+tools/test_bundle*
+tools/test_fixed_linker.js
+

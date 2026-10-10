@@ -118,16 +118,6 @@ void run_courses_app(void) {
             break;
         }
 
-        /* Mode Panique Furtif universel direct via [Var] */
-        if (eadk_keyboard_key_down(kbd, eadk_key_var)) {
-            run_panic_calculator();
-            while (eadk_keyboard_scan() != 0) eadk_timing_msleep(20);
-            prev_kbd = 0;
-            full_redraw = true;
-            redraw = true;
-            continue;
-        }
-
         eadk_keyboard_state_t pressed = kbd & ~prev_kbd;
 
         if (eadk_keyboard_key_down(pressed, eadk_key_back)) {

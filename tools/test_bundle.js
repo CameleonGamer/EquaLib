@@ -4,7 +4,7 @@ const EquaLibBundler = require('../web/bundler.js');
 
 async function test() {
   console.log('--- Test du packaging binaire EquaLib ---');
-  const bundler = new EquaLibBundler({ simulateExam: true, targetModel: 'N0120' });
+  const bundler = new EquaLibBundler({ targetModel: 'N0120' });
 
   const dummyApps = [
     {

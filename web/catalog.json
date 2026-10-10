@@ -48,18 +48,6 @@
     "recommended": true
   },
   {
-    "id": "stealth_calc",
-    "name": "Calculatrice Furtive & Panique",
-    "author": "EquaLib Security",
-    "version": "1.0",
-    "size_kb": 40,
-    "category": "Sécurité",
-    "description": "Fausse calculatrice officielle avec bandeau [EXAMEN ACTIF] et LED 1 Hz. Sortie secrète Shift+Home.",
-    "icon_initial": "🛡️",
-    "color": "#6366F1",
-    "recommended": true
-  },
-  {
     "id": "comm_flappy",
     "name": "Flappy Bird NW",
     "author": "EquaLib Arcade",

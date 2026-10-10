@@ -17,7 +17,7 @@ Sur le système officiel **Epsilon** (particulièrement sur la **NumWorks N0120*
 **EquaLib** résout définitivement ce problème :
 1. **Un hub multi-applications** qui occupe l'unique slot externe et permet de lancer jusqu'à 12 sous-applications (KhiCAS, tableau périodique, fiches de révision, émulateurs rétro).
 2. **Une interface Web moderne (GitHub Pages)** avec catalogue d'applications, téléversement direct via **WebUSB** et export de fichiers `.nwa` / `.nws`.
-3. **Simulation du Mode Examen** : fait clignoter la LED rouge à 1 Hz et affiche l'indicateur d'examen officiel avec une **touche de panique furtive** pour basculer instantanément sur un écran de calcul standard en cas de vérification.
+3. **Écosystème NumWorks N0120** : architecture modulaire native ARM Cortex-M7 @ 550 MHz avec support EADK, jeux 60 FPS, formulaires scientifiques et calcul matriciel.
 
 ---
 
@@ -35,15 +35,19 @@ EquaLib/
 ├── launcher/             # 📟 Application embarquée pour la calculatrice (C/C++)
 │   ├── src/
 │   │   ├── main.c        # Boucle principale et détection des touches
-│   │   ├── dispatcher.c  # Moteur de saut d'exécution vers les sous-applications
-│   │   ├── exam_sim.c    # Simulation du mode examen (LED 1Hz & écran furtif)
-│   │   └── ui.c          # Rendu graphique haute fidélité style NumWorks
+│   │   ├── app_mariokart.c # Super Mario Kart 3D Mode 7
+│   │   ├── app_courses.c # Fiches de cours et formulaires
+│   │   ├── app_periodic.c# Tableau périodique des éléments
+│   │   ├── app_math_tools.c # Résolution d'équations 2nd degré
+│   │   ├── app_flappy.c  # Jeu Flappy Bird 60 FPS
+│   │   ├── app_2048.c    # Jeu 2048 Ultimate 60 FPS
+│   │   ├── app_snake.c   # Jeu Snake Classic 60 FPS
+│   │   ├── app_tetris.c  # Jeu Tetris 60 FPS
+│   │   └── app_minesweeper.c # Démineur 60 FPS
 │   ├── include/
 │   │   ├── equalib_bundle.h # Spécification du format binaire du bundle
 │   │   ├── eadk.h        # En-têtes EADK NumWorks
-│   │   ├── exam_sim.h
-│   │   ├── dispatcher.h
-│   │   └── ui.h
+│   │   └── apps.h        # Prototypes des applications
 │   └── Makefile          # Compilation Cortex-M7 (STM32H725)
 │
 └── README.md
@@ -81,9 +85,7 @@ L'interface web dans le dossier `web/` est **100% statique** (aucun serveur requ
 | **Naviguer dans les applications** | Touches directionnelles `←` `↑` `↓` `→` |
 | **Lancer l'application sélectionnée** | Touche `OK` ou `EXE` |
 | **Quitter l'application et revenir au hub** | Touche `Back` |
-| **Activer / Désactiver la simulation LED Examen (1 Hz)** | Touche `Toolbox` |
-| **Mode Panique Furtif (Calculatrice de secours)** | **Touche `Var`** (accessible instantanément depuis n'importe quelle app ou jeu) ou **Double appui rapide sur `Back`** |
-| **Sortir du Mode Panique Furtif** | **Touche `Var`** (bascule immédiate) ou `Shift` + `Home` / `Toolbox` + `Back` |
+| **Retour à Epsilon (Calculatrice native)** | Touche `Home` ou double appui sur `Back` depuis le Hub |
 
 ---
 

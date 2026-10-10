@@ -38,13 +38,6 @@ const APP_DETAILS_MAP = {
     ],
     tips: 'Calcule le discriminant Δ, les racines réelles et complexes, ainsi que la forme canonique avec étapes.'
   },
-  'stealth_calc': {
-    controls: [
-      { key: 'Double appui sur Back', desc: 'Bascule immédiate en mode fausse calculatrice officielle' },
-      { key: 'Shift + Home', desc: 'Combinaison secrète pour réouvrir le Hub EquaLib' }
-    ],
-    tips: 'Affiche un historique de calculs crédible et le tag [EXAMEN ACTIF] pour une discrétion absolue.'
-  },
   'flappy': {
     controls: [
       { key: 'Touche OK ou Flèche Haut', desc: 'Battre des ailes (Sauter / Flap)' },
@@ -132,10 +125,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   const flashProgress = document.getElementById('flash-progress');
   const progressText = document.getElementById('progress-text');
 
-  // Options
-  const optSimulateExam = document.getElementById('opt-simulate-exam');
-  const optPanicKey = document.getElementById('opt-panic-key');
-
   // Zone Drag & Drop
   const dropZone = document.getElementById('drop-zone');
   const fileInput = document.getElementById('file-input');
@@ -161,16 +150,217 @@ document.addEventListener('DOMContentLoaded', async () => {
   const modalAppIcon = document.getElementById('modal-app-icon');
   let currentModalApp = null;
 
+  // ==================== DOCK D'APPLICATION ACTIVE (BAS AU CENTRE) ====================
+  const activeAppDock = document.getElementById('active-app-dock');
+  const dockAppIcon = document.getElementById('dock-app-icon');
+  const dockAppName = document.getElementById('dock-app-name');
+  const dockAppBadge = document.getElementById('dock-app-badge');
+  const dockAppCat = document.getElementById('dock-app-cat');
+  const dockAppDesc = document.getElementById('dock-app-desc');
+  const dockActionBtn = document.getElementById('dock-action-btn');
+  const dockTestBtn = document.getElementById('dock-test-btn');
+  let currentActiveDockApp = null;
+
+  // ==================== MODAL PARAMÈTRES & SYSTÈME DE THÈMES ====================
+  const settingsModalBtn = document.getElementById('settings-modal-btn');
+  const settingsModal = document.getElementById('settings-modal');
+  const settingsCloseBtn = document.getElementById('settings-close-btn');
+  const settingsSaveBtn = document.getElementById('settings-save-btn');
+  const settingsResetBtn = document.getElementById('settings-reset-btn');
+  const settingModeGallery = document.getElementById('setting-mode-gallery');
+  const settingModeList = document.getElementById('setting-mode-list');
+  const settingTooltipsToggle = document.getElementById('setting-tooltips-toggle');
+
+  const viewModeGalleryBtn = document.getElementById('view-mode-gallery-btn');
+  const viewModeListBtn = document.getElementById('view-mode-list-btn');
+  const searchViewModeGalleryBtn = document.getElementById('search-view-mode-gallery-btn');
+  const searchViewModeListBtn = document.getElementById('search-view-mode-list-btn');
+  const quickViewGalleryBtn = document.getElementById('quick-view-gallery-btn');
+  const quickViewListBtn = document.getElementById('quick-view-list-btn');
+  const quickSettingsBtn = document.getElementById('quick-settings-btn');
+  const navSettingsBtn = document.getElementById('nav-settings-btn');
+  const simBtnSettings = document.getElementById('sim-btn-settings');
+  const simDpadSettings = document.getElementById('sim-dpad-settings');
+
+  const SETTINGS_STORAGE_KEY = 'equalib_user_settings';
+  let userSettings = {
+    displayMode: 'gallery', // Défaut : galerie carrée comme demandé
+    showTooltips: true,
+    theme: localStorage.getItem('equalib_theme') || 'default',
+    customColor: '#f59e0b'
+  };
+  window.userSettings = userSettings;
+
+  try {
+    const savedSettings = localStorage.getItem(SETTINGS_STORAGE_KEY);
+    if (savedSettings) {
+      userSettings = { ...userSettings, ...JSON.parse(savedSettings) };
+      window.userSettings = userSettings;
+    }
+  } catch (e) {
+    console.warn('Erreur lecture paramètres :', e);
+  }
+
+  function saveUserSettings() {
+    try {
+      localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(userSettings));
+      localStorage.setItem('equalib_theme', userSettings.theme);
+      window.userSettings = userSettings;
+    } catch (e) {
+      console.warn('Erreur sauvegarde paramètres :', e);
+    }
+  }
+
+  function applyCustomColorVariables(hex) {
+    if (!hex || !/^#[0-9a-fA-F]{6}$/i.test(hex)) return;
+    document.documentElement.style.setProperty('--theme-primary', hex);
+    document.documentElement.style.setProperty('--theme-border', hex);
+  }
+
+  function updateViewModeButtons() {
+    const isGallery = userSettings.displayMode === 'gallery';
+
+    if (settingModeGallery && settingModeList) {
+      if (isGallery) {
+        settingModeGallery.className = 'p-3 rounded-2xl border transition-all flex items-center gap-3 text-left cursor-pointer bg-slate-950 border-amber-500/60 ring-1 ring-amber-500/20';
+        settingModeList.className = 'p-3 rounded-2xl border transition-all flex items-center gap-3 text-left cursor-pointer bg-slate-950 border-slate-800 hover:border-slate-700';
+      } else {
+        settingModeList.className = 'p-3 rounded-2xl border transition-all flex items-center gap-3 text-left cursor-pointer bg-slate-950 border-amber-500/60 ring-1 ring-amber-500/20';
+        settingModeGallery.className = 'p-3 rounded-2xl border transition-all flex items-center gap-3 text-left cursor-pointer bg-slate-950 border-slate-800 hover:border-slate-700';
+      }
+    }
+
+    if (viewModeGalleryBtn && viewModeListBtn) {
+      if (isGallery) {
+        viewModeGalleryBtn.className = 'px-3 py-1 rounded-lg text-xs font-bold transition-all bg-nw-yellow text-black flex items-center gap-1 cursor-pointer shadow-sm';
+        viewModeListBtn.className = 'px-3 py-1 rounded-lg text-xs font-semibold transition-all text-slate-400 hover:text-white flex items-center gap-1 cursor-pointer';
+      } else {
+        viewModeListBtn.className = 'px-3 py-1 rounded-lg text-xs font-bold transition-all bg-nw-yellow text-black flex items-center gap-1 cursor-pointer shadow-sm';
+        viewModeGalleryBtn.className = 'px-3 py-1 rounded-lg text-xs font-semibold transition-all text-slate-400 hover:text-white flex items-center gap-1 cursor-pointer';
+      }
+    }
+
+    if (quickViewGalleryBtn && quickViewListBtn) {
+      if (isGallery) {
+        quickViewGalleryBtn.className = 'px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-nw-yellow text-black flex items-center gap-1.5 cursor-pointer shadow-sm';
+        quickViewListBtn.className = 'px-3 py-1.5 rounded-lg text-xs font-semibold transition-all text-slate-400 hover:text-white flex items-center gap-1.5 cursor-pointer';
+      } else {
+        quickViewListBtn.className = 'px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-nw-yellow text-black flex items-center gap-1.5 cursor-pointer shadow-sm';
+        quickViewGalleryBtn.className = 'px-3 py-1.5 rounded-lg text-xs font-semibold transition-all text-slate-400 hover:text-white flex items-center gap-1.5 cursor-pointer';
+      }
+    }
+
+    if (searchViewModeGalleryBtn && searchViewModeListBtn) {
+      if (isGallery) {
+        searchViewModeGalleryBtn.className = 'px-2 py-0.5 rounded-lg text-xs font-bold transition-all bg-nw-yellow text-black flex items-center gap-1 cursor-pointer';
+        searchViewModeListBtn.className = 'px-2 py-0.5 rounded-lg text-xs font-semibold transition-all text-slate-400 hover:text-white flex items-center gap-1 cursor-pointer';
+      } else {
+        searchViewModeListBtn.className = 'px-2 py-0.5 rounded-lg text-xs font-bold transition-all bg-nw-yellow text-black flex items-center gap-1 cursor-pointer';
+        searchViewModeGalleryBtn.className = 'px-2 py-0.5 rounded-lg text-xs font-semibold transition-all text-slate-400 hover:text-white flex items-center gap-1 cursor-pointer';
+      }
+    }
+  }
+
+  function setDisplayMode(mode) {
+    if (userSettings.displayMode === mode) return;
+    userSettings.displayMode = mode;
+    saveUserSettings();
+    updateViewModeButtons();
+    renderCatalog();
+    renderCommunitySearch();
+    if (simulator && typeof simulator.setSimulatorDisplayMode === 'function') {
+      simulator.setSimulatorDisplayMode(mode);
+    }
+  }
+
+  function applyUserSettings() {
+    // 1. Tooltips / raccourcis
+    document.body.classList.toggle('hide-tooltips', !userSettings.showTooltips);
+    if (settingTooltipsToggle) settingTooltipsToggle.checked = userSettings.showTooltips;
+
+    // 2. Thèmes & arrière-plan animé
+    const themeClasses = ['theme-sakura', 'theme-hacker', 'theme-bee', 'theme-mario', 'theme-gameboy'];
+    themeClasses.forEach(cls => document.body.classList.remove(cls));
+    if (userSettings.theme && userSettings.theme !== 'default') {
+      document.body.classList.add(`theme-${userSettings.theme}`);
+    }
+    if (typeof window.setThemeBg === 'function') {
+      window.setThemeBg(userSettings.theme);
+    }
+
+    // 3. Couleur personnalisée
+    if (userSettings.customColor) {
+      applyCustomColorVariables(userSettings.customColor);
+      const hexInput = document.getElementById('custom-color-hex');
+      const nativePicker = document.getElementById('native-color-picker');
+      const preview = document.getElementById('custom-color-preview');
+      if (hexInput) hexInput.value = userSettings.customColor.toUpperCase();
+      if (nativePicker) nativePicker.value = userSettings.customColor;
+      if (preview) preview.style.backgroundColor = userSettings.customColor;
+    }
+
+    // 4. Badges des thèmes
+    document.querySelectorAll('.theme-preset-btn').forEach(btn => {
+      const t = btn.getAttribute('data-theme');
+      if (t === userSettings.theme) {
+        btn.classList.add('ring-2', 'ring-amber-400', 'border-amber-400');
+      } else {
+        btn.classList.remove('ring-2', 'ring-amber-400', 'border-amber-400');
+      }
+    });
+
+    document.querySelectorAll('.quick-theme-pill').forEach(btn => {
+      const t = btn.getAttribute('data-theme');
+      if (t === userSettings.theme) {
+        btn.classList.add('ring-2', 'ring-amber-400', 'border-amber-400', 'bg-amber-500/20');
+        btn.classList.remove('bg-slate-950');
+      } else {
+        btn.classList.remove('ring-2', 'ring-amber-400', 'border-amber-400', 'bg-amber-500/20');
+        btn.classList.add('bg-slate-950');
+      }
+    });
+
+    if (simulator) {
+      if (typeof simulator.setSimulatorTheme === 'function') simulator.setSimulatorTheme(userSettings.theme);
+      if (typeof simulator.setSimulatorDisplayMode === 'function') simulator.setSimulatorDisplayMode(userSettings.displayMode);
+      if (typeof simulator.setSimulatorTooltips === 'function') simulator.setSimulatorTooltips(userSettings.showTooltips);
+    }
+
+    updateViewModeButtons();
+  }
+
+  function updateActiveAppDock(app) {
+    if (!app || !activeAppDock) return;
+    currentActiveDockApp = app;
+
+    activeAppDock.classList.remove('dock-hidden');
+    activeAppDock.classList.add('dock-visible');
+
+    if (dockAppIcon) {
+      dockAppIcon.textContent = app.icon_initial || '📦';
+      dockAppIcon.style.backgroundColor = app.color || '#F59E0B';
+    }
+    if (dockAppName) dockAppName.textContent = app.name;
+    if (dockAppBadge) dockAppBadge.textContent = app.format ? `.${app.format}` : '.BIN';
+    if (dockAppCat) dockAppCat.textContent = app.category || '';
+    if (dockAppDesc) dockAppDesc.textContent = app.description || 'Application optimisée pour NumWorks N0120.';
+
+    const isSelected = selectedApps.some(s => s.id === app.id);
+    if (dockActionBtn) {
+      if (isSelected) {
+        dockActionBtn.textContent = '✓ Inclus';
+        dockActionBtn.className = 'px-4 py-2 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-bold transition-all cursor-pointer';
+      } else {
+        dockActionBtn.textContent = '+ Ajouter';
+        dockActionBtn.className = 'px-4 py-2 rounded-xl bg-nw-yellow hover:bg-nw-yellowHover text-black text-xs font-extrabold transition-all shadow-md active:scale-95 cursor-pointer';
+      }
+    }
+  }
+
   // Simulateur virtuel NumWorks
   const simLed = document.getElementById('sim-led');
-  const simExamTag = document.getElementById('sim-exam-tag');
   const simTitle = document.getElementById('sim-title');
   const simMenu = document.getElementById('sim-menu');
-  const simPanicView = document.getElementById('sim-panic-view');
-  const simBtnExam = document.getElementById('sim-btn-exam');
-  const simBtnPanic = document.getElementById('sim-btn-panic');
-  let simExamActive = false;
-  let simPanicActive = false;
 
   let simulator = null;
   try {
@@ -239,6 +429,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.activeElement.blur();
       }
       closeAppDetails();
+      closeSettingsModal();
       if (webusbHelpModal) {
         webusbHelpModal.classList.add('hidden');
         webusbHelpModal.classList.remove('flex');
@@ -358,6 +549,325 @@ document.addEventListener('DOMContentLoaded', async () => {
     closeAppDetails();
   });
 
+  // ==================== CONTRÔLES DU MENU PARAMÈTRES & COULEUR ====================
+  function openSettingsModal() {
+    window.soundFx?.playClick();
+    applyUserSettings();
+    settingsModal?.classList.remove('hidden');
+    settingsModal?.classList.add('flex');
+  }
+
+  function closeSettingsModal() {
+    if (settingsModal && !settingsModal.classList.contains('hidden')) {
+      window.soundFx?.playClick();
+      settingsModal.classList.add('hidden');
+      settingsModal.classList.remove('flex');
+    }
+  }
+
+  settingsModalBtn?.addEventListener('click', openSettingsModal);
+  settingsCloseBtn?.addEventListener('click', closeSettingsModal);
+  settingsModal?.addEventListener('click', (e) => {
+    if (e.target === settingsModal) closeSettingsModal();
+  });
+
+  settingModeGallery?.addEventListener('click', () => {
+    window.soundFx?.playClick();
+    setDisplayMode('gallery');
+  });
+
+  settingModeList?.addEventListener('click', () => {
+    window.soundFx?.playClick();
+    setDisplayMode('list');
+  });
+
+  viewModeGalleryBtn?.addEventListener('click', () => {
+    window.soundFx?.playClick();
+    setDisplayMode('gallery');
+  });
+
+  viewModeListBtn?.addEventListener('click', () => {
+    window.soundFx?.playClick();
+    setDisplayMode('list');
+  });
+
+  searchViewModeGalleryBtn?.addEventListener('click', () => {
+    window.soundFx?.playClick();
+    setDisplayMode('gallery');
+  });
+
+  searchViewModeListBtn?.addEventListener('click', () => {
+    window.soundFx?.playClick();
+    setDisplayMode('list');
+  });
+
+  settingTooltipsToggle?.addEventListener('change', (e) => {
+    window.soundFx?.playClick();
+    userSettings.showTooltips = e.target.checked;
+    document.body.classList.toggle('hide-tooltips', !userSettings.showTooltips);
+    saveUserSettings();
+    showToast(userSettings.showTooltips ? 'Affichage des raccourcis et bulles activé' : 'Raccourcis et bulles d\'aide masqués', 'info');
+  });
+
+  // Gestion des 6 presets de thèmes
+  const THEME_PRESET_COLORS = {
+    sakura: '#f472b6',
+    hacker: '#38bdf8',
+    bee: '#fbbf24',
+    mario: '#ef4444',
+    gameboy: '#9bbc0f',
+    default: '#f59e0b'
+  };
+
+  window.setAppTheme = function(themeKey) {
+    userSettings.theme = themeKey;
+    if (THEME_PRESET_COLORS[themeKey]) {
+      userSettings.customColor = THEME_PRESET_COLORS[themeKey];
+    }
+    applyUserSettings();
+    saveUserSettings();
+    showToast(`Thème « ${themeKey.toUpperCase()} » activé !`, 'success');
+  };
+
+  document.querySelectorAll('.theme-preset-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      window.soundFx?.playClick();
+      const themeKey = btn.getAttribute('data-theme') || 'default';
+      window.setAppTheme(themeKey);
+    });
+  });
+
+  document.querySelectorAll('.quick-theme-pill').forEach(btn => {
+    btn.addEventListener('click', () => {
+      window.soundFx?.playClick();
+      const themeKey = btn.getAttribute('data-theme') || 'default';
+      window.setAppTheme(themeKey);
+    });
+  });
+
+  navSettingsBtn?.addEventListener('click', openSettingsModal);
+  quickSettingsBtn?.addEventListener('click', openSettingsModal);
+  quickViewGalleryBtn?.addEventListener('click', () => {
+    window.soundFx?.playClick();
+    setDisplayMode('gallery');
+  });
+  quickViewListBtn?.addEventListener('click', () => {
+    window.soundFx?.playClick();
+    setDisplayMode('list');
+  });
+  simBtnSettings?.addEventListener('click', () => {
+    window.soundFx?.playClick();
+    if (simulator && typeof simulator.launchApp === 'function') {
+      simulator.launchApp('SETTINGS');
+    } else {
+      openSettingsModal();
+    }
+  });
+  simDpadSettings?.addEventListener('click', () => {
+    window.soundFx?.playClick();
+    if (simulator && typeof simulator.launchApp === 'function') {
+      simulator.launchApp('SETTINGS');
+    } else {
+      openSettingsModal();
+    }
+  });
+
+  // Initialisation et gestion de la roue chromatique interactive
+  function initColorWheel() {
+    const canvas = document.getElementById('color-wheel-canvas');
+    const picker = document.getElementById('color-wheel-picker');
+    const preview = document.getElementById('custom-color-preview');
+    const hexInput = document.getElementById('custom-color-hex');
+    const nativePicker = document.getElementById('native-color-picker');
+    const applyBtn = document.getElementById('apply-custom-color-btn');
+
+    if (!canvas || !picker) return;
+    const ctx = canvas.getContext('2d');
+    const size = canvas.width;
+    const center = size / 2;
+    const radius = center - 4;
+
+    function drawWheel() {
+      ctx.clearRect(0, 0, size, size);
+      for (let angle = 0; angle < 360; angle += 1) {
+        const startAngle = (angle - 0.5) * Math.PI / 180;
+        const endAngle = (angle + 1.5) * Math.PI / 180;
+        ctx.beginPath();
+        ctx.moveTo(center, center);
+        ctx.arc(center, center, radius, startAngle, endAngle);
+        ctx.closePath();
+
+        const radGrad = ctx.createRadialGradient(center, center, 0, center, center, radius);
+        radGrad.addColorStop(0, '#ffffff');
+        radGrad.addColorStop(1, `hsl(${angle}, 100%, 50%)`);
+        ctx.fillStyle = radGrad;
+        ctx.fill();
+      }
+    }
+    drawWheel();
+
+    function hsvToHex(h, s, v) {
+      let r, g, b;
+      const i = Math.floor(h / 60) % 6;
+      const f = (h / 60) - Math.floor(h / 60);
+      const p = v * (1 - s);
+      const q = v * (1 - f * s);
+      const t = v * (1 - (1 - f) * s);
+      switch (i) {
+        case 0: r = v; g = t; b = p; break;
+        case 1: r = q; g = v; b = p; break;
+        case 2: r = p; g = v; b = t; break;
+        case 3: r = p; g = q; b = v; break;
+        case 4: r = t; g = p; b = v; break;
+        case 5: r = v; g = p; b = q; break;
+      }
+      const toHex = (n) => Math.round(n * 255).toString(16).padStart(2, '0');
+      return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+    }
+
+    function pickColorAt(clientX, clientY) {
+      const rect = canvas.getBoundingClientRect();
+      const x = clientX - rect.left;
+      const y = clientY - rect.top;
+      const dx = x - center;
+      const dy = y - center;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      const clampedDist = Math.min(dist, radius);
+      const angle = ((Math.atan2(dy, dx) * 180 / Math.PI) + 360) % 360;
+      const sat = clampedDist / radius;
+      const hex = hsvToHex(angle, sat, 1.0);
+
+      const thumbX = center + (dx / (dist || 1)) * clampedDist;
+      const thumbY = center + (dy / (dist || 1)) * clampedDist;
+      picker.style.left = `${thumbX}px`;
+      picker.style.top = `${thumbY}px`;
+
+      if (preview) preview.style.backgroundColor = hex;
+      if (hexInput) hexInput.value = hex.toUpperCase();
+      if (nativePicker) nativePicker.value = hex;
+      userSettings.customColor = hex;
+      applyCustomColorVariables(hex);
+    }
+
+    let isDragging = false;
+    canvas.addEventListener('mousedown', (e) => {
+      isDragging = true;
+      pickColorAt(e.clientX, e.clientY);
+    });
+    window.addEventListener('mousemove', (e) => {
+      if (isDragging) pickColorAt(e.clientX, e.clientY);
+    });
+    window.addEventListener('mouseup', () => {
+      isDragging = false;
+    });
+
+    canvas.addEventListener('touchstart', (e) => {
+      if (e.touches.length > 0) {
+        isDragging = true;
+        pickColorAt(e.touches[0].clientX, e.touches[0].clientY);
+      }
+    }, { passive: true });
+    window.addEventListener('touchmove', (e) => {
+      if (isDragging && e.touches.length > 0) {
+        pickColorAt(e.touches[0].clientX, e.touches[0].clientY);
+      }
+    }, { passive: true });
+    window.addEventListener('touchend', () => {
+      isDragging = false;
+    });
+
+    if (hexInput) {
+      hexInput.addEventListener('input', (e) => {
+        let val = e.target.value.trim();
+        if (!val.startsWith('#')) val = '#' + val;
+        if (/^#[0-9a-fA-F]{6}$/i.test(val)) {
+          userSettings.customColor = val;
+          if (preview) preview.style.backgroundColor = val;
+          if (nativePicker) nativePicker.value = val;
+          applyCustomColorVariables(val);
+        }
+      });
+    }
+
+    if (nativePicker) {
+      nativePicker.addEventListener('input', (e) => {
+        const val = e.target.value;
+        userSettings.customColor = val;
+        if (hexInput) hexInput.value = val.toUpperCase();
+        if (preview) preview.style.backgroundColor = val;
+        applyCustomColorVariables(val);
+      });
+    }
+
+    if (applyBtn) {
+      applyBtn.addEventListener('click', () => {
+        window.soundFx?.playClick();
+        applyCustomColorVariables(userSettings.customColor);
+        saveUserSettings();
+        showToast(`✓ Couleur personnalisée (${userSettings.customColor}) appliquée !`, 'success');
+      });
+    }
+  }
+
+  settingsSaveBtn?.addEventListener('click', () => {
+    window.soundFx?.playSuccess();
+    saveUserSettings();
+    closeSettingsModal();
+    showToast('✓ Vos préférences d\'affichage ont été enregistrées !', 'success');
+  });
+
+  settingsResetBtn?.addEventListener('click', () => {
+    window.soundFx?.playClick();
+    userSettings = {
+      displayMode: 'gallery',
+      showTooltips: true,
+      theme: 'default',
+      customColor: '#f59e0b'
+    };
+    document.documentElement.style.removeProperty('--theme-primary');
+    document.documentElement.style.removeProperty('--theme-border');
+    applyUserSettings();
+    saveUserSettings();
+    renderCatalog();
+    renderCommunitySearch();
+    showToast('Paramètres réinitialisés aux valeurs d\'origine.', 'info');
+  });
+
+  // Boutons du Dock d'Application Active
+  if (dockActionBtn) {
+    dockActionBtn.addEventListener('click', () => {
+      if (!currentActiveDockApp) return;
+      const isSelected = selectedApps.some(s => s.id === currentActiveDockApp.id);
+      if (isSelected) {
+        const idx = selectedApps.findIndex(s => s.id === currentActiveDockApp.id);
+        if (idx !== -1) {
+          selectedApps.splice(idx, 1);
+          window.soundFx?.playHit();
+          showToast(`"${currentActiveDockApp.name}" retiré du pack`, 'info');
+        }
+      } else {
+        addAppToSelection(currentActiveDockApp);
+      }
+      updateUI();
+      renderCatalog();
+      renderCommunitySearch();
+      updateActiveAppDock(currentActiveDockApp);
+    });
+  }
+
+  if (dockTestBtn) {
+    dockTestBtn.addEventListener('click', () => {
+      if (!currentActiveDockApp) return;
+      window.soundFx?.playClick();
+      if (simulator && typeof simulator.launchApp === 'function') {
+        simulator.launchApp(currentActiveDockApp.id);
+        showToast(`🎮 Lancement de "${currentActiveDockApp.name}" dans le simulateur`, 'info');
+      } else {
+        openAppDetails(currentActiveDockApp);
+      }
+    });
+  }
+
   // ==================== GESTION DES ONGLETS ====================
   function switchTab(target) {
     window.soundFx?.playClick();
@@ -386,44 +896,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   tabBtnSearch.addEventListener('click', () => switchTab('search'));
   tabBtnImport.addEventListener('click', () => switchTab('import'));
 
-  // ==================== SIMULATEUR VIRTUEL ====================
-  if (simBtnExam) {
-    simBtnExam.addEventListener('click', () => {
-      simExamActive = !simExamActive;
-      if (simExamActive) {
-        simLed.classList.add('animate-led');
-        simLed.classList.remove('bg-red-600/20');
-        simLed.classList.add('bg-red-500');
-        simExamTag.classList.remove('hidden');
-        simBtnExam.classList.add('bg-red-500/20', 'text-red-300', 'border-red-500/40');
-        showToast('LED Mode Examen active (clignotement 1 Hz)', 'info');
-      } else {
-        simLed.classList.remove('animate-led');
-        simLed.classList.remove('bg-red-500');
-        simLed.classList.add('bg-red-600/20');
-        simExamTag.classList.add('hidden');
-        simBtnExam.classList.remove('bg-red-500/20', 'text-red-300', 'border-red-500/40');
-      }
-    });
-  }
-
-  if (simBtnPanic) {
-    simBtnPanic.addEventListener('click', () => {
-      simPanicActive = !simPanicActive;
-      if (simPanicActive) {
-        simMenu.classList.add('hidden');
-        simPanicView.classList.remove('hidden');
-        simTitle.textContent = 'Calculs [EXAMEN]';
-        simBtnPanic.classList.add('bg-amber-500/20', 'text-amber-300', 'border-amber-500/40');
-        showToast('Mode Panique actif : fausse calculatrice avec [EXAMEN ACTIF]', 'warning');
-      } else {
-        simMenu.classList.remove('hidden');
-        simPanicView.classList.add('hidden');
-        simTitle.textContent = 'EquaLib - Hub N0120';
-        simBtnPanic.classList.remove('bg-amber-500/20', 'text-amber-300', 'border-amber-500/40');
-      }
-    });
-  }
 
   // ==================== FILTRES PAR CATÉGORIE DU CATALOGUE ====================
   const catPills = document.querySelectorAll('.cat-pill');
@@ -520,13 +992,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   if (presetBacBtn) {
     presetBacBtn.addEventListener('click', () => {
-      const bacIds = ['periodique', 'fiches', 'math_solver', 'stealth_calc'];
+      const bacIds = ['periodique', 'fiches', 'math_solver'];
       selectedApps = catalogApps.filter(a => bacIds.includes(a.id)).map(a => ({...a}));
       window.soundFx?.playSuccess();
       updateUI();
       renderCatalog();
       renderCommunitySearch();
-      showToast('🎓 Pack Bac & Sup appliqué (Tableau, Fiches, Solveur, Furtif) !', 'success');
+      showToast('🎓 Pack Bac & Sup appliqué (Tableau, Fiches, Solveur) !', 'success');
     });
   }
 
@@ -629,6 +1101,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     const defaults = catalogApps.filter(a => a.recommended);
     defaults.forEach(a => addAppToSelection(a));
 
+    if (catalogApps.length > 0) {
+      updateActiveAppDock(catalogApps[0]);
+    }
+
+    // Initialisation des paramètres visuels & roue chromatique
+    applyUserSettings();
+    initColorWheel();
+
     // Vérification d'une application envoyée depuis converter.html
     const pendingAppStr = sessionStorage.getItem('equalib_imported_app');
     if (pendingAppStr) {
@@ -669,6 +1149,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   // ==================== RENDU DU CATALOGUE PRINCIPAL ====================
   function renderCatalog() {
     catalogList.innerHTML = '';
+    const isGallery = (userSettings.displayMode === 'gallery');
+    catalogList.className = isGallery ? 'gallery-grid' : 'space-y-2.5';
     
     const filtered = catalogApps.filter(app => {
       const matchCat = (activeCategory === 'ALL') || 
@@ -706,7 +1188,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (filtered.length === 0) {
       catalogList.innerHTML = `
-        <div class="text-center py-8 bg-slate-900/60 rounded-2xl border border-slate-800 space-y-2">
+        <div class="col-span-full text-center py-8 bg-slate-900/60 rounded-2xl border border-slate-800 space-y-2">
           <div class="text-2xl">🔍</div>
           <p class="text-xs font-semibold text-slate-300">Aucune application trouvée pour « ${catalogSearchText} »</p>
           <p class="text-[11px] text-slate-500">Essayez un autre mot-clé ou effacez la recherche.</p>
@@ -717,65 +1199,150 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     filtered.forEach(app => {
       const isSelected = selectedApps.some(s => s.id === app.id);
-      const card = document.createElement('div');
-      card.className = `hover-lift p-4 rounded-2xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
-        isSelected 
-          ? 'bg-slate-900 border-amber-500/50 ring-1 ring-amber-500/20' 
-          : 'bg-slate-900 border-slate-800 hover:border-slate-700'
-      }`;
 
-      card.innerHTML = `
-        <div class="flex items-center gap-3.5 min-w-0 cursor-pointer app-info-trigger flex-1" title="Cliquez pour afficher les commandes et détails">
-          <div class="w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl text-white shadow-md shrink-0 hover:scale-105 transition-transform" style="background-color: ${app.color || '#F59E0B'}">
+      if (isGallery) {
+        const card = document.createElement('div');
+        card.className = `gallery-card ${isSelected ? 'is-selected' : ''}`;
+        card.setAttribute('data-app-id', app.id);
+        card.setAttribute('tabindex', '0');
+
+        card.innerHTML = `
+          <div class="w-full flex items-center justify-between text-[10px] pointer-events-none">
+            <span class="px-1.5 py-0.5 rounded-md bg-slate-900/90 border border-slate-700/80 font-mono font-bold text-amber-300">.${app.format || 'BIN'}</span>
+            <span class="px-1.5 py-0.5 rounded-md bg-slate-900/80 text-slate-400 text-[9px] truncate max-w-[85px]">${app.category}</span>
+          </div>
+
+          <div class="gallery-icon-wrapper" style="background-color: ${app.color || '#F59E0B'}">
             ${app.icon_initial || '📦'}
           </div>
-          <div class="space-y-0.5 min-w-0 flex-1">
-            <div class="flex items-center gap-2 flex-wrap">
-              <h4 class="font-bold text-slate-100 text-sm hover:text-amber-300 transition-colors">${app.name}</h4>
-              <span class="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 border border-slate-700 text-slate-300 font-semibold">${app.category}</span>
-            </div>
-            <p class="text-xs text-slate-400 line-clamp-1 leading-normal">${app.description}</p>
-            <div class="text-[11px] text-slate-500 font-mono flex items-center gap-2">
-              <span>${app.size_kb} Ko</span>
-              <span>•</span>
-              <span>v${app.version}</span>
-              <span>•</span>
-              <span class="text-slate-400">${app.author}</span>
-            </div>
+
+          <div class="w-full text-center space-y-0.5 px-1 pointer-events-none">
+            <h4 class="font-bold text-white text-xs truncate" title="${app.name}">${app.name}</h4>
+            <p class="text-[10px] text-slate-400 truncate font-mono">${app.size_kb} Ko • ${app.author || 'EquaLib'}</p>
           </div>
-        </div>
-        <div class="flex items-center gap-2 shrink-0">
-          <button class="info-btn p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white text-xs transition-all cursor-pointer" title="Voir les contrôles et touches NumWorks">
-            ℹ️
-          </button>
-          <button class="add-btn px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 ${
-            isSelected 
-              ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 cursor-default' 
-              : 'bg-nw-yellow hover:bg-nw-yellowHover text-black shadow-md shadow-amber-500/10 active:scale-95 cursor-pointer'
-          }">
-            ${isSelected ? '✓ Inclus' : '+ Ajouter'}
-          </button>
-        </div>
-      `;
 
-      // Clic pour ouvrir la modale détaillée
-      card.querySelector('.app-info-trigger')?.addEventListener('click', () => openAppDetails(app));
-      card.querySelector('.info-btn')?.addEventListener('click', (e) => {
-        e.stopPropagation();
-        openAppDetails(app);
-      });
+          <div class="w-full pt-1.5 border-t border-slate-800/80 flex items-center justify-between gap-1">
+            <button class="gallery-info-btn p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 text-[11px] transition-all cursor-pointer" title="Détails & Touches">
+              ℹ️
+            </button>
+            <button class="gallery-add-btn flex-1 py-1 px-2 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
+              isSelected 
+                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' 
+                : 'bg-nw-yellow hover:bg-nw-yellowHover text-black active:scale-95'
+            }">
+              ${isSelected ? '✓ Inclus' : '+ Ajouter'}
+            </button>
+          </div>
+        `;
 
-      const btn = card.querySelector('.add-btn');
-      if (!isSelected) {
-        btn.addEventListener('click', (e) => {
+        card.addEventListener('mouseenter', () => updateActiveAppDock(app));
+        card.addEventListener('focus', () => updateActiveAppDock(app));
+        card.addEventListener('click', (e) => {
+          if (e.target.closest('.gallery-add-btn') || e.target.closest('.gallery-info-btn')) return;
+          updateActiveAppDock(app);
+        });
+        card.addEventListener('dblclick', () => openAppDetails(app));
+
+        card.querySelector('.gallery-info-btn')?.addEventListener('click', (e) => {
           e.stopPropagation();
-          addAppToSelection(app);
+          updateActiveAppDock(app);
+          openAppDetails(app);
+        });
+
+        card.querySelector('.gallery-add-btn')?.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (isSelected) {
+            const idx = selectedApps.findIndex(s => s.id === app.id);
+            if (idx !== -1) {
+              selectedApps.splice(idx, 1);
+              window.soundFx?.playHit();
+              showToast(`"${app.name}" retiré du pack`, 'info');
+            }
+          } else {
+            addAppToSelection(app);
+          }
+          updateUI();
           renderCatalog();
           renderCommunitySearch();
+          updateActiveAppDock(app);
         });
-      }
 
-      catalogList.appendChild(card);
+        catalogList.appendChild(card);
+      } else {
+        const card = document.createElement('div');
+        card.className = `hover-lift p-4 rounded-2xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+          isSelected 
+            ? 'bg-slate-900 border-amber-500/50 ring-1 ring-amber-500/20' 
+            : 'bg-slate-900 border-slate-800 hover:border-slate-700'
+        }`;
+
+        card.innerHTML = `
+          <div class="flex items-center gap-3.5 min-w-0 cursor-pointer app-info-trigger flex-1" title="Cliquez pour afficher les commandes et détails">
+            <div class="w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl text-white shadow-md shrink-0 hover:scale-105 transition-transform" style="background-color: ${app.color || '#F59E0B'}">
+              ${app.icon_initial || '📦'}
+            </div>
+            <div class="space-y-0.5 min-w-0 flex-1">
+              <div class="flex items-center gap-2 flex-wrap">
+                <h4 class="font-bold text-slate-100 text-sm hover:text-amber-300 transition-colors">${app.name}</h4>
+                <span class="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 border border-slate-700 text-slate-300 font-semibold">${app.category}</span>
+              </div>
+              <p class="text-xs text-slate-400 line-clamp-1 leading-normal">${app.description}</p>
+              <div class="text-[11px] text-slate-500 font-mono flex items-center gap-2">
+                <span>${app.size_kb} Ko</span>
+                <span>•</span>
+                <span>v${app.version}</span>
+                <span>•</span>
+                <span class="text-slate-400">${app.author}</span>
+              </div>
+            </div>
+          </div>
+          <div class="flex items-center gap-2 shrink-0">
+            <button class="info-btn p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white text-xs transition-all cursor-pointer" title="Voir les contrôles et touches NumWorks">
+              ℹ️
+            </button>
+            <button class="add-btn px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 ${
+              isSelected 
+                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 cursor-default' 
+                : 'bg-nw-yellow hover:bg-nw-yellowHover text-black shadow-md shadow-amber-500/10 active:scale-95 cursor-pointer'
+            }">
+              ${isSelected ? '✓ Inclus' : '+ Ajouter'}
+            </button>
+          </div>
+        `;
+
+        card.addEventListener('mouseenter', () => updateActiveAppDock(app));
+        card.addEventListener('focus', () => updateActiveAppDock(app));
+        card.querySelector('.app-info-trigger')?.addEventListener('click', () => {
+          updateActiveAppDock(app);
+          openAppDetails(app);
+        });
+        card.querySelector('.info-btn')?.addEventListener('click', (e) => {
+          e.stopPropagation();
+          updateActiveAppDock(app);
+          openAppDetails(app);
+        });
+
+        const btn = card.querySelector('.add-btn');
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (isSelected) {
+            const idx = selectedApps.findIndex(s => s.id === app.id);
+            if (idx !== -1) {
+              selectedApps.splice(idx, 1);
+              window.soundFx?.playHit();
+              showToast(`"${app.name}" retiré du pack`, 'info');
+            }
+          } else {
+            addAppToSelection(app);
+          }
+          updateUI();
+          renderCatalog();
+          renderCommunitySearch();
+          updateActiveAppDock(app);
+        });
+
+        catalogList.appendChild(card);
+      }
     });
   }
 
@@ -783,6 +1350,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   function renderCommunitySearch() {
     if (!searchResultsList) return;
     searchResultsList.innerHTML = '';
+    const isGallery = (userSettings.displayMode === 'gallery');
+    searchResultsList.className = isGallery ? 'gallery-grid' : 'space-y-2.5';
 
     const query = searchQuery.trim().toLowerCase();
     const filtered = communityApps.filter(app => {
@@ -801,7 +1370,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (filtered.length === 0) {
       searchResultsList.innerHTML = `
-        <div class="text-center py-10 bg-slate-900/40 rounded-2xl border border-slate-800 space-y-2">
+        <div class="col-span-full text-center py-10 bg-slate-900/40 rounded-2xl border border-slate-800 space-y-2">
           <div class="text-3xl">🔍</div>
           <p class="text-sm font-semibold text-slate-300">Aucun résultat trouvé pour « ${searchQuery} »</p>
           <p class="text-xs text-slate-500">Essayez avec un mot-clé comme <em>Flappy, Snake, 2048, Bac, Matrices</em> ou importez un fichier .nws direct.</p>
@@ -812,67 +1381,145 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     filtered.forEach(app => {
       const isSelected = selectedApps.some(s => s.id === app.id);
-      const card = document.createElement('div');
-      card.className = `p-4 rounded-2xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
-        isSelected 
-          ? 'bg-slate-900 border-amber-500/50 ring-1 ring-amber-500/20' 
-          : 'bg-slate-900 border-slate-800 hover:border-slate-700'
-      }`;
 
-      card.innerHTML = `
-        <div class="flex items-center gap-3.5">
-          <div class="w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl text-white shadow-md shrink-0" style="background-color: ${app.color || '#3B82F6'}">
+      if (isGallery) {
+        const card = document.createElement('div');
+        card.className = `gallery-card ${isSelected ? 'is-selected' : ''}`;
+        card.setAttribute('data-app-id', app.id);
+        card.setAttribute('tabindex', '0');
+
+        card.innerHTML = `
+          <div class="w-full flex items-center justify-between text-[10px] pointer-events-none">
+            <span class="px-1.5 py-0.5 rounded-md bg-amber-500/10 text-nw-yellow border border-amber-500/20 font-mono font-bold">.${app.format || 'NWS'}</span>
+            <span class="px-1.5 py-0.5 rounded-md bg-slate-900/80 text-slate-400 text-[9px] truncate max-w-[85px]">${app.category}</span>
+          </div>
+
+          <div class="gallery-icon-wrapper" style="background-color: ${app.color || '#3B82F6'}">
             ${app.icon_initial || '🌐'}
           </div>
-          <div class="space-y-0.5">
-            <div class="flex items-center gap-2 flex-wrap">
-              <h4 class="font-bold text-slate-100 text-sm">${app.name}</h4>
-              <span class="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/10 text-nw-yellow border border-amber-500/20 font-bold font-mono">
-                .${app.format || 'NWS'}
-              </span>
-              <span class="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 border border-slate-700 text-slate-400">
-                ${app.source || 'Communauté'}
-              </span>
+
+          <div class="w-full text-center space-y-0.5 px-1 pointer-events-none">
+            <h4 class="font-bold text-white text-xs truncate" title="${app.name}">${app.name}</h4>
+            <p class="text-[10px] text-slate-400 truncate font-mono">${app.size_kb} Ko • ${app.author || 'Communauté'}</p>
+          </div>
+
+          <div class="w-full pt-1.5 border-t border-slate-800/80 flex items-center justify-between gap-1">
+            <button class="gallery-info-btn p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 text-[11px] transition-all cursor-pointer" title="Détails">
+              ℹ️
+            </button>
+            <button class="gallery-dl-btn flex-1 py-1 px-2 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
+              isSelected 
+                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 cursor-default' 
+                : 'bg-emerald-500 hover:bg-emerald-400 text-black active:scale-95'
+            }">
+              ${isSelected ? '✓ Inclus' : '+ Pack'}
+            </button>
+          </div>
+        `;
+
+        card.addEventListener('mouseenter', () => updateActiveAppDock(app));
+        card.addEventListener('focus', () => updateActiveAppDock(app));
+        card.addEventListener('click', (e) => {
+          if (e.target.closest('.gallery-dl-btn') || e.target.closest('.gallery-info-btn')) return;
+          updateActiveAppDock(app);
+        });
+
+        card.querySelector('.gallery-info-btn')?.addEventListener('click', (e) => {
+          e.stopPropagation();
+          updateActiveAppDock(app);
+          openAppDetails(app);
+        });
+
+        const btn = card.querySelector('.gallery-dl-btn');
+        if (!isSelected) {
+          btn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            btn.innerHTML = `<span class="inline-block animate-spin mr-1">⏳</span>...`;
+            btn.disabled = true;
+            try {
+              await downloadAndAddCommunityApp(app);
+              renderCatalog();
+              renderCommunitySearch();
+              updateActiveAppDock(app);
+            } catch (err) {
+              btn.innerHTML = '+ Pack';
+              btn.disabled = false;
+              showToast(`Erreur téléchargement : ${err.message}`, 'error');
+            }
+          });
+        }
+
+        searchResultsList.appendChild(card);
+      } else {
+        const card = document.createElement('div');
+        card.className = `p-4 rounded-2xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+          isSelected 
+            ? 'bg-slate-900 border-amber-500/50 ring-1 ring-amber-500/20' 
+            : 'bg-slate-900 border-slate-800 hover:border-slate-700'
+        }`;
+
+        card.innerHTML = `
+          <div class="flex items-center gap-3.5 flex-1 min-w-0 cursor-pointer app-info-trigger">
+            <div class="w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl text-white shadow-md shrink-0" style="background-color: ${app.color || '#3B82F6'}">
+              ${app.icon_initial || '🌐'}
             </div>
-            <p class="text-xs text-slate-400 line-clamp-1 leading-normal">${app.description}</p>
-            <div class="text-[11px] text-slate-500 font-mono flex items-center gap-2">
-              <span>${app.size_kb} Ko</span>
-              <span>•</span>
-              <span>${app.category}</span>
-              <span>•</span>
-              <span class="text-slate-400">par ${app.author}</span>
+            <div class="space-y-0.5 flex-1 min-w-0">
+              <div class="flex items-center gap-2 flex-wrap">
+                <h4 class="font-bold text-slate-100 text-sm hover:text-amber-300 transition-colors">${app.name}</h4>
+                <span class="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/10 text-nw-yellow border border-amber-500/20 font-bold font-mono">
+                  .${app.format || 'NWS'}
+                </span>
+                <span class="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 border border-slate-700 text-slate-400">
+                  ${app.source || 'Communauté'}
+                </span>
+              </div>
+              <p class="text-xs text-slate-400 line-clamp-1 leading-normal">${app.description}</p>
+              <div class="text-[11px] text-slate-500 font-mono flex items-center gap-2">
+                <span>${app.size_kb} Ko</span>
+                <span>•</span>
+                <span>${app.category}</span>
+                <span>•</span>
+                <span class="text-slate-400">par ${app.author}</span>
+              </div>
             </div>
           </div>
-        </div>
-        <button class="dl-app-btn px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 ${
-          isSelected 
-            ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 cursor-default' 
-            : 'bg-emerald-500 hover:bg-emerald-400 text-black shadow-md shadow-emerald-500/20 active:scale-95'
-        }">
-          ${isSelected ? '✓ Dans mon Pack' : '⬇️ Ajouter au Pack'}
-        </button>
-      `;
+          <button class="dl-app-btn px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 ${
+            isSelected 
+              ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 cursor-default' 
+              : 'bg-emerald-500 hover:bg-emerald-400 text-black shadow-md shadow-emerald-500/20 active:scale-95 cursor-pointer'
+          }">
+            ${isSelected ? '✓ Dans mon Pack' : '⬇️ Ajouter au Pack'}
+          </button>
+        `;
 
-      const btn = card.querySelector('.dl-app-btn');
-      if (!isSelected) {
-        btn.addEventListener('click', async () => {
-          btn.innerHTML = `<span class="inline-block animate-spin mr-1">⏳</span> Téléchargement...`;
-          btn.disabled = true;
-
-          try {
-            await downloadAndAddCommunityApp(app);
-            btn.innerHTML = '✓ Dans mon Pack';
-            btn.className = 'dl-app-btn px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 cursor-default';
-            renderCatalog();
-          } catch (err) {
-            btn.innerHTML = '⬇️ Réessayer';
-            btn.disabled = false;
-            showToast(`Erreur lors du téléchargement : ${err.message}`, 'error');
-          }
+        card.addEventListener('mouseenter', () => updateActiveAppDock(app));
+        card.addEventListener('focus', () => updateActiveAppDock(app));
+        card.querySelector('.app-info-trigger')?.addEventListener('click', () => {
+          updateActiveAppDock(app);
+          openAppDetails(app);
         });
-      }
 
-      searchResultsList.appendChild(card);
+        const btn = card.querySelector('.dl-app-btn');
+        if (!isSelected) {
+          btn.addEventListener('click', async () => {
+            btn.innerHTML = `<span class="inline-block animate-spin mr-1">⏳</span> Téléchargement...`;
+            btn.disabled = true;
+
+            try {
+              await downloadAndAddCommunityApp(app);
+              renderCatalog();
+              renderCommunitySearch();
+              updateActiveAppDock(app);
+            } catch (err) {
+              btn.innerHTML = '⬇️ Réessayer';
+              btn.disabled = false;
+              showToast(`Erreur lors du téléchargement : ${err.message}`, 'error');
+            }
+          });
+        }
+
+        searchResultsList.appendChild(card);
+      }
     });
   }
 
@@ -1144,6 +1791,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderSelection();
     updateMemoryUsage();
     simulator?.updatePack(selectedApps);
+    if (currentActiveDockApp) {
+      updateActiveAppDock(currentActiveDockApp);
+    }
   }
 
   // ==================== GLISSER-DÉPOSER LOCAL ====================

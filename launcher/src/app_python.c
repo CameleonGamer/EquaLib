@@ -59,7 +59,6 @@ typedef struct {
     bool should_continue;
     bool should_return;
     py_val_t return_val;
-    bool panic_triggered;
     bool exit_requested;
 } py_vm_t;
 
@@ -125,7 +124,6 @@ static void vm_init(void) {
     s_vm.should_break = false;
     s_vm.should_continue = false;
     s_vm.should_return = false;
-    s_vm.panic_triggered = false;
     s_vm.exit_requested = false;
     s_vm.return_val.type = PY_NONE;
 }
@@ -334,9 +332,6 @@ static py_val_t call_builtin(const char* name, const char* arg_str) {
         int k = val_to_int(args[0]);
         eadk_keyboard_state_t state = eadk_keyboard_scan();
 
-        if (eadk_keyboard_key_down(state, eadk_key_var)) {
-            s_vm.panic_triggered = true;
-        }
         if (eadk_keyboard_key_down(state, eadk_key_home) || eadk_keyboard_key_down(state, eadk_key_on_off)) {
             s_vm.exit_requested = true;
         }
@@ -352,17 +347,13 @@ static py_val_t call_builtin(const char* name, const char* arg_str) {
         uint32_t ms = (uint32_t)(sec * 1000.0f);
         if (ms == 0) ms = 10;
         uint32_t slept = 0;
-        while (slept < ms && !s_vm.exit_requested && !s_vm.panic_triggered) {
+        while (slept < ms && !s_vm.exit_requested) {
             uint32_t chunk = (ms - slept > 15) ? 15 : (ms - slept);
             eadk_timing_msleep(chunk);
             slept += chunk;
             eadk_keyboard_state_t st = eadk_keyboard_scan();
             if (eadk_keyboard_key_down(st, eadk_key_home) || eadk_keyboard_key_down(st, eadk_key_on_off)) {
                 s_vm.exit_requested = true;
-                break;
-            }
-            if (eadk_keyboard_key_down(st, eadk_key_var)) {
-                s_vm.panic_triggered = true;
                 break;
             }
         }
@@ -793,18 +784,13 @@ static void run_script_engine(const char* script_code, uint32_t script_len) {
     char cur_buf[128];
     uint64_t last_check_ms = eadk_timing_millis();
 
-    while (cur_line < s_line_count && !s_vm.exit_requested && !s_vm.panic_triggered) {
+    while (cur_line < s_line_count && !s_vm.exit_requested) {
         uint64_t now = eadk_timing_millis();
         if (now - last_check_ms >= 30) {
             last_check_ms = now;
             eadk_keyboard_state_t kbd = eadk_keyboard_scan();
             if (eadk_keyboard_key_down(kbd, eadk_key_home) || eadk_keyboard_key_down(kbd, eadk_key_on_off)) {
                 break;
-            }
-            if (eadk_keyboard_key_down(kbd, eadk_key_var)) {
-                run_panic_calculator();
-                while (eadk_keyboard_scan() != 0) eadk_timing_msleep(20);
-                continue;
             }
             if (eadk_keyboard_key_down(kbd, eadk_key_back) && !s_has_graphics) {
                 break;
@@ -892,7 +878,7 @@ static void run_script_engine(const char* script_code, uint32_t script_len) {
                 cond_p = skip_ws(cur_buf) + 6;
                 cond = eval_expr(&cond_p);
                 is_true = (cond.type == PY_BOOL) ? cond.u.b : (val_to_int(cond) != 0);
-                if (!is_true || s_vm.exit_requested || s_vm.panic_triggered) break;
+                if (!is_true || s_vm.exit_requested) break;
 
                 s_vm.should_break = false;
                 s_vm.should_continue = false;
@@ -959,7 +945,7 @@ void run_python_app(const char* title, const char* script_code, uint32_t script_
     eadk_rect_t bottom = {0, EADK_SCREEN_HEIGHT - 16, EADK_SCREEN_WIDTH, 16};
     eadk_display_push_rect_uniform(bottom, eadk_color_white);
     eadk_point_t pt_help = {8, EADK_SCREEN_HEIGHT - 13};
-    eq_display_draw_string("BACK: Quitter vers Hub  |  Var: Furtif Panique", pt_help, false, 0x4208, eadk_color_white);
+    eq_display_draw_string("BACK: Quitter vers Hub  |  OK: Valider", pt_help, false, 0x4208, eadk_color_white);
 
     run_script_engine(script_code, script_len);
 
@@ -967,11 +953,6 @@ void run_python_app(const char* title, const char* script_code, uint32_t script_
     while (!s_vm.exit_requested) {
         eadk_keyboard_state_t kbd = eadk_keyboard_scan();
         if (eadk_keyboard_key_down(kbd, eadk_key_home) || eadk_keyboard_key_down(kbd, eadk_key_on_off)) {
-            break;
-        }
-        if (eadk_keyboard_key_down(kbd, eadk_key_var)) {
-            run_panic_calculator();
-            while (eadk_keyboard_scan() != 0) eadk_timing_msleep(20);
             break;
         }
 

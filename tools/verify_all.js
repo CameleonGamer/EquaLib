@@ -37,9 +37,9 @@ async function testAll() {
   console.log('--- TEST B: Multi-app pack with imported NWA (WebUSB Bundle) ---');
   const selectedApps = [
     { id: 'mariokart', name: 'Mario Kart', category: 'Jeu / Arcade' },
-    { id: 'comm_tetris', name: 'Tetris NumWorks', category: 'Jeu / Arcade' },
     { id: 'comm_snake', name: 'Snake Classic', category: 'Jeu / Arcade' },
-    { id: 'stealth_calc', name: 'Mode Furtif Panique', category: 'Securite' },
+    { id: '2048', name: '2048 Ultimate', category: 'Jeu / Arcade' },
+    { id: 'periodique', name: 'Tableau Periodique', category: 'Sciences' },
     {
       id: 'custom_123',
       name: 'Mon Jeu Test',

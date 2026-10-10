@@ -4,7 +4,6 @@
 #include <stdint.h>
 #include <stddef.h>
 
-void run_panic_calculator(void);
 void run_mariokart_app(void);
 void run_periodic_table_app(void);
 void run_courses_app(void);

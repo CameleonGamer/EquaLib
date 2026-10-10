@@ -17,9 +17,6 @@ const EQUALIB_ELF_TEMPLATE_B64 = "${b64}";
 class EquaLibBundler {
   constructor(options = {}) {
     this.options = Object.assign({
-      simulateExam: true,
-      examBlinkPeriodMs: 1000,
-      enablePanicKey: true,
       targetModel: 'N0120'
     }, options);
   }
@@ -93,11 +90,9 @@ class EquaLibBundler {
     view.setUint32(cursor + 12, apps.length, true);
 
     let flags = 0;
-    if (this.options.simulateExam) flags |= (1 << 0);
-    if (this.options.enablePanicKey) flags |= (1 << 1);
     view.setUint32(cursor + 16, flags, true);
-    view.setUint32(cursor + 20, this.options.examBlinkPeriodMs, true);
-    view.setUint32(cursor + 24, 5, true); // EADK_KEY_BACK
+    view.setUint32(cursor + 20, 0, true);
+    view.setUint32(cursor + 24, 0, true);
     view.setUint32(cursor + 28, totalSize, true);
 
     cursor += HEADER_SIZE;

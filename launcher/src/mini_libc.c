@@ -122,3 +122,17 @@ float __aeabi_ul2f(unsigned long long val) {
     }
     return f;
 }
+
+static uint32_t s_random_state = 0x853c49e7;
+
+uint32_t eadk_random(void) {
+    if (s_random_state == 0) s_random_state = 0x12345678;
+    s_random_state ^= s_random_state << 13;
+    s_random_state ^= s_random_state >> 17;
+    s_random_state ^= s_random_state << 5;
+    return s_random_state;
+}
+
+void eadk_random_seed(uint32_t seed) {
+    if (seed != 0) s_random_state = seed;
+}

@@ -375,7 +375,7 @@ void run_minesweeper_app(void) {
     eadk_rect_t bottom_bar = {0, EADK_SCREEN_HEIGHT - 16, EADK_SCREEN_WIDTH, 16};
     eadk_display_push_rect_uniform(bottom_bar, eadk_color_white);
     eadk_point_t pt_help = {8, EADK_SCREEN_HEIGHT - 13};
-    eadk_display_draw_string("OK: Reveler  |  Toolbox: Drapeau  |  BACK: Hub  |  Var: Furtif", pt_help, false, 0x4208, eadk_color_white);
+    eadk_display_draw_string("OK: Reveler  |  Toolbox: Drapeau  |  BACK: Hub", pt_help, false, 0x4208, eadk_color_white);
 
     /* Compteurs et Smiley */
     draw_digital_counter(BOARD_X, 27, TOTAL_MINES - flags_count);
@@ -397,28 +397,6 @@ void run_minesweeper_app(void) {
         if (eadk_keyboard_key_down(kbd, eadk_key_home) ||
             eadk_keyboard_key_down(kbd, eadk_key_on_off)) {
             break;
-        }
-
-        /* Mode Panique Furtif universel via [Var] */
-        if (eadk_keyboard_key_down(kbd, eadk_key_var)) {
-            run_panic_calculator();
-            while (eadk_keyboard_scan() != 0) eadk_timing_msleep(20);
-            prev_kbd = 0;
-            /* Forcer le rafraîchissement complet */
-            eadk_display_push_rect_uniform(eadk_screen_rect, WIN95_BG);
-            eadk_display_push_rect_uniform(top_bar, 0xFE60);
-            eadk_display_draw_string("Demineur NumWorks (Win95)", pt_title, false, eadk_color_black, 0xFE60);
-            eadk_display_push_rect_uniform(bottom_bar, eadk_color_white);
-            eadk_display_draw_string("OK: Reveler  |  Toolbox: Drapeau  |  BACK: Hub  |  Var: Furtif", pt_help, false, 0x4208, eadk_color_white);
-            draw_smiley(win ? SMILEY_WIN : (game_over ? SMILEY_LOSE : SMILEY_NORMAL));
-            prev_elapsed = -1;
-            prev_mines_left = -1;
-            for (int r = 0; r < GRID_H; r++) {
-                for (int c = 0; c < GRID_W; c++) {
-                    draw_cell(r, c, &grid[r][c], (r == cursor_r && c == cursor_c), (r == hit_mine_r && c == hit_mine_c));
-                }
-            }
-            continue;
         }
 
         eadk_keyboard_state_t pressed = kbd & ~prev_kbd;

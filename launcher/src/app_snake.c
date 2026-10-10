@@ -234,7 +234,7 @@ void run_snake_app(void) {
     eadk_rect_t bottom_bar = {0, EADK_SCREEN_HEIGHT - 16, EADK_SCREEN_WIDTH, 16};
     eadk_display_push_rect_uniform(bottom_bar, eadk_color_white);
     eadk_point_t pt_help = {8, EADK_SCREEN_HEIGHT - 13};
-    eadk_display_draw_string("Fleches: Direction  |  BACK: Hub  |  Var: Furtif", pt_help, false, 0x4208, eadk_color_white);
+    eadk_display_draw_string("Fleches: Direction  |  BACK: Hub", pt_help, false, 0x4208, eadk_color_white);
 
     /* Dessin initial du serpent et de la pomme */
     draw_head(snake[0].x, snake[0].y, dir);
@@ -251,28 +251,6 @@ void run_snake_app(void) {
         if (eadk_keyboard_key_down(kbd, eadk_key_home) ||
             eadk_keyboard_key_down(kbd, eadk_key_on_off)) {
             break;
-        }
-
-        /* Mode Panique Furtif universel via [Var] */
-        if (eadk_keyboard_key_down(kbd, eadk_key_var)) {
-            run_panic_calculator();
-            while (eadk_keyboard_scan() != 0) eadk_timing_msleep(20);
-            prev_kbd = 0;
-            /* Forcer le rafraîchissement complet */
-            eadk_display_push_rect_uniform(eadk_screen_rect, COLOR_OUTER_BG);
-            eadk_display_push_rect_uniform(top_bar, 0xFE60);
-            eadk_display_draw_string("Snake Classic", pt_title, false, eadk_color_black, 0xFE60);
-            eadk_display_push_rect_uniform(border_box, COLOR_BORDER_HI);
-            eadk_display_push_rect_uniform(arena_bg, COLOR_ARENA_BG);
-            eadk_display_push_rect_uniform(bottom_bar, eadk_color_white);
-            eadk_display_draw_string("Fleches: Direction  |  BACK: Hub  |  Var: Furtif", pt_help, false, 0x4208, eadk_color_white);
-            for (int i = 0; i < len; i++) {
-                if (i == 0) draw_head(snake[i].x, snake[i].y, dir);
-                else draw_body(snake[i].x, snake[i].y);
-            }
-            draw_apple(food.x, food.y);
-            prev_drawn_score = -1;
-            continue;
         }
 
         eadk_keyboard_state_t pressed = kbd & ~prev_kbd;

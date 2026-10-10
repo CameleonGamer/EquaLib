@@ -264,7 +264,7 @@ void run_2048_app(void) {
     eadk_rect_t bottom_bar = {0, EADK_SCREEN_HEIGHT - 16, EADK_SCREEN_WIDTH, 16};
     eadk_display_push_rect_uniform(bottom_bar, eadk_color_white);
     eadk_point_t pt_help = {8, EADK_SCREEN_HEIGHT - 13};
-    eadk_display_draw_string("Fleches / 4,6,8,2  |  BACK: Hub  |  Var: Furtif", pt_help, false, 0x4208, eadk_color_white);
+    eadk_display_draw_string("Fleches: Glisser  |  OK: Rejouer  |  BACK: Hub", pt_help, false, 0x4208, eadk_color_white);
 
     /* Initialisation du plateau */
     spawn_tile(grid);
@@ -282,33 +282,6 @@ void run_2048_app(void) {
         if (eadk_keyboard_key_down(kbd, eadk_key_home) ||
             eadk_keyboard_key_down(kbd, eadk_key_on_off)) {
             break;
-        }
-
-        /* Mode Panique Furtif universel via [Var] */
-        if (eadk_keyboard_key_down(kbd, eadk_key_var)) {
-            run_panic_calculator();
-            int p_cycles = 0;
-            while (eadk_keyboard_scan() != 0 && p_cycles < 25) {
-                eadk_timing_msleep(20);
-                p_cycles++;
-            }
-            prev_kbd = 0;
-            /* Forcer le rafraîchissement complet */
-            eadk_display_push_rect_uniform(eadk_screen_rect, COLOR_APP_BG);
-            eadk_display_push_rect_uniform(top_bar, 0xFE60);
-            eadk_display_draw_string("2048 Ultimate", pt_title, false, eadk_color_black, 0xFE60);
-            eadk_display_push_rect_uniform(container_box, COLOR_CONTAINER);
-            eadk_display_push_rect_uniform((eadk_rect_t){(uint16_t)BOARD_X, (uint16_t)BOARD_Y, (uint16_t)BOARD_W, 1}, 0x9CD3);
-            eadk_display_push_rect_uniform((eadk_rect_t){(uint16_t)BOARD_X, (uint16_t)BOARD_Y, 1, (uint16_t)BOARD_W}, 0x9CD3);
-            eadk_display_push_rect_uniform(bottom_bar, eadk_color_white);
-            eadk_display_draw_string("Fleches / 4,6,8,2  |  BACK: Hub  |  Var: Furtif", pt_help, false, 0x4208, eadk_color_white);
-            for (int r = 0; r < BOARD_SIZE; r++) {
-                for (int c = 0; c < BOARD_SIZE; c++) {
-                    draw_tile(r, c, grid[r][c]);
-                }
-            }
-            prev_drawn_score = -1;
-            continue;
         }
 
         eadk_keyboard_state_t pressed = kbd & ~prev_kbd;
@@ -398,8 +371,8 @@ void run_2048_app(void) {
                     eadk_rect_t gov_inner = {57, 97, 206, 52};
                     eadk_display_push_rect_uniform(gov_inner, 0x0000);
 
-                    eadk_point_t pt_g1 = {105, 103};
-                    eadk_display_draw_string("PARTIE TERMINEE", pt_g1, true, 0xF800, 0x0000);
+                    eadk_point_t pt_g1 = {106, 103};
+                    eadk_display_draw_string("GAME OVER", pt_g1, true, 0xF800, 0x0000);
                     eadk_point_t pt_g2 = {74, 129};
                     eadk_display_draw_string("OK: Rejouer | BACK: Hub", pt_g2, false, 0xFFFF, 0x0000);
                 }

@@ -21,9 +21,6 @@ const EQUALIB_NATIVE_BIN_B64 = "${binB64}";
 class EquaLibBundler {
   constructor(options = {}) {
     this.options = Object.assign({
-      simulateExam: true,
-      examBlinkPeriodMs: 1000,
-      enablePanicKey: true,
       targetModel: 'N0120'
     }, options);
   }
@@ -143,8 +140,6 @@ class EquaLibBundler {
         appType = 3; // Fiches de cours natives C
       } else if (appIdLower === 'math_solver' || appIdLower.includes('solveur')) {
         appType = 4; // Solveur 2nd degré natif C
-      } else if (appIdLower === 'stealth_calc' || appIdLower.includes('furtif') || appIdLower.includes('panique')) {
-        appType = 5; // Mode Furtif Panique natif C
       } else if (appIdLower === 'comm_flappy' || appIdLower === 'flappy' || appNameLower.includes('flappy')) {
         appType = 7; // Flappy Bird natif C 60 FPS
       } else if (appIdLower === 'comm_2048' || appIdLower === '2048' || appNameLower.includes('2048')) {
