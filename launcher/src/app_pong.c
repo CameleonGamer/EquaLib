@@ -2,6 +2,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include "apps.h"
+#include "storage.h"
 
 int snprintf(char* buf, unsigned int max, const char* fmt, ...);
 
@@ -45,11 +46,16 @@ static void draw_pong_court(void) {
 void run_pong_app(void) {
     while (eadk_keyboard_scan() != 0) eadk_timing_msleep(20);
 
+    eq_storage_t* store = eq_storage_get();
+    int record_wins = store->record_pong_wins;
+
     /* Barre supérieure EquaLib */
     eadk_rect_t top_bar = {0, 0, 320, PONG_TOP};
     eadk_display_push_rect_uniform(top_bar, 0x10A2);
+    char title_buf[64];
+    snprintf(title_buf, sizeof(title_buf), "Pong Arcade (Premier a 7) | VICTOIRES: %02d", record_wins);
     eadk_point_t p_title = {8, 4};
-    eadk_display_draw_string("Pong Arcade Retro (Premier a 7)", p_title, false, COLOR_TEXT, 0x10A2);
+    eadk_display_draw_string(title_buf, p_title, false, COLOR_TEXT, 0x10A2);
 
     draw_pong_court();
 
@@ -73,7 +79,16 @@ void run_pong_app(void) {
 
     bool game_over = false;
     bool in_serve = true;
+    bool prev_in_serve = false;
     eadk_keyboard_state_t prev_kbd = 0;
+
+    /* Dessin initial raquettes et balle */
+    eadk_rect_t init_p1 = {P1_X, (uint16_t)p1_y, PADDLE_W, PADDLE_H};
+    eadk_rect_t init_cpu = {CPU_X, (uint16_t)cpu_y, PADDLE_W, PADDLE_H};
+    eadk_rect_t init_ball = {(uint16_t)ball_x, (uint16_t)ball_y, BALL_SIZE, BALL_SIZE};
+    eadk_display_push_rect_uniform(init_p1, COLOR_P1);
+    eadk_display_push_rect_uniform(init_cpu, COLOR_CPU);
+    eadk_display_push_rect_uniform(init_ball, COLOR_BALL);
 
     while (true) {
         eadk_keyboard_state_t kbd = eadk_keyboard_scan();
@@ -91,13 +106,25 @@ void run_pong_app(void) {
                 last_cpu_score = -1;
                 p1_y = 110.0f;
                 cpu_y = 110.0f;
+                old_p1_y = p1_y;
+                old_cpu_y = cpu_y;
                 ball_x = 160.0f;
                 ball_y = 120.0f;
+                old_ball_x = ball_x;
+                old_ball_y = ball_y;
                 ball_vx = (eadk_random() % 2 == 0) ? 3.2f : -3.2f;
                 ball_vy = 1.6f;
                 game_over = false;
                 in_serve = false;
+                prev_in_serve = true;
                 draw_pong_court();
+
+                eadk_rect_t ip1 = {P1_X, (uint16_t)p1_y, PADDLE_W, PADDLE_H};
+                eadk_rect_t icpu = {CPU_X, (uint16_t)cpu_y, PADDLE_W, PADDLE_H};
+                eadk_rect_t iball = {(uint16_t)ball_x, (uint16_t)ball_y, BALL_SIZE, BALL_SIZE};
+                eadk_display_push_rect_uniform(ip1, COLOR_P1);
+                eadk_display_push_rect_uniform(icpu, COLOR_CPU);
+                eadk_display_push_rect_uniform(iball, COLOR_BALL);
             }
             prev_kbd = kbd;
             eadk_timing_msleep(20);
@@ -174,56 +201,82 @@ void run_pong_app(void) {
                 in_serve = true;
                 ball_x = 160.0f;
                 ball_y = 120.0f;
+                old_ball_x = ball_x;
+                old_ball_y = ball_y;
                 ball_vx = 3.2f;
                 ball_vy = 1.6f;
                 draw_pong_court();
+
+                eadk_rect_t ip1 = {P1_X, (uint16_t)p1_y, PADDLE_W, PADDLE_H};
+                eadk_rect_t icpu = {CPU_X, (uint16_t)cpu_y, PADDLE_W, PADDLE_H};
+                eadk_display_push_rect_uniform(ip1, COLOR_P1);
+                eadk_display_push_rect_uniform(icpu, COLOR_CPU);
+                last_p1_score = -1;
+                last_cpu_score = -1;
             } else if (ball_x > PONG_RIGHT + 10) {
                 p1_score++;
-                if (p1_score >= 7) game_over = true;
+                if (p1_score >= 7) {
+                    game_over = true;
+                    record_wins++;
+                    store->record_pong_wins = record_wins;
+                    eq_storage_commit();
+                }
                 in_serve = true;
                 ball_x = 160.0f;
                 ball_y = 120.0f;
+                old_ball_x = ball_x;
+                old_ball_y = ball_y;
                 ball_vx = -3.2f;
                 ball_vy = 1.6f;
                 draw_pong_court();
+
+                eadk_rect_t ip1 = {P1_X, (uint16_t)p1_y, PADDLE_W, PADDLE_H};
+                eadk_rect_t icpu = {CPU_X, (uint16_t)cpu_y, PADDLE_W, PADDLE_H};
+                eadk_display_push_rect_uniform(ip1, COLOR_P1);
+                eadk_display_push_rect_uniform(icpu, COLOR_CPU);
+                last_p1_score = -1;
+                last_cpu_score = -1;
             }
         }
 
-        /* Effacement anciens éléments */
-        eadk_rect_t clr_p1 = {P1_X, (uint16_t)old_p1_y, PADDLE_W, PADDLE_H};
-        eadk_display_push_rect_uniform(clr_p1, COLOR_PONG_BG);
+        /* Effacement et Redessin Joueur 1 (Uniquement si déplacé) */
+        if ((int)p1_y != (int)old_p1_y) {
+            eadk_rect_t clr_p1 = {P1_X, (uint16_t)old_p1_y, PADDLE_W, PADDLE_H};
+            eadk_display_push_rect_uniform(clr_p1, COLOR_PONG_BG);
+            eadk_rect_t r_p1 = {P1_X, (uint16_t)p1_y, PADDLE_W, PADDLE_H};
+            eadk_display_push_rect_uniform(r_p1, COLOR_P1);
+            old_p1_y = p1_y;
+        }
 
-        eadk_rect_t clr_cpu = {CPU_X, (uint16_t)old_cpu_y, PADDLE_W, PADDLE_H};
-        eadk_display_push_rect_uniform(clr_cpu, COLOR_PONG_BG);
+        /* Effacement et Redessin CPU (Uniquement si déplacé) */
+        if ((int)cpu_y != (int)old_cpu_y) {
+            eadk_rect_t clr_cpu = {CPU_X, (uint16_t)old_cpu_y, PADDLE_W, PADDLE_H};
+            eadk_display_push_rect_uniform(clr_cpu, COLOR_PONG_BG);
+            eadk_rect_t r_cpu = {CPU_X, (uint16_t)cpu_y, PADDLE_W, PADDLE_H};
+            eadk_display_push_rect_uniform(r_cpu, COLOR_CPU);
+            old_cpu_y = cpu_y;
+        }
 
-        eadk_rect_t clr_ball = {(uint16_t)old_ball_x, (uint16_t)old_ball_y, BALL_SIZE, BALL_SIZE};
-        eadk_display_push_rect_uniform(clr_ball, COLOR_PONG_BG);
+        /* Effacement et Redessin Balle (Uniquement si déplacée) */
+        if ((int)ball_x != (int)old_ball_x || (int)ball_y != (int)old_ball_y) {
+            eadk_rect_t clr_ball = {(uint16_t)old_ball_x, (uint16_t)old_ball_y, BALL_SIZE, BALL_SIZE};
+            eadk_display_push_rect_uniform(clr_ball, COLOR_PONG_BG);
 
-        /* Redessiner les pointillés au passage de la balle si nécessaire */
-        if (old_ball_x >= 155 && old_ball_x <= 165) {
-            for (int y = PONG_TOP + 4; y < PONG_BOTTOM - 4; y += 10) {
-                if (y >= old_ball_y - 8 && y <= old_ball_y + 10) {
-                    eadk_rect_t dash = {159, (uint16_t)y, 2, 6};
-                    eadk_display_push_rect_uniform(dash, COLOR_NET);
+            /* Redessiner les pointillés au passage de la balle si nécessaire */
+            if (old_ball_x >= 155 && old_ball_x <= 165) {
+                for (int y = PONG_TOP + 4; y < PONG_BOTTOM - 4; y += 10) {
+                    if (y >= old_ball_y - 8 && y <= old_ball_y + 10) {
+                        eadk_rect_t dash = {159, (uint16_t)y, 2, 6};
+                        eadk_display_push_rect_uniform(dash, COLOR_NET);
+                    }
                 }
             }
+
+            eadk_rect_t r_ball = {(uint16_t)ball_x, (uint16_t)ball_y, BALL_SIZE, BALL_SIZE};
+            eadk_display_push_rect_uniform(r_ball, COLOR_BALL);
+            old_ball_x = ball_x;
+            old_ball_y = ball_y;
         }
-
-        /* Dessin Joueur 1 */
-        eadk_rect_t r_p1 = {P1_X, (uint16_t)p1_y, PADDLE_W, PADDLE_H};
-        eadk_display_push_rect_uniform(r_p1, COLOR_P1);
-        old_p1_y = p1_y;
-
-        /* Dessin CPU */
-        eadk_rect_t r_cpu = {CPU_X, (uint16_t)cpu_y, PADDLE_W, PADDLE_H};
-        eadk_display_push_rect_uniform(r_cpu, COLOR_CPU);
-        old_cpu_y = cpu_y;
-
-        /* Dessin Balle */
-        eadk_rect_t r_ball = {(uint16_t)ball_x, (uint16_t)ball_y, BALL_SIZE, BALL_SIZE};
-        eadk_display_push_rect_uniform(r_ball, COLOR_BALL);
-        old_ball_x = ball_x;
-        old_ball_y = ball_y;
 
         /* Affichage Scores */
         if (p1_score != last_p1_score || cpu_score != last_cpu_score) {
@@ -239,10 +292,15 @@ void run_pong_app(void) {
             last_cpu_score = cpu_score;
         }
 
-        /* Message service */
-        if (in_serve && !game_over) {
-            eadk_point_t p_srv = {75, 170};
-            eadk_display_draw_string("Appuyez sur OK pour servir !", p_srv, false, 0xFFE0, COLOR_PONG_BG);
+        /* Message service avec effacement propre */
+        if (in_serve != prev_in_serve) {
+            prev_in_serve = in_serve;
+            eadk_rect_t srv_box = {60, 168, 200, 18};
+            eadk_display_push_rect_uniform(srv_box, COLOR_PONG_BG);
+            if (in_serve && !game_over) {
+                eadk_point_t p_srv = {75, 170};
+                eadk_display_draw_string("Appuyez sur OK pour servir !", p_srv, false, 0xFFE0, COLOR_PONG_BG);
+            }
         }
 
         /* Fin de match */

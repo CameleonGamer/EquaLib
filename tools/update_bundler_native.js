@@ -58,7 +58,7 @@ class EquaLibBundler {
   /**
    * Injecte les applications sélectionnées dans le manifeste binaire
    */
-  async patchManifest(rawBytes, apps = []) {
+  async patchManifest(rawBytes, apps = [], options = {}) {
     // Créer une copie indépendante du buffer
     const u8 = new Uint8Array(rawBytes.length);
     u8.set(rawBytes, 0);
@@ -73,7 +73,7 @@ class EquaLibBundler {
       return u8;
     }
 
-    const selectedList = apps.slice(0, 16);
+    const selectedList = apps.slice(0, 20);
     const count = selectedList.length;
 
     // Mise à jour de app_count
@@ -82,9 +82,28 @@ class EquaLibBundler {
     u8[offset + 10] = (count >> 16) & 0xFF;
     u8[offset + 11] = (count >> 24) & 0xFF;
 
-    // Nettoyage de la table des 16 apps (16 * 144 = 2304 octets)
+    // Mise à jour de manifest.flags (thème par défaut et mode d'affichage)
+    let flags = 0;
+    const themeName = (options.theme || this.options?.theme || (typeof window !== 'undefined' && window.userSettings?.theme) || 'default').toLowerCase();
+    let themeIndex = 0;
+    if (themeName.includes('sakura')) themeIndex = 1;
+    else if (themeName.includes('cyber') || themeName.includes('bee')) themeIndex = 2;
+    else if (themeName.includes('hacker') || themeName.includes('matrix')) themeIndex = 3;
+    else if (themeName.includes('nordic') || themeName.includes('blue')) themeIndex = 4;
+    else if (themeName.includes('mono') || themeName.includes('gameboy') || themeName.includes('dark')) themeIndex = 5;
+    flags |= (themeIndex & 0x0F);
+
+    const isList = (options.displayMode === 'list' || this.options?.displayMode === 'list' || (typeof window !== 'undefined' && window.userSettings?.displayMode === 'list'));
+    if (isList) flags |= 0x10;
+
+    u8[offset + 12] = flags & 0xFF;
+    u8[offset + 13] = (flags >> 8) & 0xFF;
+    u8[offset + 14] = (flags >> 16) & 0xFF;
+    u8[offset + 15] = (flags >> 24) & 0xFF;
+
+    // Nettoyage de la table des 20 apps (20 * 144 = 2880 octets)
     const appsStart = offset + 16;
-    u8.fill(0, appsStart, appsStart + 16 * 144);
+    u8.fill(0, appsStart, appsStart + 20 * 144);
 
     let extraPayloads = [];
     let currentExtraOffset = u8.length; // offset relatif au début du slot flash 0x90180000
@@ -158,6 +177,10 @@ class EquaLibBundler {
         appType = 17; // Space Invaders Retro natif C 60 FPS
       } else if (appIdLower === 'breakout' || appIdLower === 'comm_breakout' || appNameLower.includes('brique') || appNameLower.includes('breakout')) {
         appType = 18; // Casse-Briques Breakout natif C 60 FPS
+      } else if (appIdLower === 'puissance4' || appIdLower === 'comm_puissance4' || appNameLower.includes('puissance 4') || appNameLower.includes('puissance4') || appNameLower.includes('connect 4')) {
+        appType = 19; // Puissance 4 natif C 60 FPS
+      } else if (appIdLower === 'morpion' || appIdLower === 'comm_morpion' || appNameLower.includes('morpion') || appNameLower.includes('tic tac toe')) {
+        appType = 20; // Morpion natif C 60 FPS
       } else if (isNative) {
         appType = 13; // Exécutable natif ARM EADK (.bin ou .nwa)
       } else if ((app.format === 'NWS') || (app.format === 'PY') || appIdLower.includes('.nws') || appNameLower.includes('.nws') || (app.data && !isNative)) {
@@ -297,7 +320,7 @@ class EquaLibBundler {
    * @param {string} format 'bin' pour le flash direct WebUSB, 'nwa' pour le téléversement manuel
    * @returns {Object} { blob, arrayBuffer, totalBytes, appCount }
    */
-  async buildBundle(apps = [], format = 'bin') {
+  async buildBundle(apps = [], format = 'bin', options = {}) {
     const isBin = (format === 'bin');
     console.log(\`[EquaLib] Génération du pack personnalisé (\${apps.length} apps, format: \${format})...\`);
 
@@ -321,7 +344,7 @@ class EquaLibBundler {
       rawData = this.base64ToUint8Array(b64);
     }
 
-    const patchedBytes = await this.patchManifest(rawData, apps);
+    const patchedBytes = await this.patchManifest(rawData, apps, options);
     const totalSize = patchedBytes.byteLength;
 
     console.log(\`[EquaLib] Pack personnalisé prêt (\${(totalSize / 1024).toFixed(1)} Ko, \${apps.length} apps)\`);

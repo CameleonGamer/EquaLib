@@ -4,6 +4,7 @@
 #include <stddef.h>
 #include "apps.h"
 #include "equalib_manifest.h"
+#include "storage.h"
 
 /* Déclarations mini libc */
 size_t strlen(const char* s);
@@ -117,36 +118,23 @@ enum {
     VIEW_MODE_LIST = 1
 };
 
-/* État persistant du Launcher */
-#define EQUALIB_SETTINGS_MAGIC 0x51455453 /* "STEQ" */
-
-typedef struct {
-    uint32_t magic;
-    int theme;
-    int view_mode;
-    int tooltips;
-    uint32_t checksum;
-} eq_persistent_settings_t;
-
-static eq_persistent_settings_t g_saved_settings __attribute__((section(".bss")));
-
 static int g_current_theme = 0;      /* 0 = Classique, 1 = Sakura, 2 = Hacker, 3 = Abeille, 4 = Mario, 5 = GameBoy */
 static int g_view_mode = VIEW_MODE_GALLERY; /* Mode Galerie d'images carrées par défaut */
 static bool g_show_tooltips = true;  /* Affichage des raccourcis en bas d'écran */
 
 static void save_persistent_settings(void) {
-    g_saved_settings.magic = EQUALIB_SETTINGS_MAGIC;
-    g_saved_settings.theme = g_current_theme;
-    g_saved_settings.view_mode = g_view_mode;
-    g_saved_settings.tooltips = g_show_tooltips ? 1 : 0;
-    g_saved_settings.checksum = (uint32_t)(g_saved_settings.theme ^ g_saved_settings.view_mode ^ g_saved_settings.tooltips ^ 0xA5A5);
+    eq_storage_t* s = eq_storage_get();
+    s->theme = g_current_theme;
+    s->view_mode = g_view_mode;
+    s->tooltips = g_show_tooltips ? 1 : 0;
+    eq_storage_commit();
 }
 
 /* Manifeste dynamique stocké en flash (.rodata), modifiable à chaud lors du packaging */
 const equalib_manifest_t g_equalib_manifest __attribute__((used, aligned(4), section(".rodata.equalib_manifest"))) = {
     .magic = EQUALIB_MANIFEST_MAGIC,
     .version = 1,
-    .app_count = 14,
+    .app_count = 16,
     .flags = 0,
     .apps = {
         {"mariokart", "1. Mario Kart", "Jeu / Arcade", "Course Mode 7 3D complete pour N0120", APP_TYPE_MARIOKART, {0,0,0}, 0, 0},
@@ -162,7 +150,9 @@ const equalib_manifest_t g_equalib_manifest __attribute__((used, aligned(4), sec
         {"dino", "11. Chrome Dino", "Jeu / Arcade", "Runner T-Rex 60 FPS avec sauts et obstacles", APP_TYPE_DINO, {0,0,0}, 0, 0},
         {"space_invaders", "12. Space Invaders", "Jeu / Arcade", "Space Invaders arcade avec aliens et lasers", APP_TYPE_SPACE_INVADERS, {0,0,0}, 0, 0},
         {"breakout", "13. Casse-Briques", "Jeu / Arcade", "Casse-briques retro avec briques colorees", APP_TYPE_BREAKOUT, {0,0,0}, 0, 0},
-        {"settings", "14. Parametres", "Options", "Themes, mode galerie et reglages", APP_TYPE_SETTINGS, {0,0,0}, 0, 0}
+        {"puissance4", "14. Puissance 4", "Jeu / Arcade", "Connect 4 avec IA Minimax et 2 joueurs", APP_TYPE_PUISSANCE4, {0,0,0}, 0, 0},
+        {"morpion", "15. Morpion (TicTacToe)", "Jeu / Arcade", "Morpion duel avec IA Minimax imbattable", APP_TYPE_MORPION, {0,0,0}, 0, 0},
+        {"settings", "16. Parametres", "Options", "Themes, mode galerie et reglages", APP_TYPE_SETTINGS, {0,0,0}, 0, 0}
     }
 };
 
@@ -468,6 +458,36 @@ static void draw_app_icon(uint8_t app_type, int cx, int cy, uint16_t accent_col)
         eadk_display_push_rect_uniform(b5, 0x3DFE);
         eadk_display_push_rect_uniform(pad, 0xFFFF);
         eadk_display_push_rect_uniform(ball, 0xFFFF);
+    } else if (app_type == APP_TYPE_PUISSANCE4) {
+        /* Grille bleue avec 4 jetons jaunes et rouges */
+        eadk_rect_t board = {(uint16_t)(cx - 8), (uint16_t)(cy - 7), 16, 14};
+        eadk_display_push_rect_uniform(board, 0x11FD);
+        eadk_rect_t y1 = {(uint16_t)(cx - 6), (uint16_t)(cy - 5), 4, 4};
+        eadk_rect_t r1 = {(uint16_t)(cx + 2), (uint16_t)(cy - 5), 4, 4};
+        eadk_rect_t r2 = {(uint16_t)(cx - 6), (uint16_t)(cy + 1), 4, 4};
+        eadk_rect_t y2 = {(uint16_t)(cx + 2), (uint16_t)(cy + 1), 4, 4};
+        eadk_display_push_rect_uniform(y1, 0xFFE0);
+        eadk_display_push_rect_uniform(r1, 0xF800);
+        eadk_display_push_rect_uniform(r2, 0xF800);
+        eadk_display_push_rect_uniform(y2, 0xFFE0);
+    } else if (app_type == APP_TYPE_MORPION) {
+        /* Mini grille 3x3 avec X cyan et O rouge */
+        eadk_rect_t g_v1 = {(uint16_t)(cx - 3), (uint16_t)(cy - 7), 1, 14};
+        eadk_rect_t g_v2 = {(uint16_t)(cx + 3), (uint16_t)(cy - 7), 1, 14};
+        eadk_rect_t g_h1 = {(uint16_t)(cx - 7), (uint16_t)(cy - 3), 14, 1};
+        eadk_rect_t g_h2 = {(uint16_t)(cx - 7), (uint16_t)(cy + 3), 14, 1};
+        eadk_display_push_rect_uniform(g_v1, 0x7BEF);
+        eadk_display_push_rect_uniform(g_v2, 0x7BEF);
+        eadk_display_push_rect_uniform(g_h1, 0x7BEF);
+        eadk_display_push_rect_uniform(g_h2, 0x7BEF);
+        eadk_rect_t x1 = {(uint16_t)(cx - 6), (uint16_t)(cy - 6), 2, 2};
+        eadk_rect_t x2 = {(uint16_t)(cx - 5), (uint16_t)(cy - 5), 1, 1};
+        eadk_rect_t x3 = {(uint16_t)(cx - 6), (uint16_t)(cy - 4), 2, 2};
+        eadk_display_push_rect_uniform(x1, 0x3DFE);
+        eadk_display_push_rect_uniform(x2, 0xFFFF);
+        eadk_display_push_rect_uniform(x3, 0x3DFE);
+        eadk_rect_t o1 = {(uint16_t)(cx + 3), (uint16_t)(cy + 3), 3, 3};
+        eadk_display_push_rect_uniform(o1, 0xFA80);
     } else {
         /* Application générique / Boîte d'outils */
         eadk_rect_t box = {(uint16_t)(cx - 7), (uint16_t)(cy - 7), 14, 14};
@@ -645,6 +665,38 @@ static void draw_theme_decorations(const theme_t* theme) {
     }
 }
 
+/* Rendu d'une rangée du menu Paramètres */
+static void draw_settings_row(int i, bool is_s, const theme_t* th) {
+    int y = 35 + i * 40;
+    eadk_rect_t c = {16, (uint16_t)y, 288, 32};
+    eadk_display_push_rect_uniform(c, is_s ? th->card_sel : th->card_bg);
+
+    if (is_s) {
+        eadk_rect_t acc = {16, (uint16_t)y, 4, 32};
+        eadk_display_push_rect_uniform(acc, th->accent);
+    }
+
+    if (i == 0) {
+        eadk_point_t p1 = {26, (uint16_t)(y + 10)};
+        eadk_display_draw_string("Mode d'Affichage :", p1, false, th->text_primary, is_s ? th->card_sel : th->card_bg);
+        eadk_point_t p2 = {180, (uint16_t)(y + 10)};
+        eadk_display_draw_string(g_view_mode == VIEW_MODE_GALLERY ? "< GALERIE >" : "< LISTE >", p2, false, th->accent, is_s ? th->card_sel : th->card_bg);
+    } else if (i == 1) {
+        eadk_point_t p1 = {26, (uint16_t)(y + 10)};
+        eadk_display_draw_string("Raccourcis / Tooltips :", p1, false, th->text_primary, is_s ? th->card_sel : th->card_bg);
+        eadk_point_t p2 = {200, (uint16_t)(y + 10)};
+        eadk_display_draw_string(g_show_tooltips ? "< OUI >" : "< NON >", p2, false, th->accent, is_s ? th->card_sel : th->card_bg);
+    } else if (i == 2) {
+        eadk_point_t p1 = {26, (uint16_t)(y + 4)};
+        eadk_display_draw_string("Theme Visuel :", p1, false, th->text_primary, is_s ? th->card_sel : th->card_bg);
+        eadk_point_t p2 = {26, (uint16_t)(y + 17)};
+        eadk_display_draw_string(th->name, p2, false, th->accent, is_s ? th->card_sel : th->card_bg);
+    } else if (i == 3) {
+        eadk_point_t p1 = {26, (uint16_t)(y + 10)};
+        eadk_display_draw_string("[ OK / Back ] : Valider & Revenir", p1, false, th->accent, is_s ? th->card_sel : th->card_bg);
+    }
+}
+
 /* ==================== MENU DES PARAMÈTRES & THÈMES ==================== */
 static void run_settings_screen(void) {
     while (eadk_keyboard_scan() != 0) eadk_timing_msleep(20);
@@ -654,7 +706,7 @@ static void run_settings_screen(void) {
     if (g_view_mode != VIEW_MODE_GALLERY && g_view_mode != VIEW_MODE_LIST) g_view_mode = VIEW_MODE_GALLERY;
 
     int sel_item = 0;
-    bool redraw = true;
+    bool full_redraw = true;
     eadk_keyboard_state_t prev = 0;
 
     while (true) {
@@ -663,47 +715,93 @@ static void run_settings_screen(void) {
 
         if (eadk_keyboard_key_down(pressed, eadk_key_back) || 
             eadk_keyboard_key_down(kbd, eadk_key_home) ||
-            eadk_keyboard_key_down(pressed, eadk_key_ok)) {
+            (eadk_keyboard_key_down(pressed, eadk_key_ok) && sel_item == 3)) {
             break;
         }
 
+        int old_sel = sel_item;
+        const theme_t* th = &g_themes[g_current_theme];
+
         if (eadk_keyboard_key_down(pressed, eadk_key_up)) {
-            if (sel_item > 0) { sel_item--; redraw = true; }
+            if (sel_item > 0) {
+                sel_item--;
+                draw_settings_row(old_sel, false, th);
+                draw_settings_row(sel_item, true, th);
+            }
         } else if (eadk_keyboard_key_down(pressed, eadk_key_down)) {
-            if (sel_item < 3) { sel_item++; redraw = true; }
+            if (sel_item < 3) {
+                sel_item++;
+                draw_settings_row(old_sel, false, th);
+                draw_settings_row(sel_item, true, th);
+            }
         } else if (eadk_keyboard_key_down(pressed, eadk_key_left)) {
             if (sel_item == 0) {
                 g_view_mode = (g_view_mode == VIEW_MODE_GALLERY) ? VIEW_MODE_LIST : VIEW_MODE_GALLERY;
-                redraw = true;
+                draw_settings_row(0, true, th);
+                save_persistent_settings();
             } else if (sel_item == 1) {
                 g_show_tooltips = !g_show_tooltips;
-                redraw = true;
+                draw_settings_row(1, true, th);
+                eadk_rect_t bot = {0, EADK_SCREEN_HEIGHT - 16, EADK_SCREEN_WIDTH, 16};
+                eadk_display_push_rect_uniform(bot, g_show_tooltips ? th->card_bg : th->screen_bg);
+                if (g_show_tooltips) {
+                    eadk_point_t p_h = {8, EADK_SCREEN_HEIGHT - 13};
+                    eadk_display_draw_string("Fleches: Changer | OK / Back: Sauvegarder", p_h, false, th->text_muted, th->card_bg);
+                }
+                save_persistent_settings();
             } else if (sel_item == 2) {
                 g_current_theme = (g_current_theme + 5) % 6;
-                redraw = true;
+                full_redraw = true;
+                save_persistent_settings();
             }
         } else if (eadk_keyboard_key_down(pressed, eadk_key_right)) {
             if (sel_item == 0) {
                 g_view_mode = (g_view_mode == VIEW_MODE_GALLERY) ? VIEW_MODE_LIST : VIEW_MODE_GALLERY;
-                redraw = true;
+                draw_settings_row(0, true, th);
+                save_persistent_settings();
             } else if (sel_item == 1) {
                 g_show_tooltips = !g_show_tooltips;
-                redraw = true;
+                draw_settings_row(1, true, th);
+                eadk_rect_t bot = {0, EADK_SCREEN_HEIGHT - 16, EADK_SCREEN_WIDTH, 16};
+                eadk_display_push_rect_uniform(bot, g_show_tooltips ? th->card_bg : th->screen_bg);
+                if (g_show_tooltips) {
+                    eadk_point_t p_h = {8, EADK_SCREEN_HEIGHT - 13};
+                    eadk_display_draw_string("Fleches: Changer | OK / Back: Sauvegarder", p_h, false, th->text_muted, th->card_bg);
+                }
+                save_persistent_settings();
             } else if (sel_item == 2) {
                 g_current_theme = (g_current_theme + 1) % 6;
-                redraw = true;
+                full_redraw = true;
+                save_persistent_settings();
+            }
+        } else if (eadk_keyboard_key_down(pressed, eadk_key_ok) || eadk_keyboard_key_down(pressed, eadk_key_exe)) {
+            if (sel_item == 0) {
+                g_view_mode = (g_view_mode == VIEW_MODE_GALLERY) ? VIEW_MODE_LIST : VIEW_MODE_GALLERY;
+                draw_settings_row(0, true, th);
+                save_persistent_settings();
+            } else if (sel_item == 1) {
+                g_show_tooltips = !g_show_tooltips;
+                draw_settings_row(1, true, th);
+                eadk_rect_t bot = {0, EADK_SCREEN_HEIGHT - 16, EADK_SCREEN_WIDTH, 16};
+                eadk_display_push_rect_uniform(bot, g_show_tooltips ? th->card_bg : th->screen_bg);
+                if (g_show_tooltips) {
+                    eadk_point_t p_h = {8, EADK_SCREEN_HEIGHT - 13};
+                    eadk_display_draw_string("Fleches: Changer | OK / Back: Sauvegarder", p_h, false, th->text_muted, th->card_bg);
+                }
+                save_persistent_settings();
+            } else if (sel_item == 2) {
+                g_current_theme = (g_current_theme + 1) % 6;
+                full_redraw = true;
+                save_persistent_settings();
             }
         }
 
         prev = kbd;
 
-        if (redraw) {
-            redraw = false;
-            if (g_current_theme < 0 || g_current_theme >= 6) g_current_theme = 0;
-            if (g_view_mode != VIEW_MODE_GALLERY && g_view_mode != VIEW_MODE_LIST) g_view_mode = VIEW_MODE_GALLERY;
+        if (full_redraw) {
+            full_redraw = false;
+            th = &g_themes[g_current_theme];
             save_persistent_settings();
-
-            const theme_t* th = &g_themes[g_current_theme];
 
             /* Fond et barre */
             eadk_display_push_rect_uniform(eadk_screen_rect, th->screen_bg);
@@ -714,35 +812,7 @@ static void run_settings_screen(void) {
 
             /* Cadre paramètres */
             for (int i = 0; i < 4; i++) {
-                int y = 35 + i * 40;
-                bool is_s = (i == sel_item);
-                eadk_rect_t c = {16, (uint16_t)y, 288, 32};
-                eadk_display_push_rect_uniform(c, is_s ? th->card_sel : th->card_bg);
-
-                if (is_s) {
-                    eadk_rect_t acc = {16, (uint16_t)y, 4, 32};
-                    eadk_display_push_rect_uniform(acc, th->accent);
-                }
-
-                if (i == 0) {
-                    eadk_point_t p1 = {26, (uint16_t)(y + 10)};
-                    eadk_display_draw_string("Mode d'Affichage :", p1, false, th->text_primary, is_s ? th->card_sel : th->card_bg);
-                    eadk_point_t p2 = {180, (uint16_t)(y + 10)};
-                    eadk_display_draw_string(g_view_mode == VIEW_MODE_GALLERY ? "< GALERIE >" : "< LISTE >", p2, false, th->accent, is_s ? th->card_sel : th->card_bg);
-                } else if (i == 1) {
-                    eadk_point_t p1 = {26, (uint16_t)(y + 10)};
-                    eadk_display_draw_string("Raccourcis / Tooltips :", p1, false, th->text_primary, is_s ? th->card_sel : th->card_bg);
-                    eadk_point_t p2 = {200, (uint16_t)(y + 10)};
-                    eadk_display_draw_string(g_show_tooltips ? "< OUI >" : "< NON >", p2, false, th->accent, is_s ? th->card_sel : th->card_bg);
-                } else if (i == 2) {
-                    eadk_point_t p1 = {26, (uint16_t)(y + 4)};
-                    eadk_display_draw_string("Theme Visuel :", p1, false, th->text_primary, is_s ? th->card_sel : th->card_bg);
-                    eadk_point_t p2 = {26, (uint16_t)(y + 17)};
-                    eadk_display_draw_string(th->name, p2, false, th->accent, is_s ? th->card_sel : th->card_bg);
-                } else if (i == 3) {
-                    eadk_point_t p1 = {26, (uint16_t)(y + 10)};
-                    eadk_display_draw_string("[ OK / Back ] : Valider & Revenir", p1, false, th->accent, is_s ? th->card_sel : th->card_bg);
-                }
+                draw_settings_row(i, i == sel_item, th);
             }
 
             /* Pied d'écran */
@@ -766,21 +836,11 @@ int main(int argc, char* argv[]) {
     (void)argc;
     (void)argv;
 
-    /* Restauration de l'état persistant si valide, sinon initialisation par défaut */
-    uint32_t expected_chk = (uint32_t)(g_saved_settings.theme ^ g_saved_settings.view_mode ^ g_saved_settings.tooltips ^ 0xA5A5);
-    if (g_saved_settings.magic == EQUALIB_SETTINGS_MAGIC &&
-        g_saved_settings.checksum == expected_chk &&
-        g_saved_settings.theme >= 0 && g_saved_settings.theme < 6 &&
-        (g_saved_settings.view_mode == VIEW_MODE_GALLERY || g_saved_settings.view_mode == VIEW_MODE_LIST)) {
-        g_current_theme = g_saved_settings.theme;
-        g_view_mode = g_saved_settings.view_mode;
-        g_show_tooltips = (g_saved_settings.tooltips != 0);
-    } else {
-        g_current_theme = 0;
-        g_view_mode = VIEW_MODE_GALLERY;
-        g_show_tooltips = true;
-        save_persistent_settings();
-    }
+    /* Restauration de l'état persistant depuis le stockage AXI-SRAM haut */
+    eq_storage_t* st = eq_storage_get();
+    g_current_theme = st->theme;
+    g_view_mode = st->view_mode;
+    g_show_tooltips = (st->tooltips != 0);
 
     while (eadk_keyboard_scan() != 0) {
         eadk_timing_msleep(20);
@@ -788,12 +848,14 @@ int main(int argc, char* argv[]) {
 
     uint32_t total_apps = g_equalib_manifest.app_count;
     if (g_equalib_manifest.magic != EQUALIB_MANIFEST_MAGIC || total_apps == 0 || total_apps > MAX_MANIFEST_APPS) {
-        total_apps = 10;
+        total_apps = 16;
     }
 
     int selected = 0;
+    int old_selected = -1;
     int scroll_offset = 0;
-    bool redraw = true;
+    int old_scroll_offset = -1;
+    bool full_redraw = true;
     eadk_keyboard_state_t prev_kbd = 0;
 
     while (true) {
@@ -813,11 +875,11 @@ int main(int argc, char* argv[]) {
             break;
         }
 
-        /* Touche Paramètres : Toolbox, Var ou touche 0 */
+        /* Touche Paramètres : Toolbox ou Var */
         if (eadk_keyboard_key_down(pressed, eadk_key_toolbox) || 
             eadk_keyboard_key_down(pressed, eadk_key_var)) {
             run_settings_screen();
-            redraw = true;
+            full_redraw = true;
             prev_kbd = 0;
             continue;
         }
@@ -828,22 +890,18 @@ int main(int argc, char* argv[]) {
             if (eadk_keyboard_key_down(pressed, eadk_key_right)) {
                 if (selected < (int)total_apps - 1) {
                     selected++;
-                    redraw = true;
                 }
             } else if (eadk_keyboard_key_down(pressed, eadk_key_left)) {
                 if (selected > 0) {
                     selected--;
-                    redraw = true;
                 }
             } else if (eadk_keyboard_key_down(pressed, eadk_key_down)) {
                 if (selected + 3 < (int)total_apps) {
                     selected += 3;
-                    redraw = true;
                 }
             } else if (eadk_keyboard_key_down(pressed, eadk_key_up)) {
                 if (selected - 3 >= 0) {
                     selected -= 3;
-                    redraw = true;
                 }
             }
         } else {
@@ -852,13 +910,11 @@ int main(int argc, char* argv[]) {
                 if (selected < (int)total_apps - 1) {
                     selected++;
                     if (selected >= scroll_offset + 4) scroll_offset = selected - 3;
-                    redraw = true;
                 }
             } else if (eadk_keyboard_key_down(pressed, eadk_key_up)) {
                 if (selected > 0) {
                     selected--;
                     if (selected < scroll_offset) scroll_offset = selected;
-                    redraw = true;
                 }
             }
         }
@@ -881,6 +937,8 @@ int main(int argc, char* argv[]) {
             else if (type == APP_TYPE_DINO) run_dino_app();
             else if (type == APP_TYPE_SPACE_INVADERS) run_space_invaders_app();
             else if (type == APP_TYPE_BREAKOUT) run_breakout_app();
+            else if (type == APP_TYPE_PUISSANCE4) run_puissance4_app();
+            else if (type == APP_TYPE_MORPION) run_morpion_app();
             else if (type == APP_TYPE_SETTINGS) run_settings_screen();
             else if (type == APP_TYPE_NATIVE_EXEC) {
                 const uint8_t* bin_ptr = (app->data_size > 0) ? (const uint8_t*)(0x90180000 + app->data_offset) : NULL;
@@ -901,20 +959,18 @@ int main(int argc, char* argv[]) {
 
             while (eadk_keyboard_scan() != 0) eadk_timing_msleep(20);
             prev_kbd = 0;
-            redraw = true;
+            full_redraw = true;
+            old_selected = -1;
+            continue;
         }
 
         prev_kbd = kbd;
 
-        /* Rendu graphique complet */
-        if (redraw) {
-            redraw = false;
-            if (g_current_theme < 0 || g_current_theme >= 6) g_current_theme = 0;
-            if (g_view_mode != VIEW_MODE_GALLERY && g_view_mode != VIEW_MODE_LIST) g_view_mode = VIEW_MODE_GALLERY;
-            if (selected < 0) selected = 0;
-            if (selected >= (int)total_apps) selected = (int)total_apps - 1;
+        const theme_t* cur_th = &g_themes[g_current_theme];
 
-            const theme_t* cur_th = &g_themes[g_current_theme];
+        /* Rendu graphique propre */
+        if (full_redraw) {
+            full_redraw = false;
 
             /* Fond général de l'écran LCD */
             eadk_display_push_rect_uniform(eadk_screen_rect, cur_th->screen_bg);
@@ -935,7 +991,6 @@ int main(int argc, char* argv[]) {
 
             /* Contenu : Galerie ou Liste */
             if (g_view_mode == VIEW_MODE_GALLERY) {
-                /* Galerie : grille 3x2 (6 tuiles visibles par page) */
                 int page = selected / 6;
                 int page_start = page * 6;
                 for (int slot = 0; slot < 6; slot++) {
@@ -947,7 +1002,6 @@ int main(int argc, char* argv[]) {
                     }
                 }
             } else {
-                /* Liste : 4 cartes verticales */
                 int visible_count = 4;
                 if (visible_count > (int)total_apps - scroll_offset) {
                     visible_count = (int)total_apps - scroll_offset;
@@ -958,10 +1012,8 @@ int main(int argc, char* argv[]) {
                 }
             }
 
-            /* Bandeau En bas au centre : nom et catégorie de l'application active */
             draw_bottom_active_dock(selected, cur_th);
 
-            /* Pied de page avec raccourcis (Tooltips) si activés */
             if (g_show_tooltips) {
                 eadk_rect_t bottom_bar = {0, EADK_SCREEN_HEIGHT - 16, EADK_SCREEN_WIDTH, 16};
                 eadk_display_push_rect_uniform(bottom_bar, cur_th->card_bg);
@@ -969,14 +1021,51 @@ int main(int argc, char* argv[]) {
                 eadk_point_t p_help = {8, EADK_SCREEN_HEIGHT - 13};
                 eadk_display_draw_string("OK: Lancer | Toolbox: Options | Back: Epsilon", p_help, false, cur_th->text_muted, cur_th->card_bg);
             }
+            old_selected = selected;
+            old_scroll_offset = scroll_offset;
+        } else if (selected != old_selected || scroll_offset != old_scroll_offset) {
+            /* Rendu incrémental 100% sans scintillement */
+            if (g_view_mode == VIEW_MODE_GALLERY) {
+                if (selected / 6 == old_selected / 6) {
+                    int old_slot = old_selected % 6;
+                    int new_slot = selected % 6;
+                    draw_gallery_card(old_selected, old_slot % 3, old_slot / 3, false, cur_th);
+                    draw_gallery_card(selected, new_slot % 3, new_slot / 3, true, cur_th);
+                    draw_bottom_active_dock(selected, cur_th);
+                    old_selected = selected;
+                } else {
+                    full_redraw = true;
+                }
+            } else {
+                if (scroll_offset == old_scroll_offset) {
+                    draw_list_card(old_selected, old_selected - scroll_offset, false, cur_th);
+                    draw_list_card(selected, selected - scroll_offset, true, cur_th);
+                    draw_bottom_active_dock(selected, cur_th);
+                    old_selected = selected;
+                } else {
+                    eadk_rect_t list_zone = {8, 28, EADK_SCREEN_WIDTH - 16, 155};
+                    eadk_display_push_rect_uniform(list_zone, cur_th->screen_bg);
+                    int visible_count = 4;
+                    if (visible_count > (int)total_apps - scroll_offset) {
+                        visible_count = (int)total_apps - scroll_offset;
+                    }
+                    for (int v = 0; v < visible_count; v++) {
+                        int i = scroll_offset + v;
+                        draw_list_card(i, v, i == selected, cur_th);
+                    }
+                    draw_bottom_active_dock(selected, cur_th);
+                    old_selected = selected;
+                    old_scroll_offset = scroll_offset;
+                }
+            }
         }
 
         eadk_timing_msleep(20);
     }
 
+    save_persistent_settings();
     while (eadk_keyboard_scan() != 0) {
         eadk_timing_msleep(20);
     }
-
     return 0;
 }

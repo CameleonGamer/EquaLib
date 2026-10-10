@@ -241,14 +241,14 @@ describe('3. Algorithmes Mathématiques de la Roue Chromatique', () => {
 });
 
 // -------------------------------------------------------------
-// SUITE 4: Logique de Sélection, Limite à 16 Apps & Dock
+// SUITE 4: Logique de Sélection, Limite à 20 Apps & Dock
 // -------------------------------------------------------------
 describe('4. Pack d\'Applications et Dock Flottant', () => {
   let selectedApps = [];
   const catalog = JSON.parse(fs.readFileSync('web/catalog.json', 'utf8'));
 
   function addApp(app) {
-    if (selectedApps.length >= 16) return false;
+    if (selectedApps.length >= 20) return false;
     if (selectedApps.some(s => s.id === app.id)) return false;
     selectedApps.push({ ...app });
     return true;
@@ -263,16 +263,16 @@ describe('4. Pack d\'Applications et Dock Flottant', () => {
     return false;
   }
 
-  it('Ajout d\'applications et respect de la limite stricte de 16', () => {
+  it('Ajout d\'applications et respect de la limite stricte de 20', () => {
     selectedApps = [];
     catalog.forEach(app => addApp(app));
-    assert.strictEqual(selectedApps.length, Math.min(16, catalog.length));
+    assert.strictEqual(selectedApps.length, Math.min(20, catalog.length));
 
-    // Tentative d'ajout au-delà de 16
+    // Tentative d'ajout au-delà de 20
     for (let i = 0; i < 25; i++) {
       addApp({ id: 'dummy_' + i, name: 'Dummy', size_kb: 10 });
     }
-    assert.strictEqual(selectedApps.length, 16, 'Le pack ne doit jamais dépasser 16 applications');
+    assert.strictEqual(selectedApps.length, 20, 'Le pack ne doit jamais dépasser 20 applications');
   });
 
   it('Suppression et bascule dynamique des statuts d\'application', () => {
@@ -280,7 +280,7 @@ describe('4. Pack d\'Applications et Dock Flottant', () => {
     assert(selectedApps.some(s => s.id === firstId));
     removeApp(firstId);
     assert(!selectedApps.some(s => s.id === firstId));
-    assert.strictEqual(selectedApps.length, 15);
+    assert.strictEqual(selectedApps.length, 19);
   });
 
   it('Dock d\'application active retourne les bonnes informations', () => {
@@ -463,6 +463,21 @@ describe('5. Simulateur Virtuel et Jeux NumWorks', () => {
     sim.p4Move(-1);
     sim.p4Drop();
     sim.p4Restart();
+    sim.returnToMenu();
+    assert.strictEqual(sim.currentView, 'MENU');
+  });
+
+  it('Lancement du jeu Morpion (Tic-Tac-Toe, placement de symbole et IA Minimax)', () => {
+    sim.launchApp('MORPION');
+    assert.strictEqual(sim.currentView, 'MORPION');
+    assert(typeof sim.morpionMove === 'function');
+    assert(typeof sim.morpionPlace === 'function');
+    assert(typeof sim.morpionPlayCell === 'function');
+    assert(typeof sim.morpionRestart === 'function');
+    sim.morpionMove(0, 1);
+    sim.morpionMove(1, 0);
+    sim.morpionPlace();
+    sim.morpionRestart();
     sim.returnToMenu();
     assert.strictEqual(sim.currentView, 'MENU');
   });

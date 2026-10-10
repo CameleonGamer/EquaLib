@@ -2,6 +2,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include "apps.h"
+#include "storage.h"
 
 int snprintf(char* buf, unsigned int max, const char* fmt, ...);
 
@@ -343,11 +344,13 @@ void run_minesweeper_app(void) {
     /* Rendu complet initial de la fenêtre Windows 95 (UNE SEULE FOIS pour 0 scintillement) */
     eadk_display_push_rect_uniform(eadk_screen_rect, WIN95_BG);
 
-    /* Barre supérieure de l'application */
     eadk_rect_t top_bar = {0, 0, EADK_SCREEN_WIDTH, 22};
     eadk_display_push_rect_uniform(top_bar, 0xFE60);
     eadk_point_t pt_title = {8, 5};
-    eadk_display_draw_string("Demineur NumWorks (Win95)", pt_title, false, eadk_color_black, 0xFE60);
+    eq_storage_t* store = eq_storage_get();
+    char title_buf[48];
+    snprintf(title_buf, sizeof(title_buf), "Demineur Win95 (Victoires: %02d)", store->record_minesweeper_wins);
+    eadk_display_draw_string(title_buf, pt_title, false, eadk_color_black, 0xFE60);
 
     /* Encadrement global du démineur Windows 95 */
     int frame_x = BOARD_X - 6;
@@ -491,6 +494,8 @@ void run_minesweeper_app(void) {
                         if (revealed_count >= (GRID_W * GRID_H - TOTAL_MINES)) {
                             win = true;
                             draw_smiley(SMILEY_WIN);
+                            store->record_minesweeper_wins++;
+                            eq_storage_commit();
                         }
                     }
                 }

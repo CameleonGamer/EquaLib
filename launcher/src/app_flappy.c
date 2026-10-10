@@ -2,6 +2,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include "apps.h"
+#include "storage.h"
 
 int snprintf(char* buf, unsigned int max, const char* fmt, ...);
 
@@ -307,7 +308,7 @@ void run_flappy_app(void) {
     }
 
     int score = 0;
-    int best_score = 0;
+    int best_score = eq_storage_get()->record_flappy;
     int prev_drawn_score = -1;
     bool game_over = false;
     bool started = false;
@@ -419,7 +420,11 @@ void run_flappy_app(void) {
                     if (!pipes[i].passed && pipes[i].x + PIPE_BODY_W < BIRD_X) {
                         pipes[i].passed = true;
                         score++;
-                        if (score > best_score) best_score = score;
+                        if (score > best_score) {
+                            best_score = score;
+                            eq_storage_get()->record_flappy = best_score;
+                            eq_storage_commit();
+                        }
                     }
 
                     /* Recyclage hors écran */

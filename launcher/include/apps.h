@@ -19,5 +19,7 @@ void run_pong_app(void);
 void run_dino_app(void);
 void run_space_invaders_app(void);
 void run_breakout_app(void);
+void run_puissance4_app(void);
+void run_morpion_app(void);
 
 #endif // EQUALIB_APPS_H

@@ -2,6 +2,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include "apps.h"
+#include "storage.h"
 
 int snprintf(char* buf, unsigned int max, const char* fmt, ...);
 
@@ -171,9 +172,9 @@ static void draw_piece(int piece, int rot, int px, int py) {
 /* Rendu de l'aperçu de la pièce suivante dans le panneau latéral */
 static void draw_next_preview(int next_p) {
     int box_x = PANEL_X + 16;
-    int box_y = BOARD_Y + 28;
+    int box_y = BOARD_Y + 24;
     int box_w = 48;
-    int box_h = 42;
+    int box_h = 40;
 
     eadk_rect_t p_bg = {(uint16_t)box_x, (uint16_t)box_y, (uint16_t)box_w, (uint16_t)box_h};
     eadk_display_push_rect_uniform(p_bg, COLOR_BOARD_BG);
@@ -186,7 +187,7 @@ static void draw_next_preview(int next_p) {
     eadk_display_push_rect_uniform((eadk_rect_t){(uint16_t)(box_x+box_w), (uint16_t)(box_y-1), 1, (uint16_t)(box_h+2)}, COLOR_BORDER_LO);
 
     int off_x = box_x + 8;
-    int off_y = box_y + 11;
+    int off_y = box_y + 10;
     if (next_p == 0) { off_x -= 5; off_y -= 5; } /* I centré */
     else if (next_p == 1) { off_x -= 5; }          /* O centré */
 
@@ -198,28 +199,35 @@ static void draw_next_preview(int next_p) {
 }
 
 /* Mise à jour des textes du panneau latéral */
-static void update_panel_stats(int score, int lines, int level) {
+static void update_panel_stats(int score, int lines, int level, int hi_score) {
     char buf[24];
 
     /* Score */
     snprintf(buf, sizeof(buf), "%d", score);
-    eadk_rect_t sc_bg = {(uint16_t)(PANEL_X + 16), (uint16_t)(BOARD_Y + 95), 110, 16};
+    eadk_rect_t sc_bg = {(uint16_t)(PANEL_X + 16), (uint16_t)(BOARD_Y + 84), 110, 16};
     eadk_display_push_rect_uniform(sc_bg, COLOR_PANEL_BG);
-    eadk_point_t pt_sc = {(uint16_t)(PANEL_X + 16), (uint16_t)(BOARD_Y + 95)};
+    eadk_point_t pt_sc = {(uint16_t)(PANEL_X + 16), (uint16_t)(BOARD_Y + 84)};
     eadk_display_draw_string(buf, pt_sc, true, 0xFFFF, COLOR_PANEL_BG);
+
+    /* Record */
+    snprintf(buf, sizeof(buf), "%d", hi_score);
+    eadk_rect_t hi_bg = {(uint16_t)(PANEL_X + 16), (uint16_t)(BOARD_Y + 116), 110, 16};
+    eadk_display_push_rect_uniform(hi_bg, COLOR_PANEL_BG);
+    eadk_point_t pt_hi = {(uint16_t)(PANEL_X + 16), (uint16_t)(BOARD_Y + 116)};
+    eadk_display_draw_string(buf, pt_hi, true, 0xFE60, COLOR_PANEL_BG);
 
     /* Lignes */
     snprintf(buf, sizeof(buf), "%d", lines);
-    eadk_rect_t li_bg = {(uint16_t)(PANEL_X + 16), (uint16_t)(BOARD_Y + 135), 110, 14};
+    eadk_rect_t li_bg = {(uint16_t)(PANEL_X + 16), (uint16_t)(BOARD_Y + 148), 110, 14};
     eadk_display_push_rect_uniform(li_bg, COLOR_PANEL_BG);
-    eadk_point_t pt_li = {(uint16_t)(PANEL_X + 16), (uint16_t)(BOARD_Y + 135)};
+    eadk_point_t pt_li = {(uint16_t)(PANEL_X + 16), (uint16_t)(BOARD_Y + 148)};
     eadk_display_draw_string(buf, pt_li, false, 0xFFFF, COLOR_PANEL_BG);
 
     /* Niveau */
     snprintf(buf, sizeof(buf), "%d", level);
-    eadk_rect_t lv_bg = {(uint16_t)(PANEL_X + 16), (uint16_t)(BOARD_Y + 172), 110, 14};
+    eadk_rect_t lv_bg = {(uint16_t)(PANEL_X + 16), (uint16_t)(BOARD_Y + 180), 110, 14};
     eadk_display_push_rect_uniform(lv_bg, COLOR_PANEL_BG);
-    eadk_point_t pt_lv = {(uint16_t)(PANEL_X + 16), (uint16_t)(BOARD_Y + 172)};
+    eadk_point_t pt_lv = {(uint16_t)(PANEL_X + 16), (uint16_t)(BOARD_Y + 180)};
     eadk_display_draw_string(buf, pt_lv, false, 0xFFFF, COLOR_PANEL_BG);
 }
 
@@ -230,6 +238,9 @@ void run_tetris_app(void) {
     while (eadk_keyboard_scan() != 0) {
         eadk_timing_msleep(20);
     }
+
+    eq_storage_t* store = eq_storage_get();
+    int hi_score = store->record_tetris;
 
     uint8_t board[BOARD_ROWS][BOARD_COLS] = {{0}};
 
@@ -284,16 +295,19 @@ void run_tetris_app(void) {
     eadk_display_push_rect_uniform(panel_bg, COLOR_PANEL_BG);
 
     /* Titres des sections dans le panneau */
-    eadk_point_t pt_nxt = {(uint16_t)(PANEL_X + 16), (uint16_t)(BOARD_Y + 10)};
+    eadk_point_t pt_nxt = {(uint16_t)(PANEL_X + 16), (uint16_t)(BOARD_Y + 8)};
     eadk_display_draw_string("SUIVANT :", pt_nxt, false, 0xFE60, COLOR_PANEL_BG);
 
-    eadk_point_t pt_tsc = {(uint16_t)(PANEL_X + 16), (uint16_t)(BOARD_Y + 80)};
+    eadk_point_t pt_tsc = {(uint16_t)(PANEL_X + 16), (uint16_t)(BOARD_Y + 70)};
     eadk_display_draw_string("SCORE :", pt_tsc, false, 0x9CD3, COLOR_PANEL_BG);
 
-    eadk_point_t pt_tli = {(uint16_t)(PANEL_X + 16), (uint16_t)(BOARD_Y + 120)};
+    eadk_point_t pt_thi = {(uint16_t)(PANEL_X + 16), (uint16_t)(BOARD_Y + 102)};
+    eadk_display_draw_string("RECORD :", pt_thi, false, 0xFE60, COLOR_PANEL_BG);
+
+    eadk_point_t pt_tli = {(uint16_t)(PANEL_X + 16), (uint16_t)(BOARD_Y + 134)};
     eadk_display_draw_string("LIGNES :", pt_tli, false, 0x9CD3, COLOR_PANEL_BG);
 
-    eadk_point_t pt_tlv = {(uint16_t)(PANEL_X + 16), (uint16_t)(BOARD_Y + 158)};
+    eadk_point_t pt_tlv = {(uint16_t)(PANEL_X + 16), (uint16_t)(BOARD_Y + 166)};
     eadk_display_draw_string("NIVEAU :", pt_tlv, false, 0x9CD3, COLOR_PANEL_BG);
 
     /* Barre inférieure */
@@ -304,7 +318,7 @@ void run_tetris_app(void) {
 
     /* Affichage initial */
     draw_next_preview(next_piece);
-    update_panel_stats(score, lines, level);
+    update_panel_stats(score, lines, level, hi_score);
     draw_piece(cur_piece, cur_rot, cur_x, cur_y);
 
     while (true) {
@@ -344,7 +358,7 @@ void run_tetris_app(void) {
                 last_drop_ms = eadk_timing_millis();
 
                 draw_next_preview(next_piece);
-                update_panel_stats(score, lines, level);
+                update_panel_stats(score, lines, level, hi_score);
                 draw_piece(cur_piece, cur_rot, cur_x, cur_y);
             }
         } else {
@@ -392,6 +406,12 @@ void run_tetris_app(void) {
                     erase_piece(board, cur_piece, cur_rot, cur_x, cur_y);
                     cur_y++;
                     score += 1;
+                    if (score > hi_score) {
+                        hi_score = score;
+                        store->record_tetris = hi_score;
+                        eq_storage_commit();
+                    }
+                    update_panel_stats(score, lines, level, hi_score);
                     draw_piece(cur_piece, cur_rot, cur_x, cur_y);
                 }
             }
@@ -405,6 +425,12 @@ void run_tetris_app(void) {
                     drop_dist++;
                 }
                 score += drop_dist * 2;
+                if (score > hi_score) {
+                    hi_score = score;
+                    store->record_tetris = hi_score;
+                    eq_storage_commit();
+                }
+                update_panel_stats(score, lines, level, hi_score);
                 draw_piece(cur_piece, cur_rot, cur_x, cur_y);
                 last_drop_ms = 0; /* Force le verrouillage immédiat */
             }
@@ -473,7 +499,12 @@ void run_tetris_app(void) {
                                 draw_board_cell(c, r, board[r][c]);
                             }
                         }
-                        update_panel_stats(score, lines, level);
+                        if (score > hi_score) {
+                            hi_score = score;
+                            store->record_tetris = hi_score;
+                            eq_storage_commit();
+                        }
+                        update_panel_stats(score, lines, level, hi_score);
                     }
 
                     /* Pièce suivante */
@@ -487,6 +518,11 @@ void run_tetris_app(void) {
 
                     if (check_collision(board, cur_piece, cur_rot, cur_x, cur_y)) {
                         game_over = true;
+                        if (score > hi_score) {
+                            hi_score = score;
+                            store->record_tetris = hi_score;
+                            eq_storage_commit();
+                        }
                         /* Message Game Over */
                         eadk_rect_t gov_box = {45, 90, 230, 60};
                         eadk_display_push_rect_uniform(gov_box, 0xFFFF);

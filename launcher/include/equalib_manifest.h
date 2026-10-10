@@ -24,8 +24,10 @@
 #define APP_TYPE_DINO        16
 #define APP_TYPE_SPACE_INVADERS 17
 #define APP_TYPE_BREAKOUT    18
+#define APP_TYPE_PUISSANCE4  19
+#define APP_TYPE_MORPION     20
 
-#define MAX_MANIFEST_APPS 16
+#define MAX_MANIFEST_APPS 20
 
 #pragma pack(push, 1)
 

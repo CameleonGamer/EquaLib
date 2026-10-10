@@ -21,6 +21,8 @@ const srcFiles = [
   'app_dino.c',
   'app_space_invaders.c',
   'app_breakout.c',
+  'app_puissance4.c',
+  'app_morpion.c',
   'app_python.c',
   'eq_font.c',
   'mini_libc.c'

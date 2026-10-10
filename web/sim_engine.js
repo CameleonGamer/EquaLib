@@ -45,7 +45,8 @@ class NumWorksSimulator {
       { id: 'space_invaders', name: '9. Space Invaders', cat: 'Arcade', type: 'SPACE_INVADERS', icon: '👾' },
       { id: 'breakout', name: '10. Casse-Briques', cat: 'Arcade', type: 'BREAKOUT', icon: '🧱' },
       { id: 'puissance4', name: '11. Puissance 4', cat: 'Arcade', type: 'PUISSANCE4', icon: '🟡' },
-      { id: 'settings', name: '12. Paramètres & Thèmes', cat: 'Options', type: 'SETTINGS', icon: '⚙️' }
+      { id: 'morpion', name: '12. Morpion (Tic-Tac-Toe)', cat: 'Arcade', type: 'MORPION', icon: '❌' },
+      { id: 'settings', name: '13. Paramètres & Thèmes', cat: 'Options', type: 'SETTINGS', icon: '⚙️' }
     ];
 
     let savedSettings = null;
@@ -220,6 +221,17 @@ class NumWorksSimulator {
         else if (e.key === 'ArrowRight' || keyL === 'd') { e.preventDefault(); this.p4Move?.(1); }
         else if (e.key === ' ' || e.key === 'Enter' || e.key === 'ArrowDown' || keyL === 's') { e.preventDefault(); this.p4Drop?.(); }
         else if (e.key === 'Escape' || e.key === 'Backspace') { e.preventDefault(); this.returnToMenu(); }
+      } else if (this.currentView === 'MORPION') {
+        if (['1', '2', '3', '4', '5', '6', '7', '8', '9'].includes(e.key)) {
+          e.preventDefault();
+          const n = parseInt(e.key, 10) - 1;
+          this.morpionPlayCell?.(Math.floor(n / 3), n % 3);
+        } else if (e.key === 'ArrowLeft' || keyL === 'q' || keyL === 'a') { e.preventDefault(); this.morpionMove?.(0, -1); }
+        else if (e.key === 'ArrowRight' || keyL === 'd') { e.preventDefault(); this.morpionMove?.(0, 1); }
+        else if (e.key === 'ArrowUp' || keyL === 'z' || keyL === 'w') { e.preventDefault(); this.morpionMove?.(-1, 0); }
+        else if (e.key === 'ArrowDown' || keyL === 's') { e.preventDefault(); this.morpionMove?.(1, 0); }
+        else if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); this.morpionPlace?.(); }
+        else if (e.key === 'Escape' || e.key === 'Backspace') { e.preventDefault(); this.returnToMenu(); }
       } else if (this.currentView === 'COURSES') {
         if (e.key === 'ArrowRight' || keyL === 'd') { e.preventDefault(); this.nextCoursePage(1); }
         else if (e.key === 'ArrowLeft' || keyL === 'q' || keyL === 'a') { e.preventDefault(); this.nextCoursePage(-1); }
@@ -346,6 +358,13 @@ class NumWorksSimulator {
       else if (action === 'RIGHT') this.p4Move?.(1);
       else if (action === 'OK' || action === 'DOWN') this.p4Drop?.();
       else if (action === 'BACK') this.returnToMenu();
+    } else if (this.currentView === 'MORPION') {
+      if (action === 'LEFT') this.morpionMove?.(0, -1);
+      else if (action === 'RIGHT') this.morpionMove?.(0, 1);
+      else if (action === 'UP') this.morpionMove?.(-1, 0);
+      else if (action === 'DOWN') this.morpionMove?.(1, 0);
+      else if (action === 'OK') this.morpionPlace?.();
+      else if (action === 'BACK') this.returnToMenu();
     } else if (this.currentView === 'COURSES') {
       if (action === 'RIGHT') this.nextCoursePage(1);
       else if (action === 'LEFT') this.nextCoursePage(-1);
@@ -400,6 +419,9 @@ class NumWorksSimulator {
     } else if (t === 'PUISSANCE4' || t.includes('PUISSANCE') || t.includes('CONNECT4')) {
       this.currentView = 'PUISSANCE4';
       this.startPuissance4Game();
+    } else if (t === 'MORPION' || t.includes('MORPION') || t.includes('TICTAC')) {
+      this.currentView = 'MORPION';
+      this.startMorpionGame();
     } else if (t === 'COURSES' || t.includes('FICHE') || t.includes('COURS')) {
       this.currentView = 'COURSES';
       this.startCoursesViewer();
@@ -648,7 +670,8 @@ class NumWorksSimulator {
         { id: 'space_invaders', name: '9. Space Invaders', cat: 'Arcade', type: 'SPACE_INVADERS', icon: '👾' },
         { id: 'breakout', name: '10. Casse-Briques', cat: 'Arcade', type: 'BREAKOUT', icon: '🧱' },
         { id: 'puissance4', name: '11. Puissance 4', cat: 'Arcade', type: 'PUISSANCE4', icon: '🟡' },
-        { id: 'settings', name: '12. Paramètres & Thèmes', cat: 'Options', type: 'SETTINGS', icon: '⚙️' }
+        { id: 'morpion', name: '12. Morpion (Tic-Tac-Toe)', cat: 'Arcade', type: 'MORPION', icon: '❌' },
+        { id: 'settings', name: '13. Paramètres & Thèmes', cat: 'Options', type: 'SETTINGS', icon: '⚙️' }
       ];
     } else {
       this.apps = pack.map((app, i) => {
@@ -671,6 +694,7 @@ class NumWorksSimulator {
         else if (idL.includes('invader') || nameL.includes('space') || nameL.includes('invader')) { type = 'SPACE_INVADERS'; icon = '👾'; }
         else if (idL.includes('breakout') || idL.includes('brique') || nameL.includes('brique')) { type = 'BREAKOUT'; icon = '🧱'; }
         else if (idL.includes('puissance') || nameL.includes('puissance') || idL.includes('connect4') || nameL.includes('connect4')) { type = 'PUISSANCE4'; icon = '🟡'; }
+        else if (idL.includes('morpion') || nameL.includes('morpion') || idL.includes('tic') || nameL.includes('tic tac toe')) { type = 'MORPION'; icon = '❌'; }
 
         return {
           id: app.id,
@@ -2430,6 +2454,379 @@ class NumWorksSimulator {
           ctx.lineTo(30 + pEnd.c * 34 + 17, 32 + pEnd.r * 21 + 10);
           ctx.stroke();
         }
+      }
+
+      this.gameLoopId = requestAnimationFrame(loop);
+    };
+
+    loop();
+  }
+
+  // ==================== MINI JEU MORPION (TIC-TAC-TOE) ====================
+  startMorpionGame() {
+    this.title.textContent = 'Morpion (Tic-Tac-Toe)';
+    this.topbar.style.backgroundColor = '#ec4899';
+
+    let recordWins = parseInt(safeStorageGet('equalib_record_morpion_wins', '0'), 10) || 0;
+
+    this.content.innerHTML = `
+      <div class="w-full h-full flex flex-col justify-between bg-[#0b1021] p-1 rounded relative select-none">
+        <canvas id="morp-cvs" width="300" height="165" class="w-full h-full block rounded cursor-pointer"></canvas>
+        <div id="morp-overlay" class="hidden absolute inset-0 bg-black/85 flex flex-col items-center justify-center text-white text-center rounded z-10">
+          <div id="morp-msg" class="font-black text-sm text-pink-400 mb-1 drop-shadow">VICTOIRE !</div>
+          <div id="morp-submsg" class="text-[9px] text-slate-300 mb-2">Alignement de 3 symboles réussi !</div>
+          <button id="morp-restart-btn" class="px-4 py-1.5 bg-pink-600 hover:bg-pink-500 text-white text-[10px] font-bold rounded shadow transition cursor-pointer">
+            Rejouer (OK / Espace)
+          </button>
+        </div>
+        <div class="flex items-center justify-between px-1 text-[8px] text-slate-300 pt-0.5">
+          <span id="morp-turn-status" class="font-bold text-cyan-400">À votre tour (X)</span>
+          <div class="flex items-center gap-1">
+            <button id="morp-mode-btn" class="px-1.5 py-0.5 bg-slate-800 hover:bg-slate-700 text-yellow-400 font-bold rounded cursor-pointer">Mode: 1P (vs IA)</button>
+            <span id="morp-wins-badge" class="px-1.5 py-0.5 bg-slate-800 text-slate-300 rounded font-mono">Victoires: ${recordWins}</span>
+            <button id="morp-back-btn" class="px-1.5 py-0.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded cursor-pointer">Hub</button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    const canvas = document.getElementById('morp-cvs');
+    const ctx = canvas.getContext('2d');
+    const overlay = document.getElementById('morp-overlay');
+    const msgEl = document.getElementById('morp-msg');
+    const statusEl = document.getElementById('morp-turn-status');
+    const restartBtn = document.getElementById('morp-restart-btn');
+    const backBtn = document.getElementById('morp-back-btn');
+    const modeBtn = document.getElementById('morp-mode-btn');
+    const winsBadge = document.getElementById('morp-wins-badge');
+
+    let grid = [
+      [0, 0, 0],
+      [0, 0, 0],
+      [0, 0, 0]
+    ];
+    let selR = 1;
+    let selC = 1;
+    let curPlayer = 1; // 1 = X, 2 = O
+    let vsAi = true;
+    let gameOver = false;
+    let winCells = null;
+
+    const checkWin = () => {
+      // Lignes
+      for (let r = 0; r < 3; r++) {
+        if (grid[r][0] !== 0 && grid[r][0] === grid[r][1] && grid[r][1] === grid[r][2]) {
+          return { winner: grid[r][0], line: [{r, c: 0}, {r, c: 1}, {r, c: 2}] };
+        }
+      }
+      // Colonnes
+      for (let c = 0; c < 3; c++) {
+        if (grid[0][c] !== 0 && grid[0][c] === grid[1][c] && grid[1][c] === grid[2][c]) {
+          return { winner: grid[0][c], line: [{r: 0, c}, {r: 1, c}, {r: 2, c}] };
+        }
+      }
+      // Diagonales
+      if (grid[0][0] !== 0 && grid[0][0] === grid[1][1] && grid[1][1] === grid[2][2]) {
+        return { winner: grid[0][0], line: [{r: 0, c: 0}, {r: 1, c: 1}, {r: 2, c: 2}] };
+      }
+      if (grid[0][2] !== 0 && grid[0][2] === grid[1][1] && grid[1][1] === grid[2][0]) {
+        return { winner: grid[0][2], line: [{r: 0, c: 2}, {r: 1, c: 1}, {r: 2, c: 0}] };
+      }
+      return null;
+    };
+
+    const isFull = () => {
+      for (let r = 0; r < 3; r++) {
+        for (let c = 0; c < 3; c++) {
+          if (grid[r][c] === 0) return false;
+        }
+      }
+      return true;
+    };
+
+    const minimax = (depth, isMaximizing) => {
+      const res = checkWin();
+      if (res) {
+        return res.winner === 2 ? (10 - depth) : (depth - 10);
+      }
+      if (isFull()) return 0;
+
+      if (isMaximizing) {
+        let maxEval = -100;
+        for (let r = 0; r < 3; r++) {
+          for (let c = 0; c < 3; c++) {
+            if (grid[r][c] === 0) {
+              grid[r][c] = 2;
+              const evaluation = minimax(depth + 1, false);
+              grid[r][c] = 0;
+              if (evaluation > maxEval) maxEval = evaluation;
+            }
+          }
+        }
+        return maxEval;
+      } else {
+        let minEval = 100;
+        for (let r = 0; r < 3; r++) {
+          for (let c = 0; c < 3; c++) {
+            if (grid[r][c] === 0) {
+              grid[r][c] = 1;
+              const evaluation = minimax(depth + 1, true);
+              grid[r][c] = 0;
+              if (evaluation < minEval) minEval = evaluation;
+            }
+          }
+        }
+        return minEval;
+      }
+    };
+
+    const findBestMove = () => {
+      let bestVal = -100;
+      let move = null;
+      for (let r = 0; r < 3; r++) {
+        for (let c = 0; c < 3; c++) {
+          if (grid[r][c] === 0) {
+            grid[r][c] = 2;
+            const moveVal = minimax(0, false);
+            grid[r][c] = 0;
+            if (moveVal > bestVal) {
+              bestVal = moveVal;
+              move = { r, c };
+            }
+          }
+        }
+      }
+      return move;
+    };
+
+    const runAi = () => {
+      if (gameOver) return;
+      if (statusEl) {
+        statusEl.textContent = "🤖 L'IA réfléchit...";
+        statusEl.className = 'font-bold text-pink-400';
+      }
+
+      setTimeout(() => {
+        if (gameOver) return;
+        const best = findBestMove();
+        if (best) {
+          selR = best.r;
+          selC = best.c;
+          grid[best.r][best.c] = 2;
+          window.soundFx?.playClick?.();
+
+          const win = checkWin();
+          if (win) {
+            gameOver = true;
+            winCells = win.line;
+            msgEl.textContent = "L'IA A GAGNÉ !";
+            msgEl.className = 'font-black text-sm text-pink-400 mb-1 drop-shadow';
+            overlay.classList.remove('hidden');
+            window.soundFx?.playHit?.();
+          } else if (isFull()) {
+            gameOver = true;
+            msgEl.textContent = 'MATCH NUL !';
+            msgEl.className = 'font-black text-sm text-slate-300 mb-1 drop-shadow';
+            overlay.classList.remove('hidden');
+          } else {
+            curPlayer = 1;
+            if (statusEl) {
+              statusEl.textContent = 'À votre tour (X)';
+              statusEl.className = 'font-bold text-cyan-400';
+            }
+          }
+        }
+      }, 300);
+    };
+
+    this.morpionMove = (dr, dc) => {
+      if (gameOver || (vsAi && curPlayer === 2)) return;
+      selR = (selR + dr + 3) % 3;
+      selC = (selC + dc + 3) % 3;
+      window.soundFx?.playClick?.();
+    };
+
+    this.morpionPlayCell = (r, c) => {
+      if (gameOver || (vsAi && curPlayer === 2)) return;
+      selR = r;
+      selC = c;
+      this.morpionPlace();
+    };
+
+    this.morpionPlace = () => {
+      if (gameOver || (vsAi && curPlayer === 2)) return;
+      if (grid[selR][selC] !== 0) return;
+
+      grid[selR][selC] = curPlayer;
+      window.soundFx?.playClick?.();
+
+      const win = checkWin();
+      if (win) {
+        gameOver = true;
+        winCells = win.line;
+        if (win.winner === 1) {
+          msgEl.textContent = 'VICTOIRE JOUEUR 1 (X) ! 🏆';
+          msgEl.className = 'font-black text-sm text-cyan-400 mb-1 drop-shadow';
+          recordWins++;
+          safeStorageSet('equalib_record_morpion_wins', recordWins.toString());
+          if (winsBadge) winsBadge.textContent = `Victoires: ${recordWins}`;
+          window.soundFx?.playScore?.();
+        } else {
+          msgEl.textContent = vsAi ? "L'IA A GAGNÉ !" : 'VICTOIRE JOUEUR 2 (O) ! 🏆';
+          msgEl.className = 'font-black text-sm text-pink-400 mb-1 drop-shadow';
+          window.soundFx?.playHit?.();
+        }
+        overlay.classList.remove('hidden');
+      } else if (isFull()) {
+        gameOver = true;
+        msgEl.textContent = 'MATCH NUL !';
+        msgEl.className = 'font-black text-sm text-slate-300 mb-1 drop-shadow';
+        overlay.classList.remove('hidden');
+      } else {
+        if (vsAi) {
+          curPlayer = 2;
+          runAi();
+        } else {
+          curPlayer = (curPlayer === 1) ? 2 : 1;
+          if (statusEl) {
+            statusEl.textContent = curPlayer === 1 ? 'Tour: Joueur 1 (X)' : 'Tour: Joueur 2 (O)';
+            statusEl.className = curPlayer === 1 ? 'font-bold text-cyan-400' : 'font-bold text-pink-400';
+          }
+        }
+      }
+    };
+
+    this.morpionRestart = () => {
+      grid = [
+        [0, 0, 0],
+        [0, 0, 0],
+        [0, 0, 0]
+      ];
+      selR = 1;
+      selC = 1;
+      curPlayer = 1;
+      gameOver = false;
+      winCells = null;
+      if (statusEl) {
+        statusEl.textContent = vsAi ? 'À votre tour (X)' : 'Tour: Joueur 1 (X)';
+        statusEl.className = 'font-bold text-cyan-400';
+      }
+      overlay.classList.add('hidden');
+    };
+
+    if (restartBtn) restartBtn.addEventListener('click', () => this.morpionRestart());
+    if (backBtn) backBtn.addEventListener('click', () => this.returnToMenu());
+    if (modeBtn) {
+      modeBtn.addEventListener('click', () => {
+        vsAi = !vsAi;
+        modeBtn.textContent = vsAi ? 'Mode: 1P (vs IA)' : 'Mode: 2 Joueurs';
+        this.morpionRestart();
+      });
+    }
+
+    canvas.addEventListener('click', (e) => {
+      if (gameOver) { this.morpionRestart(); return; }
+      if (vsAi && curPlayer === 2) return;
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      const clickX = (e.clientX - rect.left) * scaleX;
+      const clickY = (e.clientY - rect.top) * scaleY;
+
+      const gridLeft = (canvas.width - 138) / 2;
+      const gridTop = (canvas.height - 138) / 2;
+      const c = Math.floor((clickX - gridLeft) / 46);
+      const r = Math.floor((clickY - gridTop) / 46);
+      if (r >= 0 && r < 3 && c >= 0 && c < 3) {
+        this.morpionPlayCell(r, c);
+      }
+    });
+
+    let tick = 0;
+    const loop = () => {
+      tick++;
+
+      ctx.fillStyle = '#0b1021';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      const cellSize = 46;
+      const gridW = 3 * cellSize;
+      const startX = Math.round((canvas.width - gridW) / 2);
+      const startY = Math.round((canvas.height - gridW) / 2);
+
+      // Grille néon 3x3
+      ctx.strokeStyle = '#1e293b';
+      ctx.lineWidth = 4;
+      ctx.lineCap = 'round';
+
+      // Lignes verticales
+      for (let c = 1; c < 3; c++) {
+        const x = startX + c * cellSize;
+        ctx.beginPath();
+        ctx.moveTo(x, startY + 4);
+        ctx.lineTo(x, startY + gridW - 4);
+        ctx.stroke();
+      }
+      // Lignes horizontales
+      for (let r = 1; r < 3; r++) {
+        const y = startY + r * cellSize;
+        ctx.beginPath();
+        ctx.moveTo(startX + 4, y);
+        ctx.lineTo(startX + gridW - 4, y);
+        ctx.stroke();
+      }
+
+      // Curseur sélectionné
+      if (!gameOver && !(vsAi && curPlayer === 2)) {
+        const cx = startX + selC * cellSize;
+        const cy = startY + selR * cellSize;
+        const pulse = 0.5 + 0.5 * Math.sin(tick * 0.12);
+        ctx.strokeStyle = `rgba(56, 189, 248, ${0.4 + pulse * 0.5})`;
+        ctx.lineWidth = 2;
+        ctx.strokeRect(cx + 4, cy + 4, cellSize - 8, cellSize - 8);
+      }
+
+      // Symboles X et O
+      for (let r = 0; r < 3; r++) {
+        for (let c = 0; c < 3; c++) {
+          const val = grid[r][c];
+          const cx = startX + c * cellSize + cellSize / 2;
+          const cy = startY + r * cellSize + cellSize / 2;
+
+          if (val === 1) {
+            // Croix X (Cyan vif)
+            ctx.strokeStyle = '#38bdf8';
+            ctx.lineWidth = 4;
+            ctx.lineCap = 'round';
+            const rad = 13;
+            ctx.beginPath();
+            ctx.moveTo(cx - rad, cy - rad);
+            ctx.lineTo(cx + rad, cy + rad);
+            ctx.moveTo(cx + rad, cy - rad);
+            ctx.lineTo(cx - rad, cy + rad);
+            ctx.stroke();
+          } else if (val === 2) {
+            // Rond O (Rose vif)
+            ctx.strokeStyle = '#f43f5e';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.arc(cx, cy, 14, 0, Math.PI * 2);
+            ctx.stroke();
+          }
+        }
+      }
+
+      // Ligne de victoire animée
+      if (winCells && winCells.length === 3) {
+        ctx.strokeStyle = (Math.floor(tick / 6) % 2 === 0) ? '#ffffff' : '#22c55e';
+        ctx.lineWidth = 5;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        const p1 = winCells[0];
+        const p3 = winCells[2];
+        ctx.moveTo(startX + p1.c * cellSize + cellSize / 2, startY + p1.r * cellSize + cellSize / 2);
+        ctx.lineTo(startX + p3.c * cellSize + cellSize / 2, startY + p3.r * cellSize + cellSize / 2);
+        ctx.stroke();
       }
 
       this.gameLoopId = requestAnimationFrame(loop);

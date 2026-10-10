@@ -2,6 +2,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include "apps.h"
+#include "storage.h"
 
 int snprintf(char* buf, unsigned int max, const char* fmt, ...);
 
@@ -230,7 +231,7 @@ void run_2048_app(void) {
 
     int grid[BOARD_SIZE][BOARD_SIZE] = {{0}};
     int score = 0;
-    int best_score = 0;
+    int best_score = eq_storage_get()->record_2048;
     int prev_drawn_score = -1;
     bool game_over = false;
 
@@ -354,7 +355,11 @@ void run_2048_app(void) {
             }
 
             if (moved) {
-                if (score > best_score) best_score = score;
+                if (score > best_score) {
+                    best_score = score;
+                    eq_storage_get()->record_2048 = best_score;
+                    eq_storage_commit();
+                }
                 spawn_tile(grid);
                 for (int r = 0; r < BOARD_SIZE; r++) {
                     for (int c = 0; c < BOARD_SIZE; c++) {

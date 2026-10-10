@@ -174,6 +174,24 @@ const APP_DETAILS_MAP = {
       { key: 'Back', desc: 'Retour au Hub' }
     ],
     tips: 'Alignez 4 jetons horizontalement, verticalement ou en diagonale.'
+  },
+  'morpion': {
+    controls: [
+      { key: 'Clic Case / 1 à 9', desc: 'Placer directement le symbole dans la case' },
+      { key: 'Flèches (ZQSD)', desc: 'Déplacer le curseur dans la grille 3x3' },
+      { key: 'OK / Espace', desc: 'Valider le coup (X ou O)' },
+      { key: 'Back', desc: 'Retour au Hub' }
+    ],
+    tips: 'Alignez 3 symboles face à une IA imbattable (Minimax) ou basculez en mode 2 joueurs !'
+  },
+  'comm_morpion': {
+    controls: [
+      { key: 'Clic Case / 1 à 9', desc: 'Placer directement le symbole' },
+      { key: 'Flèches (ZQSD)', desc: 'Déplacer le curseur' },
+      { key: 'OK / Espace', desc: 'Valider le coup' },
+      { key: 'Back', desc: 'Retour au Hub' }
+    ],
+    tips: 'Alignez 3 symboles face à l\'IA ou entre amis.'
   }
 };
 
@@ -1180,7 +1198,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         selectedApps = [];
         config.apps.forEach(cfgApp => {
           const match = catalogApps.find(a => a.id === cfgApp.id) || communityApps.find(a => a.id === cfgApp.id);
-          if (match && selectedApps.length < 16 && !selectedApps.some(s => s.id === match.id)) {
+          if (match && selectedApps.length < 20 && !selectedApps.some(s => s.id === match.id)) {
             selectedApps.push({...match});
           }
         });
@@ -1757,9 +1775,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // ==================== GESTION DE LA SÉLECTION (LE PACK) ====================
   function addAppToSelection(app) {
-    if (selectedApps.length >= 16) {
+    if (selectedApps.length >= 20) {
       window.soundFx?.playHit();
-      showToast('Limite atteinte (maximum 16 applications par bundle)', 'warning');
+      showToast('Limite atteinte (maximum 20 applications par bundle)', 'warning');
       return;
     }
     if (selectedApps.some(s => s.id === app.id)) return;
@@ -1902,7 +1920,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const slotsRemainingText = document.getElementById('slots-remaining-text');
     if (slotsRemainingText) {
-      const freeSlots = Math.max(0, 16 - selectedApps.length);
+      const freeSlots = Math.max(0, 20 - selectedApps.length);
       slotsRemainingText.textContent = `${freeSlots} slot${freeSlots > 1 ? 's' : ''} libre${freeSlots > 1 ? 's' : ''}`;
       if (freeSlots === 0) {
         slotsRemainingText.className = 'text-red-400 font-bold';
@@ -1923,7 +1941,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   function updateUI() {
-    appCountBadge.textContent = `${selectedApps.length} / 16`;
+    appCountBadge.textContent = `${selectedApps.length} / 20`;
     renderSelection();
     updateMemoryUsage();
     simulator?.updatePack(selectedApps);
@@ -2044,7 +2062,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     try {
       showToast(`Génération du binaire natif N0120 avec vos ${selectedApps.length} applications...`, 'info');
-      const bundle = await bundler.buildBundle(selectedApps, 'nwa');
+      const bundle = await bundler.buildBundle(selectedApps, 'nwa', { theme: userSettings.theme, displayMode: userSettings.displayMode });
       const url = URL.createObjectURL(bundle.blob);
       const a = document.createElement('a');
       a.href = url;
@@ -2113,7 +2131,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       progressText.textContent = `Génération du pack personnalisé (${selectedApps.length} application${selectedApps.length > 1 ? 's' : ''})...`;
 
       // 1. Génération dynamique du binaire natif patché avec les apps sélectionnées
-      const bundle = await bundler.buildBundle(selectedApps, 'bin');
+      const bundle = await bundler.buildBundle(selectedApps, 'bin', { theme: userSettings.theme, displayMode: userSettings.displayMode });
 
       progressText.textContent = 'Préparation du flash USB...';
 
