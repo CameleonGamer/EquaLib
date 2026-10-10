@@ -222,41 +222,41 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (settingModeGallery && settingModeList) {
       if (isGallery) {
-        settingModeGallery.className = 'p-3 rounded-2xl border transition-all flex items-center gap-3 text-left cursor-pointer bg-slate-950 border-amber-500/60 ring-1 ring-amber-500/20';
-        settingModeList.className = 'p-3 rounded-2xl border transition-all flex items-center gap-3 text-left cursor-pointer bg-slate-950 border-slate-800 hover:border-slate-700';
+        settingModeGallery.className = 'p-3 rounded border-2 transition-all flex items-center gap-3 text-left cursor-pointer bg-[#1c2128] border-[#FFBB00] shadow-[2px_2px_0px_#000]';
+        settingModeList.className = 'p-3 rounded border-2 transition-all flex items-center gap-3 text-left cursor-pointer bg-[#0d1117] border-[#30363d] hover:border-[#8b949e]';
       } else {
-        settingModeList.className = 'p-3 rounded-2xl border transition-all flex items-center gap-3 text-left cursor-pointer bg-slate-950 border-amber-500/60 ring-1 ring-amber-500/20';
-        settingModeGallery.className = 'p-3 rounded-2xl border transition-all flex items-center gap-3 text-left cursor-pointer bg-slate-950 border-slate-800 hover:border-slate-700';
+        settingModeList.className = 'p-3 rounded border-2 transition-all flex items-center gap-3 text-left cursor-pointer bg-[#1c2128] border-[#FFBB00] shadow-[2px_2px_0px_#000]';
+        settingModeGallery.className = 'p-3 rounded border-2 transition-all flex items-center gap-3 text-left cursor-pointer bg-[#0d1117] border-[#30363d] hover:border-[#8b949e]';
       }
     }
 
     if (viewModeGalleryBtn && viewModeListBtn) {
       if (isGallery) {
-        viewModeGalleryBtn.className = 'px-3 py-1 rounded-lg text-xs font-bold transition-all bg-nw-yellow text-black flex items-center gap-1 cursor-pointer shadow-sm';
-        viewModeListBtn.className = 'px-3 py-1 rounded-lg text-xs font-semibold transition-all text-slate-400 hover:text-white flex items-center gap-1 cursor-pointer';
+        viewModeGalleryBtn.className = 'px-3 py-1 rounded text-xs font-mono font-bold transition-all bg-[#FFBB00] text-black border border-[#FFBB00] flex items-center gap-1 cursor-pointer shadow-[1px_1px_0px_#000]';
+        viewModeListBtn.className = 'px-3 py-1 rounded text-xs font-mono font-medium transition-all text-[#8b949e] hover:text-[#c9d1d9] flex items-center gap-1 cursor-pointer';
       } else {
-        viewModeListBtn.className = 'px-3 py-1 rounded-lg text-xs font-bold transition-all bg-nw-yellow text-black flex items-center gap-1 cursor-pointer shadow-sm';
-        viewModeGalleryBtn.className = 'px-3 py-1 rounded-lg text-xs font-semibold transition-all text-slate-400 hover:text-white flex items-center gap-1 cursor-pointer';
+        viewModeListBtn.className = 'px-3 py-1 rounded text-xs font-mono font-bold transition-all bg-[#FFBB00] text-black border border-[#FFBB00] flex items-center gap-1 cursor-pointer shadow-[1px_1px_0px_#000]';
+        viewModeGalleryBtn.className = 'px-3 py-1 rounded text-xs font-mono font-medium transition-all text-[#8b949e] hover:text-[#c9d1d9] flex items-center gap-1 cursor-pointer';
       }
     }
 
     if (quickViewGalleryBtn && quickViewListBtn) {
       if (isGallery) {
-        quickViewGalleryBtn.className = 'px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-nw-yellow text-black flex items-center gap-1.5 cursor-pointer shadow-sm';
-        quickViewListBtn.className = 'px-3 py-1.5 rounded-lg text-xs font-semibold transition-all text-slate-400 hover:text-white flex items-center gap-1.5 cursor-pointer';
+        quickViewGalleryBtn.className = 'px-3 py-1.5 rounded text-xs font-mono font-bold transition-all bg-[#FFBB00] text-black border border-[#FFBB00] flex items-center gap-1.5 cursor-pointer shadow-[1px_1px_0px_#000]';
+        quickViewListBtn.className = 'px-3 py-1.5 rounded text-xs font-mono font-medium transition-all text-[#8b949e] hover:text-[#c9d1d9] flex items-center gap-1.5 cursor-pointer';
       } else {
-        quickViewListBtn.className = 'px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-nw-yellow text-black flex items-center gap-1.5 cursor-pointer shadow-sm';
-        quickViewGalleryBtn.className = 'px-3 py-1.5 rounded-lg text-xs font-semibold transition-all text-slate-400 hover:text-white flex items-center gap-1.5 cursor-pointer';
+        quickViewListBtn.className = 'px-3 py-1.5 rounded text-xs font-mono font-bold transition-all bg-[#FFBB00] text-black border border-[#FFBB00] flex items-center gap-1.5 cursor-pointer shadow-[1px_1px_0px_#000]';
+        quickViewGalleryBtn.className = 'px-3 py-1.5 rounded text-xs font-mono font-medium transition-all text-[#8b949e] hover:text-[#c9d1d9] flex items-center gap-1.5 cursor-pointer';
       }
     }
 
     if (searchViewModeGalleryBtn && searchViewModeListBtn) {
       if (isGallery) {
-        searchViewModeGalleryBtn.className = 'px-2 py-0.5 rounded-lg text-xs font-bold transition-all bg-nw-yellow text-black flex items-center gap-1 cursor-pointer';
-        searchViewModeListBtn.className = 'px-2 py-0.5 rounded-lg text-xs font-semibold transition-all text-slate-400 hover:text-white flex items-center gap-1 cursor-pointer';
+        searchViewModeGalleryBtn.className = 'px-2 py-0.5 rounded text-xs font-mono font-bold transition-all bg-[#FFBB00] text-black border border-[#FFBB00] flex items-center gap-1 cursor-pointer shadow-[1px_1px_0px_#000]';
+        searchViewModeListBtn.className = 'px-2 py-0.5 rounded text-xs font-mono font-medium transition-all text-[#8b949e] hover:text-[#c9d1d9] flex items-center gap-1 cursor-pointer';
       } else {
-        searchViewModeListBtn.className = 'px-2 py-0.5 rounded-lg text-xs font-bold transition-all bg-nw-yellow text-black flex items-center gap-1 cursor-pointer';
-        searchViewModeGalleryBtn.className = 'px-2 py-0.5 rounded-lg text-xs font-semibold transition-all text-slate-400 hover:text-white flex items-center gap-1 cursor-pointer';
+        searchViewModeListBtn.className = 'px-2 py-0.5 rounded text-xs font-mono font-bold transition-all bg-[#FFBB00] text-black border border-[#FFBB00] flex items-center gap-1 cursor-pointer shadow-[1px_1px_0px_#000]';
+        searchViewModeGalleryBtn.className = 'px-2 py-0.5 rounded text-xs font-mono font-medium transition-all text-[#8b949e] hover:text-[#c9d1d9] flex items-center gap-1 cursor-pointer';
       }
     }
   }
@@ -303,20 +303,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.querySelectorAll('.theme-preset-btn').forEach(btn => {
       const t = btn.getAttribute('data-theme');
       if (t === userSettings.theme) {
-        btn.classList.add('ring-2', 'ring-amber-400', 'border-amber-400');
+        btn.classList.add('border-[#FFBB00]', 'ring-1', 'ring-[#FFBB00]', 'shadow-[2px_2px_0px_#000]');
       } else {
-        btn.classList.remove('ring-2', 'ring-amber-400', 'border-amber-400');
+        btn.classList.remove('border-[#FFBB00]', 'ring-1', 'ring-[#FFBB00]', 'shadow-[2px_2px_0px_#000]');
       }
     });
 
     document.querySelectorAll('.quick-theme-pill').forEach(btn => {
       const t = btn.getAttribute('data-theme');
       if (t === userSettings.theme) {
-        btn.classList.add('ring-2', 'ring-amber-400', 'border-amber-400', 'bg-amber-500/20');
-        btn.classList.remove('bg-slate-950');
+        btn.classList.add('border-[#FFBB00]', 'text-[#FFBB00]', 'bg-[#1c2128]', 'shadow-[1px_1px_0px_#000]');
+        btn.classList.remove('text-[#8b949e]', 'bg-[#0d1117]');
       } else {
-        btn.classList.remove('ring-2', 'ring-amber-400', 'border-amber-400', 'bg-amber-500/20');
-        btn.classList.add('bg-slate-950');
+        btn.classList.remove('border-[#FFBB00]', 'text-[#FFBB00]', 'bg-[#1c2128]', 'shadow-[1px_1px_0px_#000]');
+        btn.classList.add('text-[#8b949e]', 'bg-[#0d1117]');
       }
     });
 
@@ -1188,10 +1188,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (filtered.length === 0) {
       catalogList.innerHTML = `
-        <div class="col-span-full text-center py-8 bg-slate-900/60 rounded-2xl border border-slate-800 space-y-2">
-          <div class="text-2xl">🔍</div>
-          <p class="text-xs font-semibold text-slate-300">Aucune application trouvée pour « ${catalogSearchText} »</p>
-          <p class="text-[11px] text-slate-500">Essayez un autre mot-clé ou effacez la recherche.</p>
+        <div class="col-span-full text-center py-8 bg-[#161b22] rounded border border-[#30363d] shadow-[2px_2px_0px_#000] space-y-2">
+          <div class="text-2xl font-mono text-[#8b949e]">[ ∅ ]</div>
+          <p class="text-xs font-semibold text-[#c9d1d9]">Aucune application trouvée pour « ${catalogSearchText} »</p>
+          <p class="text-[11px] font-mono text-[#8b949e]">Essayez un autre mot-clé ou réinitialisez les filtres.</p>
         </div>
       `;
       return;
@@ -1208,27 +1208,27 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         card.innerHTML = `
           <div class="w-full flex items-center justify-between text-[10px] pointer-events-none">
-            <span class="px-1.5 py-0.5 rounded-md bg-slate-900/90 border border-slate-700/80 font-mono font-bold text-amber-300">.${app.format || 'BIN'}</span>
-            <span class="px-1.5 py-0.5 rounded-md bg-slate-900/80 text-slate-400 text-[9px] truncate max-w-[85px]">${app.category}</span>
+            <span class="px-1.5 py-0.2 rounded bg-[#0d1117] border border-[#30363d] font-mono font-bold text-[#FFBB00] text-[9px]">.${app.format || 'BIN'}</span>
+            <span class="px-1.5 py-0.2 rounded bg-[#0d1117] text-[#8b949e] font-mono text-[9px] truncate max-w-[85px]">${app.category}</span>
           </div>
 
-          <div class="gallery-icon-wrapper" style="background-color: ${app.color || '#F59E0B'}">
+          <div class="gallery-icon-wrapper" style="background-color: ${app.color || '#FFBB00'}">
             ${app.icon_initial || '📦'}
           </div>
 
           <div class="w-full text-center space-y-0.5 px-1 pointer-events-none">
-            <h4 class="font-bold text-white text-xs truncate" title="${app.name}">${app.name}</h4>
-            <p class="text-[10px] text-slate-400 truncate font-mono">${app.size_kb} Ko • ${app.author || 'EquaLib'}</p>
+            <h4 class="font-extrabold text-[#e6edf3] text-xs font-mono truncate" title="${app.name}">${app.name}</h4>
+            <p class="text-[10px] text-[#8b949e] truncate font-mono">${app.size_kb} Ko • ${app.author || 'EquaLib'}</p>
           </div>
 
-          <div class="w-full pt-1.5 border-t border-slate-800/80 flex items-center justify-between gap-1">
-            <button class="gallery-info-btn p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 text-[11px] transition-all cursor-pointer" title="Détails & Touches">
+          <div class="w-full pt-1.5 border-t border-[#30363d] flex items-center justify-between gap-1">
+            <button class="gallery-info-btn p-1 rounded bg-[#0d1117] hover:bg-[#21262d] text-[#8b949e] hover:text-white border border-[#30363d] text-[11px] transition-all cursor-pointer font-mono" title="Détails & Touches">
               ℹ️
             </button>
-            <button class="gallery-add-btn flex-1 py-1 px-2 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
+            <button class="gallery-add-btn flex-1 py-1 px-2 rounded text-[10px] font-mono font-bold transition-all cursor-pointer ${
               isSelected 
-                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' 
-                : 'bg-nw-yellow hover:bg-nw-yellowHover text-black active:scale-95'
+                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' 
+                : 'bg-[#FFBB00] hover:bg-[#E5A600] text-black border border-black shadow-[1px_1px_0px_#000] active:translate-x-[1px] active:translate-y-[1px]'
             }">
               ${isSelected ? '✓ Inclus' : '+ Ajouter'}
             </button>
@@ -1270,40 +1270,40 @@ document.addEventListener('DOMContentLoaded', async () => {
         catalogList.appendChild(card);
       } else {
         const card = document.createElement('div');
-        card.className = `hover-lift p-4 rounded-2xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+        card.className = `hover-lift p-3 rounded-lg border-2 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-[3px_3px_0px_#000] ${
           isSelected 
-            ? 'bg-slate-900 border-amber-500/50 ring-1 ring-amber-500/20' 
-            : 'bg-slate-900 border-slate-800 hover:border-slate-700'
+            ? 'bg-[#161b22] border-[#3fb950]' 
+            : 'bg-[#161b22] border-[#30363d] hover:border-[#8b949e]'
         }`;
 
         card.innerHTML = `
           <div class="flex items-center gap-3.5 min-w-0 cursor-pointer app-info-trigger flex-1" title="Cliquez pour afficher les commandes et détails">
-            <div class="w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl text-white shadow-md shrink-0 hover:scale-105 transition-transform" style="background-color: ${app.color || '#F59E0B'}">
+            <div class="w-10 h-10 rounded border-2 border-black flex items-center justify-center font-bold text-lg text-white shadow-[2px_2px_0px_#000] shrink-0" style="background-color: ${app.color || '#FFBB00'}">
               ${app.icon_initial || '📦'}
             </div>
-            <div class="space-y-0.5 min-w-0 flex-1">
+            <div class="space-y-0.5 min-w-0 flex-1 font-mono">
               <div class="flex items-center gap-2 flex-wrap">
-                <h4 class="font-bold text-slate-100 text-sm hover:text-amber-300 transition-colors">${app.name}</h4>
-                <span class="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 border border-slate-700 text-slate-300 font-semibold">${app.category}</span>
+                <h4 class="font-bold text-[#e6edf3] text-xs hover:text-[#FFBB00] transition-colors">${app.name}</h4>
+                <span class="text-[10px] px-1.5 py-0.2 rounded bg-[#0d1117] border border-[#30363d] text-[#8b949e] font-semibold">${app.category}</span>
               </div>
-              <p class="text-xs text-slate-400 line-clamp-1 leading-normal">${app.description}</p>
-              <div class="text-[11px] text-slate-500 font-mono flex items-center gap-2">
+              <p class="text-xs text-[#8b949e] line-clamp-1 leading-normal">${app.description}</p>
+              <div class="text-[11px] text-[#8b949e] flex items-center gap-2">
                 <span>${app.size_kb} Ko</span>
                 <span>•</span>
                 <span>v${app.version}</span>
                 <span>•</span>
-                <span class="text-slate-400">${app.author}</span>
+                <span class="text-[#c9d1d9]">${app.author}</span>
               </div>
             </div>
           </div>
           <div class="flex items-center gap-2 shrink-0">
-            <button class="info-btn p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white text-xs transition-all cursor-pointer" title="Voir les contrôles et touches NumWorks">
+            <button class="info-btn p-1.5 rounded bg-[#0d1117] hover:bg-[#21262d] text-[#8b949e] hover:text-white text-xs border border-[#30363d] transition-all cursor-pointer font-mono" title="Voir les contrôles et touches NumWorks">
               ℹ️
             </button>
-            <button class="add-btn px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 ${
+            <button class="add-btn px-3 py-1.5 rounded text-xs font-mono font-bold transition-all shrink-0 ${
               isSelected 
-                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 cursor-default' 
-                : 'bg-nw-yellow hover:bg-nw-yellowHover text-black shadow-md shadow-amber-500/10 active:scale-95 cursor-pointer'
+                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 cursor-default' 
+                : 'bg-[#FFBB00] hover:bg-[#E5A600] text-black border-2 border-black shadow-[2px_2px_0px_#000] active:translate-x-[1px] active:translate-y-[1px] cursor-pointer'
             }">
               ${isSelected ? '✓ Inclus' : '+ Ajouter'}
             </button>
@@ -1370,10 +1370,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (filtered.length === 0) {
       searchResultsList.innerHTML = `
-        <div class="col-span-full text-center py-10 bg-slate-900/40 rounded-2xl border border-slate-800 space-y-2">
-          <div class="text-3xl">🔍</div>
-          <p class="text-sm font-semibold text-slate-300">Aucun résultat trouvé pour « ${searchQuery} »</p>
-          <p class="text-xs text-slate-500">Essayez avec un mot-clé comme <em>Flappy, Snake, 2048, Bac, Matrices</em> ou importez un fichier .nws direct.</p>
+        <div class="col-span-full text-center py-10 bg-[#161b22] rounded border border-[#30363d] shadow-[2px_2px_0px_#000] space-y-2">
+          <div class="text-3xl font-mono text-[#8b949e]">[ ∅ ]</div>
+          <p class="text-sm font-semibold text-[#c9d1d9]">Aucun résultat trouvé pour « ${searchQuery} »</p>
+          <p class="text-xs font-mono text-[#8b949e]">Essayez avec un mot-clé comme <em class="text-[#FFBB00]">Flappy, Snake, 2048, Bac, Matrices</em> ou importez un fichier .nws direct.</p>
         </div>
       `;
       return;
@@ -1390,8 +1390,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         card.innerHTML = `
           <div class="w-full flex items-center justify-between text-[10px] pointer-events-none">
-            <span class="px-1.5 py-0.5 rounded-md bg-amber-500/10 text-nw-yellow border border-amber-500/20 font-mono font-bold">.${app.format || 'NWS'}</span>
-            <span class="px-1.5 py-0.5 rounded-md bg-slate-900/80 text-slate-400 text-[9px] truncate max-w-[85px]">${app.category}</span>
+            <span class="px-1.5 py-0.2 rounded bg-[#0d1117] text-[#FFBB00] border border-[#30363d] font-mono font-bold text-[9px]">.${app.format || 'NWS'}</span>
+            <span class="px-1.5 py-0.2 rounded bg-[#0d1117] text-[#8b949e] font-mono text-[9px] truncate max-w-[85px]">${app.category}</span>
           </div>
 
           <div class="gallery-icon-wrapper" style="background-color: ${app.color || '#3B82F6'}">
@@ -1399,18 +1399,18 @@ document.addEventListener('DOMContentLoaded', async () => {
           </div>
 
           <div class="w-full text-center space-y-0.5 px-1 pointer-events-none">
-            <h4 class="font-bold text-white text-xs truncate" title="${app.name}">${app.name}</h4>
-            <p class="text-[10px] text-slate-400 truncate font-mono">${app.size_kb} Ko • ${app.author || 'Communauté'}</p>
+            <h4 class="font-extrabold text-[#e6edf3] text-xs font-mono truncate" title="${app.name}">${app.name}</h4>
+            <p class="text-[10px] text-[#8b949e] truncate font-mono">${app.size_kb} Ko • ${app.author || 'Communauté'}</p>
           </div>
 
-          <div class="w-full pt-1.5 border-t border-slate-800/80 flex items-center justify-between gap-1">
-            <button class="gallery-info-btn p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 text-[11px] transition-all cursor-pointer" title="Détails">
+          <div class="w-full pt-1.5 border-t border-[#30363d] flex items-center justify-between gap-1">
+            <button class="gallery-info-btn p-1 rounded bg-[#0d1117] hover:bg-[#21262d] text-[#8b949e] hover:text-white border border-[#30363d] text-[11px] transition-all cursor-pointer font-mono" title="Détails">
               ℹ️
             </button>
-            <button class="gallery-dl-btn flex-1 py-1 px-2 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
+            <button class="gallery-dl-btn flex-1 py-1 px-2 rounded text-[10px] font-mono font-bold transition-all cursor-pointer ${
               isSelected 
-                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 cursor-default' 
-                : 'bg-emerald-500 hover:bg-emerald-400 text-black active:scale-95'
+                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 cursor-default' 
+                : 'bg-emerald-500 hover:bg-emerald-400 text-black border border-black shadow-[1px_1px_0px_#000] active:translate-x-[1px] active:translate-y-[1px]'
             }">
               ${isSelected ? '✓ Inclus' : '+ Pack'}
             </button>
@@ -1452,43 +1452,43 @@ document.addEventListener('DOMContentLoaded', async () => {
         searchResultsList.appendChild(card);
       } else {
         const card = document.createElement('div');
-        card.className = `p-4 rounded-2xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+        card.className = `p-3 rounded-lg border-2 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-[3px_3px_0px_#000] ${
           isSelected 
-            ? 'bg-slate-900 border-amber-500/50 ring-1 ring-amber-500/20' 
-            : 'bg-slate-900 border-slate-800 hover:border-slate-700'
+            ? 'bg-[#161b22] border-[#3fb950]' 
+            : 'bg-[#161b22] border-[#30363d] hover:border-[#8b949e]'
         }`;
 
         card.innerHTML = `
           <div class="flex items-center gap-3.5 flex-1 min-w-0 cursor-pointer app-info-trigger">
-            <div class="w-12 h-12 rounded-xl flex items-center justify-center font-bold text-xl text-white shadow-md shrink-0" style="background-color: ${app.color || '#3B82F6'}">
+            <div class="w-10 h-10 rounded border-2 border-black flex items-center justify-center font-bold text-lg text-white shadow-[2px_2px_0px_#000] shrink-0" style="background-color: ${app.color || '#3B82F6'}">
               ${app.icon_initial || '🌐'}
             </div>
-            <div class="space-y-0.5 flex-1 min-w-0">
+            <div class="space-y-0.5 flex-1 min-w-0 font-mono">
               <div class="flex items-center gap-2 flex-wrap">
-                <h4 class="font-bold text-slate-100 text-sm hover:text-amber-300 transition-colors">${app.name}</h4>
-                <span class="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/10 text-nw-yellow border border-amber-500/20 font-bold font-mono">
+                <h4 class="font-bold text-[#e6edf3] text-xs hover:text-[#FFBB00] transition-colors">${app.name}</h4>
+                <span class="text-[10px] px-1.5 py-0.2 rounded bg-[#0d1117] text-[#FFBB00] border border-[#30363d] font-bold">
                   .${app.format || 'NWS'}
                 </span>
-                <span class="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 border border-slate-700 text-slate-400">
+                <span class="text-[10px] px-1.5 py-0.2 rounded bg-[#0d1117] border border-[#30363d] text-[#8b949e]">
                   ${app.source || 'Communauté'}
                 </span>
               </div>
-              <p class="text-xs text-slate-400 line-clamp-1 leading-normal">${app.description}</p>
-              <div class="text-[11px] text-slate-500 font-mono flex items-center gap-2">
+              <p class="text-xs text-[#8b949e] line-clamp-1 leading-normal">${app.description}</p>
+              <div class="text-[11px] text-[#8b949e] flex items-center gap-2">
                 <span>${app.size_kb} Ko</span>
                 <span>•</span>
                 <span>${app.category}</span>
                 <span>•</span>
-                <span class="text-slate-400">par ${app.author}</span>
+                <span class="text-[#c9d1d9]">par ${app.author}</span>
               </div>
             </div>
           </div>
-          <button class="dl-app-btn px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 ${
+          <button class="dl-app-btn px-3 py-1.5 rounded text-xs font-mono font-bold transition-all shrink-0 ${
             isSelected 
-              ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 cursor-default' 
-              : 'bg-emerald-500 hover:bg-emerald-400 text-black shadow-md shadow-emerald-500/20 active:scale-95 cursor-pointer'
+              ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 cursor-default' 
+              : 'bg-emerald-500 hover:bg-emerald-400 text-black border-2 border-black shadow-[2px_2px_0px_#000] active:translate-x-[1px] active:translate-y-[1px] cursor-pointer'
           }">
-            ${isSelected ? '✓ Dans mon Pack' : '⬇️ Ajouter au Pack'}
+            ${isSelected ? '✓ Dans le Pack' : '⬇️ Ajouter au Pack'}
           </button>
         `;
 
@@ -1668,22 +1668,22 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       selectedApps.forEach((app, idx) => {
         const item = document.createElement('div');
-        item.className = 'p-3 bg-slate-950 rounded-xl border border-slate-800 hover:border-slate-700 flex items-center justify-between shadow-sm transition-all';
+        item.className = 'p-2.5 bg-[#0d1117] rounded border border-[#30363d] hover:border-[#8b949e] flex items-center justify-between shadow-[2px_2px_0px_#000] transition-colors';
         item.innerHTML = `
-          <div class="flex items-center gap-3 min-w-0 cursor-pointer app-pack-info flex-1" title="Voir les détails et contrôles de cette application">
-            <span class="font-mono text-xs text-amber-500 font-extrabold w-4">${idx + 1}.</span>
-            <div class="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm text-white shrink-0 hover:scale-105 transition-transform" style="background-color: ${app.color || '#475569'}">
+          <div class="flex items-center gap-2.5 min-w-0 cursor-pointer app-pack-info flex-1" title="Voir les détails et contrôles de cette application">
+            <span class="font-mono text-xs text-[#FFBB00] font-bold w-4">${idx + 1}.</span>
+            <div class="w-7 h-7 rounded border border-[#30363d] flex items-center justify-center font-bold text-sm text-white shrink-0" style="background-color: ${app.color || '#21262d'}">
               ${app.icon_initial || '📦'}
             </div>
             <div class="min-w-0 flex-1">
-              <p class="text-xs font-bold text-slate-200 truncate hover:text-amber-300 transition-colors">${app.name}</p>
-              <p class="text-[10px] font-mono text-slate-500">${app.size_kb} Ko • ${app.category}</p>
+              <p class="text-xs font-semibold text-[#c9d1d9] truncate hover:text-[#FFBB00] transition-colors">${app.name}</p>
+              <p class="text-[10px] font-mono text-[#8b949e]">${app.size_kb} Ko • ${app.category}</p>
             </div>
           </div>
-          <div class="flex items-center gap-1 shrink-0 ml-2">
-            <button class="up-btn p-1.5 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-slate-200 text-xs transition-colors cursor-pointer" title="Monter" ${idx === 0 ? 'disabled style="opacity:0.2"' : ''}>▲</button>
-            <button class="down-btn p-1.5 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-slate-200 text-xs transition-colors cursor-pointer" title="Descendre" ${idx === selectedApps.length - 1 ? 'disabled style="opacity:0.2"' : ''}>▼</button>
-            <button class="del-btn p-1.5 hover:bg-red-500/20 rounded-lg text-red-400 hover:text-red-300 ml-1 text-xs transition-colors cursor-pointer" title="Supprimer du pack">✕</button>
+          <div class="flex items-center gap-1 shrink-0 ml-2 font-mono">
+            <button class="up-btn p-1 hover:bg-[#21262d] rounded border border-[#30363d] text-[#8b949e] hover:text-[#c9d1d9] text-[10px] transition-colors cursor-pointer" title="Monter" ${idx === 0 ? 'disabled style="opacity:0.2"' : ''}>▲</button>
+            <button class="down-btn p-1 hover:bg-[#21262d] rounded border border-[#30363d] text-[#8b949e] hover:text-[#c9d1d9] text-[10px] transition-colors cursor-pointer" title="Descendre" ${idx === selectedApps.length - 1 ? 'disabled style="opacity:0.2"' : ''}>▼</button>
+            <button class="del-btn p-1 hover:bg-red-950/60 rounded border border-red-800/60 text-red-400 hover:text-red-300 ml-1 text-[10px] transition-colors cursor-pointer" title="Supprimer du pack">✕</button>
           </div>
         `;
 
@@ -1801,11 +1801,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     if (percent > 90) {
-      memoryProgressBar.className = 'h-full transition-all rounded-full bg-red-500 shadow-sm shadow-red-500/50';
+      memoryProgressBar.className = 'h-full transition-all rounded bg-[#f85149]';
     } else if (percent > 70) {
-      memoryProgressBar.className = 'h-full transition-all rounded-full bg-amber-500 shadow-sm shadow-amber-500/50';
+      memoryProgressBar.className = 'h-full transition-all rounded bg-[#FFBB00]';
     } else {
-      memoryProgressBar.className = 'h-full transition-all rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/50';
+      memoryProgressBar.className = 'h-full transition-all rounded bg-[#3fb950]';
     }
   }
 
@@ -1823,16 +1823,16 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (dropZone) {
     dropZone.addEventListener('dragover', (e) => {
       e.preventDefault();
-      dropZone.classList.add('border-amber-400', 'bg-amber-500/10');
+      dropZone.classList.add('border-[#FFBB00]', 'bg-[#FFBB00]/10');
     });
 
     dropZone.addEventListener('dragleave', () => {
-      dropZone.classList.remove('border-amber-400', 'bg-amber-500/10');
+      dropZone.classList.remove('border-[#FFBB00]', 'bg-[#FFBB00]/10');
     });
 
     dropZone.addEventListener('drop', (e) => {
       e.preventDefault();
-      dropZone.classList.remove('border-amber-400', 'bg-amber-500/10');
+      dropZone.classList.remove('border-[#FFBB00]', 'bg-[#FFBB00]/10');
       if (e.dataTransfer.files.length > 0) {
         handleCustomFiles(e.dataTransfer.files);
       }
@@ -2035,33 +2035,33 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!container) return;
     const toast = document.createElement('div');
     
-    let bg = 'bg-slate-900 border-slate-700 text-white';
-    let icon = 'ℹ️';
+    let borderCls = 'border-[#30363d] text-[#c9d1d9]';
+    let icon = 'ℹ';
     if (type === 'success') {
-      bg = 'bg-emerald-950/90 border-emerald-500/50 text-emerald-200';
+      borderCls = 'border-[#3fb950] text-[#3fb950]';
       icon = '✓';
     } else if (type === 'error') {
-      bg = 'bg-red-950/90 border-red-500/50 text-red-200';
-      icon = '❌';
+      borderCls = 'border-[#f85149] text-[#f85149]';
+      icon = '✕';
     } else if (type === 'warning') {
-      bg = 'bg-amber-950/90 border-amber-500/50 text-amber-200';
-      icon = '⚠️';
+      borderCls = 'border-[#FFBB00] text-[#FFBB00]';
+      icon = '⚠';
     }
 
-    toast.className = `${bg} border backdrop-blur-md px-4 py-3 rounded-2xl shadow-2xl text-xs font-semibold transition-all duration-300 transform translate-y-3 opacity-0 flex items-center gap-2.5 pointer-events-auto`;
+    toast.className = `bg-[#161b22] ${borderCls} border-2 px-3.5 py-2.5 rounded shadow-[4px_4px_0px_#000] text-xs font-mono font-semibold transition-all duration-150 transform translate-y-2 opacity-0 flex items-center gap-2.5 pointer-events-auto`;
     toast.innerHTML = `
-      <span class="w-5 h-5 rounded-full bg-white/10 flex items-center justify-center font-bold text-xs shrink-0">${icon}</span>
-      <span>${message}</span>
+      <span class="w-5 h-5 rounded border border-current flex items-center justify-center font-bold text-xs shrink-0">${icon}</span>
+      <span class="text-[#c9d1d9]">${message}</span>
     `;
 
     container.appendChild(toast);
     requestAnimationFrame(() => {
-      toast.classList.remove('translate-y-3', 'opacity-0');
+      toast.classList.remove('translate-y-2', 'opacity-0');
     });
 
     setTimeout(() => {
-      toast.classList.add('opacity-0', 'translate-y-3');
-      setTimeout(() => toast.remove(), 350);
+      toast.classList.add('opacity-0', 'translate-y-2');
+      setTimeout(() => toast.remove(), 200);
     }, 4000);
   }
 });

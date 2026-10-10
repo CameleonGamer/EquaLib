@@ -39,10 +39,10 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-  <!-- Feuille de style Cyber-ASCII & CRT avec police Outfit & JetBrains Mono -->
-  <link rel="stylesheet" href="retro_ascii.css?v=38">
+  <!-- Feuille de style Neo-Brutalist Dev avec police Outfit & JetBrains Mono -->
+  <link rel="stylesheet" href="retro_ascii.css?v=60">
 </head>
-<body class="min-h-screen text-slate-100 flex flex-col justify-between selection:bg-cyan-500 selection:text-black">
+<body class="min-h-screen text-[#e6edf3] bg-[#0d1117] flex flex-col justify-between selection:bg-[#FFBB00] selection:text-black">
 
   <!-- Effets CRT TV vintage : Lignes de balayage & vignette -->
   <div class="crt-scanlines"></div>
@@ -50,48 +50,47 @@
 
   <!-- Fond interactif de symboles mathématiques et chiffres -->
   <canvas id="math-canvas" class="fixed inset-0 pointer-events-none z-0"></canvas>
-  <div id="cursor-glow" class="pointer-events-none fixed -translate-x-1/2 -translate-y-1/2 rounded-full w-[450px] h-[450px] bg-[radial-gradient(circle,rgba(56,189,248,0.22)_0%,rgba(168,85,247,0.12)_35%,transparent_70%)] blur-2xl z-[1]"></div>
 
-  <!-- ==================== HEADER OFFICIEL CYBER-ASCII ==================== -->
-  <header class="relative z-20 border-b border-cyan-500/20 bg-slate-950/95 backdrop-blur-md sticky top-0">
+  <!-- ==================== HEADER OFFICIEL DEV ==================== -->
+  <header class="relative z-20 border-b-2 border-[#30363d] bg-[#161b22] sticky top-0 shadow-[0_2px_0px_#000]">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
       
       <!-- Logo et Titre avec icône π -->
       <div class="flex items-center gap-3 shrink-0">
         <a href="index.html" class="flex items-center gap-3 group">
-          <div class="relative w-10 h-10 rounded-xl overflow-hidden border border-cyan-400/40 shadow-md shadow-cyan-500/20 group-hover:scale-105 transition-all shrink-0">
+          <div class="relative w-9 h-9 rounded border-2 border-[#30363d] shadow-[2px_2px_0px_#000] overflow-hidden shrink-0">
             <img src="assets/logo.png?v=25" alt="EquaLib Pi Logo" class="w-full h-full object-cover">
           </div>
           <div>
             <div class="flex items-center gap-2">
-              <span class="font-black text-lg tracking-tight text-white glow-cyan whitespace-nowrap">EQUALIB <span class="text-cyan-400 font-mono text-sm">π</span></span>
+              <span class="font-extrabold text-base tracking-tight text-white whitespace-nowrap font-ascii">EQUALIB <span class="text-[#FFBB00]">π</span></span>
               <span class="ascii-badge text-[10px] px-1.5 py-0.5">Linker</span>
             </div>
-            <p class="text-[11px] font-ascii text-slate-400 hidden sm:block whitespace-nowrap">NumWorks N0120 & N0110 • STM32</p>
+            <p class="text-[11px] font-ascii text-[#8b949e] hidden sm:block whitespace-nowrap">NumWorks N0120 & N0110 • STM32</p>
           </div>
         </a>
       </div>
 
-      <!-- Navigation entre Hub et Convertisseur (Onglets compacts) -->
-      <nav class="hidden md:flex items-center gap-1 font-ascii text-xs p-1 bg-slate-900/90 border border-slate-800 rounded-xl shrink-0">
-        <a href="index.html" class="px-3.5 py-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/70 transition-all flex items-center gap-1.5 whitespace-nowrap">
+      <!-- Navigation entre Hub et Convertisseur -->
+      <nav class="hidden md:flex items-center gap-1 font-ascii text-xs p-1 bg-[#0d1117] border border-[#30363d] rounded-lg shadow-[2px_2px_0px_#000] shrink-0">
+        <a href="index.html" class="px-3 py-1.5 rounded text-[#8b949e] hover:text-[#e6edf3] hover:bg-[#161b22] transition-all flex items-center gap-1.5 whitespace-nowrap">
           <span>🎯</span> Hub Apps
         </a>
-        <a href="converter.html" class="px-3.5 py-1.5 rounded-lg bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/30 shadow-sm flex items-center gap-1.5 whitespace-nowrap">
+        <a href="converter.html" class="px-3 py-1.5 rounded bg-[#21262d] text-[#FFBB00] font-bold border border-[#30363d] flex items-center gap-1.5 whitespace-nowrap">
           <span>⚡</span> Convertisseur
         </a>
       </nav>
 
       <!-- Outils Son & CRT -->
       <div class="flex items-center gap-2 shrink-0">
-        <div class="flex items-center bg-slate-900/90 border border-slate-800 rounded-xl p-0.5 shrink-0">
-          <button id="sound-toggle-btn" class="w-8 h-8 rounded-lg hover:bg-slate-800 text-slate-300 hover:text-white flex items-center justify-center transition-all cursor-pointer text-xs" title="Activer / Désactiver les sons 8-bit">
+        <div class="flex items-center bg-[#0d1117] border border-[#30363d] rounded-lg p-0.5 shadow-[2px_2px_0px_#000] shrink-0">
+          <button id="sound-toggle-btn" class="w-8 h-8 rounded hover:bg-[#21262d] text-[#8b949e] hover:text-[#e6edf3] flex items-center justify-center transition-all cursor-pointer text-xs" title="Activer / Désactiver les sons 8-bit">
             <span id="sound-icon">🔊</span>
           </button>
-          <button id="crt-toggle-btn" class="w-8 h-8 rounded-lg hover:bg-slate-800 text-slate-300 hover:text-white flex items-center justify-center transition-all cursor-pointer text-xs" title="Activer / Désactiver les scanlines CRT">
+          <button id="crt-toggle-btn" class="w-8 h-8 rounded hover:bg-[#21262d] text-[#8b949e] hover:text-[#e6edf3] flex items-center justify-center transition-all cursor-pointer text-xs" title="Activer / Désactiver les scanlines CRT">
             <span id="crt-icon">📺</span>
           </button>
-          <a href="https://github.com/CameleonGamer/EquaLib" target="_blank" class="w-8 h-8 rounded-lg hover:bg-slate-800 text-slate-300 hover:text-white flex items-center justify-center transition-all text-xs" title="GitHub">
+          <a href="https://github.com/CameleonGamer/EquaLib" target="_blank" class="w-8 h-8 rounded hover:bg-[#21262d] text-[#8b949e] hover:text-[#e6edf3] flex items-center justify-center transition-all text-xs" title="GitHub">
             <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
           </a>
         </div>

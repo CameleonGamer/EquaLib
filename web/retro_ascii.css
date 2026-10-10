@@ -1,10 +1,15 @@
 /**
- * EquaLib Cyber-ASCII & CRT Retro Stylesheet
- * Typographie moderne Outfit & JetBrains Mono, effets CRT TV vintage, bordures ASCII & phosphore
+ * EquaLib Neo-Brutalist & Developer Tech Stylesheet
+ * Identité visuelle authentique Dev / Hardware NumWorks N0120
+ * - Bordures franches 1.5px à 2px solides
+ * - Ombres décalées nettes (hard offset shadows : 3px 3px 0px #000)
+ * - Typographie JetBrains Mono & Outfit haute lisibilité
+ * - Micro-interactions rapides et tactiles (<= 150ms)
+ * - Zéro cliché AI/SaaS (pas de dégradés fluo, pas de glassmorphism flouté générique)
  */
 
 /* Import Google Fonts pour Outfit et JetBrains Mono */
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap');
 
 /* Fallbacks locaux hors-ligne garantissant un affichage instantané sans connexion */
 @font-face {
@@ -55,12 +60,30 @@
   font-display: swap;
 }
 
+/* ==================== SYSTÈME DE VARIABLES DEV TECH ==================== */
 :root {
   --font-main: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   --font-ascii: 'JetBrains Mono', 'Cascadia Code', 'Fira Code', 'Courier New', monospace;
   --font-arista: var(--font-main);
-  --color-phosphor-cyan: #38bdf8;
-  --color-phosphor-purple: #c084fc;
+
+  /* Palette Dark Dev Hardware (Inspirée GitHub Dark / VS Code & NumWorks) */
+  --theme-bg: #0d1117;
+  --theme-surface: #161b22;
+  --theme-surface-raised: #21262d;
+  --theme-border: #30363d;
+  --theme-border-strong: #000000;
+  --theme-primary: #FFBB00;
+  --theme-primary-hover: #E5A600;
+  --theme-accent: #3fb950;
+  --theme-text: #e6edf3;
+  --theme-text-muted: #8b949e;
+  --theme-card: #161b22;
+
+  /* Ombres décalées franches (Neo-brutalist hard shadows) */
+  --shadow-hard-sm: 2px 2px 0px #000000;
+  --shadow-hard-md: 3px 3px 0px #000000;
+  --shadow-hard-lg: 4px 4px 0px #000000;
+  --shadow-hard-xl: 6px 6px 0px #000000;
 }
 
 html {
@@ -72,13 +95,13 @@ html {
 
 body {
   font-family: var(--font-main);
-  background-color: #030712;
-  color: #f1f5f9;
+  background-color: var(--theme-bg);
+  color: var(--theme-text);
   overflow-x: hidden;
   position: relative;
 }
 
-/* Police ASCII pour les bannières, formules et blocs de code */
+/* Polices utilitaires */
 .font-ascii {
   font-family: var(--font-ascii) !important;
 }
@@ -87,9 +110,7 @@ body {
   font-family: var(--font-arista) !important;
 }
 
-/* ==================== EFFETS CRT VINTAGE TV (ISOLÉS SUR LE FOND) ==================== */
-
-/* 1. Lignes de balayage CRT (Scanlines) - Uniquement sur l'arrière-plan */
+/* ==================== EFFETS CRT VINTAGE OPTIONNELS ==================== */
 .crt-scanlines {
   position: fixed;
   top: 0;
@@ -97,21 +118,15 @@ body {
   width: 100vw;
   height: 100vh;
   pointer-events: none;
-  z-index: 1; /* Inférieur à tous les éléments de texte et d'UI (z-10, z-20, z-50) */
+  z-index: 1;
   background: linear-gradient(
     rgba(18, 16, 16, 0) 50%,
-    rgba(0, 0, 0, 0.45) 50%
-  ),
-  linear-gradient(
-    90deg,
-    rgba(255, 0, 0, 0.03),
-    rgba(0, 255, 0, 0.02),
-    rgba(0, 0, 255, 0.03)
+    rgba(0, 0, 0, 0.35) 50%
   );
-  background-size: 100% 3px, 6px 100%;
+  background-size: 100% 3px;
+  opacity: 0.7;
 }
 
-/* 2. Vignette et tube cathodique (CRT Vignette) - Arrière-plan uniquement */
 .crt-vignette {
   position: fixed;
   top: 0;
@@ -119,111 +134,96 @@ body {
   width: 100vw;
   height: 100vh;
   pointer-events: none;
-  z-index: 1; /* Inférieur à tous les éléments de texte et d'UI */
-  box-shadow: 
-    inset 0 0 120px rgba(0, 0, 0, 0.9),
-    inset 0 0 50px rgba(0, 0, 0, 0.95);
+  z-index: 1;
+  box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.8);
 }
 
-/* 3. Lueur subtile de phosphore cathodique */
-.glow-cyan {
-  text-shadow: 0 0 8px rgba(56, 189, 248, 0.7), 0 0 16px rgba(56, 189, 248, 0.3);
-}
-
-.glow-purple {
-  text-shadow: 0 0 8px rgba(192, 132, 252, 0.7), 0 0 16px rgba(192, 132, 252, 0.3);
-}
-
-.glow-box-cyan {
-  box-shadow: 0 0 20px rgba(56, 189, 248, 0.2), inset 0 0 15px rgba(56, 189, 248, 0.05);
-}
-
-.glow-box-purple {
-  box-shadow: 0 0 20px rgba(192, 132, 252, 0.2), inset 0 0 15px rgba(192, 132, 252, 0.05);
-}
-
-/* ==================== CADRES ET BORDURES ASCII ==================== */
-
-.ascii-box {
-  background: rgba(15, 23, 42, 0.96); /* Opaque pour garantir une lisibilité absolue des textes */
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(56, 189, 248, 0.25);
-  border-radius: 16px;
-  position: relative;
-  transition: all 0.25s ease;
-}
-
-.ascii-box:hover {
-  border-color: rgba(56, 189, 248, 0.6);
-  box-shadow: 0 0 25px rgba(56, 189, 248, 0.15);
-}
-
-.ascii-badge {
-  font-family: var(--font-ascii);
-  font-size: 11px;
-  padding: 2px 8px;
-  border-radius: 6px;
-  border: 1px solid rgba(56, 189, 248, 0.3);
-  background: rgba(56, 189, 248, 0.1);
-  color: #7dd3fc;
-}
-
-/* Ruban de formules mathématiques défilant subtilement */
-.math-ticker {
-  font-family: var(--font-ascii);
-  letter-spacing: 0.12em;
-  opacity: 0.7;
-}
-
-/* Scrollbar cyberpunk rétro */
-::-webkit-scrollbar {
-  width: 8px;
-}
-::-webkit-scrollbar-track {
-  background: #030712;
-}
-::-webkit-scrollbar-thumb {
-  background: #1e293b;
-  border-radius: 4px;
-  border: 1px solid rgba(56, 189, 248, 0.2);
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #38bdf8;
-}
-
-/* Désactivation optionnelle des scanlines CRT pour lisibilité maximale (QOL) */
 body.crt-off .crt-scanlines,
 body.crt-off .crt-vignette {
   display: none !important;
 }
 
+/* Fallback lisible pour glow-cyan / glow-purple sans effet néon baveux */
+.glow-cyan, .glow-purple {
+  text-shadow: none !important;
+}
+.glow-box-cyan, .glow-box-purple {
+  box-shadow: var(--shadow-hard-sm) !important;
+}
+
+/* ==================== CADRES, BOÎTES & BADGES DEV TECH ==================== */
+.ascii-box {
+  background: var(--theme-surface);
+  border: 1.5px solid var(--theme-border);
+  box-shadow: var(--shadow-hard-md);
+  border-radius: 8px;
+  position: relative;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.ascii-box:hover {
+  border-color: var(--theme-primary);
+  box-shadow: var(--shadow-hard-lg);
+}
+
+.ascii-badge {
+  font-family: var(--font-ascii);
+  font-size: 11px;
+  padding: 2px 7px;
+  border-radius: 5px;
+  border: 1.5px solid var(--theme-border);
+  background: var(--theme-surface-raised);
+  color: var(--theme-text-muted);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* Scrollbar sobre et rectangulaire */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--theme-bg);
+}
+::-webkit-scrollbar-thumb {
+  background: #21262d;
+  border: 1px solid #30363d;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #30363d;
+}
+
 /* ==================== TOUCHES & BOUTONS TACTILES NUMWORKS ==================== */
 .nw-key-btn {
-  box-shadow: 0 3px 0 #020617, 0 4px 6px rgba(0,0,0,0.5);
-  transition: all 0.08s ease;
+  border: 1.5px solid #000000;
+  box-shadow: 2px 2px 0px #000000;
+  transition: transform 0.08s ease, box-shadow 0.08s ease;
 }
 .nw-key-btn:active {
-  transform: translateY(2px) !important;
-  box-shadow: 0 1px 0 #020617, 0 1px 3px rgba(0,0,0,0.5) !important;
+  transform: translate(1px, 1px) !important;
+  box-shadow: 1px 1px 0px #000000 !important;
 }
 
 .nw-yellow-btn {
-  box-shadow: 0 3px 0 #b45309, 0 4px 8px rgba(245, 158, 11, 0.25);
-  transition: all 0.08s ease;
+  background-color: var(--theme-primary) !important;
+  color: #000000 !important;
+  border: 1.5px solid #000000;
+  box-shadow: 2px 2px 0px #000000;
+  font-weight: 800;
+  transition: transform 0.08s ease, box-shadow 0.08s ease;
 }
 .nw-yellow-btn:active {
-  transform: translateY(2px) !important;
-  box-shadow: 0 1px 0 #b45309, 0 1px 3px rgba(245, 158, 11, 0.25) !important;
+  transform: translate(1px, 1px) !important;
+  box-shadow: 1px 1px 0px #000000 !important;
 }
 
 /* ==================== COQUE RÉALISTE NUMWORKS N0120 ==================== */
 .nw-shell {
-  background: linear-gradient(160deg, #ffffff 0%, #f1f5f9 60%, #e2e8f0 100%);
-  box-shadow: 
-    0 25px 40px -12px rgba(0, 0, 0, 0.7),
-    0 0 0 1px rgba(255, 255, 255, 0.6) inset,
-    0 3px 6px rgba(0, 0, 0, 0.08) inset;
-  border: 1px solid #cbd5e1;
+  background: #f0f2f5;
+  border: 2px solid #000000;
+  box-shadow: var(--shadow-hard-xl);
 }
 
 /* ==================== BADGES & TOUCHES CLAVIER (KBD) ==================== */
@@ -235,89 +235,101 @@ body.crt-off .crt-vignette {
   font-size: 10px;
   font-family: var(--font-ascii);
   font-weight: 700;
-  color: #94a3b8;
-  background: #090d16;
-  border: 1px solid #334155;
-  border-bottom: 2px solid #1e293b;
+  color: #c9d1d9;
+  background: #161b22;
+  border: 1.5px solid #30363d;
+  border-bottom: 2.5px solid #000000;
   border-radius: 5px;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.4);
+  box-shadow: 1px 1px 0px #000000;
 }
 
 /* ==================== MICRO-INTERACTIONS & SURVOL CARTE ==================== */
 .hover-lift {
-  transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.2s cubic-bezier(0.2, 0, 0, 1), border-color 0.2s ease;
+  transition: transform 0.12s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.12s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.12s ease;
 }
 .hover-lift:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 0 18px rgba(56, 189, 248, 0.12);
+  transform: translate(-1px, -1px);
+  box-shadow: var(--shadow-hard-lg);
+  border-color: #484f58;
 }
-
-/* Animation douce pour les badges en avant */
-@keyframes badge-glow {
-  0%, 100% { border-color: rgba(56, 189, 248, 0.35); box-shadow: 0 0 8px rgba(56, 189, 248, 0.1); }
-  50% { border-color: rgba(56, 189, 248, 0.8); box-shadow: 0 0 16px rgba(56, 189, 248, 0.3); }
-}
-.glow-pulse {
-  animation: badge-glow 2.5s infinite;
+.hover-lift:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0px #000000;
 }
 
 /* ==================== THEME PRESETS & CUSTOM COLOR SYSTEM ==================== */
-:root {
-  --theme-bg: #030712;
-  --theme-card: #0f172a;
-  --theme-border: #334155;
-  --theme-primary: #f59e0b;
-  --theme-accent: #38bdf8;
-  --theme-text: #f8fafc;
-}
-
 body.theme-sakura {
-  --theme-bg: #190916;
-  --theme-card: #2c1228;
+  --theme-bg: #160813;
+  --theme-surface: #240d1f;
+  --theme-surface-raised: #34132c;
   --theme-border: #f472b6;
+  --theme-border-strong: #831843;
   --theme-primary: #f472b6;
+  --theme-primary-hover: #ec4899;
   --theme-accent: #fbcfe8;
   --theme-text: #fdf2f8;
-  background-color: #190916 !important;
+  --theme-text-muted: #f9a8d4;
+  --theme-card: #240d1f;
+  background-color: #160813 !important;
 }
 
 body.theme-hacker {
-  --theme-bg: #030a16;
-  --theme-card: #07152d;
+  --theme-bg: #040912;
+  --theme-surface: #091325;
+  --theme-surface-raised: #0f1d38;
   --theme-border: #0284c7;
+  --theme-border-strong: #0369a1;
   --theme-primary: #38bdf8;
+  --theme-primary-hover: #0284c7;
   --theme-accent: #00f0ff;
   --theme-text: #e0f2fe;
-  background-color: #030a16 !important;
+  --theme-text-muted: #7dd3fc;
+  --theme-card: #091325;
+  background-color: #040912 !important;
 }
 
 body.theme-bee {
-  --theme-bg: #120e04;
-  --theme-card: #1f1807;
+  --theme-bg: #0f0d04;
+  --theme-surface: #1b1707;
+  --theme-surface-raised: #2a230a;
   --theme-border: #d97706;
+  --theme-border-strong: #92400e;
   --theme-primary: #fbbf24;
+  --theme-primary-hover: #f59e0b;
   --theme-accent: #fef08a;
   --theme-text: #fefce8;
-  background-color: #120e04 !important;
+  --theme-text-muted: #fde047;
+  --theme-card: #1b1707;
+  background-color: #0f0d04 !important;
 }
 
 body.theme-mario {
-  --theme-bg: #180505;
-  --theme-card: #2d0a0a;
+  --theme-bg: #140404;
+  --theme-surface: #250909;
+  --theme-surface-raised: #380d0d;
   --theme-border: #ef4444;
+  --theme-border-strong: #991b1b;
   --theme-primary: #ef4444;
+  --theme-primary-hover: #dc2626;
   --theme-accent: #ffffff;
   --theme-text: #ffffff;
-  background-color: #180505 !important;
+  --theme-text-muted: #fca5a5;
+  --theme-card: #250909;
+  background-color: #140404 !important;
 }
 
 body.theme-gameboy {
   --theme-bg: #0f380f;
-  --theme-card: #244b24;
+  --theme-surface: #1e4d1e;
+  --theme-surface-raised: #2b612b;
   --theme-border: #8bac0f;
+  --theme-border-strong: #306230;
   --theme-primary: #9bbc0f;
+  --theme-primary-hover: #8bac0f;
   --theme-accent: #8bac0f;
   --theme-text: #e0f8d0;
+  --theme-text-muted: #9bbc0f;
+  --theme-card: #1e4d1e;
   background-color: #0f380f !important;
 }
 
@@ -333,18 +345,20 @@ body.hide-tooltips [data-shortcut-hint] {
 .gallery-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem;
+  gap: 0.85rem;
 }
 
 @media (min-width: 640px) {
   .gallery-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
   }
 }
 
 @media (min-width: 1024px) {
   .gallery-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1.1rem;
   }
 }
 
@@ -355,59 +369,67 @@ body.hide-tooltips [data-shortcut-hint] {
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
-  padding: 0.9rem;
-  border-radius: 1.25rem;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: radial-gradient(circle at top, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.95) 100%);
+  padding: 0.85rem;
+  border-radius: 8px;
+  border: 1.5px solid var(--theme-border);
+  background: var(--theme-surface);
+  box-shadow: var(--shadow-hard-md);
   cursor: pointer;
-  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.12s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.12s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.12s ease;
   overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
   user-select: none;
 }
 
 .gallery-card:hover, .gallery-card.active-hover {
-  transform: translateY(-4px) scale(1.02);
-  border-color: var(--theme-primary, #f59e0b);
-  box-shadow: 0 12px 28px -6px rgba(0, 0, 0, 0.6), 0 0 18px rgba(245, 158, 11, 0.3);
+  transform: translate(-1px, -1px);
+  border-color: var(--theme-primary);
+  box-shadow: var(--shadow-hard-lg);
+}
+
+.gallery-card:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0px #000000;
 }
 
 .gallery-card.is-selected {
-  border-color: rgba(16, 185, 129, 0.8);
-  box-shadow: 0 0 20px rgba(16, 185, 129, 0.25);
+  border-color: #3fb950;
+  box-shadow: 3px 3px 0px #238636;
 }
 
 .gallery-icon-wrapper {
-  width: 3.5rem;
-  height: 3.5rem;
-  border-radius: 1rem;
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: 6px;
+  border: 1.5px solid rgba(0, 0, 0, 0.4);
+  box-shadow: 2px 2px 0px #000000;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.85rem;
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.4);
-  transition: transform 0.2s ease;
+  font-size: 1.75rem;
+  transition: transform 0.12s ease;
 }
 
 .gallery-card:hover .gallery-icon-wrapper {
-  transform: scale(1.1) rotate(2deg);
+  transform: scale(1.05);
 }
 
 /* ==================== BOTTOM CENTER DYNAMIC APP DOCK ==================== */
 #active-app-dock {
-  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease;
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.15s ease;
+  background: var(--theme-surface);
+  border: 2px solid var(--theme-border) !important;
+  box-shadow: var(--shadow-hard-lg) !important;
+  border-radius: 10px;
 }
 
 #active-app-dock.dock-hidden {
-  transform: translate(-50%, 120%) scale(0.95);
+  transform: translate(-50%, 120%);
   opacity: 0;
   pointer-events: none;
 }
 
 #active-app-dock.dock-visible {
-  transform: translate(-50%, 0) scale(1);
+  transform: translate(-50%, 0);
   opacity: 1;
   pointer-events: auto;
 }
@@ -425,7 +447,8 @@ body.hide-tooltips [data-shortcut-hint] {
   height: 180px;
   border-radius: 50%;
   cursor: crosshair;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.6), inset 0 0 4px rgba(255, 255, 255, 0.2);
+  border: 2px solid #000000;
+  box-shadow: var(--shadow-hard-md);
 }
 
 .color-wheel-picker {
@@ -436,28 +459,23 @@ body.hide-tooltips [data-shortcut-hint] {
   height: 16px;
   border-radius: 50%;
   border: 2px solid #ffffff;
-  box-shadow: 0 0 4px rgba(0, 0, 0, 0.8);
+  box-shadow: 0 0 0 1px #000000;
   pointer-events: none;
   transform: translate(-50%, -50%);
 }
 
-/* ==================== QUICK THEME PILLS & SIMULATOR EXTENSIONS ==================== */
+/* ==================== PILLS & BOUTONS NEO-BRUTALIST ==================== */
 .quick-theme-pill {
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
   user-select: none;
 }
-
 .quick-theme-pill:hover {
-  transform: translateY(-2px);
+  transform: translate(-1px, -1px);
+}
+.quick-theme-pill:active {
+  transform: translate(1px, 1px);
 }
 
 .sim-gallery-card:hover {
-  transform: translateY(-1px) scale(1.04);
+  transform: translateY(-1px);
 }
-
-#active-app-dock {
-  border-color: var(--theme-border, #f59e0b) !important;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), 0 0 15px rgba(245, 158, 11, 0.25);
-}
-
-

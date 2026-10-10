@@ -39,8 +39,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-  <!-- Feuille de style Cyber-ASCII & CRT avec police Outfit & JetBrains Mono -->
-  <link rel="stylesheet" href="retro_ascii.css?v=55">
+  <!-- Feuille de style Neo-Brutalist Dev avec police Outfit & JetBrains Mono -->
+  <link rel="stylesheet" href="retro_ascii.css?v=60">
 
   <style>
     /* Écran NumWorks rétro */
@@ -50,80 +50,79 @@
     }
   </style>
 </head>
-<body class="min-h-full flex flex-col antialiased selection:bg-cyan-500 selection:text-black relative">
+<body class="min-h-full flex flex-col antialiased selection:bg-[#FFBB00] selection:text-black relative bg-[#0d1117] text-[#e6edf3]">
 
   <!-- Effets CRT TV vintage : Lignes de balayage & vignette -->
   <div class="crt-scanlines"></div>
   <div class="crt-vignette"></div>
 
-  <!-- Fond interactif de symboles mathématiques et chiffres avec lueur de curseur -->
+  <!-- Fond interactif de symboles mathématiques et chiffres -->
   <canvas id="math-canvas" class="fixed inset-0 pointer-events-none z-0"></canvas>
-  <div id="cursor-glow" class="pointer-events-none fixed -translate-x-1/2 -translate-y-1/2 rounded-full w-[450px] h-[450px] bg-[radial-gradient(circle,rgba(56,189,248,0.22)_0%,rgba(168,85,247,0.12)_35%,transparent_70%)] blur-2xl z-[1]"></div>
 
-  <!-- ==================== BARRE DE NAVIGATION OFFICIELLE ==================== -->
-  <header class="bg-slate-950/95 backdrop-blur-md border-b border-cyan-500/20 sticky top-0 z-50">
+  <!-- ==================== BARRE DE NAVIGATION OFFICIELLE DEV ==================== -->
+  <header class="bg-[#161b22] border-b-2 border-[#30363d] sticky top-0 z-50 shadow-[0_2px_0px_#000]">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
       
       <!-- Logo et Identité avec icône π -->
       <div class="flex items-center gap-3 shrink-0">
         <a href="index.html" class="flex items-center gap-3 group">
-          <div class="relative w-10 h-10 rounded-xl overflow-hidden border border-cyan-400/40 shadow-md shadow-cyan-500/20 group-hover:scale-105 transition-all shrink-0">
+          <div class="relative w-9 h-9 rounded border-2 border-[#30363d] shadow-[2px_2px_0px_#000] overflow-hidden shrink-0">
             <img src="assets/logo.png?v=25" alt="EquaLib Pi Logo" class="w-full h-full object-cover">
           </div>
           <div>
             <div class="flex items-center gap-2">
-              <span class="font-black text-lg tracking-tight text-white glow-cyan whitespace-nowrap">EQUALIB <span class="text-cyan-400 font-mono text-sm">π</span></span>
+              <span class="font-extrabold text-base tracking-tight text-white whitespace-nowrap font-ascii">EQUALIB <span class="text-[#FFBB00]">π</span></span>
               <span class="ascii-badge text-[10px] px-1.5 py-0.5">v3.5</span>
             </div>
-            <p class="text-[11px] font-ascii text-slate-400 hidden sm:block whitespace-nowrap">Hub Multi-Applications NumWorks N0120</p>
+            <p class="text-[11px] font-ascii text-[#8b949e] hidden sm:block whitespace-nowrap">Hub Multi-Applications NumWorks N0120</p>
           </div>
         </a>
       </div>
 
-      <!-- Navigation entre Hub, Convertisseur et Paramètres (Onglets compacts) -->
-      <nav class="hidden md:flex items-center gap-1 font-ascii text-xs p-1 bg-slate-900/90 border border-slate-800 rounded-xl shrink-0">
-        <a href="index.html" class="px-3.5 py-1.5 rounded-lg bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/30 shadow-sm flex items-center gap-1.5 whitespace-nowrap">
+      <!-- Navigation entre Hub, Convertisseur et Paramètres -->
+      <nav class="hidden md:flex items-center gap-1 font-ascii text-xs p-1 bg-[#0d1117] border border-[#30363d] rounded-lg shadow-[2px_2px_0px_#000] shrink-0">
+        <a href="index.html" class="px-3 py-1.5 rounded bg-[#21262d] text-[#FFBB00] font-bold border border-[#30363d] flex items-center gap-1.5 whitespace-nowrap">
           <span>🎯</span> Hub Apps
         </a>
-        <a href="converter.html" class="px-3.5 py-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/70 transition-all flex items-center gap-1.5 whitespace-nowrap">
+        <a href="converter.html" class="px-3 py-1.5 rounded text-[#8b949e] hover:text-[#e6edf3] hover:bg-[#161b22] transition-all flex items-center gap-1.5 whitespace-nowrap">
           <span>⚡</span> Convertisseur
         </a>
-        <button id="nav-settings-btn" class="px-3.5 py-1.5 rounded-lg text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 font-bold transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer">
-          <span>⚙️</span> Paramètres & Thèmes
+        <button id="nav-settings-btn" class="px-3 py-1.5 rounded text-[#e6edf3] hover:bg-[#21262d] border border-transparent hover:border-[#30363d] font-bold transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer">
+          <span>⚙️</span> Options & Thèmes
         </button>
       </nav>
 
-      <!-- Statut USB et Outils (Ne se déforme jamais) -->
+      <!-- Statut USB et Outils -->
       <div class="flex items-center gap-2 sm:gap-3 shrink-0">
         <!-- Groupe d'outils compacts (Son, CRT, Aide, Paramètres, GitHub) -->
-        <div class="flex items-center bg-slate-900/90 border border-slate-800 rounded-xl p-0.5 shrink-0">
-          <button id="sound-toggle-btn" class="w-8 h-8 rounded-lg hover:bg-slate-800 text-slate-300 hover:text-white flex items-center justify-center transition-all cursor-pointer text-xs" title="Activer / Désactiver les sons 8-bit">
+        <div class="flex items-center bg-[#0d1117] border border-[#30363d] rounded-lg p-0.5 shadow-[2px_2px_0px_#000] shrink-0">
+          <button id="sound-toggle-btn" class="w-8 h-8 rounded hover:bg-[#21262d] text-[#8b949e] hover:text-[#e6edf3] flex items-center justify-center transition-all cursor-pointer text-xs" title="Activer / Désactiver les sons 8-bit">
             <span id="sound-icon">🔊</span>
           </button>
-          <button id="crt-toggle-btn" class="w-8 h-8 rounded-lg hover:bg-slate-800 text-slate-300 hover:text-white flex items-center justify-center transition-all cursor-pointer text-xs" title="Activer / Désactiver les scanlines CRT">
+          <button id="crt-toggle-btn" class="w-8 h-8 rounded hover:bg-[#21262d] text-[#8b949e] hover:text-[#e6edf3] flex items-center justify-center transition-all cursor-pointer text-xs" title="Activer / Désactiver les scanlines CRT">
             <span id="crt-icon">📺</span>
           </button>
-          <button id="help-modal-btn" class="w-8 h-8 rounded-lg hover:bg-slate-800 text-slate-300 hover:text-white flex items-center justify-center transition-all cursor-pointer text-xs" title="Guide & Aide USB">
+          <button id="help-modal-btn" class="w-8 h-8 rounded hover:bg-[#21262d] text-[#8b949e] hover:text-[#e6edf3] flex items-center justify-center transition-all cursor-pointer text-xs" title="Guide & Aide USB">
             <span>❓</span>
           </button>
-          <button id="settings-modal-btn" class="w-8 h-8 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 hover:text-white flex items-center justify-center transition-all cursor-pointer text-xs border border-amber-500/30 shadow-sm" title="Paramètres & Thèmes de l'Application">
+          <button id="settings-modal-btn" class="w-8 h-8 rounded bg-[#21262d] hover:bg-[#30363d] text-[#FFBB00] flex items-center justify-center transition-all cursor-pointer text-xs border border-[#30363d]" title="Paramètres & Thèmes de l'Application">
             <span>⚙️</span>
           </button>
-          <a href="https://github.com/CameleonGamer/EquaLib" target="_blank" class="w-8 h-8 rounded-lg hover:bg-slate-800 text-slate-300 hover:text-white flex items-center justify-center transition-all text-xs" title="GitHub">
+          <a href="https://github.com/CameleonGamer/EquaLib" target="_blank" class="w-8 h-8 rounded hover:bg-[#21262d] text-[#8b949e] hover:text-[#e6edf3] flex items-center justify-center transition-all text-xs" title="GitHub">
             <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
           </a>
         </div>
 
-        <!-- Badge Statut USB (Protégé contre toute déformation) -->
-        <div id="connection-badge" class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-xs font-medium text-slate-300 font-ascii shrink-0 whitespace-nowrap">
-          <span id="connection-dot" class="w-2 h-2 rounded-full bg-slate-500 shrink-0"></span>
+        <!-- Badge Statut USB -->
+        <div id="connection-badge" class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#0d1117] border border-[#30363d] text-xs font-medium text-[#c9d1d9] font-ascii shadow-[2px_2px_0px_#000] shrink-0 whitespace-nowrap">
+          <span id="connection-dot" class="w-2 h-2 rounded-full bg-[#8b949e] shrink-0"></span>
           <span id="connection-text" class="whitespace-nowrap">Déconnectée</span>
-          <span class="text-slate-700 hidden sm:inline">|</span>
-          <span id="model-text" class="text-slate-400 font-mono text-[11px] hidden sm:inline whitespace-nowrap">N0120</span>
+          <span class="text-[#30363d] hidden sm:inline">|</span>
+          <span id="model-text" class="text-[#8b949e] font-mono text-[11px] hidden sm:inline whitespace-nowrap">N0120</span>
         </div>
 
         <!-- Bouton Connecter -->
-        <button id="connect-btn" class="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold text-xs transition-all flex items-center gap-1.5 shadow-sm font-ascii shrink-0 whitespace-nowrap active:scale-95 cursor-pointer">
+        <button id="connect-btn" class="px-3.5 py-1.5 rounded-lg bg-[#FFBB00] hover:bg-[#E5A600] text-black font-extrabold text-xs transition-all flex items-center gap-1.5 font-ascii shrink-0 whitespace-nowrap border-2 border-black shadow-[2px_2px_0px_#000] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none cursor-pointer">
           <span>🔌</span> <span class="whitespace-nowrap">Connecter</span>
         </button>
       </div>
@@ -131,49 +130,47 @@
     </div>
   </header>
 
-  <!-- ==================== BANNIÈRE HERO ==================== -->
-  <section class="relative z-10 overflow-hidden border-b border-slate-800/80 bg-gradient-to-b from-slate-900 via-slate-950 to-slate-950 py-10">
-    <div class="absolute inset-0 bg-[radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-amber-500/10 via-transparent to-transparent pointer-events-none"></div>
-
+  <!-- ==================== BANNIÈRE HERO NEO-BRUTALIST / DEV ==================== -->
+  <section class="relative z-10 border-b-2 border-[#30363d] bg-[#161b22] py-8 shadow-[0_3px_0px_#000]">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
         
         <!-- Texte de présentation -->
         <div class="lg:col-span-7 space-y-4">
-          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-nw-yellow text-xs font-semibold">
-            <span>✨</span> Débloquez le véritable potentiel de votre NumWorks
+          <div class="inline-flex items-center gap-2 px-2.5 py-1 rounded border border-[#30363d] bg-[#0d1117] text-[#FFBB00] font-mono text-xs font-bold shadow-[2px_2px_0px_#000]">
+            <span>⚡</span> NUMWORKS N0120 • EADK NATIVE HUB
           </div>
-          <h2 class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight leading-tight">
-            Toutes vos applications préférées réunies dans <span class="text-transparent bg-clip-text bg-gradient-to-r from-nw-yellow via-amber-400 to-amber-200">un seul fichier</span>.
+          <h2 class="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#e6edf3] tracking-tight leading-snug">
+            Toutes vos applications et jeux dans <span class="text-[#FFBB00] underline decoration-[#FFBB00]/40 underline-offset-4">un seul lanceur</span>.
           </h2>
-          <p class="text-sm sm:text-base text-slate-400 leading-relaxed max-w-2xl">
+          <p class="text-xs sm:text-sm text-[#8b949e] leading-relaxed max-w-2xl">
             Sur la NumWorks N0120, le système Epsilon n'autorise qu'un seul emplacement pour application externe. 
-            <strong>EquaLib contourne cette limitation</strong> en installant un lanceur natif autonome tout-en-un avec jeux 3D, formulaires et tableau périodique.
+            <strong>EquaLib contourne cette limitation</strong> en fournissant un lanceur modulaire autonome tout-en-un avec jeux natifs 60 FPS, outils scientifiques et fiches de révision.
           </p>
 
           <!-- Badges des points forts -->
-          <div class="pt-2 flex flex-wrap gap-2.5">
-            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-900 border border-slate-800 text-xs font-medium text-slate-300">
-              🏎️ <strong>Super Mario Kart 3D</strong>
+          <div class="pt-1 flex flex-wrap gap-2">
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded border border-[#30363d] bg-[#0d1117] text-xs font-mono text-[#c9d1d9] shadow-[1px_1px_0px_#000]">
+              🏎️ Mario Kart 3D
             </span>
-            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-900 border border-slate-800 text-xs font-medium text-slate-300">
-              🧪 <strong>Tableau Périodique (118 élém.)</strong>
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded border border-[#30363d] bg-[#0d1117] text-xs font-mono text-[#c9d1d9] shadow-[1px_1px_0px_#000]">
+              🧪 Tableau Périodique (118 élém.)
             </span>
-            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-900 border border-slate-800 text-xs font-medium text-slate-300">
-              📚 <strong>Fiches de Révision Maths/Sc.</strong>
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded border border-[#30363d] bg-[#0d1117] text-xs font-mono text-[#c9d1d9] shadow-[1px_1px_0px_#000]">
+              📚 Fiches Révision Maths/Sc.
             </span>
-            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-900 border border-slate-800 text-xs font-medium text-slate-300">
-              🕹️ <strong>Jeux Rétro 60 FPS</strong>
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded border border-[#30363d] bg-[#0d1117] text-xs font-mono text-[#c9d1d9] shadow-[1px_1px_0px_#000]">
+              🕹️ Jeux Natifs 60 FPS
             </span>
-            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-900 border border-slate-800 text-xs font-medium text-slate-300">
-              ⚡ <strong>Flash USB 1-Clic</strong>
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded border border-[#30363d] bg-[#0d1117] text-xs font-mono text-[#c9d1d9] shadow-[1px_1px_0px_#000]">
+              ⚡ Flash USB 1-Clic
             </span>
           </div>
         </div>
 
         <!-- Aperçu Interactif de la Calculatrice NumWorks N0120 -->
         <div class="lg:col-span-5 flex flex-col items-center">
-          <div class="w-full max-w-[340px] nw-shell rounded-3xl p-4 shadow-2xl relative transition-all duration-300" id="sim-calculator-container">
+          <div class="w-full max-w-[340px] nw-shell rounded-xl p-3.5 shadow-[6px_6px_0px_#000] relative transition-all duration-300" id="sim-calculator-container">
             
             <!-- Coque Calculatrice Blanche NumWorks -->
             <div class="bg-white/90 rounded-2xl p-3 border border-slate-300 shadow-inner">
@@ -286,34 +283,34 @@
   </section>
 
   <!-- ==================== BARRE DE CONTRÔLE RAPIDE : THÈMES EN 1-CLIC & VUE GALERIE ==================== -->
-  <section class="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-5 mb-2">
-    <div class="bg-slate-900/95 backdrop-blur-md p-3 rounded-2xl border border-slate-700/80 shadow-2xl flex flex-col md:flex-row md:items-center justify-between gap-3">
+  <section class="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-4 mb-2">
+    <div class="bg-[#161b22] p-2.5 rounded-lg border-2 border-[#30363d] shadow-[3px_3px_0px_#000] flex flex-col md:flex-row md:items-center justify-between gap-3">
       <!-- 1. Presets de thèmes directs en 1-clic -->
-      <div class="flex items-center gap-2 overflow-x-auto pb-1 md:pb-0" id="quick-themes-container">
-        <span class="text-xs font-extrabold text-white flex items-center gap-1.5 shrink-0">
+      <div class="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0" id="quick-themes-container">
+        <span class="text-xs font-mono font-extrabold text-[#e6edf3] flex items-center gap-1.5 shrink-0 px-1">
           <span>🎨</span> Thèmes :
         </span>
-        <button class="quick-theme-pill px-3 py-1.5 rounded-xl text-xs font-bold transition-all border cursor-pointer shrink-0 bg-slate-950 border-amber-500/60 text-amber-300 hover:scale-105" data-theme="default">⚡ NumWorks</button>
-        <button class="quick-theme-pill px-3 py-1.5 rounded-xl text-xs font-bold transition-all border cursor-pointer shrink-0 bg-slate-950 border-slate-800 text-pink-300 hover:border-pink-500 hover:scale-105" data-theme="sakura">🌸 Sakura</button>
-        <button class="quick-theme-pill px-3 py-1.5 rounded-xl text-xs font-bold transition-all border cursor-pointer shrink-0 bg-slate-950 border-slate-800 text-cyan-300 hover:border-cyan-500 hover:scale-105" data-theme="hacker">💻 Hacker</button>
-        <button class="quick-theme-pill px-3 py-1.5 rounded-xl text-xs font-bold transition-all border cursor-pointer shrink-0 bg-slate-950 border-slate-800 text-yellow-300 hover:border-yellow-500 hover:scale-105" data-theme="bee">🐝 Abeille</button>
-        <button class="quick-theme-pill px-3 py-1.5 rounded-xl text-xs font-bold transition-all border cursor-pointer shrink-0 bg-slate-950 border-slate-800 text-red-300 hover:border-red-500 hover:scale-105" data-theme="mario">🍄 Mario</button>
-        <button class="quick-theme-pill px-3 py-1.5 rounded-xl text-xs font-bold transition-all border cursor-pointer shrink-0 bg-slate-950 border-slate-800 text-lime-300 hover:border-lime-500 hover:scale-105" data-theme="gameboy">🕹️ GameBoy</button>
+        <button class="quick-theme-pill px-2.5 py-1 rounded text-xs font-mono font-bold border border-[#FFBB00] bg-[#0d1117] text-[#FFBB00] shadow-[1px_1px_0px_#000] cursor-pointer shrink-0" data-theme="default">⚡ NumWorks</button>
+        <button class="quick-theme-pill px-2.5 py-1 rounded text-xs font-mono font-bold border border-[#30363d] hover:border-pink-400 bg-[#0d1117] text-pink-300 shadow-[1px_1px_0px_#000] cursor-pointer shrink-0" data-theme="sakura">🌸 Sakura</button>
+        <button class="quick-theme-pill px-2.5 py-1 rounded text-xs font-mono font-bold border border-[#30363d] hover:border-cyan-400 bg-[#0d1117] text-cyan-300 shadow-[1px_1px_0px_#000] cursor-pointer shrink-0" data-theme="hacker">💻 Hacker</button>
+        <button class="quick-theme-pill px-2.5 py-1 rounded text-xs font-mono font-bold border border-[#30363d] hover:border-amber-400 bg-[#0d1117] text-amber-300 shadow-[1px_1px_0px_#000] cursor-pointer shrink-0" data-theme="bee">🐝 Abeille</button>
+        <button class="quick-theme-pill px-2.5 py-1 rounded text-xs font-mono font-bold border border-[#30363d] hover:border-red-400 bg-[#0d1117] text-red-300 shadow-[1px_1px_0px_#000] cursor-pointer shrink-0" data-theme="mario">🍄 Mario</button>
+        <button class="quick-theme-pill px-2.5 py-1 rounded text-xs font-mono font-bold border border-[#30363d] hover:border-lime-400 bg-[#0d1117] text-lime-300 shadow-[1px_1px_0px_#000] cursor-pointer shrink-0" data-theme="gameboy">🕹️ GameBoy</button>
       </div>
 
       <!-- 2. Mode Galerie carrée / Mode Liste & Bouton Paramètres -->
       <div class="flex items-center gap-2.5 shrink-0 justify-between md:justify-end">
-        <div class="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800">
-          <button id="quick-view-gallery-btn" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-nw-yellow text-black flex items-center gap-1.5 cursor-pointer shadow-sm" title="Mode Galerie (Tuiles carrées)">
+        <div class="flex items-center gap-1 bg-[#0d1117] p-0.5 rounded border border-[#30363d] shadow-[1px_1px_0px_#000]">
+          <button id="quick-view-gallery-btn" class="px-2.5 py-1 rounded text-xs font-mono font-bold bg-[#FFBB00] text-black border border-black flex items-center gap-1.5 cursor-pointer shadow-[1px_1px_0px_#000]" title="Mode Galerie (Tuiles carrées)">
             <span>⏹️</span> Galerie
           </button>
-          <button id="quick-view-list-btn" class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all text-slate-400 hover:text-white flex items-center gap-1.5 cursor-pointer" title="Mode Liste">
+          <button id="quick-view-list-btn" class="px-2.5 py-1 rounded text-xs font-mono font-semibold text-[#8b949e] hover:text-[#e6edf3] flex items-center gap-1.5 cursor-pointer" title="Mode Liste">
             <span>☰</span> Liste
           </button>
         </div>
 
-        <button id="quick-settings-btn" class="px-3.5 py-1.5 rounded-xl bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 border border-amber-500/40 text-xs font-extrabold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm active:scale-95" title="Personnalisation avancée & Roue chromatique">
-          <span>⚙️</span> Paramètres
+        <button id="quick-settings-btn" class="px-3 py-1.5 rounded bg-[#21262d] hover:bg-[#30363d] text-[#e6edf3] border-2 border-black text-xs font-mono font-bold flex items-center gap-1.5 cursor-pointer shadow-[2px_2px_0px_#000] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none" title="Personnalisation avancée & Roue chromatique">
+          <span>⚙️</span> Options
         </button>
       </div>
     </div>
@@ -329,78 +326,78 @@
       <div class="lg:col-span-7 space-y-5">
         
         <!-- Barre d'onglets Catalogue & Recherche Web -->
-        <div class="flex items-center gap-2 p-1.5 bg-slate-900 border border-slate-800 rounded-2xl">
-          <button id="tab-btn-catalog" class="flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all bg-nw-yellow text-black shadow-sm flex items-center justify-center gap-1.5">
+        <div class="flex items-center gap-1.5 p-1 bg-[#161b22] border-2 border-[#30363d] rounded-lg shadow-[3px_3px_0px_#000]">
+          <button id="tab-btn-catalog" class="flex-1 py-1.5 px-3 rounded text-xs font-mono font-bold transition-all bg-[#FFBB00] text-black border border-black shadow-[1px_1px_0px_#000] flex items-center justify-center gap-1.5 cursor-pointer">
             <span>📦</span>
             <span>Apps Intégrées</span>
           </button>
-          <button id="tab-btn-search" class="flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all text-slate-300 hover:text-white hover:bg-slate-800 flex items-center justify-center gap-1.5">
+          <button id="tab-btn-search" class="flex-1 py-1.5 px-3 rounded text-xs font-mono font-bold transition-all text-[#8b949e] hover:text-[#e6edf3] hover:bg-[#21262d] flex items-center justify-center gap-1.5 cursor-pointer">
             <span>🌐</span>
-            <span>Rechercher sur le Web (.nws)</span>
-            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span>Rechercher Web (.nws)</span>
+            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
           </button>
-          <button id="tab-btn-import" class="flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all text-slate-300 hover:text-white hover:bg-slate-800 flex items-center justify-center gap-1.5">
+          <button id="tab-btn-import" class="flex-1 py-1.5 px-3 rounded text-xs font-mono font-bold transition-all text-[#8b949e] hover:text-[#e6edf3] hover:bg-[#21262d] flex items-center justify-center gap-1.5 cursor-pointer">
             <span>🔗</span>
-            <span>Importer URL / Fichier</span>
+            <span>Importer</span>
           </button>
         </div>
 
         <!-- ================= ONGLET 1 : CATALOGUE PRINCIPAL ================= -->
         <div id="tab-view-catalog" class="space-y-4">
           <!-- Filtres par catégorie -->
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-900 p-3.5 rounded-2xl border border-slate-800">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#161b22] p-3 rounded-lg border-2 border-[#30363d] shadow-[3px_3px_0px_#000]">
             <div>
-              <h3 class="font-extrabold text-sm text-white flex items-center gap-2">
-                <span>⚡</span> Applications Pré-intégrées
+              <h3 class="font-extrabold text-xs text-[#e6edf3] flex items-center gap-2 font-mono uppercase tracking-wider">
+                <span>⚡</span> Catalogue Applications
               </h3>
-              <p class="text-[11px] text-slate-400">Prêtes et optimisées pour N0120</p>
+              <p class="text-[11px] text-[#8b949e] font-mono">Pré-optimisées pour STM32H725</p>
             </div>
 
-            <div class="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0" id="category-filters">
-              <button class="cat-pill active px-2.5 py-1 rounded-lg text-xs font-semibold bg-nw-yellow text-black transition-all" data-category="ALL">
+            <div class="flex items-center gap-1 overflow-x-auto pb-1 sm:pb-0" id="category-filters">
+              <button class="cat-pill active px-2.5 py-1 rounded text-xs font-mono font-bold bg-[#FFBB00] text-black border border-black shadow-[1px_1px_0px_#000] transition-all cursor-pointer" data-category="ALL">
                 Toutes
               </button>
-              <button class="cat-pill px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 transition-all" data-category="Jeux / Arcade">
+              <button class="cat-pill px-2.5 py-1 rounded text-xs font-mono font-semibold bg-[#0d1117] hover:bg-[#21262d] text-[#8b949e] hover:text-[#e6edf3] border border-[#30363d] transition-all cursor-pointer" data-category="Jeux / Arcade">
                 🎮 Jeux
               </button>
-              <button class="cat-pill px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 transition-all" data-category="Sciences">
+              <button class="cat-pill px-2.5 py-1 rounded text-xs font-mono font-semibold bg-[#0d1117] hover:bg-[#21262d] text-[#8b949e] hover:text-[#e6edf3] border border-[#30363d] transition-all cursor-pointer" data-category="Sciences">
                 🧪 Sciences
               </button>
-              <button class="cat-pill px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 transition-all" data-category="Révision">
+              <button class="cat-pill px-2.5 py-1 rounded text-xs font-mono font-semibold bg-[#0d1117] hover:bg-[#21262d] text-[#8b949e] hover:text-[#e6edf3] border border-[#30363d] transition-all cursor-pointer" data-category="Révision">
                 📚 Révision
               </button>
-              <button class="cat-pill px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 transition-all" data-category="Maths">
+              <button class="cat-pill px-2.5 py-1 rounded text-xs font-mono font-semibold bg-[#0d1117] hover:bg-[#21262d] text-[#8b949e] hover:text-[#e6edf3] border border-[#30363d] transition-all cursor-pointer" data-category="Maths">
                 📐 Maths
               </button>
             </div>
           </div>
 
-          <!-- Barre de recherche en direct dans le catalogue (QOL: Raccourci / ou Ctrl+K) -->
+          <!-- Barre de recherche en direct dans le catalogue -->
           <div class="relative">
-            <input type="text" id="catalog-search-input" placeholder="Filtrer les applications (ex: Mario, Flappy, 2048, chimie, fiches...)" class="w-full bg-slate-900 border border-slate-800 focus:border-amber-400 focus:ring-1 focus:ring-amber-400 text-xs text-white rounded-xl pl-9 pr-24 py-2.5 placeholder:text-slate-500 font-medium transition-all shadow-inner">
-            <span class="absolute left-3 top-2.5 text-slate-400 text-xs">🔍</span>
-            <span class="hidden sm:inline-flex items-center gap-1 absolute right-9 top-2 px-1.5 py-0.5 rounded text-[9px] font-mono text-slate-400 bg-slate-800/80 border border-slate-700/60 pointer-events-none">
-              <kbd class="kbd-key" style="padding:0 3px; font-size:9px;">/</kbd> ou <kbd class="kbd-key" style="padding:0 3px; font-size:9px;">Ctrl K</kbd>
+            <input type="text" id="catalog-search-input" placeholder="Filtrer les applications (ex: Mario, Flappy, 2048, chimie...)" class="w-full bg-[#0d1117] border-2 border-[#30363d] focus:border-[#FFBB00] text-xs font-mono text-[#e6edf3] rounded-lg pl-8 pr-24 py-2 placeholder:text-[#8b949e] font-medium transition-all shadow-[inset_1px_1px_2px_#000]">
+            <span class="absolute left-2.5 top-2.5 text-[#8b949e] text-xs">🔍</span>
+            <span class="hidden sm:inline-flex items-center gap-1 absolute right-8 top-1.5 px-1.5 py-0.5 rounded text-[9px] font-mono text-[#8b949e] bg-[#161b22] border border-[#30363d] pointer-events-none">
+              <kbd class="kbd-key" style="padding:0 3px; font-size:9px;">/</kbd>
             </span>
-            <button id="catalog-search-clear" class="hidden absolute right-2.5 top-2 px-1.5 py-0.5 text-[10px] text-slate-400 hover:text-white rounded bg-slate-800 cursor-pointer">✕</button>
+            <button id="catalog-search-clear" class="hidden absolute right-2.5 top-1.5 px-1.5 py-0.5 text-[10px] text-[#8b949e] hover:text-white rounded bg-[#21262d] cursor-pointer">✕</button>
           </div>
 
-          <!-- Liste des Cartes d'Applications du Catalogue avec Tri (QOL) -->
+          <!-- Liste des Cartes d'Applications du Catalogue avec Tri -->
           <div class="space-y-3">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-slate-400 font-semibold px-1">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-[#8b949e] font-mono font-semibold px-1">
               <span id="catalog-count-label">Applications disponibles</span>
               <div class="flex items-center gap-2">
-                <div class="flex items-center gap-1 bg-slate-900 border border-slate-800 p-0.5 rounded-xl">
-                  <button id="view-mode-gallery-btn" class="px-3 py-1 rounded-lg text-xs font-bold transition-all bg-nw-yellow text-black flex items-center gap-1 cursor-pointer" title="Mode Galerie (Tuiles carrées)">
+                <div class="flex items-center gap-1 bg-[#0d1117] border border-[#30363d] p-0.5 rounded shadow-[1px_1px_0px_#000]">
+                  <button id="view-mode-gallery-btn" class="px-2.5 py-0.5 rounded text-xs font-mono font-bold transition-all bg-[#FFBB00] text-black border border-black flex items-center gap-1 cursor-pointer shadow-[1px_1px_0px_#000]" title="Mode Galerie (Tuiles carrées)">
                     <span>⏹️</span> <span class="text-[11px] font-bold">Galerie</span>
                   </button>
-                  <button id="view-mode-list-btn" class="px-3 py-1 rounded-lg text-xs font-semibold transition-all text-slate-400 hover:text-white flex items-center gap-1 cursor-pointer" title="Mode Liste">
+                  <button id="view-mode-list-btn" class="px-2.5 py-0.5 rounded text-xs font-mono font-semibold transition-all text-[#8b949e] hover:text-[#e6edf3] flex items-center gap-1 cursor-pointer" title="Mode Liste">
                     <span>☰</span> <span class="text-[11px] font-bold">Liste</span>
                   </button>
                 </div>
                 <div class="flex items-center gap-1.5">
-                  <label for="catalog-sort" class="text-[11px] text-slate-500 font-normal hidden sm:inline">Trier :</label>
-                  <select id="catalog-sort" class="bg-slate-900 border border-slate-800 focus:border-amber-400 text-slate-300 text-[11px] rounded-lg px-2 py-1 transition-all cursor-pointer">
+                  <label for="catalog-sort" class="text-[11px] text-[#8b949e] font-mono hidden sm:inline">Tri :</label>
+                  <select id="catalog-sort" class="bg-[#0d1117] border-2 border-[#30363d] focus:border-[#FFBB00] text-[#e6edf3] text-[11px] font-mono rounded px-2 py-1 transition-all cursor-pointer shadow-[1px_1px_0px_#000]">
                     <option value="recommended">⭐ Recommandées</option>
                     <option value="name_asc">🔤 Nom (A → Z)</option>
                     <option value="name_desc">🔤 Nom (Z → A)</option>
@@ -420,50 +417,50 @@
         <!-- ================= ONGLET 2 : RECHERCHE SUR LE WEB (.NWS / .NWA) ================= -->
         <div id="tab-view-search" class="space-y-4 hidden">
           <!-- Barre de Recherche Web Dédiée -->
-          <div class="bg-slate-900 p-4 rounded-2xl border border-slate-800 space-y-3">
+          <div class="bg-[#161b22] p-3.5 rounded-lg border-2 border-[#30363d] shadow-[3px_3px_0px_#000] space-y-3">
             <div class="flex items-center justify-between">
-              <label for="web-search-input" class="text-xs font-extrabold text-white flex items-center gap-2">
-                <span>🔎</span> Rechercher des fichiers .nws & .nwa sur le web
+              <label for="web-search-input" class="text-xs font-mono font-bold text-[#e6edf3] flex items-center gap-2 uppercase tracking-wider">
+                <span>🔎</span> Recherche Web (.nws & .nwa)
               </label>
-              <span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                Hub Communautaire
+              <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-[#0d1117] text-emerald-400 border border-[#30363d]">
+                Dépôt Communautaire
               </span>
             </div>
 
             <div class="relative">
-              <input type="text" id="web-search-input" placeholder="Ex: Snake, 2048, Flappy, Bac, Matrices, Syracuse, Philo..." class="w-full bg-slate-950 border border-slate-700 focus:border-amber-400 focus:ring-1 focus:ring-amber-400 text-sm text-white rounded-xl pl-10 pr-24 py-3 placeholder:text-slate-500 font-medium transition-all">
-              <span class="absolute left-3.5 top-3.5 text-slate-400 text-sm">🔍</span>
-              <button id="web-search-clear" class="hidden absolute right-3 top-2.5 px-2.5 py-1 text-xs text-slate-400 hover:text-white rounded-lg bg-slate-800">
+              <input type="text" id="web-search-input" placeholder="Ex: Snake, 2048, Flappy, Bac, Matrices, Syracuse, Philo..." class="w-full bg-[#0d1117] border-2 border-[#30363d] focus:border-[#FFBB00] text-xs font-mono text-[#e6edf3] rounded-lg pl-8 pr-20 py-2.5 placeholder:text-[#8b949e] font-medium transition-all shadow-[inset_1px_1px_2px_#000]">
+              <span class="absolute left-2.5 top-2.5 text-[#8b949e] text-xs">🔍</span>
+              <button id="web-search-clear" class="hidden absolute right-2.5 top-2 px-2 py-0.5 text-[10px] text-[#8b949e] hover:text-white rounded bg-[#21262d] cursor-pointer">
                 Effacer
               </button>
             </div>
 
             <!-- Tags rapides de recherche -->
             <div class="flex items-center gap-1.5 overflow-x-auto text-[11px] pt-1" id="quick-search-tags">
-              <span class="text-slate-500 shrink-0">Suggestions :</span>
-              <button class="quick-tag px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium transition-all shrink-0" data-tag="">Tous</button>
-              <button class="quick-tag px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium transition-all shrink-0" data-tag="flappy">🐦 Flappy</button>
-              <button class="quick-tag px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium transition-all shrink-0" data-tag="2048">🔢 2048</button>
-              <button class="quick-tag px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium transition-all shrink-0" data-tag="snake">🐍 Snake</button>
-              <button class="quick-tag px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium transition-all shrink-0" data-tag="pong">🏓 Pong</button>
-              <button class="quick-tag px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium transition-all shrink-0" data-tag="dino">🦖 Dino</button>
-              <button class="quick-tag px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium transition-all shrink-0" data-tag="space">👾 Space</button>
-              <button class="quick-tag px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium transition-all shrink-0" data-tag="breakout">🧱 Briques</button>
-              <button class="quick-tag px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium transition-all shrink-0" data-tag="puissance4">🟡 Puissance 4</button>
-              <button class="quick-tag px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium transition-all shrink-0" data-tag="bac">📚 Bac</button>
-              <button class="quick-tag px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium transition-all shrink-0" data-tag="prepa">🎓 Prépas</button>
+              <span class="text-[#8b949e] font-mono shrink-0">Tags :</span>
+              <button class="quick-tag px-2 py-0.5 rounded bg-[#0d1117] hover:bg-[#21262d] text-[#8b949e] hover:text-[#e6edf3] font-mono border border-[#30363d] transition-all shrink-0 cursor-pointer" data-tag="">Tous</button>
+              <button class="quick-tag px-2 py-0.5 rounded bg-[#0d1117] hover:bg-[#21262d] text-[#8b949e] hover:text-[#e6edf3] font-mono border border-[#30363d] transition-all shrink-0 cursor-pointer" data-tag="flappy">🐦 Flappy</button>
+              <button class="quick-tag px-2 py-0.5 rounded bg-[#0d1117] hover:bg-[#21262d] text-[#8b949e] hover:text-[#e6edf3] font-mono border border-[#30363d] transition-all shrink-0 cursor-pointer" data-tag="2048">🔢 2048</button>
+              <button class="quick-tag px-2 py-0.5 rounded bg-[#0d1117] hover:bg-[#21262d] text-[#8b949e] hover:text-[#e6edf3] font-mono border border-[#30363d] transition-all shrink-0 cursor-pointer" data-tag="snake">🐍 Snake</button>
+              <button class="quick-tag px-2 py-0.5 rounded bg-[#0d1117] hover:bg-[#21262d] text-[#8b949e] hover:text-[#e6edf3] font-mono border border-[#30363d] transition-all shrink-0 cursor-pointer" data-tag="pong">🏓 Pong</button>
+              <button class="quick-tag px-2 py-0.5 rounded bg-[#0d1117] hover:bg-[#21262d] text-[#8b949e] hover:text-[#e6edf3] font-mono border border-[#30363d] transition-all shrink-0 cursor-pointer" data-tag="dino">🦖 Dino</button>
+              <button class="quick-tag px-2 py-0.5 rounded bg-[#0d1117] hover:bg-[#21262d] text-[#8b949e] hover:text-[#e6edf3] font-mono border border-[#30363d] transition-all shrink-0 cursor-pointer" data-tag="space">👾 Space</button>
+              <button class="quick-tag px-2 py-0.5 rounded bg-[#0d1117] hover:bg-[#21262d] text-[#8b949e] hover:text-[#e6edf3] font-mono border border-[#30363d] transition-all shrink-0 cursor-pointer" data-tag="breakout">🧱 Briques</button>
+              <button class="quick-tag px-2 py-0.5 rounded bg-[#0d1117] hover:bg-[#21262d] text-[#8b949e] hover:text-[#e6edf3] font-mono border border-[#30363d] transition-all shrink-0 cursor-pointer" data-tag="puissance4">🟡 Puissance 4</button>
+              <button class="quick-tag px-2 py-0.5 rounded bg-[#0d1117] hover:bg-[#21262d] text-[#8b949e] hover:text-[#e6edf3] font-mono border border-[#30363d] transition-all shrink-0 cursor-pointer" data-tag="bac">📚 Bac</button>
+              <button class="quick-tag px-2 py-0.5 rounded bg-[#0d1117] hover:bg-[#21262d] text-[#8b949e] hover:text-[#e6edf3] font-mono border border-[#30363d] transition-all shrink-0 cursor-pointer" data-tag="prepa">🎓 Prépas</button>
             </div>
           </div>
 
           <!-- Liste des résultats de recherche web -->
           <div class="space-y-3">
-            <div class="flex items-center justify-between text-xs text-slate-400 font-semibold px-1">
+            <div class="flex items-center justify-between text-xs text-[#8b949e] font-mono font-semibold px-1">
               <span id="search-count-label">Applications communautaires</span>
-              <div class="flex items-center gap-1 bg-slate-900 border border-slate-800 p-0.5 rounded-xl">
-                <button id="search-view-mode-gallery-btn" class="px-2 py-0.5 rounded-lg text-xs font-bold transition-all bg-nw-yellow text-black flex items-center gap-1 cursor-pointer" title="Mode Galerie (Tuiles carrées)">
+              <div class="flex items-center gap-1 bg-[#0d1117] border border-[#30363d] p-0.5 rounded shadow-[1px_1px_0px_#000]">
+                <button id="search-view-mode-gallery-btn" class="px-2 py-0.5 rounded text-xs font-mono font-bold transition-all bg-[#FFBB00] text-black border border-black flex items-center gap-1 cursor-pointer shadow-[1px_1px_0px_#000]" title="Mode Galerie (Tuiles carrées)">
                   <span>⏹️</span> <span class="hidden sm:inline text-[11px]">Galerie</span>
                 </button>
-                <button id="search-view-mode-list-btn" class="px-2 py-0.5 rounded-lg text-xs font-semibold transition-all text-slate-400 hover:text-white flex items-center gap-1 cursor-pointer" title="Mode Liste">
+                <button id="search-view-mode-list-btn" class="px-2 py-0.5 rounded text-xs font-mono font-semibold transition-all text-[#8b949e] hover:text-[#e6edf3] flex items-center gap-1 cursor-pointer" title="Mode Liste">
                   <span>☰</span> <span class="hidden sm:inline text-[11px]">Liste</span>
                 </button>
               </div>
@@ -479,52 +476,52 @@
         <div id="tab-view-import" class="space-y-4 hidden">
 
           <!-- Bannière Convertisseur NWA dédié -->
-          <div class="bg-gradient-to-r from-cyan-950/60 via-slate-900 to-slate-900 p-4 rounded-2xl border border-cyan-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div class="bg-[#161b22] p-4 rounded-lg border-2 border-[#30363d] shadow-[3px_3px_0px_#000] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div class="space-y-1">
-              <span class="ascii-badge">Outil Intégré WebAssembly</span>
-              <h4 class="text-xs font-bold text-white flex items-center gap-1.5 pt-1">
-                <span>⚡</span> Vous avez un fichier .nwa brut ?
+              <span class="ascii-badge">Linker WebAssembly</span>
+              <h4 class="text-xs font-bold font-mono text-[#e6edf3] flex items-center gap-1.5 pt-1">
+                <span>⚡</span> Binaire .nwa brut ?
               </h4>
-              <p class="text-[11px] text-slate-400">
-                Transformez-le en binaire exécutable .bin officiel grâce à notre compilateur/linker intégré !
+              <p class="text-[11px] text-[#8b949e] font-mono">
+                Convertissez et relogez votre .nwa en binaire .bin exécutable pour NumWorks !
               </p>
             </div>
-            <a href="converter.html" class="px-3.5 py-2 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-black font-extrabold text-xs shrink-0 transition-all shadow-md shadow-cyan-500/20 font-ascii text-center">
-              Ouvrir le Convertisseur NWA →
+            <a href="converter.html" class="px-3.5 py-2 rounded bg-[#FFBB00] hover:bg-[#E5A600] text-black font-extrabold text-xs shrink-0 transition-all font-mono border-2 border-black shadow-[2px_2px_0px_#000] text-center">
+              Convertisseur NWA →
             </a>
           </div>
 
           <!-- Téléchargement par URL web directe -->
-          <div class="bg-slate-900 p-4 rounded-2xl border border-slate-800 space-y-3">
+          <div class="bg-[#161b22] p-4 rounded-lg border-2 border-[#30363d] shadow-[3px_3px_0px_#000] space-y-3">
             <div class="flex items-center justify-between">
-              <h4 class="text-xs font-bold text-white flex items-center gap-2">
-                <span>🌐</span> Télécharger depuis une URL Web (.nws / .nwa)
+              <h4 class="text-xs font-bold font-mono text-[#e6edf3] flex items-center gap-2">
+                <span>🌐</span> Télécharger via URL (.nws / .nwa)
               </h4>
-              <span class="text-[10px] text-slate-400 font-mono">HTTP / GitHub Raw</span>
+              <span class="text-[10px] text-[#8b949e] font-mono">HTTP / GitHub Raw</span>
             </div>
 
-            <p class="text-xs text-slate-400">
-              Collez l'adresse web directe vers n'importe quel fichier <code>.nws</code>, <code>.nwa</code> ou script <code>.py</code> en ligne :
+            <p class="text-xs text-[#8b949e] font-mono">
+              Collez le lien direct vers un fichier <code>.nws</code>, <code>.nwa</code> ou script Python :
             </p>
 
             <div class="flex flex-col sm:flex-row gap-2">
-              <input type="url" id="import-url-input" placeholder="https://raw.githubusercontent.com/.../programme.nws" class="flex-1 bg-slate-950 border border-slate-700 focus:border-amber-400 focus:ring-1 focus:ring-amber-400 text-xs text-white rounded-xl px-3 py-2.5 placeholder:text-slate-500 font-mono">
-              <button id="import-url-btn" class="px-4 py-2.5 rounded-xl bg-nw-yellow hover:bg-nw-yellowHover text-black font-extrabold text-xs transition-all active:scale-95 shrink-0 flex items-center justify-center gap-1.5">
+              <input type="url" id="import-url-input" placeholder="https://raw.githubusercontent.com/.../app.nws" class="flex-1 bg-[#0d1117] border-2 border-[#30363d] focus:border-[#FFBB00] text-xs font-mono text-[#e6edf3] rounded-lg px-3 py-2 placeholder:text-[#8b949e]">
+              <button id="import-url-btn" class="px-3.5 py-2 rounded bg-[#FFBB00] hover:bg-[#E5A600] text-black font-extrabold text-xs transition-all border-2 border-black shadow-[2px_2px_0px_#000] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none shrink-0 flex items-center justify-center gap-1.5 cursor-pointer font-mono">
                 <span>⬇️</span> Télécharger & Ajouter
               </button>
             </div>
           </div>
 
           <!-- Zone de Glisser-Déposer Personnalisée -->
-          <div id="drop-zone" class="border-2 border-dashed border-slate-700 hover:border-amber-400 bg-slate-900/40 hover:bg-amber-500/5 p-6 rounded-2xl text-center cursor-pointer transition-all group">
+          <div id="drop-zone" class="border-2 border-dashed border-[#30363d] hover:border-[#FFBB00] bg-[#161b22] hover:bg-[#21262d] p-6 rounded-lg text-center cursor-pointer transition-all shadow-[3px_3px_0px_#000] group">
             <input type="file" id="file-input" class="hidden" accept=".bin,.nwa,.nws,.py,.json,.txt" multiple>
-            <div class="w-12 h-12 mx-auto rounded-xl bg-slate-800 group-hover:bg-amber-500/20 group-hover:text-nw-yellow flex items-center justify-center text-slate-400 text-2xl transition-all mb-2">
+            <div class="w-10 h-10 mx-auto rounded border border-[#30363d] bg-[#0d1117] flex items-center justify-center text-xl transition-all mb-2">
               📥
             </div>
-            <p class="text-sm font-semibold text-slate-200">
-              Ou glissez-déposez vos fichiers <span class="font-mono text-emerald-400">.bin</span>, <span class="font-mono text-nw-yellow">.nwa</span> ou <span class="font-mono text-sky-400">.nws</span> locaux
+            <p class="text-xs font-mono font-bold text-[#e6edf3]">
+              Glissez-déposez vos fichiers <span class="text-emerald-400">.bin</span>, <span class="text-[#FFBB00]">.nwa</span> ou <span class="text-cyan-400">.nws</span>
             </p>
-            <p class="text-xs text-slate-500 mt-0.5">Exécutables natifs ARM (.bin / .nwa) ou scripts Python (.nws / .py)</p>
+            <p class="text-[11px] text-[#8b949e] font-mono mt-0.5">Exécutables natifs ARM Cortex-M7 ou scripts Python</p>
           </div>
         </div>
 
@@ -534,64 +531,64 @@
       <div class="lg:col-span-5 space-y-5">
 
         <!-- Carte de configuration du Pack -->
-        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-5">
+        <div class="bg-[#161b22] border-2 border-[#30363d] rounded-lg p-5 shadow-[4px_4px_0px_#000] space-y-4">
           
-          <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+          <div class="flex items-center justify-between pb-3 border-b-2 border-[#30363d]">
             <div>
-              <h3 class="font-extrabold text-base text-white flex items-center gap-2">
+              <h3 class="font-extrabold text-sm text-[#e6edf3] flex items-center gap-2 font-mono uppercase tracking-wider">
                 <span>🎯</span> Votre Pack EquaLib
               </h3>
-              <p class="text-xs text-slate-400">Applications chargées dans le lanceur</p>
+              <p class="text-[11px] text-[#8b949e] font-mono">Applications chargées dans le Hub</p>
             </div>
             <div class="flex items-center gap-1.5">
-              <button id="btn-pack-defaults" class="text-[10px] text-amber-300 hover:text-black hover:bg-amber-400 font-bold px-2 py-1 rounded-lg bg-amber-500/15 border border-amber-500/30 transition-all active:scale-95 cursor-pointer" title="Restaurer la sélection recommandée">↺ Défaut</button>
-              <button id="btn-pack-clear" class="text-[10px] text-red-400 hover:text-white hover:bg-red-500 font-bold px-2 py-1 rounded-lg bg-red-500/15 border border-red-500/30 transition-all active:scale-95 cursor-pointer" title="Vider le pack">🗑️ Vider</button>
-              <span id="app-count-badge" class="px-2.5 py-1 rounded-full bg-slate-800 border border-slate-700 font-mono text-xs font-extrabold text-nw-yellow">
+              <button id="btn-pack-defaults" class="text-[10px] text-[#FFBB00] hover:text-black hover:bg-[#FFBB00] font-mono font-bold px-2 py-1 rounded bg-[#0d1117] border border-[#30363d] transition-all cursor-pointer shadow-[1px_1px_0px_#000]" title="Restaurer la sélection recommandée">↺ Défaut</button>
+              <button id="btn-pack-clear" class="text-[10px] text-red-400 hover:text-white hover:bg-red-600 font-mono font-bold px-2 py-1 rounded bg-[#0d1117] border border-[#30363d] transition-all cursor-pointer shadow-[1px_1px_0px_#000]" title="Vider le pack">🗑️ Vider</button>
+              <span id="app-count-badge" class="px-2 py-0.5 rounded bg-[#0d1117] border border-[#30363d] font-mono text-xs font-extrabold text-[#FFBB00] shadow-[1px_1px_0px_#000]">
                 0 / 12
               </span>
             </div>
           </div>
 
-          <!-- Packs Prédéfinis en 1 clic (QOL) -->
-          <div class="space-y-1.5 p-3 rounded-2xl bg-slate-950/80 border border-slate-800/80">
-            <div class="flex items-center justify-between text-[11px] font-bold text-slate-300">
+          <!-- Packs Prédéfinis en 1 clic -->
+          <div class="space-y-1.5 p-2.5 rounded-lg bg-[#0d1117] border border-[#30363d] shadow-[2px_2px_0px_#000]">
+            <div class="flex items-center justify-between text-[11px] font-mono font-bold text-[#c9d1d9]">
               <span class="flex items-center gap-1.5"><span>⚡</span> Packs rapides :</span>
-              <span class="text-[10px] text-slate-500">1 clic</span>
+              <span class="text-[10px] text-[#8b949e]">1 clic</span>
             </div>
             <div class="grid grid-cols-3 gap-1.5 pt-1">
-              <button id="preset-arcade-btn" class="py-1.5 px-2 rounded-xl bg-slate-900 hover:bg-amber-500/10 hover:border-amber-500/40 border border-slate-800 text-[10px] font-bold text-amber-300 transition-all flex items-center justify-center gap-1 active:scale-95 cursor-pointer" title="Pack Jeux : Mario Kart, Flappy Bird, 2048, Snake">
+              <button id="preset-arcade-btn" class="py-1.5 px-2 rounded bg-[#161b22] hover:bg-[#21262d] border border-[#30363d] text-[10px] font-mono font-bold text-amber-300 transition-all flex items-center justify-center gap-1 cursor-pointer shadow-[1px_1px_0px_#000] active:translate-x-[1px] active:translate-y-[1px]" title="Pack Jeux : Mario Kart, Flappy Bird, 2048, Snake">
                 <span>🎮</span> Arcade
               </button>
-              <button id="preset-bac-btn" class="py-1.5 px-2 rounded-xl bg-slate-900 hover:bg-cyan-500/10 hover:border-cyan-500/40 border border-slate-800 text-[10px] font-bold text-cyan-300 transition-all flex items-center justify-center gap-1 active:scale-95 cursor-pointer" title="Pack Études : Tableau Périodique, Fiches Cours, Solveur Maths">
+              <button id="preset-bac-btn" class="py-1.5 px-2 rounded bg-[#161b22] hover:bg-[#21262d] border border-[#30363d] text-[10px] font-mono font-bold text-cyan-300 transition-all flex items-center justify-center gap-1 cursor-pointer shadow-[1px_1px_0px_#000] active:translate-x-[1px] active:translate-y-[1px]" title="Pack Études : Tableau Périodique, Fiches Cours, Solveur Maths">
                 <span>🎓</span> Bac & Sup
               </button>
-              <button id="preset-all-btn" class="py-1.5 px-2 rounded-xl bg-slate-900 hover:bg-emerald-500/10 hover:border-emerald-500/40 border border-slate-800 text-[10px] font-bold text-emerald-300 transition-all flex items-center justify-center gap-1 active:scale-95 cursor-pointer" title="Pack Complet : Toutes les applications recommandées">
+              <button id="preset-all-btn" class="py-1.5 px-2 rounded bg-[#161b22] hover:bg-[#21262d] border border-[#30363d] text-[10px] font-mono font-bold text-emerald-300 transition-all flex items-center justify-center gap-1 cursor-pointer shadow-[1px_1px_0px_#000] active:translate-x-[1px] active:translate-y-[1px]" title="Pack Complet : Toutes les applications recommandées">
                 <span>⭐</span> Complet
               </button>
             </div>
           </div>
 
-          <!-- Jauge de Stockage Flash QSPI Améliorée -->
-          <div class="space-y-2 bg-slate-950/70 p-4 rounded-2xl border border-slate-800">
-            <div class="flex items-center justify-between text-xs">
-              <span class="font-semibold text-slate-300">Mémoire Flash N0120</span>
-              <span id="memory-percent" class="font-mono font-bold text-white">0%</span>
+          <!-- Jauge de Stockage Flash QSPI -->
+          <div class="space-y-2 bg-[#0d1117] p-3.5 rounded-lg border border-[#30363d] shadow-[2px_2px_0px_#000]">
+            <div class="flex items-center justify-between text-xs font-mono">
+              <span class="font-semibold text-[#c9d1d9]">Mémoire Flash QSPI (N0120)</span>
+              <span id="memory-percent" class="font-bold text-white">0%</span>
             </div>
-            <div class="w-full h-2.5 bg-slate-800 rounded-full overflow-hidden p-0.5">
-              <div id="memory-progress-bar" class="h-full bg-emerald-500 rounded-full transition-all duration-300" style="width: 0%;"></div>
+            <div class="w-full h-2.5 bg-[#161b22] rounded overflow-hidden border border-[#30363d]">
+              <div id="memory-progress-bar" class="h-full bg-emerald-500 transition-all duration-300" style="width: 0%;"></div>
             </div>
-            <div class="flex justify-between text-[11px] text-slate-500 font-mono">
+            <div class="flex justify-between text-[11px] text-[#8b949e] font-mono">
               <span id="memory-text">0.00 Mo / 4.00 Mo</span>
-              <span id="slots-remaining-text" class="text-slate-400">12 slots libres</span>
+              <span id="slots-remaining-text" class="text-[#8b949e]">12 slots libres</span>
             </div>
           </div>
 
-          <!-- Sauvegarde et Partage du Pack (QOL) -->
-          <div class="flex items-center justify-between px-1 text-[11px]">
-            <button id="btn-export-pack" class="text-slate-400 hover:text-amber-300 transition-colors flex items-center gap-1 cursor-pointer font-medium" title="Exporter cette configuration de pack en fichier .json">
+          <!-- Sauvegarde et Partage du Pack -->
+          <div class="flex items-center justify-between px-1 text-[11px] font-mono">
+            <button id="btn-export-pack" class="text-[#8b949e] hover:text-[#FFBB00] transition-colors flex items-center gap-1 cursor-pointer font-medium" title="Exporter cette configuration de pack en fichier .json">
               <span>📤</span> Sauvegarder Pack
             </button>
-            <button id="btn-import-pack" class="text-slate-400 hover:text-cyan-300 transition-colors flex items-center gap-1 cursor-pointer font-medium" title="Charger un pack depuis un fichier .json">
+            <button id="btn-import-pack" class="text-[#8b949e] hover:text-cyan-300 transition-colors flex items-center gap-1 cursor-pointer font-medium" title="Charger un pack depuis un fichier .json">
               <span>📥</span> Charger Pack
             </button>
             <input type="file" id="import-pack-file" class="hidden" accept=".json" />
@@ -599,9 +596,9 @@
 
           <!-- Liste des applications sélectionnées dans le pack -->
           <div class="space-y-2 min-h-[140px]">
-            <div id="empty-state" class="text-center py-8 text-slate-500 space-y-1">
-              <div class="text-3xl">📦</div>
-              <p class="text-xs font-medium">Votre pack est vide.<br>Ajoutez des applications depuis le catalogue à gauche.</p>
+            <div id="empty-state" class="text-center py-8 text-[#8b949e] space-y-1 font-mono">
+              <div class="text-2xl">📦</div>
+              <p class="text-xs">Votre pack est vide.<br>Ajoutez des applications depuis le catalogue à gauche.</p>
             </div>
             <div id="selected-list" class="space-y-2 hidden max-h-[300px] overflow-y-auto pr-1">
               <!-- Injecté dynamiquement par app.js -->
@@ -610,28 +607,28 @@
 
           <!-- Barre de progression du téléversement USB -->
           <div id="progress-container" class="hidden space-y-2 pt-2">
-            <div class="flex justify-between text-xs font-semibold text-slate-300">
+            <div class="flex justify-between text-xs font-mono font-semibold text-[#c9d1d9]">
               <span id="progress-text">Téléversement vers la N0120...</span>
             </div>
-            <div class="w-full h-3 bg-slate-800 rounded-full overflow-hidden">
-              <div id="flash-progress" class="h-full bg-nw-yellow rounded-full transition-all" style="width: 0%;"></div>
+            <div class="w-full h-3 bg-[#0d1117] rounded border border-[#30363d] overflow-hidden">
+              <div id="flash-progress" class="h-full bg-[#FFBB00] transition-all" style="width: 0%;"></div>
             </div>
           </div>
 
           <!-- Boutons d'Action Principaux -->
-          <div class="space-y-2.5 pt-2">
+          <div class="space-y-2 pt-2">
             <!-- Bouton Principal Recommandé : Flash USB Direct -->
-            <button id="flash-btn" class="w-full py-4 px-4 rounded-2xl bg-nw-yellow hover:bg-nw-yellowHover active:scale-[0.98] text-black font-extrabold text-sm tracking-wide transition-all shadow-lg shadow-amber-500/25 flex items-center justify-center gap-2 group">
-              <span class="group-hover:scale-110 transition-transform">⚡</span>
-              <span>Installer sur ma NumWorks (Flash USB Direct - Recommandé)</span>
+            <button id="flash-btn" class="w-full py-3.5 px-4 rounded-lg bg-[#FFBB00] hover:bg-[#E5A600] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[1px_1px_0px_#000] text-black font-extrabold text-xs font-mono uppercase tracking-wider border-2 border-black shadow-[4px_4px_0px_#000] flex items-center justify-center gap-2 cursor-pointer transition-all">
+              <span>⚡</span>
+              <span>Installer sur ma NumWorks (Flash USB Direct)</span>
             </button>
 
             <div class="grid grid-cols-2 gap-2">
-              <button id="download-btn" class="py-2.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs transition-all flex items-center justify-center gap-1.5 border border-slate-700 shadow-sm active:scale-95 group">
-                <span class="group-hover:translate-y-[-1px] transition-transform">💾</span>
+              <button id="download-btn" class="py-2 px-3 rounded-lg bg-[#21262d] hover:bg-[#30363d] text-[#e6edf3] font-mono font-bold text-xs transition-all flex items-center justify-center gap-1.5 border border-[#30363d] shadow-[2px_2px_0px_#000] active:translate-x-[1px] active:translate-y-[1px] cursor-pointer">
+                <span>💾</span>
                 <span>Télécharger .nwa</span>
               </button>
-              <button id="download-nws-btn" class="py-2.5 px-3 rounded-xl bg-slate-800/60 hover:bg-slate-800 text-slate-300 font-semibold text-xs transition-all flex items-center justify-center gap-1.5 border border-slate-700">
+              <button id="download-nws-btn" class="py-2 px-3 rounded-lg bg-[#21262d] hover:bg-[#30363d] text-[#8b949e] hover:text-[#e6edf3] font-mono font-semibold text-xs transition-all flex items-center justify-center gap-1.5 border border-[#30363d] shadow-[2px_2px_0px_#000] active:translate-x-[1px] active:translate-y-[1px] cursor-pointer">
                 <span>📦</span> Exporter .nws
               </button>
             </div>
@@ -640,38 +637,38 @@
         </div>
 
         <!-- Guide d'installation pas-à-pas -->
-        <div class="p-5 rounded-3xl bg-slate-900 border border-amber-500/30 text-xs text-slate-300 space-y-3">
-          <div class="flex items-center gap-2 font-bold text-nw-yellow text-sm">
-            <span>⚡</span> Installation de votre Pack EquaLib :
+        <div class="p-4 rounded-lg bg-[#161b22] border-2 border-[#30363d] shadow-[3px_3px_0px_#000] text-xs font-mono text-[#c9d1d9] space-y-3">
+          <div class="flex items-center gap-2 font-bold text-[#FFBB00] text-xs font-mono uppercase tracking-wider">
+            <span>⚡</span> Guide Installation Pack EquaLib :
           </div>
-          <div class="space-y-3 text-slate-400 pl-1">
-            <div class="p-2.5 rounded-xl bg-slate-950 border border-amber-500/30 space-y-1">
-              <p class="font-bold text-slate-100 text-[11px] flex items-center gap-1.5">
-                <span class="text-amber-400">Méthode Recommandée (1 Clic) :</span> Flash USB Direct
+          <div class="space-y-2 text-[#8b949e]">
+            <div class="p-2.5 rounded bg-[#0d1117] border border-[#30363d] space-y-1">
+              <p class="font-bold text-[#e6edf3] text-[11px] flex items-center gap-1.5">
+                <span class="text-[#FFBB00]">1. Flash USB Direct (Recommandé)</span>
               </p>
               <p class="text-[11px]">
-                Branchez votre NumWorks en USB, cliquez sur <strong>« Installer sur ma NumWorks »</strong>. Votre pack personnalisé avec toutes vos applications et jeux externes est compilé, relogé et installé immédiatement !
+                Branchez votre calculatrice en USB et cliquez sur <strong>« Installer sur ma NumWorks »</strong>. Votre pack personnalisé est relié et flashé en un clic.
               </p>
             </div>
-            <div class="p-2.5 rounded-xl bg-slate-950 border border-slate-800 space-y-1">
-              <p class="font-bold text-slate-300 text-[11px] flex items-center gap-1.5">
-                <span class="text-cyan-400">Applications .nwa externes :</span>
+            <div class="p-2.5 rounded bg-[#0d1117] border border-[#30363d] space-y-1">
+              <p class="font-bold text-[#c9d1d9] text-[11px] flex items-center gap-1.5">
+                <span class="text-cyan-400">2. Binaires .nwa externes</span>
               </p>
               <p class="text-[11px]">
-                Glissez directement vos fichiers <strong>.nwa</strong> dans le Pack EquaLib ci-contre. Le système effectue la liaison mémoire automatiquement lors du flash USB. <em>(Pour installer un seul jeu sans EquaLib, utilisez la page Convertisseur)</em>.
+                Glissez directement vos fichiers <strong>.nwa</strong> dans la zone d'importation. Le linker gère automatiquement le relogement mémoire.
               </p>
             </div>
           </div>
         </div>
 
         <!-- Raccourcis Clavier sur la calculatrice -->
-        <div class="p-4 rounded-2xl bg-slate-900 border border-slate-800 text-xs text-slate-400 space-y-2">
-          <p class="font-bold text-slate-200">🕹️ Raccourcis dans EquaLib sur la calculatrice :</p>
+        <div class="p-3.5 rounded-lg bg-[#161b22] border-2 border-[#30363d] shadow-[3px_3px_0px_#000] text-xs font-mono text-[#8b949e] space-y-2">
+          <p class="font-bold text-[#e6edf3]">🕹️ Commandes dans le lanceur NumWorks :</p>
           <ul class="space-y-1 text-[11px]">
-            <li>• <strong class="text-slate-300">Flèches Haut / Bas</strong> : Sélectionner une application dans le menu</li>
-            <li>• <strong class="text-slate-300">OK / EXE</strong> : Lancer l'application</li>
-            <li>• <strong class="text-slate-300">Back</strong> : Revenir au menu Hub depuis un jeu ou outil</li>
-            <li>• <strong class="text-slate-300">Home</strong> : Revenir immédiatement au système NumWorks Epsilon</li>
+            <li>• <strong class="text-[#c9d1d9]">Flèches ▲▼◀▶</strong> : Sélectionner une application</li>
+            <li>• <strong class="text-[#c9d1d9]">OK / EXE</strong> : Lancer l'application</li>
+            <li>• <strong class="text-[#c9d1d9]">Back</strong> : Revenir au Hub</li>
+            <li>• <strong class="text-[#c9d1d9]">Home</strong> : Revenir immédiatement à Epsilon</li>
           </ul>
         </div>
 
@@ -682,68 +679,68 @@
   </main>
 
   <!-- ==================== PIED DE PAGE ==================== -->
-  <footer class="relative z-10 border-t border-slate-800/80 bg-slate-950 py-8 text-center text-xs text-slate-500">
-    <div class="max-w-7xl mx-auto px-4 space-y-3">
-      <div class="flex flex-wrap items-center justify-center gap-2 text-slate-400 font-medium">
-        <span>EquaLib Studio</span>
+  <footer class="relative z-10 border-t-2 border-[#30363d] bg-[#161b22] py-6 text-center text-xs text-[#8b949e] font-mono">
+    <div class="max-w-7xl mx-auto px-4 space-y-2">
+      <div class="flex flex-wrap items-center justify-center gap-2 font-medium">
+        <span>EquaLib Hub</span>
         <span>•</span>
-        <span>Créé par <strong class="text-slate-200">CameleonGamer</strong></span>
+        <span>Créé par <strong class="text-[#e6edf3]">CameleonGamer</strong></span>
         <span>•</span>
-        <span class="inline-flex items-center gap-1.5 text-nw-yellow font-semibold">
-          <span>✨</span> En collaboration avec <strong>Gemini</strong> (Google DeepMind)
+        <span class="inline-flex items-center gap-1.5 text-[#FFBB00] font-semibold">
+          <span>⚡</span> En collaboration avec <strong>Gemini</strong> (Google DeepMind)
         </span>
         <span>•</span>
         <span>NumWorks N0120 (STM32H725 @ 550 MHz)</span>
       </div>
-      <p class="text-slate-600">NumWorks est une marque déposée de NumWorks SAS. EquaLib est un projet indépendant communautaire.</p>
+      <p class="text-[#8b949e] text-[11px]">NumWorks est une marque déposée de NumWorks SAS. EquaLib est un projet libre et communautaire.</p>
     </div>
   </footer>
 
   <!-- ==================== MODAL 1 : DÉTAILS DE L'APPLICATION & COMMANDES ==================== -->
-  <div id="app-details-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4">
-    <div class="bg-slate-900 border border-slate-700/80 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-5 animate-in fade-in zoom-in duration-200">
+  <div id="app-details-modal" class="fixed inset-0 z-50 bg-black/80 hidden items-center justify-center p-4">
+    <div class="bg-[#161b22] border-2 border-[#30363d] rounded-lg max-w-lg w-full p-6 shadow-[6px_6px_0px_#000] space-y-4">
       
       <!-- En-tête du modal -->
-      <div class="flex items-start justify-between gap-4 pb-4 border-b border-slate-800">
-        <div class="flex items-center gap-3.5">
-          <div id="modal-app-icon" class="w-14 h-14 rounded-2xl flex items-center justify-center font-bold text-2xl text-white shadow-lg shrink-0 bg-amber-500">
+      <div class="flex items-start justify-between gap-4 pb-3 border-b-2 border-[#30363d]">
+        <div class="flex items-center gap-3">
+          <div id="modal-app-icon" class="w-12 h-12 rounded border-2 border-black flex items-center justify-center font-bold text-2xl text-white shadow-[2px_2px_0px_#000] shrink-0 bg-[#FFBB00]">
             📦
           </div>
           <div>
             <div class="flex items-center gap-2 flex-wrap">
-              <h3 id="modal-app-name" class="font-extrabold text-white text-lg">Nom App</h3>
-              <span id="modal-app-cat" class="text-[10px] px-2.5 py-0.5 rounded-full bg-slate-800 border border-slate-700 text-slate-300 font-semibold">Catégorie</span>
+              <h3 id="modal-app-name" class="font-extrabold text-[#e6edf3] text-base font-mono">Nom App</h3>
+              <span id="modal-app-cat" class="text-[10px] px-2 py-0.5 rounded bg-[#0d1117] border border-[#30363d] text-[#8b949e] font-mono font-semibold">Catégorie</span>
             </div>
-            <p id="modal-app-meta" class="text-xs text-slate-400 font-mono mt-0.5">v1.0 • 45 Ko • Par Auteur</p>
+            <p id="modal-app-meta" class="text-xs text-[#8b949e] font-mono mt-0.5">v1.0 • 45 Ko • Par Auteur</p>
           </div>
         </div>
-        <button id="modal-close-btn" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition-all cursor-pointer">✕</button>
+        <button id="modal-close-btn" class="p-1.5 rounded bg-[#0d1117] hover:bg-[#21262d] text-[#8b949e] hover:text-white border border-[#30363d] transition-all cursor-pointer font-mono">✕</button>
       </div>
 
       <!-- Description -->
-      <div class="space-y-1.5">
-        <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400">Description</h4>
-        <p id="modal-app-desc" class="text-xs text-slate-300 leading-relaxed bg-slate-950 p-3 rounded-xl border border-slate-800">
+      <div class="space-y-1">
+        <h4 class="text-xs font-bold font-mono uppercase tracking-wider text-[#8b949e]">Description</h4>
+        <p id="modal-app-desc" class="text-xs text-[#e6edf3] font-mono leading-relaxed bg-[#0d1117] p-3 rounded border border-[#30363d]">
           Description complète de l'application.
         </p>
       </div>
 
       <!-- Commandes et touches sur la NumWorks -->
-      <div class="space-y-1.5">
-        <h4 class="text-xs font-bold uppercase tracking-wider text-nw-yellow flex items-center gap-1.5">
-          <span>🕹️</span> Commandes sur votre NumWorks N0120
+      <div class="space-y-1">
+        <h4 class="text-xs font-bold font-mono uppercase tracking-wider text-[#FFBB00] flex items-center gap-1.5">
+          <span>🕹️</span> Touches sur NumWorks N0120
         </h4>
-        <div id="modal-app-controls" class="space-y-1 text-xs text-slate-300 bg-slate-950 p-3 rounded-xl border border-slate-800 font-mono">
+        <div id="modal-app-controls" class="space-y-1 text-xs text-[#c9d1d9] bg-[#0d1117] p-3 rounded border border-[#30363d] font-mono">
           <!-- Injecté dynamiquement -->
         </div>
       </div>
 
       <!-- Boutons d'action -->
       <div class="pt-2 flex gap-3">
-        <button id="modal-toggle-pack-btn" class="flex-1 py-3 px-4 rounded-xl bg-nw-yellow hover:bg-nw-yellowHover text-black font-extrabold text-xs transition-all shadow-md active:scale-95 flex items-center justify-center gap-2 cursor-pointer">
-          <span>+ Ajouter à mon Pack</span>
+        <button id="modal-toggle-pack-btn" class="flex-1 py-2.5 px-4 rounded bg-[#FFBB00] hover:bg-[#E5A600] text-black font-extrabold text-xs font-mono border-2 border-black shadow-[2px_2px_0px_#000] active:translate-x-[1px] active:translate-y-[1px] flex items-center justify-center gap-2 cursor-pointer transition-all">
+          <span>+ Ajouter au Pack</span>
         </button>
-        <button id="modal-cancel-btn" class="py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs transition-all cursor-pointer">
+        <button id="modal-cancel-btn" class="py-2.5 px-4 rounded bg-[#21262d] hover:bg-[#30363d] text-[#e6edf3] font-bold text-xs font-mono border border-[#30363d] shadow-[2px_2px_0px_#000] cursor-pointer transition-all">
           Fermer
         </button>
       </div>
@@ -752,45 +749,45 @@
   </div>
 
   <!-- ==================== MODAL 2 : AIDE & DÉPANNAGE WEBUSB ==================== -->
-  <div id="webusb-help-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4">
-    <div class="bg-slate-900 border border-slate-700/80 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-5 animate-in fade-in zoom-in duration-200">
+  <div id="webusb-help-modal" class="fixed inset-0 z-50 bg-black/80 hidden items-center justify-center p-4">
+    <div class="bg-[#161b22] border-2 border-[#30363d] rounded-lg max-w-lg w-full p-6 shadow-[6px_6px_0px_#000] space-y-4">
       
-      <div class="flex items-center justify-between pb-4 border-b border-slate-800">
+      <div class="flex items-center justify-between pb-3 border-b-2 border-[#30363d]">
         <div class="flex items-center gap-2.5">
-          <span class="text-2xl">🔌</span>
+          <span class="text-xl">🔌</span>
           <div>
-            <h3 class="font-extrabold text-white text-base">Assistant de Connexion USB</h3>
-            <p class="text-xs text-slate-400">NumWorks N0120 (STM32H725 @ 550 MHz)</p>
+            <h3 class="font-extrabold text-[#e6edf3] text-sm font-mono uppercase tracking-wider">Assistant Connexion USB</h3>
+            <p class="text-[11px] text-[#8b949e] font-mono">NumWorks N0120 (STM32H725 @ 550 MHz)</p>
           </div>
         </div>
-        <button id="help-close-btn" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition-all cursor-pointer">✕</button>
+        <button id="help-close-btn" class="p-1.5 rounded bg-[#0d1117] hover:bg-[#21262d] text-[#8b949e] hover:text-white border border-[#30363d] transition-all cursor-pointer font-mono">✕</button>
       </div>
 
-      <div class="space-y-3 text-xs text-slate-300 leading-relaxed">
-        <div class="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-1">
-          <p class="font-bold text-nw-yellow">1. Navigateurs compatibles</p>
-          <p class="text-slate-400">Utilisez <strong>Google Chrome</strong>, <strong>Microsoft Edge</strong>, <strong>Brave</strong> ou <strong>Opera</strong>. Firefox et Safari ne supportent pas le protocole WebUSB.</p>
+      <div class="space-y-2 text-xs font-mono text-[#c9d1d9] leading-relaxed">
+        <div class="p-2.5 rounded bg-[#0d1117] border border-[#30363d] space-y-1">
+          <p class="font-bold text-[#FFBB00]">1. Navigateurs compatibles</p>
+          <p class="text-[#8b949e]">Utilisez <strong>Google Chrome</strong>, <strong>Microsoft Edge</strong>, <strong>Brave</strong> ou <strong>Opera</strong> (WebUSB).</p>
         </div>
 
-        <div class="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-1">
-          <p class="font-bold text-nw-yellow">2. Câble USB-C Data</p>
-          <p class="text-slate-400">Assurez-vous d'utiliser un câble USB capable de transférer des données (pas un simple câble de chargeur sans broches data).</p>
+        <div class="p-2.5 rounded bg-[#0d1117] border border-[#30363d] space-y-1">
+          <p class="font-bold text-[#FFBB00]">2. Câble USB-C Données</p>
+          <p class="text-[#8b949e]">Utilisez un câble USB-C data capable de transférer des fichiers, pas un simple câble de recharge.</p>
         </div>
 
-        <div class="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-1">
-          <p class="font-bold text-nw-yellow">3. Autorisation du navigateur</p>
-          <p class="text-slate-400">Lorsque la fenêtre pop-up s'ouvre, sélectionnez <strong>« NumWorks Calculator »</strong> puis cliquez sur <strong>« Connexion »</strong>.</p>
+        <div class="p-2.5 rounded bg-[#0d1117] border border-[#30363d] space-y-1">
+          <p class="font-bold text-[#FFBB00]">3. Autorisation WebUSB</p>
+          <p class="text-[#8b949e]">Dans la fenêtre popup du navigateur, sélectionnez <strong>« NumWorks Calculator »</strong> puis validez.</p>
         </div>
 
-        <div class="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-1">
-          <p class="font-bold text-nw-yellow">4. Calculatrice figée ou bloquée ?</p>
-          <p class="text-slate-400">Appuyez brièvement sur le bouton <strong>RESET</strong> avec une pointe à l'arrière de la calculatrice pour la débloquer instantanément.</p>
+        <div class="p-2.5 rounded bg-[#0d1117] border border-[#30363d] space-y-1">
+          <p class="font-bold text-[#FFBB00]">4. En cas de blocage</p>
+          <p class="text-[#8b949e]">Appuyez sur le bouton <strong>RESET</strong> au dos de la calculatrice pour redémarrer instantanément.</p>
         </div>
       </div>
 
-      <div class="pt-2">
-        <button id="help-ok-btn" class="w-full py-3 rounded-xl bg-nw-yellow hover:bg-nw-yellowHover text-black font-extrabold text-xs transition-all active:scale-95 cursor-pointer">
-          J'ai compris !
+      <div class="pt-1">
+        <button id="help-ok-btn" class="w-full py-2.5 rounded bg-[#FFBB00] hover:bg-[#E5A600] text-black font-extrabold text-xs font-mono border-2 border-black shadow-[2px_2px_0px_#000] cursor-pointer transition-all">
+          Compris !
         </button>
       </div>
 
@@ -798,172 +795,172 @@
   </div>
 
   <!-- ==================== BANDEAU FLOTTANT EN BAS AU CENTRE : APP ACTIVE (GALLERY DOCK) ==================== -->
-  <div id="active-app-dock" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-40 max-w-xl w-[92%] sm:w-auto px-4 py-2.5 rounded-2xl bg-slate-900/95 border border-slate-700/80 shadow-2xl shadow-black/80 flex items-center justify-between gap-4 dock-visible transition-all">
+  <div id="active-app-dock" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-40 max-w-xl w-[92%] sm:w-auto px-4 py-2.5 rounded-lg bg-[#161b22] border-2 border-[#30363d] shadow-[4px_4px_0px_#000] flex items-center justify-between gap-4 dock-visible transition-all">
     <div class="flex items-center gap-3 min-w-0">
-      <div id="dock-app-icon" class="w-11 h-11 rounded-xl bg-amber-500 text-white flex items-center justify-center font-bold text-2xl shadow-md shrink-0">
+      <div id="dock-app-icon" class="w-10 h-10 rounded border-2 border-black bg-[#FFBB00] text-black flex items-center justify-center font-bold text-xl shadow-[2px_2px_0px_#000] shrink-0">
         🏎️
       </div>
       <div class="min-w-0">
         <div class="flex items-center gap-2">
-          <h4 id="dock-app-name" class="font-extrabold text-white text-sm truncate">Super Mario Kart 3D</h4>
-          <span id="dock-app-badge" class="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 border border-slate-700 text-amber-300 font-mono font-bold">.BIN</span>
-          <span id="dock-app-cat" class="text-[10px] px-2 py-0.5 rounded-full bg-slate-800/80 text-slate-300 font-semibold hidden sm:inline">Jeux / Arcade</span>
+          <h4 id="dock-app-name" class="font-extrabold text-[#e6edf3] text-xs font-mono truncate">Super Mario Kart 3D</h4>
+          <span id="dock-app-badge" class="text-[10px] px-1.5 py-0.2 rounded bg-[#0d1117] border border-[#30363d] text-[#FFBB00] font-mono font-bold">.BIN</span>
+          <span id="dock-app-cat" class="text-[10px] px-1.5 py-0.2 rounded bg-[#0d1117] text-[#8b949e] font-mono font-semibold hidden sm:inline">Jeux</span>
         </div>
-        <p id="dock-app-desc" class="text-xs text-slate-400 truncate max-w-xs sm:max-w-md">Course Mode 7 3D complète pour NumWorks N0120</p>
+        <p id="dock-app-desc" class="text-[11px] text-[#8b949e] font-mono truncate max-w-xs sm:max-w-md">Course Mode 7 3D complète pour NumWorks N0120</p>
       </div>
     </div>
     <div class="flex items-center gap-2 shrink-0">
-      <button id="dock-test-btn" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-200 text-xs font-bold transition-all flex items-center gap-1 cursor-pointer" title="Lancer dans le simulateur">
+      <button id="dock-test-btn" class="px-3 py-1.5 rounded bg-[#21262d] hover:bg-[#30363d] text-[#e6edf3] text-xs font-mono font-bold border border-[#30363d] shadow-[2px_2px_0px_#000] flex items-center gap-1 cursor-pointer transition-all" title="Lancer dans le simulateur">
         <span>▶</span> <span class="hidden sm:inline">Tester</span>
       </button>
-      <button id="dock-action-btn" class="px-4 py-2 rounded-xl bg-nw-yellow hover:bg-nw-yellowHover text-black text-xs font-extrabold transition-all shadow-md active:scale-95 cursor-pointer">
+      <button id="dock-action-btn" class="px-3.5 py-1.5 rounded bg-[#FFBB00] hover:bg-[#E5A600] text-black text-xs font-mono font-extrabold border-2 border-black shadow-[2px_2px_0px_#000] cursor-pointer transition-all">
         + Ajouter
       </button>
     </div>
   </div>
 
   <!-- ==================== MODAL 3 : PARAMÈTRES & THÈMES DE L'APPLICATION ==================== -->
-  <div id="settings-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md hidden items-center justify-center p-4 overflow-y-auto">
-    <div class="bg-slate-900 border border-slate-700/80 rounded-3xl max-w-xl w-full p-6 shadow-2xl space-y-6 animate-in fade-in zoom-in duration-200 my-8">
+  <div id="settings-modal" class="fixed inset-0 z-50 bg-black/80 hidden items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-[#161b22] border-2 border-[#30363d] rounded-lg max-w-xl w-full p-6 shadow-[6px_6px_0px_#000] space-y-5 my-8">
       
       <!-- En-tête Paramètres -->
-      <div class="flex items-center justify-between pb-4 border-b border-slate-800">
-        <div class="flex items-center gap-3">
-          <span class="text-2xl">⚙️</span>
+      <div class="flex items-center justify-between pb-3 border-b-2 border-[#30363d]">
+        <div class="flex items-center gap-2.5">
+          <span class="text-xl">⚙️</span>
           <div>
-            <h3 class="font-extrabold text-white text-base">Paramètres d'Affichage & Thèmes</h3>
-            <p class="text-xs text-slate-400">Personnalisez votre expérience EquaLib Hub</p>
+            <h3 class="font-extrabold text-[#e6edf3] text-sm font-mono uppercase tracking-wider">Paramètres d'Affichage & Thèmes</h3>
+            <p class="text-[11px] text-[#8b949e] font-mono">Personnalisez votre lanceur EquaLib</p>
           </div>
         </div>
-        <button id="settings-close-btn" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition-all cursor-pointer">✕</button>
+        <button id="settings-close-btn" class="p-1.5 rounded bg-[#0d1117] hover:bg-[#21262d] text-[#8b949e] hover:text-white border border-[#30363d] transition-all cursor-pointer font-mono">✕</button>
       </div>
 
       <!-- 1. Mode d'affichage des applications -->
       <div class="space-y-2">
-        <label class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-          <span>🖼️</span> Mode d'Affichage des Applications
+        <label class="text-xs font-bold font-mono uppercase tracking-wider text-[#8b949e] flex items-center gap-1.5">
+          <span>🖼️</span> Mode d'Affichage
         </label>
         <div class="grid grid-cols-2 gap-2.5">
-          <button id="setting-mode-gallery" class="p-3 rounded-2xl border transition-all flex items-center gap-3 text-left cursor-pointer bg-slate-950 border-amber-500/60 ring-1 ring-amber-500/20">
-            <span class="text-2xl">⏹️</span>
+          <button id="setting-mode-gallery" class="p-3 rounded-lg border-2 transition-all flex items-center gap-3 text-left cursor-pointer bg-[#0d1117] border-[#FFBB00] shadow-[2px_2px_0px_#000]">
+            <span class="text-xl">⏹️</span>
             <div>
-              <p class="font-bold text-xs text-white">Mode Galerie (Défaut)</p>
-              <p class="text-[10px] text-slate-400">Grandes images carrées avec icônes</p>
+              <p class="font-bold text-xs text-white font-mono">Mode Galerie (Défaut)</p>
+              <p class="text-[10px] text-[#8b949e] font-mono">Grandes tuiles carrées</p>
             </div>
           </button>
-          <button id="setting-mode-list" class="p-3 rounded-2xl border transition-all flex items-center gap-3 text-left cursor-pointer bg-slate-950 border-slate-800 hover:border-slate-700">
-            <span class="text-2xl">☰</span>
+          <button id="setting-mode-list" class="p-3 rounded-lg border-2 transition-all flex items-center gap-3 text-left cursor-pointer bg-[#0d1117] border-[#30363d] hover:border-[#8b949e] shadow-[2px_2px_0px_#000]">
+            <span class="text-xl">☰</span>
             <div>
-              <p class="font-bold text-xs text-white">Mode Liste</p>
-              <p class="text-[10px] text-slate-400">Cartes horizontales détaillées</p>
+              <p class="font-bold text-xs text-white font-mono">Mode Liste</p>
+              <p class="text-[10px] text-[#8b949e] font-mono">Cartes horizontales détaillées</p>
             </div>
           </button>
         </div>
       </div>
 
       <!-- 2. Désactivation des tooltips & raccourcis -->
-      <div class="p-4 rounded-2xl bg-slate-950 border border-slate-800 flex items-center justify-between gap-4">
+      <div class="p-3.5 rounded-lg bg-[#0d1117] border border-[#30363d] flex items-center justify-between gap-4 font-mono shadow-[2px_2px_0px_#000]">
         <div>
-          <h4 class="font-bold text-xs text-white flex items-center gap-1.5">
-            <span>⌨️</span> Affichage des Raccourcis & Tooltips
+          <h4 class="font-bold text-xs text-[#e6edf3] flex items-center gap-1.5">
+            <span>⌨️</span> Affichage des Raccourcis & Légendes
           </h4>
-          <p class="text-[11px] text-slate-400 mt-0.5">
-            Affiche les bulles d'aide et les touches raccourcis (<kbd class="kbd-key">/</kbd>, <kbd class="kbd-key">Ctrl K</kbd>, légendes).
+          <p class="text-[11px] text-[#8b949e] mt-0.5">
+            Affiche les touches raccourcis (<kbd class="kbd-key">/</kbd>, légendes clavier).
           </p>
         </div>
         <label class="relative inline-flex items-center cursor-pointer shrink-0">
           <input type="checkbox" id="setting-tooltips-toggle" class="sr-only peer" checked>
-          <div class="w-11 h-6 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+          <div class="w-10 h-5 bg-[#21262d] peer-focus:outline-none rounded border border-[#30363d] peer peer-checked:after:translate-x-full peer-checked:after:border-black after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500"></div>
         </label>
       </div>
 
       <!-- 3. Thèmes Prédéfinis (Presets) -->
-      <div class="space-y-2.5">
-        <label class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+      <div class="space-y-2">
+        <label class="text-xs font-bold font-mono uppercase tracking-wider text-[#8b949e] flex items-center gap-1.5">
           <span>🎨</span> Thèmes Prédéfinis (Presets)
         </label>
         <div class="grid grid-cols-2 sm:grid-cols-3 gap-2" id="theme-presets-container">
           <!-- Preset Sakura -->
-          <button data-theme="sakura" class="theme-preset-btn p-2.5 rounded-2xl border text-left transition-all cursor-pointer bg-slate-950 border-slate-800 hover:border-pink-500 flex flex-col justify-between h-20 relative overflow-hidden group">
+          <button data-theme="sakura" class="theme-preset-btn p-2 rounded-lg border-2 text-left transition-all cursor-pointer bg-[#0d1117] border-[#30363d] hover:border-pink-400 flex flex-col justify-between h-20 shadow-[2px_2px_0px_#000] active:translate-x-[1px] active:translate-y-[1px]">
             <div class="flex items-center justify-between">
               <span class="text-base">🌸</span>
-              <span class="w-3.5 h-3.5 rounded-full bg-pink-400 border border-pink-300 shadow"></span>
+              <span class="w-3.5 h-3.5 rounded bg-pink-400 border border-pink-300"></span>
             </div>
             <div>
-              <p class="font-bold text-xs text-pink-300">Sakura</p>
-              <p class="text-[9px] text-slate-400 truncate">Fleurs roses & pétales</p>
+              <p class="font-bold text-xs text-pink-300 font-mono">Sakura</p>
+              <p class="text-[9px] text-[#8b949e] font-mono truncate">Fleurs roses & pétales</p>
             </div>
           </button>
 
           <!-- Preset Hacker -->
-          <button data-theme="hacker" class="theme-preset-btn p-2.5 rounded-2xl border text-left transition-all cursor-pointer bg-slate-950 border-slate-800 hover:border-cyan-400 flex flex-col justify-between h-20 relative overflow-hidden group">
+          <button data-theme="hacker" class="theme-preset-btn p-2 rounded-lg border-2 text-left transition-all cursor-pointer bg-[#0d1117] border-[#30363d] hover:border-cyan-400 flex flex-col justify-between h-20 shadow-[2px_2px_0px_#000] active:translate-x-[1px] active:translate-y-[1px]">
             <div class="flex items-center justify-between">
               <span class="text-base">💻</span>
-              <span class="w-3.5 h-3.5 rounded-full bg-cyan-400 border border-cyan-300 shadow"></span>
+              <span class="w-3.5 h-3.5 rounded bg-cyan-400 border border-cyan-300"></span>
             </div>
             <div>
-              <p class="font-bold text-xs text-cyan-300">Hacker</p>
-              <p class="text-[9px] text-slate-400 truncate">Bleu foncé & circuits cyber</p>
+              <p class="font-bold text-xs text-cyan-300 font-mono">Hacker</p>
+              <p class="text-[9px] text-[#8b949e] font-mono truncate">Bleu foncé & circuits</p>
             </div>
           </button>
 
           <!-- Preset Abeille -->
-          <button data-theme="bee" class="theme-preset-btn p-2.5 rounded-2xl border text-left transition-all cursor-pointer bg-slate-950 border-slate-800 hover:border-amber-400 flex flex-col justify-between h-20 relative overflow-hidden group">
+          <button data-theme="bee" class="theme-preset-btn p-2 rounded-lg border-2 text-left transition-all cursor-pointer bg-[#0d1117] border-[#30363d] hover:border-amber-400 flex flex-col justify-between h-20 shadow-[2px_2px_0px_#000] active:translate-x-[1px] active:translate-y-[1px]">
             <div class="flex items-center justify-between">
               <span class="text-base">🐝</span>
-              <span class="w-3.5 h-3.5 rounded-full bg-amber-400 border border-amber-300 shadow"></span>
+              <span class="w-3.5 h-3.5 rounded bg-amber-400 border border-amber-300"></span>
             </div>
             <div>
-              <p class="font-bold text-xs text-amber-300">Abeille</p>
-              <p class="text-[9px] text-slate-400 truncate">Jaune miel & alvéoles</p>
+              <p class="font-bold text-xs text-amber-300 font-mono">Abeille</p>
+              <p class="text-[9px] text-[#8b949e] font-mono truncate">Jaune miel & alvéoles</p>
             </div>
           </button>
 
           <!-- Preset Mario -->
-          <button data-theme="mario" class="theme-preset-btn p-2.5 rounded-2xl border text-left transition-all cursor-pointer bg-slate-950 border-slate-800 hover:border-red-500 flex flex-col justify-between h-20 relative overflow-hidden group">
+          <button data-theme="mario" class="theme-preset-btn p-2 rounded-lg border-2 text-left transition-all cursor-pointer bg-[#0d1117] border-[#30363d] hover:border-red-400 flex flex-col justify-between h-20 shadow-[2px_2px_0px_#000] active:translate-x-[1px] active:translate-y-[1px]">
             <div class="flex items-center justify-between">
               <span class="text-base">🍄</span>
-              <span class="w-3.5 h-3.5 rounded-full bg-red-500 border border-white shadow"></span>
+              <span class="w-3.5 h-3.5 rounded bg-red-500 border border-white"></span>
             </div>
             <div>
-              <p class="font-bold text-xs text-red-400">Mario</p>
-              <p class="text-[9px] text-slate-400 truncate">Rouge, blanc & 'M' au centre</p>
+              <p class="font-bold text-xs text-red-400 font-mono">Mario</p>
+              <p class="text-[9px] text-[#8b949e] font-mono truncate">Rouge, blanc & 'M'</p>
             </div>
           </button>
 
           <!-- Preset 8-Bit GameBoy -->
-          <button data-theme="gameboy" class="theme-preset-btn p-2.5 rounded-2xl border text-left transition-all cursor-pointer bg-slate-950 border-slate-800 hover:border-lime-500 flex flex-col justify-between h-20 relative overflow-hidden group">
+          <button data-theme="gameboy" class="theme-preset-btn p-2 rounded-lg border-2 text-left transition-all cursor-pointer bg-[#0d1117] border-[#30363d] hover:border-lime-400 flex flex-col justify-between h-20 shadow-[2px_2px_0px_#000] active:translate-x-[1px] active:translate-y-[1px]">
             <div class="flex items-center justify-between">
               <span class="text-base">🎮</span>
-              <span class="w-3.5 h-3.5 rounded-full bg-[#8bac0f] border border-[#9bbc0f] shadow"></span>
+              <span class="w-3.5 h-3.5 rounded bg-[#8bac0f] border border-[#9bbc0f]"></span>
             </div>
             <div>
-              <p class="font-bold text-xs text-lime-400">8-Bit GameBoy</p>
-              <p class="text-[9px] text-slate-400 truncate">Gris & jaune verdâtre</p>
+              <p class="font-bold text-xs text-lime-400 font-mono">GameBoy</p>
+              <p class="text-[9px] text-[#8b949e] font-mono truncate">Gris & vert LCD</p>
             </div>
           </button>
 
-          <!-- Preset Défaut NumWorks Cyber -->
-          <button data-theme="default" class="theme-preset-btn p-2.5 rounded-2xl border text-left transition-all cursor-pointer bg-slate-950 border-slate-800 hover:border-amber-400 flex flex-col justify-between h-20 relative overflow-hidden group">
+          <!-- Preset Défaut NumWorks -->
+          <button data-theme="default" class="theme-preset-btn p-2 rounded-lg border-2 text-left transition-all cursor-pointer bg-[#0d1117] border-[#FFBB00] flex flex-col justify-between h-20 shadow-[2px_2px_0px_#000] active:translate-x-[1px] active:translate-y-[1px]">
             <div class="flex items-center justify-between">
               <span class="text-base">⚡</span>
-              <span class="w-3.5 h-3.5 rounded-full bg-amber-400 border border-white shadow"></span>
+              <span class="w-3.5 h-3.5 rounded bg-[#FFBB00] border border-black"></span>
             </div>
             <div>
-              <p class="font-bold text-xs text-amber-300">NumWorks π</p>
-              <p class="text-[9px] text-slate-400 truncate">Or officiel & cyber sombre</p>
+              <p class="font-bold text-xs text-[#FFBB00] font-mono">NumWorks π</p>
+              <p class="text-[9px] text-[#8b949e] font-mono truncate">Or officiel & sombre</p>
             </div>
           </button>
         </div>
       </div>
 
       <!-- 4. Personnalisation Manuelle : Roue Chromatique -->
-      <div class="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-3">
+      <div class="p-3.5 rounded-lg bg-[#0d1117] border border-[#30363d] space-y-3 font-mono shadow-[2px_2px_0px_#000]">
         <div class="flex items-center justify-between">
-          <label class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-            <span>🎡</span> Roue Chromatique Manuelle
+          <label class="text-xs font-bold uppercase tracking-wider text-[#8b949e] flex items-center gap-1.5">
+            <span>🎡</span> Roue Chromatique
           </label>
-          <span class="text-[10px] text-slate-500 font-mono">Couleur Sur Mesure</span>
+          <span class="text-[10px] text-[#8b949e]">Couleur Sur Mesure</span>
         </div>
 
         <div class="flex flex-col sm:flex-row items-center justify-around gap-4 pt-1">
@@ -976,18 +973,18 @@
           <!-- Contrôles et valeur Hex -->
           <div class="space-y-2.5 text-center sm:text-left">
             <div class="flex items-center justify-center sm:justify-start gap-2.5">
-              <div id="custom-color-preview" class="w-10 h-10 rounded-xl border border-white/30 shadow-md" style="background-color: #f59e0b;"></div>
+              <div id="custom-color-preview" class="w-10 h-10 rounded border-2 border-black shadow-[2px_2px_0px_#000]" style="background-color: #f59e0b;"></div>
               <div>
-                <p class="text-[10px] text-slate-400 font-mono">Code Couleur</p>
-                <input type="text" id="custom-color-hex" value="#F59E0B" maxlength="7" class="w-24 bg-slate-900 border border-slate-700 text-xs font-mono font-bold text-white px-2 py-1 rounded-lg uppercase">
+                <p class="text-[10px] text-[#8b949e]">Code Couleur</p>
+                <input type="text" id="custom-color-hex" value="#F59E0B" maxlength="7" class="w-24 bg-[#161b22] border-2 border-[#30363d] text-xs font-mono font-bold text-white px-2 py-1 rounded uppercase">
               </div>
             </div>
             <div>
-              <label for="native-color-picker" class="text-[10px] text-slate-400 block mb-1">Pipette système :</label>
-              <input type="color" id="native-color-picker" value="#f59e0b" class="w-full h-8 bg-transparent cursor-pointer rounded-lg border border-slate-700">
+              <label for="native-color-picker" class="text-[10px] text-[#8b949e] block mb-1">Pipette :</label>
+              <input type="color" id="native-color-picker" value="#f59e0b" class="w-full h-8 bg-transparent cursor-pointer rounded border border-[#30363d]">
             </div>
-            <button id="apply-custom-color-btn" class="w-full py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs transition-all cursor-pointer">
-              Appliquer cette couleur
+            <button id="apply-custom-color-btn" class="w-full py-1.5 px-3 rounded bg-[#21262d] hover:bg-[#30363d] text-white font-bold text-xs border border-[#30363d] shadow-[2px_2px_0px_#000] cursor-pointer">
+              Appliquer couleur
             </button>
           </div>
         </div>
@@ -995,10 +992,10 @@
 
       <!-- Boutons Enregistrer & Fermer -->
       <div class="pt-2 flex gap-3">
-        <button id="settings-save-btn" class="flex-1 py-3 px-4 rounded-xl bg-nw-yellow hover:bg-nw-yellowHover text-black font-extrabold text-xs transition-all shadow-md active:scale-95 cursor-pointer">
-          ✓ Enregistrer les Préférences
+        <button id="settings-save-btn" class="flex-1 py-2.5 px-4 rounded bg-[#FFBB00] hover:bg-[#E5A600] text-black font-extrabold text-xs font-mono border-2 border-black shadow-[2px_2px_0px_#000] active:translate-x-[1px] active:translate-y-[1px] cursor-pointer">
+          ✓ Enregistrer
         </button>
-        <button id="settings-reset-btn" class="py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs transition-all cursor-pointer" title="Réinitialiser tous les paramètres">
+        <button id="settings-reset-btn" class="py-2.5 px-4 rounded bg-[#21262d] hover:bg-[#30363d] text-[#e6edf3] font-bold text-xs font-mono border border-[#30363d] shadow-[2px_2px_0px_#000] cursor-pointer" title="Réinitialiser tous les paramètres">
           Réinitialiser
         </button>
       </div>
@@ -1010,12 +1007,12 @@
   <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
   <!-- Scripts -->
-  <script src="sound_fx.js?v=55"></script>
-  <script src="sim_engine.js?v=55"></script>
-  <script src="nwa_linker.js?v=55"></script>
-  <script src="bundler.js?v=55"></script>
-  <script src="webusb.js?v=55"></script>
-  <script src="crt_math.js?v=55"></script>
-  <script src="app.js?v=55"></script>
+  <script src="sound_fx.js?v=60"></script>
+  <script src="sim_engine.js?v=60"></script>
+  <script src="nwa_linker.js?v=60"></script>
+  <script src="bundler.js?v=60"></script>
+  <script src="webusb.js?v=60"></script>
+  <script src="crt_math.js?v=60"></script>
+  <script src="app.js?v=60"></script>
 </body>
 </html>
