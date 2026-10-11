@@ -24,7 +24,7 @@ typedef struct {
     bool active;
 } obstacle_t;
 
-#define MAX_OBSTACLES 3
+#define MAX_OBSTACLES 4
 
 static void draw_dino_body(int y, bool duck, int leg_tick) {
     if (duck) {
@@ -133,6 +133,8 @@ static void draw_obstacle(const obstacle_t* obs, int tick) {
         /* Ptérodactyle volant (20x12) */
         safe_push_rect(ox + 4, oy + 4, 12, 4, COLOR_DINO_FG);
         safe_push_rect(ox, oy + 5, 5, 3, COLOR_DINO_FG);
+        /* Nettoyage de la colonne des ailes pour éliminer les rémanences */
+        safe_push_rect(ox + 7, oy, 4, 12, COLOR_DINO_BG);
         if ((tick / 8) % 2 == 0) {
             safe_push_rect(ox + 7, oy, 4, 5, COLOR_DINO_FG);
         } else {
@@ -167,14 +169,15 @@ void run_dino_app(void) {
     bool game_over = false;
 
     float speed = 4.0f;
+    float next_min_gap = 150.0f;
     int score = 0;
     int prev_score = -1;
     int prev_hi_score = -1;
     int frame_tick = 0;
 
     obstacle_t obstacles[MAX_OBSTACLES];
-    float old_obs_x[MAX_OBSTACLES] = {0, 0, 0};
-    bool old_obs_active[MAX_OBSTACLES] = {false, false, false};
+    float old_obs_x[MAX_OBSTACLES] = {0, 0, 0, 0};
+    bool old_obs_active[MAX_OBSTACLES] = {false, false, false, false};
 
     for (int i = 0; i < MAX_OBSTACLES; i++) {
         obstacles[i].active = false;
@@ -224,6 +227,7 @@ void run_dino_app(void) {
                     obstacles[i].active = false;
                     old_obs_active[i] = false;
                 }
+                next_min_gap = 150.0f;
 
                 eadk_display_push_rect_uniform(screen_field, COLOR_DINO_BG);
                 eadk_display_push_rect_uniform(ground_line, COLOR_DINO_FG);
@@ -266,59 +270,64 @@ void run_dino_app(void) {
                 erase_obstacle_trail((int)obstacles[i].x, obstacles[i].y, obstacles[i].w, obstacles[i].h, (int)speed + 2);
                 draw_obstacle(&obstacles[i], frame_tick);
 
-                if (obstacles[i].x + obstacles[i].w <= 0) {
+                if (obstacles[i].x + (float)obstacles[i].w <= 0.0f) {
+                    safe_push_rect(0, obstacles[i].y, (int)speed + 6, obstacles[i].h, COLOR_DINO_BG);
                     obstacles[i].active = false;
                     old_obs_active[i] = false;
                 }
             }
         }
 
-        /* Génération d'obstacles aléatoires espacés */
-        if (frame_tick % 50 == 0 && (eadk_random() % 3 == 0)) {
-            bool can_spawn = true;
-            for (int i = 0; i < MAX_OBSTACLES; i++) {
-                if (obstacles[i].active && obstacles[i].x > 210) {
-                    can_spawn = false;
-                    break;
+        /* Génération d'obstacles continue et espacée (zéro famine) */
+        float max_obs_x = -100.0f;
+        int active_count = 0;
+        for (int i = 0; i < MAX_OBSTACLES; i++) {
+            if (obstacles[i].active) {
+                active_count++;
+                if (obstacles[i].x > max_obs_x) {
+                    max_obs_x = obstacles[i].x;
                 }
             }
+        }
 
-            if (can_spawn) {
-                for (int i = 0; i < MAX_OBSTACLES; i++) {
-                    if (!obstacles[i].active) {
-                        obstacles[i].active = true;
-                        obstacles[i].x = 320;
-                        old_obs_x[i] = 320;
-                        old_obs_active[i] = true;
+        if (active_count == 0 || max_obs_x <= (320.0f - next_min_gap)) {
+            for (int i = 0; i < MAX_OBSTACLES; i++) {
+                if (!obstacles[i].active) {
+                    obstacles[i].active = true;
+                    obstacles[i].x = 320.0f;
+                    old_obs_x[i] = 320.0f;
+                    old_obs_active[i] = true;
 
-                        int r = eadk_random() % 100;
-                        if (r < 25 && score > 80) {
-                            /* Ptérodactyle */
-                            obstacles[i].type = 3;
-                            obstacles[i].w = 20;
-                            obstacles[i].h = 12;
-                            obstacles[i].y = (r < 12) ? (DINO_GROUND_Y - 26) : (DINO_GROUND_Y - 14);
-                        } else if (r < 60) {
-                            /* Petit cactus */
-                            obstacles[i].type = 0;
-                            obstacles[i].w = 12;
-                            obstacles[i].h = 18;
-                            obstacles[i].y = DINO_GROUND_Y - 18;
-                        } else if (r < 85) {
-                            /* Grand cactus */
-                            obstacles[i].type = 1;
-                            obstacles[i].w = 14;
-                            obstacles[i].h = 24;
-                            obstacles[i].y = DINO_GROUND_Y - 24;
-                        } else {
-                            /* Double cactus */
-                            obstacles[i].type = 2;
-                            obstacles[i].w = 22;
-                            obstacles[i].h = 20;
-                            obstacles[i].y = DINO_GROUND_Y - 20;
-                        }
-                        break;
+                    int r = (int)(eadk_random() % 100);
+                    if (r < 25 && score > 60) {
+                        /* Ptérodactyle */
+                        obstacles[i].type = 3;
+                        obstacles[i].w = 20;
+                        obstacles[i].h = 12;
+                        obstacles[i].y = (r < 12) ? (DINO_GROUND_Y - 26) : (DINO_GROUND_Y - 14);
+                    } else if (r < 55) {
+                        /* Petit cactus */
+                        obstacles[i].type = 0;
+                        obstacles[i].w = 12;
+                        obstacles[i].h = 18;
+                        obstacles[i].y = DINO_GROUND_Y - 18;
+                    } else if (r < 80) {
+                        /* Grand cactus */
+                        obstacles[i].type = 1;
+                        obstacles[i].w = 14;
+                        obstacles[i].h = 24;
+                        obstacles[i].y = DINO_GROUND_Y - 24;
+                    } else {
+                        /* Double cactus */
+                        obstacles[i].type = 2;
+                        obstacles[i].w = 22;
+                        obstacles[i].h = 20;
+                        obstacles[i].y = DINO_GROUND_Y - 20;
                     }
+
+                    /* Calcul du prochain intervalle dynamique adapté à la vitesse */
+                    next_min_gap = 120.0f + (speed * 10.0f) + (float)(eadk_random() % 90);
+                    break;
                 }
             }
         }
@@ -362,12 +371,12 @@ void run_dino_app(void) {
             prev_score = score;
             prev_hi_score = hi_score;
 
-            eadk_rect_t sc_box = {175, DINO_TOP_BAR + 4, 140, 14};
+            eadk_rect_t sc_box = {160, DINO_TOP_BAR + 4, 155, 14};
             eadk_display_push_rect_uniform(sc_box, COLOR_DINO_BG);
 
             char sc_buf[32];
             snprintf(sc_buf, sizeof(sc_buf), "HI %05d  %05d", hi_score, score);
-            eadk_point_t p_sc = {180, DINO_TOP_BAR + 6};
+            eadk_point_t p_sc = {165, DINO_TOP_BAR + 6};
             eadk_display_draw_string(sc_buf, p_sc, false, COLOR_DINO_FG, COLOR_DINO_BG);
         }
 

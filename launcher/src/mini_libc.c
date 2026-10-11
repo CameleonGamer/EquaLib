@@ -47,7 +47,7 @@ void* memmove(void* dest, const void* src, size_t n) {
     return dest;
 }
 
-static int append_int(char* buf, size_t max, size_t* pos, int val) {
+static int append_int(char* buf, size_t max, size_t* pos, int val, int width, int zero_pad) {
     char tmp[16];
     int i = 0;
     int sign = 0;
@@ -63,9 +63,28 @@ static int append_int(char* buf, size_t max, size_t* pos, int val) {
             val /= 10;
         }
     }
-    if (sign && *pos + 1 < max) {
-        buf[(*pos)++] = '-';
+
+    int needed_len = i + (sign ? 1 : 0);
+    int pad_len = (width > needed_len) ? (width - needed_len) : 0;
+
+    if (zero_pad) {
+        if (sign && *pos + 1 < max) {
+            buf[(*pos)++] = '-';
+            sign = 0;
+        }
+        while (pad_len-- > 0 && *pos + 1 < max) {
+            buf[(*pos)++] = '0';
+        }
+    } else {
+        while (pad_len-- > 0 && *pos + 1 < max) {
+            buf[(*pos)++] = ' ';
+        }
+        if (sign && *pos + 1 < max) {
+            buf[(*pos)++] = '-';
+            sign = 0;
+        }
     }
+
     while (i > 0 && *pos + 1 < max) {
         buf[(*pos)++] = tmp[--i];
     }
@@ -92,9 +111,22 @@ int vsnprintf(char* buf, size_t max, const char* fmt, va_list args) {
         p++;
         if (*p == '\0') break;
 
-        if (*p == 'd' || *p == 'i') {
+        int zero_pad = 0;
+        int width = 0;
+
+        if (*p == '0') {
+            zero_pad = 1;
+            p++;
+        }
+        while (*p >= '0' && *p <= '9') {
+            width = width * 10 + (*p - '0');
+            p++;
+        }
+        if (*p == '\0') break;
+
+        if (*p == 'd' || *p == 'i' || *p == 'u') {
             int v = va_arg(args, int);
-            append_int(buf, max, &pos, v);
+            append_int(buf, max, &pos, v, width, zero_pad);
         } else if (*p == 's') {
             const char* s = va_arg(args, const char*);
             append_str(buf, max, &pos, s);

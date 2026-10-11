@@ -1,14 +1,39 @@
 #include "storage.h"
 
-/* Stockage persistant alloué en mémoire BSS/DATA légale de l'application */
+/* Emplacement persistant en AXI SRAM hors de la section .bss
+ * (survit à la sortie vers Epsilon et au relancement de l'application)
+ */
+static eq_storage_t* get_storage_target(void) {
+#if PLATFORM_DEVICE
+    uintptr_t sp_addr = 0;
+    __asm__ volatile("mov %0, sp" : "=r"(sp_addr));
+    if (sp_addr >= 0x24000000 && sp_addr <= 0x24050000) {
+        /* NumWorks N0120 (STM32H725 AXI SRAM)
+         * Zone MPU externe autorisée : [0x240118a4, 0x240218a4].
+         * La section .bss se termine vers 0x2401913c.
+         * Le pointeur de pile sp débute à 0x240218a4.
+         * L'adresse 0x2401D000 est en zone autorisée MPU, 16 Ko au-dessus de .bss
+         * et 18 Ko en dessous du haut de la pile, donc jamais écrasée par _start ni par la pile.
+         */
+        return (eq_storage_t*)0x2401D000;
+    } else if (sp_addr >= 0x20000000 && sp_addr <= 0x20040000) {
+        /* NumWorks N0110 (STM32F412 SRAM) */
+        return (eq_storage_t*)0x2000E000;
+    }
+#endif
+    /* Fallback mémoire locale pour les tests hôte PC / Node.js */
+    static eq_storage_t s_local_storage;
+    return &s_local_storage;
+}
+
 eq_storage_t g_eq_storage;
 
 eq_storage_t* eq_storage_get_ptr(void) {
-    return &g_eq_storage;
+    return get_storage_target();
 }
 
 eq_storage_t* eq_storage_get(void) {
-    eq_storage_t* s = &g_eq_storage;
+    eq_storage_t* s = get_storage_target();
     if (s->magic != EQ_STORAGE_MAGIC || s->checksum != eq_storage_calc_checksum(s)) {
         s->magic = EQ_STORAGE_MAGIC;
         uint32_t init_theme = g_equalib_manifest.flags & 0x0F;
@@ -35,7 +60,7 @@ eq_storage_t* eq_storage_get(void) {
 }
 
 void eq_storage_commit(void) {
-    eq_storage_t* s = &g_eq_storage;
+    eq_storage_t* s = get_storage_target();
     s->magic = EQ_STORAGE_MAGIC;
     s->checksum = eq_storage_calc_checksum(s);
 }
