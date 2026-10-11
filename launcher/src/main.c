@@ -114,7 +114,7 @@ static const theme_t g_themes[7] = {
     {
         .name = "Custom (Mon Fond)",
         .top_bar = 0x2124,     /* Ardoise sombre tech */
-        .screen_bg = 0x10A2,   /* Fond de repli sombre */
+        .screen_bg = 0x2124,   /* Fond de repli ardoise moderne contrasté */
         .card_bg = 0xFFFF,     /* Blanc pur */
         .card_sel = 0xFEE0,    /* Ambre pastel clair */
         .accent = 0xFE60,      /* Jaune NumWorks #FFBB00 */
@@ -990,7 +990,12 @@ int main(int argc, char* argv[]) {
             /* Fond général de l'écran LCD : Fond personnalisé RGB565 si actif, sinon couleur unie */
             if (g_current_theme == 6 && g_equalib_manifest.wallpaper_size >= 153600 && g_equalib_manifest.wallpaper_offset > 0) {
                 const eadk_color_t* wp_ptr = (const eadk_color_t*)(0x90180000 + g_equalib_manifest.wallpaper_offset);
-                eadk_display_push_rect(eadk_screen_rect, wp_ptr);
+                /* Poussée par bandes de 20 lignes pour compatibilité matérielle DMA 16-bit sans dépassement de registre NDTR */
+                const uint16_t band_h = 20;
+                for (uint16_t y = 0; y < EADK_SCREEN_HEIGHT; y += band_h) {
+                    eadk_rect_t band_r = {0, y, EADK_SCREEN_WIDTH, band_h};
+                    eadk_display_push_rect(band_r, wp_ptr + (y * EADK_SCREEN_WIDTH));
+                }
             } else {
                 eadk_display_push_rect_uniform(eadk_screen_rect, cur_th->screen_bg);
             }

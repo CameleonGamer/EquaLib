@@ -2131,10 +2131,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     try {
       showToast(`Génération du binaire natif N0120 avec vos ${selectedApps.length} applications...`, 'info');
+      const wpBytes = window.customWallpaperRGB565 || (window.wallpaperStudio?.generateRGB565Bytes?.());
       const bundle = await bundler.buildBundle(selectedApps, 'nwa', { 
         theme: userSettings.theme, 
         displayMode: userSettings.displayMode,
-        customWallpaper: window.customWallpaperRGB565
+        customWallpaper: wpBytes
       });
       const url = URL.createObjectURL(bundle.blob);
       const a = document.createElement('a');
@@ -2204,10 +2205,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       progressText.textContent = `Génération du pack personnalisé (${selectedApps.length} application${selectedApps.length > 1 ? 's' : ''})...`;
 
       // 1. Génération dynamique du binaire natif patché avec les apps sélectionnées
+      const wpBytes = window.customWallpaperRGB565 || (window.wallpaperStudio?.generateRGB565Bytes?.());
       const bundle = await bundler.buildBundle(selectedApps, 'bin', { 
         theme: userSettings.theme, 
         displayMode: userSettings.displayMode,
-        customWallpaper: window.customWallpaperRGB565
+        customWallpaper: wpBytes
       });
 
       progressText.textContent = 'Préparation du flash USB...';

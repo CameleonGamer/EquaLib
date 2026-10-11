@@ -82,8 +82,18 @@ class EquaLibBundler {
 
     // Custom Wallpaper extraction & injection
     let wallpaperBytes = options.customWallpaper || this.options?.customWallpaper;
-    if (!wallpaperBytes && typeof window !== 'undefined' && window.customWallpaperRGB565) {
-      wallpaperBytes = window.customWallpaperRGB565;
+    if (!wallpaperBytes && typeof window !== 'undefined') {
+      if (window.customWallpaperRGB565) {
+        wallpaperBytes = window.customWallpaperRGB565;
+      } else {
+        try {
+          const b64 = localStorage.getItem('equalib_custom_wallpaper_rgb565');
+          if (b64) {
+            wallpaperBytes = this.base64ToUint8Array(b64);
+            window.customWallpaperRGB565 = wallpaperBytes;
+          }
+        } catch (_) {}
+      }
     }
 
     // Mise à jour de manifest.flags (thème par défaut et mode d'affichage)

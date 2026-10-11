@@ -274,7 +274,7 @@ class NumWorksSimulator {
       bee: { topbar: '#fbbf24', bg: '#18181b', card: '#27272a', cardSel: '#3f3f46', border: '#facc15', text: '#fef08a', badge: '🐝 Abeille', descText: '#fde047' },
       mario: { topbar: '#ef4444', bg: '#fef2f2', card: '#ffffff', cardSel: '#fee2e2', border: '#dc2626', text: '#991b1b', badge: '🍄 Mario', descText: '#b91c1c' },
       gameboy: { topbar: '#8bac0f', bg: '#0f380f', card: '#1f481f', cardSel: '#306230', border: '#9bbc0f', text: '#e0f8d0', badge: '🕹️ GameBoy', descText: '#8bac0f' },
-      custom: { topbar: '#1e293b', bg: '#0f172a', card: '#ffffff', cardSel: '#fef3c7', border: '#FFBB00', text: '#0f172a', badge: '🎨 Custom', descText: '#64748b' }
+      custom: { topbar: '#1e293b', bg: '#1e293b', card: '#ffffff', cardSel: '#fef3c7', border: '#FFBB00', text: '#0f172a', badge: '🎨 Custom', descText: '#64748b' }
     };
     return THEME_PALETTES[this.theme] || THEME_PALETTES.default;
   }

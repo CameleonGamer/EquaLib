@@ -1,12 +1,14 @@
 /**
  * EquaLib Wallpaper & Theme Studio
  * Éditeur de Pixel Art et Convertisseur d'images 320x240 pour NumWorks N0120 / N0110
- * - Éditeur Pixel Art interactif (Crayon, Gomme, Pot de peinture, Pipette, Ligne, Rectangle)
+ * - Éditeur Pixel Art interactif (Pinceau réglable, Crayon, Gomme, Pot, Pipette, Ligne, Rectangle)
+ * - Pinceau à taille dynamique (1px à 24px) avec formes Ronde et Carrée et stamping continu Bresenham
  * - Grille commutable, Niveaux de Zoom (1x, 2x, 3x, 4x), Undo / Redo (30 niveaux)
  * - Import d'images (PNG, JPG, WEBP) avec redimensionnement automatique et cadrage
  * - Dithering adaptatif Floyd-Steinberg vers RGB565 (16 bits)
  * - Aperçu Hub UI interactif par superposition (Top Bar, 6 tuiles Galerie, Dock, Shortcuts)
  * - Exportation PNG, binaire RGB565 (153.6 Ko) et injection dans le pack calculatrice
+ * - Persistance et auto-synchronisation instantanée pour éviter tout écran noir
  */
 
 (function(window) {
@@ -43,7 +45,11 @@
       this.ctx = null;
       this.overlayCanvas = null;
       this.overlayCtx = null;
-      this.currentTool = 'pencil'; // pencil, eraser, fill, picker, line, rect
+
+      // Outils
+      this.currentTool = 'brush'; // brush, pencil, eraser, fill, picker, line, rect
+      this.brushSize = 3;         // 1 to 24 px
+      this.brushShape = 'round';   // 'round' or 'square'
       this.currentColor = '#FFBB00';
       this.currentPalette = 'numworks';
       this.zoomLevel = 2; // 1x, 2x, 3x, 4x
@@ -52,31 +58,47 @@
       this.overlayOpacity = 0.5; // 0 to 1
       this.useDithering = true;
 
-      // État de dessin
+      // État de dessin et curseur
       this.isDrawing = false;
       this.startX = 0;
       this.startY = 0;
+      this.cursorX = -1;
+      this.cursorY = -1;
       this.history = [];
       this.historyIndex = -1;
       this.maxHistory = 30;
 
       // Données de pixels en mémoire (RGBA)
       this.pixelData = new Uint8ClampedArray(TOTAL_PIXELS * 4);
-      // Remplissage par défaut (Fond sombre moderne avec dégradé subtil)
+      // Remplissage par défaut (Fond sombre moderne avec dégradé subtil à haute visibilité)
       this.initDefaultCanvas();
     }
 
+    /**
+     * Initialise un fond texturé moderne slate haute lisibilité (jamais 100% noir)
+     */
     initDefaultCanvas() {
-      // Fond sombre ardoise par défaut
-      for (let i = 0; i < TOTAL_PIXELS; i++) {
-        const offset = i * 4;
-        const y = Math.floor(i / SCREEN_WIDTH);
-        // Léger dégradé sombre vertical (bleu nuit tech)
-        const v = Math.floor(15 + (y / SCREEN_HEIGHT) * 15);
-        this.pixelData[offset] = Math.min(255, v);         // R
-        this.pixelData[offset + 1] = Math.min(255, v + 5); // G
-        this.pixelData[offset + 2] = Math.min(255, v + 15);// B
-        this.pixelData[offset + 3] = 255;                  // A
+      for (let y = 0; y < SCREEN_HEIGHT; y++) {
+        for (let x = 0; x < SCREEN_WIDTH; x++) {
+          const offset = (y * SCREEN_WIDTH + x) * 4;
+          // Dégradé ardoise moderne contrasté (#1e293b vers #0f172a)
+          const ratio = y / SCREEN_HEIGHT;
+          let r = Math.round(28 - ratio * 12);
+          let g = Math.round(38 - ratio * 14);
+          let b = Math.round(54 - ratio * 14);
+
+          // Subtil quadrillage tech tous les 16 pixels
+          if (x % 16 === 0 || y % 16 === 0) {
+            r = Math.min(255, r + 5);
+            g = Math.min(255, g + 6);
+            b = Math.min(255, b + 8);
+          }
+
+          this.pixelData[offset] = r;
+          this.pixelData[offset + 1] = g;
+          this.pixelData[offset + 2] = b;
+          this.pixelData[offset + 3] = 255;
+        }
       }
     }
 
@@ -89,12 +111,13 @@
       this.renderOverlay();
       this.updateZoomCSS();
       this.checkStoredWallpaper();
+      this.autoSyncWallpaper();
     }
 
     renderHTML() {
       return `
         <div class="wallpaper-studio-container space-y-4 font-mono">
-          <!-- En-tête du Studio avec Onglets Mode Création / Mode Import -->
+          <!-- En-tête du Studio avec actions principales -->
           <div class="bg-[#161b22] border-2 border-[#30363d] rounded-lg p-3 shadow-[3px_3px_0px_#000] flex flex-wrap items-center justify-between gap-3">
             <div class="flex items-center gap-2">
               <span class="text-xl">🎨</span>
@@ -160,26 +183,79 @@
               
               <!-- Outils de Dessin -->
               <div class="space-y-1.5">
-                <span class="text-[11px] font-bold text-[#8b949e] uppercase tracking-wider">Outils de Pixel Art</span>
-                <div class="grid grid-cols-3 gap-1.5">
-                  <button class="ws-tool-btn active py-1.5 px-2 rounded bg-[#FFBB00] text-black font-bold text-xs border border-black flex items-center justify-center gap-1 cursor-pointer" data-tool="pencil" title="Crayon (1 pixel)">
+                <span class="text-[11px] font-bold text-[#8b949e] uppercase tracking-wider">Outils de Dessin</span>
+                <div class="grid grid-cols-4 gap-1.5">
+                  <button class="ws-tool-btn active py-1.5 px-1.5 rounded bg-[#FFBB00] text-black font-bold text-xs border border-black flex items-center justify-center gap-1 cursor-pointer" data-tool="brush" title="Pinceau (taille réglable)">
+                    <span>🖌️</span> Pinceau
+                  </button>
+                  <button class="ws-tool-btn py-1.5 px-1.5 rounded bg-[#0d1117] text-[#8b949e] hover:text-white hover:bg-[#21262d] font-bold text-xs border border-[#30363d] flex items-center justify-center gap-1 cursor-pointer" data-tool="pencil" title="Crayon pixel (1 px fixe)">
                     <span>✏️</span> Crayon
                   </button>
-                  <button class="ws-tool-btn py-1.5 px-2 rounded bg-[#0d1117] text-[#8b949e] hover:text-white hover:bg-[#21262d] font-bold text-xs border border-[#30363d] flex items-center justify-center gap-1 cursor-pointer" data-tool="eraser" title="Gomme">
+                  <button class="ws-tool-btn py-1.5 px-1.5 rounded bg-[#0d1117] text-[#8b949e] hover:text-white hover:bg-[#21262d] font-bold text-xs border border-[#30363d] flex items-center justify-center gap-1 cursor-pointer" data-tool="eraser" title="Gomme">
                     <span>🧹</span> Gomme
                   </button>
-                  <button class="ws-tool-btn py-1.5 px-2 rounded bg-[#0d1117] text-[#8b949e] hover:text-white hover:bg-[#21262d] font-bold text-xs border border-[#30363d] flex items-center justify-center gap-1 cursor-pointer" data-tool="fill" title="Remplissage pot de peinture">
+                  <button class="ws-tool-btn py-1.5 px-1.5 rounded bg-[#0d1117] text-[#8b949e] hover:text-white hover:bg-[#21262d] font-bold text-xs border border-[#30363d] flex items-center justify-center gap-1 cursor-pointer" data-tool="fill" title="Remplissage pot de peinture">
                     <span>🪣</span> Pot
                   </button>
-                  <button class="ws-tool-btn py-1.5 px-2 rounded bg-[#0d1117] text-[#8b949e] hover:text-white hover:bg-[#21262d] font-bold text-xs border border-[#30363d] flex items-center justify-center gap-1 cursor-pointer" data-tool="picker" title="Pipette (Sélectionner une couleur)">
+                  <button class="ws-tool-btn py-1.5 px-1.5 rounded bg-[#0d1117] text-[#8b949e] hover:text-white hover:bg-[#21262d] font-bold text-xs border border-[#30363d] flex items-center justify-center gap-1 cursor-pointer" data-tool="picker" title="Pipette (Sélectionner une couleur)">
                     <span>🧪</span> Pipette
                   </button>
-                  <button class="ws-tool-btn py-1.5 px-2 rounded bg-[#0d1117] text-[#8b949e] hover:text-white hover:bg-[#21262d] font-bold text-xs border border-[#30363d] flex items-center justify-center gap-1 cursor-pointer" data-tool="line" title="Tracer une ligne droite">
+                  <button class="ws-tool-btn py-1.5 px-1.5 rounded bg-[#0d1117] text-[#8b949e] hover:text-white hover:bg-[#21262d] font-bold text-xs border border-[#30363d] flex items-center justify-center gap-1 cursor-pointer" data-tool="line" title="Tracer une ligne droite">
                     <span>📏</span> Ligne
                   </button>
-                  <button class="ws-tool-btn py-1.5 px-2 rounded bg-[#0d1117] text-[#8b949e] hover:text-white hover:bg-[#21262d] font-bold text-xs border border-[#30363d] flex items-center justify-center gap-1 cursor-pointer" data-tool="rect" title="Tracer un rectangle">
+                  <button class="ws-tool-btn py-1.5 px-1.5 rounded bg-[#0d1117] text-[#8b949e] hover:text-white hover:bg-[#21262d] font-bold text-xs border border-[#30363d] flex items-center justify-center gap-1 cursor-pointer" data-tool="rect" title="Tracer un rectangle">
                     <span>⬜</span> Rect
                   </button>
+                  <button id="ws-tool-presets-btn" class="py-1.5 px-1.5 rounded bg-[#0d1117] text-[#8b949e] hover:text-white hover:bg-[#21262d] font-bold text-xs border border-[#30363d] flex items-center justify-center gap-1 cursor-pointer" title="Fonds Prédéfinis">
+                    <span>✨</span> Fonds
+                  </button>
+                </div>
+              </div>
+
+              <!-- Réglage de la taille du Pinceau & Gomme -->
+              <div id="ws-brush-size-panel" class="bg-[#0d1117] border border-[#30363d] rounded p-2.5 space-y-2">
+                <div class="flex items-center justify-between text-xs">
+                  <span class="text-[#8b949e] font-bold flex items-center gap-1.5">
+                    <span>🎯</span> Taille du Pinceau / Gomme :
+                  </span>
+                  <span id="ws-brush-size-label" class="font-extrabold text-[#FFBB00]">3 px</span>
+                </div>
+                
+                <div class="flex items-center gap-2">
+                  <input type="range" id="ws-brush-size-slider" min="1" max="24" value="3" class="w-full accent-[#FFBB00] cursor-pointer">
+                </div>
+
+                <div class="flex items-center justify-between gap-1 pt-1 border-t border-[#21262d]">
+                  <!-- Boutons rapides de taille -->
+                  <div class="flex items-center gap-1">
+                    <button class="ws-size-pill text-[10px] font-bold px-1.5 py-0.5 rounded bg-[#21262d] text-[#8b949e] hover:text-white cursor-pointer" data-size="1">1</button>
+                    <button class="ws-size-pill text-[10px] font-bold px-1.5 py-0.5 rounded bg-[#21262d] text-[#8b949e] hover:text-white cursor-pointer" data-size="2">2</button>
+                    <button class="ws-size-pill active text-[10px] font-bold px-1.5 py-0.5 rounded bg-[#FFBB00] text-black cursor-pointer" data-size="3">3</button>
+                    <button class="ws-size-pill text-[10px] font-bold px-1.5 py-0.5 rounded bg-[#21262d] text-[#8b949e] hover:text-white cursor-pointer" data-size="6">6</button>
+                    <button class="ws-size-pill text-[10px] font-bold px-1.5 py-0.5 rounded bg-[#21262d] text-[#8b949e] hover:text-white cursor-pointer" data-size="10">10</button>
+                    <button class="ws-size-pill text-[10px] font-bold px-1.5 py-0.5 rounded bg-[#21262d] text-[#8b949e] hover:text-white cursor-pointer" data-size="16">16</button>
+                  </div>
+
+                  <!-- Forme de pointe (Ronde / Carrée) -->
+                  <div class="flex items-center gap-1">
+                    <button id="ws-shape-round-btn" class="active text-[10px] font-bold px-1.5 py-0.5 rounded bg-[#FFBB00] text-black border border-black cursor-pointer" title="Pointe Ronde">⚪</button>
+                    <button id="ws-shape-square-btn" class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-[#21262d] text-[#8b949e] border border-[#30363d] cursor-pointer" title="Pointe Carrée">⬛</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Menu des fonds prédéfinis (Masquable) -->
+              <div id="ws-bg-presets-modal" class="hidden bg-[#0d1117] border border-[#30363d] rounded p-2.5 space-y-2">
+                <div class="flex items-center justify-between text-xs font-bold text-[#c9d1d9]">
+                  <span>Fonds Prédéfinis Rétro :</span>
+                  <button id="ws-close-presets-btn" class="text-[#8b949e] hover:text-white cursor-pointer">✕</button>
+                </div>
+                <div class="grid grid-cols-2 gap-1.5 text-xs">
+                  <button class="ws-preset-btn py-1 px-2 rounded bg-[#21262d] hover:bg-[#30363d] text-amber-300 font-bold border border-[#30363d] cursor-pointer" data-preset="numworks">⚡ NumWorks</button>
+                  <button class="ws-preset-btn py-1 px-2 rounded bg-[#21262d] hover:bg-[#30363d] text-cyan-300 font-bold border border-[#30363d] cursor-pointer" data-preset="matrix">🌆 Cyber Matrix</button>
+                  <button class="ws-preset-btn py-1 px-2 rounded bg-[#21262d] hover:bg-[#30363d] text-emerald-300 font-bold border border-[#30363d] cursor-pointer" data-preset="gameboy">🎮 GameBoy</button>
+                  <button class="ws-preset-btn py-1 px-2 rounded bg-[#21262d] hover:bg-[#30363d] text-slate-200 font-bold border border-[#30363d] cursor-pointer" data-preset="slate">⬛ Ardoise Sombre</button>
+                  <button class="ws-preset-btn py-1 px-2 rounded bg-[#21262d] hover:bg-[#30363d] text-white font-bold border border-[#30363d] cursor-pointer col-span-2" data-preset="white">⬜ Blanc Pur Épuré</button>
                 </div>
               </div>
 
@@ -225,7 +301,7 @@
                   <button id="ws-redo-btn" class="py-1 px-2 rounded bg-[#0d1117] hover:bg-[#21262d] text-xs font-bold text-[#8b949e] hover:text-white border border-[#30363d] cursor-pointer" title="Rétablir (Ctrl+Y)">
                     ↪️ Redo
                   </button>
-                  <button id="ws-clear-btn" class="py-1 px-2 rounded bg-[#0d1117] hover:bg-rose-950 text-xs font-bold text-rose-400 border border-rose-900/50 cursor-pointer" title="Effacer tout l'écran">
+                  <button id="ws-clear-btn" class="py-1 px-2 rounded bg-[#0d1117] hover:bg-rose-950 text-xs font-bold text-rose-400 border border-rose-900/50 cursor-pointer" title="Réinitialiser le fond">
                     🗑️ Vider
                   </button>
                 </div>
@@ -262,18 +338,18 @@
 
               <!-- Zone de travail avec Canvas centré et Scrollable -->
               <div class="ws-canvas-wrapper overflow-auto max-h-[520px] p-4 bg-[#0d1117] border-2 border-black rounded-lg flex items-center justify-center relative shadow-[inset_2px_2px_4px_#000]">
-                <div class="relative inline-block border-2 border-[#30363d] shadow-[0_0_15px_rgba(0,0,0,0.8)]" id="ws-viewport">
+                <div class="relative inline-block border-2 border-[#30363d] shadow-[0_0_15px_rgba(0,0,0,0.8)] cursor-crosshair" id="ws-viewport">
                   <!-- Canvas de dessin principal (320x240 natif) -->
-                  <canvas id="ws-main-canvas" width="320" height="240" class="block image-pixelated bg-black"></canvas>
-                  <!-- Canvas d'overlay de l'UI du Hub (Top Bar, Cartes Galerie, Dock) -->
+                  <canvas id="ws-main-canvas" width="320" height="240" class="block image-pixelated bg-[#1e293b]"></canvas>
+                  <!-- Canvas d'overlay de l'UI du Hub (Top Bar, Cartes Galerie, Dock, Curseur Pinceau) -->
                   <canvas id="ws-overlay-canvas" width="320" height="240" class="absolute inset-0 pointer-events-none block image-pixelated"></canvas>
                 </div>
               </div>
 
               <!-- Pied d'écran : Statut et Coordonnées -->
               <div class="flex items-center justify-between text-[11px] text-[#8b949e] pt-1">
-                <span id="ws-cursor-coords">Curseur : X: 0, Y: 0</span>
-                <span class="text-emerald-400 font-bold" id="ws-active-theme-status">Thème Custom non configuré</span>
+                <span id="ws-cursor-coords">Curseur : X: 0, Y: 0 | Outil : Pinceau (3px)</span>
+                <span class="text-amber-400 font-bold" id="ws-active-theme-status">✓ Fond d'écran prêt pour la calculatrice (153.6 Ko)</span>
               </div>
 
             </div>
@@ -300,6 +376,73 @@
           btn.classList.add('active', 'bg-[#FFBB00]', 'text-black');
           btn.classList.remove('bg-[#0d1117]', 'text-[#8b949e]');
           this.currentTool = btn.getAttribute('data-tool');
+          this.updateCursorLabel();
+          this.renderOverlay();
+        });
+      });
+
+      // Gestionnaire de Taille de Pinceau (Slider)
+      const sizeSlider = container.querySelector('#ws-brush-size-slider');
+      const sizeLabel = container.querySelector('#ws-brush-size-label');
+      const sizePills = container.querySelectorAll('.ws-size-pill');
+
+      if (sizeSlider) {
+        sizeSlider.addEventListener('input', (e) => {
+          const val = parseInt(e.target.value, 10);
+          this.setBrushSize(val);
+        });
+      }
+
+      sizePills.forEach(pill => {
+        pill.addEventListener('click', () => {
+          const sz = parseInt(pill.getAttribute('data-size'), 10);
+          this.setBrushSize(sz);
+        });
+      });
+
+      // Formes de pointe (Ronde / Carrée)
+      const roundBtn = container.querySelector('#ws-shape-round-btn');
+      const squareBtn = container.querySelector('#ws-shape-square-btn');
+      if (roundBtn && squareBtn) {
+        roundBtn.addEventListener('click', () => {
+          this.brushShape = 'round';
+          roundBtn.classList.add('active', 'bg-[#FFBB00]', 'text-black', 'border-black');
+          roundBtn.classList.remove('bg-[#21262d]', 'text-[#8b949e]', 'border-[#30363d]');
+          squareBtn.classList.remove('active', 'bg-[#FFBB00]', 'text-black', 'border-black');
+          squareBtn.classList.add('bg-[#21262d]', 'text-[#8b949e]', 'border-[#30363d]');
+          this.renderOverlay();
+        });
+        squareBtn.addEventListener('click', () => {
+          this.brushShape = 'square';
+          squareBtn.classList.add('active', 'bg-[#FFBB00]', 'text-black', 'border-black');
+          squareBtn.classList.remove('bg-[#21262d]', 'text-[#8b949e]', 'border-[#30363d]');
+          roundBtn.classList.remove('active', 'bg-[#FFBB00]', 'text-black', 'border-black');
+          roundBtn.classList.add('bg-[#21262d]', 'text-[#8b949e]', 'border-[#30363d]');
+          this.renderOverlay();
+        });
+      }
+
+      // Presets de fond modal
+      const presetsBtn = container.querySelector('#ws-tool-presets-btn');
+      const presetsModal = container.querySelector('#ws-bg-presets-modal');
+      const closePresetsBtn = container.querySelector('#ws-close-presets-btn');
+
+      if (presetsBtn && presetsModal) {
+        presetsBtn.addEventListener('click', () => {
+          presetsModal.classList.toggle('hidden');
+        });
+      }
+      if (closePresetsBtn && presetsModal) {
+        closePresetsBtn.addEventListener('click', () => {
+          presetsModal.classList.add('hidden');
+        });
+      }
+
+      container.querySelectorAll('.ws-preset-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const key = btn.getAttribute('data-preset');
+          this.applyBackgroundPreset(key);
+          if (presetsModal) presetsModal.classList.add('hidden');
         });
       });
 
@@ -366,10 +509,11 @@
       container.querySelector('#ws-undo-btn').addEventListener('click', () => this.undo());
       container.querySelector('#ws-redo-btn').addEventListener('click', () => this.redo());
       container.querySelector('#ws-clear-btn').addEventListener('click', () => {
-        if (confirm('Effacer le fond et réinitialiser ?')) {
+        if (confirm('Réinitialiser le fond avec le thème ardoise contrasté ?')) {
           this.initDefaultCanvas();
           this.pushHistoryState();
           this.renderCanvas();
+          this.autoSyncWallpaper();
         }
       });
 
@@ -423,12 +567,161 @@
 
       this.canvas.addEventListener('touchend', () => this.onPointerUp());
 
+      // Raccourcis clavier (Undo, Redo, Pinceau, Taille)
+      window.addEventListener('keydown', (e) => {
+        if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName)) return;
+        const key = e.key.toLowerCase();
+
+        if (e.ctrlKey || e.metaKey) {
+          if (key === 'z') {
+            e.preventDefault();
+            if (e.shiftKey) this.redo();
+            else this.undo();
+          } else if (key === 'y') {
+            e.preventDefault();
+            this.redo();
+          }
+          return;
+        }
+
+        if (key === 'b') this.selectTool('brush');
+        else if (key === 'p') this.selectTool('pencil');
+        else if (key === 'e') this.selectTool('eraser');
+        else if (key === 'g' || key === 'f') this.selectTool('fill');
+        else if (key === 'i') this.selectTool('picker');
+        else if (key === 'l') this.selectTool('line');
+        else if (key === 'r') this.selectTool('rect');
+        else if (key === '[' || key === '-') this.setBrushSize(Math.max(1, this.brushSize - 1));
+        else if (key === ']' || key === '+') this.setBrushSize(Math.min(24, this.brushSize + 1));
+      });
+
       // Exportations
       container.querySelector('#ws-export-png-btn').addEventListener('click', () => this.exportPNG());
       container.querySelector('#ws-export-bin-btn').addEventListener('click', () => this.exportBIN());
       container.querySelector('#ws-apply-theme-btn').addEventListener('click', () => this.applyCustomTheme());
 
       this.renderPaletteSwatches();
+    }
+
+    setBrushSize(sz) {
+      this.brushSize = Math.max(1, Math.min(24, sz));
+      if (typeof document !== 'undefined') {
+        const slider = document.getElementById('ws-brush-size-slider');
+        const label = document.getElementById('ws-brush-size-label');
+        if (slider) slider.value = this.brushSize;
+        if (label) label.textContent = `${this.brushSize} px`;
+
+        document.querySelectorAll('.ws-size-pill').forEach(pill => {
+          const ps = parseInt(pill.getAttribute('data-size'), 10);
+          if (ps === this.brushSize) {
+            pill.className = 'ws-size-pill active text-[10px] font-bold px-1.5 py-0.5 rounded bg-[#FFBB00] text-black cursor-pointer';
+          } else {
+            pill.className = 'ws-size-pill text-[10px] font-bold px-1.5 py-0.5 rounded bg-[#21262d] text-[#8b949e] hover:text-white cursor-pointer';
+          }
+        });
+      }
+
+      this.updateCursorLabel();
+      this.renderOverlay();
+    }
+
+    selectTool(toolName) {
+      this.currentTool = toolName;
+      if (typeof document !== 'undefined') {
+        document.querySelectorAll('.ws-tool-btn').forEach(b => {
+          if (b.getAttribute('data-tool') === toolName) {
+            b.classList.add('active', 'bg-[#FFBB00]', 'text-black');
+            b.classList.remove('bg-[#0d1117]', 'text-[#8b949e]');
+          } else {
+            b.classList.remove('active', 'bg-[#FFBB00]', 'text-black');
+            b.classList.add('bg-[#0d1117]', 'text-[#8b949e]');
+          }
+        });
+      }
+      this.updateCursorLabel();
+      this.renderOverlay();
+    }
+
+    getToolLabel() {
+      switch (this.currentTool) {
+        case 'brush': return 'Pinceau';
+        case 'pencil': return 'Crayon 1px';
+        case 'eraser': return 'Gomme';
+        case 'fill': return 'Pot';
+        case 'picker': return 'Pipette';
+        case 'line': return 'Ligne';
+        case 'rect': return 'Rectangle';
+        default: return 'Outil';
+      }
+    }
+
+    updateCursorLabel() {
+      if (typeof document === 'undefined') return;
+      const coordEl = document.getElementById('ws-cursor-coords');
+      if (coordEl && this.cursorX >= 0) {
+        coordEl.textContent = `Curseur : X: ${this.cursorX}, Y: ${this.cursorY} | Outil : ${this.getToolLabel()} (${this.brushSize}px)`;
+      }
+    }
+
+    applyBackgroundPreset(presetKey) {
+      if (presetKey === 'numworks') {
+        // Slate profond avec bordure ambre NumWorks
+        for (let y = 0; y < SCREEN_HEIGHT; y++) {
+          for (let x = 0; x < SCREEN_WIDTH; x++) {
+            const off = (y * SCREEN_WIDTH + x) * 4;
+            const isBorder = (x < 2 || x >= SCREEN_WIDTH - 2 || y < 2 || y >= SCREEN_HEIGHT - 2);
+            if (isBorder) {
+              this.pixelData[off] = 255;
+              this.pixelData[off + 1] = 187;
+              this.pixelData[off + 2] = 0;
+            } else {
+              const r = Math.round(28 + (y / SCREEN_HEIGHT) * 14);
+              this.pixelData[off] = r;
+              this.pixelData[off + 1] = r + 4;
+              this.pixelData[off + 2] = r + 14;
+            }
+            this.pixelData[off + 3] = 255;
+          }
+        }
+      } else if (presetKey === 'matrix') {
+        // Cyan Matrix avec grille fine
+        for (let y = 0; y < SCREEN_HEIGHT; y++) {
+          for (let x = 0; x < SCREEN_WIDTH; x++) {
+            const off = (y * SCREEN_WIDTH + x) * 4;
+            const grid = (x % 16 === 0 || y % 16 === 0);
+            this.pixelData[off] = grid ? 10 : 6;
+            this.pixelData[off + 1] = grid ? 45 : 20;
+            this.pixelData[off + 2] = grid ? 75 : 35;
+            this.pixelData[off + 3] = 255;
+          }
+        }
+      } else if (presetKey === 'gameboy') {
+        // Vert rétro DMG
+        for (let i = 0; i < TOTAL_PIXELS; i++) {
+          const off = i * 4;
+          this.pixelData[off] = 15;
+          this.pixelData[off + 1] = 56;
+          this.pixelData[off + 2] = 15;
+          this.pixelData[off + 3] = 255;
+        }
+      } else if (presetKey === 'white') {
+        // Blanc épuré
+        for (let i = 0; i < TOTAL_PIXELS; i++) {
+          const off = i * 4;
+          this.pixelData[off] = 248;
+          this.pixelData[off + 1] = 250;
+          this.pixelData[off + 2] = 252;
+          this.pixelData[off + 3] = 255;
+        }
+      } else {
+        // Ardoise sombre par défaut
+        this.initDefaultCanvas();
+      }
+
+      this.pushHistoryState();
+      this.renderCanvas();
+      this.autoSyncWallpaper();
+      window.soundFx?.playClick?.();
     }
 
     renderPaletteSwatches() {
@@ -485,9 +778,12 @@
       this.isDrawing = true;
       this.startX = coords.x;
       this.startY = coords.y;
+      this.cursorX = coords.x;
+      this.cursorY = coords.y;
 
       if (this.currentTool === 'picker') {
         this.pickColorAt(coords.x, coords.y);
+        this.isDrawing = false;
         return;
       }
 
@@ -495,32 +791,44 @@
         this.floodFill(coords.x, coords.y, this.currentColor);
         this.pushHistoryState();
         this.renderCanvas();
+        this.autoSyncWallpaper();
+        this.isDrawing = false;
         return;
       }
 
-      if (this.currentTool === 'pencil') {
+      if (this.currentTool === 'brush') {
+        this.drawBrushStamp(coords.x, coords.y, this.currentColor, this.brushSize, this.brushShape);
+        this.renderCanvas();
+      } else if (this.currentTool === 'pencil') {
         this.setPixel(coords.x, coords.y, this.currentColor);
         this.renderCanvas();
       } else if (this.currentTool === 'eraser') {
-        this.setPixel(coords.x, coords.y, '#161B22');
+        this.drawBrushStamp(coords.x, coords.y, '#1e293b', this.brushSize, this.brushShape);
         this.renderCanvas();
       }
     }
 
     onPointerMove(e) {
       const coords = this.getCanvasCoords(e);
-      const coordEl = document.getElementById('ws-cursor-coords');
-      if (coordEl) coordEl.textContent = `Curseur : X: ${coords.x}, Y: ${coords.y}`;
+      this.cursorX = coords.x;
+      this.cursorY = coords.y;
+      this.updateCursorLabel();
+      this.renderOverlay();
 
       if (!this.isDrawing) return;
 
-      if (this.currentTool === 'pencil') {
-        this.drawLine(this.startX, this.startY, coords.x, coords.y, this.currentColor);
+      if (this.currentTool === 'brush') {
+        this.drawBrushLine(this.startX, this.startY, coords.x, coords.y, this.currentColor, this.brushSize, this.brushShape);
         this.startX = coords.x;
         this.startY = coords.y;
         this.renderCanvas();
       } else if (this.currentTool === 'eraser') {
-        this.drawLine(this.startX, this.startY, coords.x, coords.y, '#161B22');
+        this.drawBrushLine(this.startX, this.startY, coords.x, coords.y, '#1e293b', this.brushSize, this.brushShape);
+        this.startX = coords.x;
+        this.startY = coords.y;
+        this.renderCanvas();
+      } else if (this.currentTool === 'pencil') {
+        this.drawLine(this.startX, this.startY, coords.x, coords.y, this.currentColor);
         this.startX = coords.x;
         this.startY = coords.y;
         this.renderCanvas();
@@ -532,6 +840,65 @@
       this.isDrawing = false;
       this.pushHistoryState();
       this.renderCanvas();
+      this.autoSyncWallpaper();
+    }
+
+    /**
+     * Applique une empreinte de pinceau (circulaire ou carrée) centrée sur (cx, cy)
+     */
+    drawBrushStamp(cx, cy, colorHex, size, shape = 'round') {
+      if (size <= 1) {
+        this.setPixel(cx, cy, colorHex);
+        return;
+      }
+
+      if (shape === 'square') {
+        const half = Math.floor(size / 2);
+        const startX = cx - half;
+        const startY = cy - half;
+        for (let dy = 0; dy < size; dy++) {
+          for (let dx = 0; dx < size; dx++) {
+            this.setPixel(startX + dx, startY + dy, colorHex);
+          }
+        }
+      } else {
+        // Empreinte circulaire
+        const r = size / 2;
+        const rSq = r * r;
+        const minX = Math.floor(cx - r);
+        const maxX = Math.ceil(cx + r);
+        const minY = Math.floor(cy - r);
+        const maxY = Math.ceil(cy + r);
+
+        for (let py = minY; py <= maxY; py++) {
+          for (let px = minX; px <= maxX; px++) {
+            const dx = px - cx;
+            const dy = py - cy;
+            if (dx * dx + dy * dy <= rSq + 0.25) {
+              this.setPixel(px, py, colorHex);
+            }
+          }
+        }
+      }
+    }
+
+    /**
+     * Interpolation continue Bresenham pour pinceau avec stamp à chaque pas
+     */
+    drawBrushLine(x0, y0, x1, y1, colorHex, size, shape) {
+      const dx = Math.abs(x1 - x0);
+      const dy = Math.abs(y1 - y0);
+      const sx = (x0 < x1) ? 1 : -1;
+      const sy = (y0 < y1) ? 1 : -1;
+      let err = dx - dy;
+
+      while (true) {
+        this.drawBrushStamp(x0, y0, colorHex, size, shape);
+        if (x0 === x1 && y0 === y1) break;
+        const e2 = 2 * err;
+        if (e2 > -dy) { err -= dy; x0 += sx; }
+        if (e2 < dx) { err += dx; y0 += sy; }
+      }
     }
 
     setPixel(x, y, hexColor) {
@@ -579,6 +946,7 @@
       const hexEl = document.getElementById('ws-color-hex');
       if (picker) picker.value = hex;
       if (hexEl) hexEl.textContent = hex;
+      this.selectTool('brush');
     }
 
     floodFill(startX, startY, fillHex) {
@@ -626,6 +994,7 @@
         this.historyIndex--;
         this.pixelData.set(this.history[this.historyIndex]);
         this.renderCanvas();
+        this.autoSyncWallpaper();
       }
     }
 
@@ -634,6 +1003,7 @@
         this.historyIndex++;
         this.pixelData.set(this.history[this.historyIndex]);
         this.renderCanvas();
+        this.autoSyncWallpaper();
       }
     }
 
@@ -648,7 +1018,7 @@
       if (!this.overlayCtx) return;
       this.overlayCtx.clearRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 
-      // Grille Pixel si activée
+      // 1. Grille Pixel si activée
       if (this.showGrid && this.zoomLevel >= 2) {
         this.overlayCtx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
         this.overlayCtx.lineWidth = 1;
@@ -664,12 +1034,12 @@
         this.overlayCtx.stroke();
       }
 
-      // Hub UI exact superposé
+      // 2. Hub UI exact superposé
       if (this.showOverlay) {
         const op = this.overlayOpacity;
         this.overlayCtx.save();
 
-        // 1. Barre supérieure (h: 22px)
+        // Top Bar (h: 22px)
         this.overlayCtx.fillStyle = `rgba(33, 38, 45, ${op * 0.95})`;
         this.overlayCtx.fillRect(0, 0, SCREEN_WIDTH, 22);
         this.overlayCtx.fillStyle = `rgba(255, 187, 0, ${op})`;
@@ -678,7 +1048,7 @@
         this.overlayCtx.fillStyle = `rgba(255, 255, 255, ${op})`;
         this.overlayCtx.fillText('12:00', SCREEN_WIDTH - 35, 15);
 
-        // 2. Cartes de la Galerie (3 colonnes x 2 rangées)
+        // Cartes Galerie (3 cols x 2 rows)
         const cardW = 88;
         const cardH = 70;
         for (let row = 0; row < 2; row++) {
@@ -687,16 +1057,13 @@
             const y = 28 + row * 78;
             const isSel = (row === 0 && col === 0);
 
-            // Fond tuile
             this.overlayCtx.fillStyle = isSel ? `rgba(254, 243, 199, ${op * 0.9})` : `rgba(255, 255, 255, ${op * 0.85})`;
             this.overlayCtx.fillRect(x, y, cardW, cardH);
 
-            // Bordure
             this.overlayCtx.strokeStyle = isSel ? `rgba(245, 158, 11, ${op})` : `rgba(226, 232, 240, ${op * 0.8})`;
             this.overlayCtx.lineWidth = isSel ? 2 : 1;
             this.overlayCtx.strokeRect(x, y, cardW, cardH);
 
-            // Icône et texte factices
             this.overlayCtx.fillStyle = isSel ? '#000000' : '#334155';
             this.overlayCtx.font = 'bold 8px monospace';
             this.overlayCtx.textAlign = 'center';
@@ -706,7 +1073,7 @@
           }
         }
 
-        // 3. Dock du bas (h: 24px à y: 188)
+        // Dock bas (h: 24px à y: 188)
         this.overlayCtx.fillStyle = `rgba(255, 255, 255, ${op * 0.9})`;
         this.overlayCtx.fillRect(16, 188, 288, 24);
         this.overlayCtx.strokeStyle = `rgba(255, 187, 0, ${op})`;
@@ -720,13 +1087,35 @@
         this.overlayCtx.fillStyle = `rgba(217, 119, 6, ${op})`;
         this.overlayCtx.fillText('Jeu / Arcade', 230, 204);
 
-        // 4. Barre de raccourcis tout en bas (h: 16px à y: 224)
+        // Barre raccourcis (y: 224)
         this.overlayCtx.fillStyle = `rgba(255, 255, 255, ${op * 0.85})`;
         this.overlayCtx.fillRect(0, 224, SCREEN_WIDTH, 16);
         this.overlayCtx.fillStyle = `rgba(100, 116, 139, ${op})`;
         this.overlayCtx.font = '8px monospace';
         this.overlayCtx.fillText('OK: Lancer | Toolbox: Options | Back: Epsilon', 8, 235);
 
+        this.overlayCtx.restore();
+      }
+
+      // 3. Aperçu visuel du curseur Pinceau / Gomme (Cercle ou Carré en pointillé)
+      if ((this.currentTool === 'brush' || this.currentTool === 'eraser') && this.cursorX >= 0 && this.cursorX < SCREEN_WIDTH && this.cursorY >= 0 && this.cursorY < SCREEN_HEIGHT) {
+        this.overlayCtx.save();
+        this.overlayCtx.strokeStyle = (this.currentTool === 'eraser') ? 'rgba(248, 113, 113, 0.9)' : 'rgba(255, 255, 255, 0.95)';
+        this.overlayCtx.lineWidth = 1;
+        this.overlayCtx.setLineDash([2, 2]);
+
+        const cx = this.cursorX;
+        const cy = this.cursorY;
+        const sz = this.brushSize;
+
+        if (this.brushShape === 'square') {
+          const half = Math.floor(sz / 2);
+          this.overlayCtx.strokeRect(cx - half - 0.5, cy - half - 0.5, sz, sz);
+        } else {
+          this.overlayCtx.beginPath();
+          this.overlayCtx.arc(cx + 0.5, cy + 0.5, Math.max(1, sz / 2), 0, Math.PI * 2);
+          this.overlayCtx.stroke();
+        }
         this.overlayCtx.restore();
       }
     }
@@ -744,13 +1133,13 @@
     }
 
     processLoadedImage(img, fitMode = 'cover', applyDither = true) {
-      // Canevas hors-écran pour redimensionnement
       const tempCanvas = document.createElement('canvas');
       tempCanvas.width = SCREEN_WIDTH;
       tempCanvas.height = SCREEN_HEIGHT;
       const tctx = tempCanvas.getContext('2d');
 
-      tctx.fillStyle = '#000000';
+      // Fond ardoise moderne contrasté au lieu de noir pur
+      tctx.fillStyle = '#1e293b';
       tctx.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 
       const srcW = img.width;
@@ -781,7 +1170,6 @@
       if (applyDither) {
         this.applyFloydSteinbergDither(rawPixels);
       } else {
-        // Quantification directe RGB565 sans dither
         for (let i = 0; i < TOTAL_PIXELS; i++) {
           const off = i * 4;
           const r5 = (rawPixels[off] >> 3) & 0x1F;
@@ -796,11 +1184,11 @@
 
       this.pushHistoryState();
       this.renderCanvas();
+      this.autoSyncWallpaper();
       window.soundFx?.playSuccess?.();
     }
 
     applyFloydSteinbergDither(rawPixels) {
-      // Table de floats pour diffusion d'erreur
       const bufR = new Float32Array(TOTAL_PIXELS);
       const bufG = new Float32Array(TOTAL_PIXELS);
       const bufB = new Float32Array(TOTAL_PIXELS);
@@ -893,6 +1281,40 @@
       return bytes;
     }
 
+    /**
+     * Auto-synchronise le fond d'écran actif dans window et localStorage
+     */
+    autoSyncWallpaper() {
+      try {
+        const bytes = this.generateRGB565Bytes();
+        const dataUrl = this.canvas ? this.canvas.toDataURL('image/png') : null;
+
+        window.customWallpaperRGB565 = bytes;
+        if (dataUrl) window.customWallpaperDataUrl = dataUrl;
+
+        if (typeof localStorage !== 'undefined') {
+          if (dataUrl) localStorage.setItem('equalib_custom_wallpaper_dataurl', dataUrl);
+          const b64 = this.uint8ToBase64(bytes);
+          localStorage.setItem('equalib_custom_wallpaper_rgb565', b64);
+        }
+
+        // Si le simulateur utilise le thème custom, rafraîchir en direct
+        if (window.simulator && window.simulator.theme === 'custom') {
+          window.simulator.renderMenu();
+        }
+
+        if (typeof document !== 'undefined') {
+          const statusEl = document.getElementById('ws-active-theme-status');
+          if (statusEl) {
+            statusEl.textContent = '✓ Fond d\'écran prêt pour la calculatrice (153.6 Ko)';
+            statusEl.className = 'text-amber-400 font-bold';
+          }
+        }
+      } catch (err) {
+        console.warn('[Wallpaper Studio] AutoSync échoué :', err);
+      }
+    }
+
     exportPNG() {
       if (!this.canvas) return;
       const link = document.createElement('a');
@@ -913,23 +1335,15 @@
     }
 
     applyCustomTheme() {
-      const bytes = this.generateRGB565Bytes();
-      const dataUrl = this.canvas.toDataURL('image/png');
-
-      // 1. Sauvegarde globale en mémoire et localStorage
-      window.customWallpaperRGB565 = bytes;
-      window.customWallpaperDataUrl = dataUrl;
+      this.autoSyncWallpaper();
 
       try {
         if (typeof localStorage !== 'undefined') {
-          localStorage.setItem('equalib_custom_wallpaper_dataurl', dataUrl);
           localStorage.setItem('equalib_theme', 'custom');
         }
-      } catch (err) {
-        console.warn('[Wallpaper Studio] Impossible de persister dans localStorage:', err);
-      }
+      } catch (_) {}
 
-      // 2. Mettre à jour les paramètres de thème de l'application web
+      // Mettre à jour les paramètres de thème de l'application web
       if (window.userSettings) {
         window.userSettings.theme = 'custom';
         if (typeof window.saveUserSettings === 'function') {
@@ -937,39 +1351,118 @@
         }
       }
 
-      // 3. Mettre à jour le simulateur virtuel NumWorks
+      // Mettre à jour le simulateur virtuel NumWorks
       if (window.simulator) {
         window.simulator.theme = 'custom';
         window.simulator.renderMenu();
       }
 
-      // 4. Mettre à jour le statut visuel
-      const statusEl = document.getElementById('ws-active-theme-status');
-      if (statusEl) {
-        statusEl.textContent = '✓ Thème Custom Actif (153.6 Ko prêt pour le Flash)';
-        statusEl.className = 'text-amber-400 font-extrabold';
+      if (typeof document !== 'undefined') {
+        const statusEl = document.getElementById('ws-active-theme-status');
+        if (statusEl) {
+          statusEl.textContent = '⭐ Thème Custom Actif pour la Calculatrice (153.6 Ko prêt au Flash)';
+          statusEl.className = 'text-amber-400 font-extrabold';
+        }
       }
 
       window.soundFx?.playSuccess?.();
       if (typeof window.showToast === 'function') {
-        window.showToast('Fond d\'écran appliqué ! Le 7ᵉ thème (« Custom ») est maintenant actif pour la calculatrice.', 'success');
+        window.showToast('Fond d\'écran appliqué ! Le 7ᵉ thème (« Custom ») est maintenant actif pour votre NumWorks.', 'success');
       } else {
         alert('✓ Fond d\'écran appliqué ! Le 7ᵉ thème (« Custom ») sera injecté lors du Flash USB.');
       }
     }
 
+    /**
+     * Charge et réhydrate le fond d'écran persisté au rechargement de la page
+     */
     checkStoredWallpaper() {
       try {
-        const stored = localStorage.getItem('equalib_custom_wallpaper_dataurl');
-        if (stored) {
-          window.customWallpaperDataUrl = stored;
-          const statusEl = document.getElementById('ws-active-theme-status');
-          if (statusEl) {
-            statusEl.textContent = '✓ Fond d\'écran personnalisé présent en mémoire';
-            statusEl.className = 'text-amber-400 font-bold';
+        if (typeof localStorage === 'undefined') return;
+
+        // 1. Réhydratation instantanée bit-exacte depuis les octets RGB565
+        const storedB64 = localStorage.getItem('equalib_custom_wallpaper_rgb565');
+        if (storedB64) {
+          const bytes = this.base64ToUint8(storedB64);
+          if (bytes && bytes.length === RGB565_BYTES) {
+            window.customWallpaperRGB565 = bytes;
+
+            for (let i = 0; i < TOTAL_PIXELS; i++) {
+              const byteIdx = i * 2;
+              const rgb16 = bytes[byteIdx] | (bytes[byteIdx + 1] << 8);
+              const r5 = (rgb16 >> 11) & 0x1F;
+              const g6 = (rgb16 >> 5) & 0x3F;
+              const b5 = rgb16 & 0x1F;
+              const off = i * 4;
+              this.pixelData[off] = Math.round((r5 * 255) / 31);
+              this.pixelData[off + 1] = Math.round((g6 * 255) / 63);
+              this.pixelData[off + 2] = Math.round((b5 * 255) / 31);
+              this.pixelData[off + 3] = 255;
+            }
+
+            this.renderCanvas();
+            this.pushHistoryState();
+
+            const dataUrl = this.canvas ? this.canvas.toDataURL('image/png') : null;
+            if (dataUrl) {
+              window.customWallpaperDataUrl = dataUrl;
+              localStorage.setItem('equalib_custom_wallpaper_dataurl', dataUrl);
+            }
+
+            if (typeof document !== 'undefined') {
+              const statusEl = document.getElementById('ws-active-theme-status');
+              if (statusEl) {
+                statusEl.textContent = '✓ Fond d\'écran personnalisé chargé (153.6 Ko)';
+                statusEl.className = 'text-amber-400 font-bold';
+              }
+            }
+            return;
           }
         }
-      } catch (_) {}
+
+        // 2. Repli sur le dataURL PNG si présent
+        const storedUrl = localStorage.getItem('equalib_custom_wallpaper_dataurl');
+        if (storedUrl) {
+          window.customWallpaperDataUrl = storedUrl;
+          const img = new Image();
+          img.onload = () => {
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = SCREEN_WIDTH;
+            tempCanvas.height = SCREEN_HEIGHT;
+            const tctx = tempCanvas.getContext('2d');
+            tctx.drawImage(img, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+            const imgData = tctx.getImageData(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+            this.pixelData.set(imgData.data);
+            this.renderCanvas();
+            this.pushHistoryState();
+            this.autoSyncWallpaper();
+          };
+          img.src = storedUrl;
+        }
+      } catch (err) {
+        console.warn('[Wallpaper Studio] Récupération stored wallpaper échouée :', err);
+      }
+    }
+
+    uint8ToBase64(u8) {
+      let binary = '';
+      const len = u8.byteLength;
+      const chunk = 8192;
+      for (let i = 0; i < len; i += chunk) {
+        const end = Math.min(i + chunk, len);
+        binary += String.fromCharCode.apply(null, u8.subarray(i, end));
+      }
+      return btoa(binary);
+    }
+
+    base64ToUint8(b64) {
+      const binary = atob(b64);
+      const len = binary.length;
+      const bytes = new Uint8Array(len);
+      for (let i = 0; i < len; i++) {
+        bytes[i] = binary.charCodeAt(i);
+      }
+      return bytes;
     }
 
     hexToRgb(hex) {
