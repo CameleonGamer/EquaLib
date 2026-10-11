@@ -2147,8 +2147,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
       showToast(`Génération du binaire natif N0120 avec vos ${selectedApps.length} applications...`, 'info');
       const wpBytes = window.customWallpaperRGB565 || (window.wallpaperStudio?.generateRGB565Bytes?.());
+      const effectiveTheme = (wpBytes && (userSettings.theme === 'custom' || userSettings.theme === 'default')) ? 'custom' : userSettings.theme;
       const bundle = await bundler.buildBundle(selectedApps, 'nwa', { 
-        theme: userSettings.theme, 
+        theme: effectiveTheme, 
         displayMode: userSettings.displayMode,
         customWallpaper: wpBytes
       });
@@ -2221,8 +2222,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       // 1. Génération dynamique du binaire natif patché avec les apps sélectionnées
       const wpBytes = window.customWallpaperRGB565 || (window.wallpaperStudio?.generateRGB565Bytes?.());
+      const effectiveTheme = (wpBytes && (userSettings.theme === 'custom' || userSettings.theme === 'default')) ? 'custom' : userSettings.theme;
       const bundle = await bundler.buildBundle(selectedApps, 'bin', { 
-        theme: userSettings.theme, 
+        theme: effectiveTheme, 
         displayMode: userSettings.displayMode,
         customWallpaper: wpBytes
       });

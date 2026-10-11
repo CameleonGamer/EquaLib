@@ -143,6 +143,27 @@ static void save_persistent_settings(void) {
     eq_storage_commit();
 }
 
+/* Tampon intermédiaire en RAM pour le rendu du fond d'écran.
+ * Sur STM32H7 (NumWorks N0120), le contrôleur DMA de l'afficheur ne peut pas lire
+ * directement en mémoire OCTOSPI Flash (0x90000000). Le processeur Cortex-M7 copie
+ * donc les bandes en AXI-SRAM avant de les pousser au LCD, évitant ainsi tout écran noir.
+ */
+#define WALLPAPER_BAND_HEIGHT 8
+static eadk_color_t s_wallpaper_ram_band[EADK_SCREEN_WIDTH * WALLPAPER_BAND_HEIGHT];
+
+static inline uintptr_t get_app_flash_base(void) {
+    uintptr_t manifest_addr = (uintptr_t)&g_equalib_manifest;
+    /* Dans le binaire plat N0120, le manifeste est situé à l'offset 67320 */
+    if (manifest_addr > 67320) {
+        uintptr_t cand = manifest_addr - 67320;
+        /* Magic EADK : 0xDEC0BEBA (0xBABEC0DE en flux d'octets LE) */
+        if (*(const uint32_t*)cand == 0xDEC0BEBA) {
+            return cand;
+        }
+    }
+    return 0x90180000;
+}
+
 /* Manifeste dynamique stocké en flash (.rodata), modifiable à chaud lors du packaging */
 const equalib_manifest_t g_equalib_manifest __attribute__((used, aligned(4), section(".rodata.equalib_manifest"))) = {
     .magic = EQUALIB_MANIFEST_MAGIC,
@@ -956,10 +977,12 @@ int main(int argc, char* argv[]) {
             else if (type == APP_TYPE_MORPION) run_morpion_app();
             else if (type == APP_TYPE_SETTINGS) run_settings_screen();
             else if (type == APP_TYPE_NATIVE_EXEC) {
-                const uint8_t* bin_ptr = (app->data_size > 0) ? (const uint8_t*)(0x90180000 + app->data_offset) : NULL;
+                uintptr_t flash_base = get_app_flash_base();
+                const uint8_t* bin_ptr = (app->data_size > 0) ? (const uint8_t*)(flash_base + app->data_offset) : NULL;
                 run_native_app((const char*)app->name, bin_ptr, app->data_size);
             } else if (type == APP_TYPE_PYTHON || type == APP_TYPE_TEXT_VIEWER) {
-                const char* data_ptr = (app->data_size > 0) ? (const char*)(0x90180000 + app->data_offset) : NULL;
+                uintptr_t flash_base = get_app_flash_base();
+                const char* data_ptr = (app->data_size > 0) ? (const char*)(flash_base + app->data_offset) : NULL;
                 if (data_ptr && app->data_size >= 4 && (
                     (*(const uint32_t*)data_ptr == 0xDEC0BEBA) ||
                     (data_ptr[0] == 0x7F && data_ptr[1] == 'E' && data_ptr[2] == 'L' && data_ptr[3] == 'F'))) {
@@ -989,12 +1012,16 @@ int main(int argc, char* argv[]) {
 
             /* Fond général de l'écran LCD : Fond personnalisé RGB565 si actif, sinon couleur unie */
             if (g_current_theme == 6 && g_equalib_manifest.wallpaper_size >= 153600 && g_equalib_manifest.wallpaper_offset > 0) {
-                const eadk_color_t* wp_ptr = (const eadk_color_t*)(0x90180000 + g_equalib_manifest.wallpaper_offset);
-                /* Poussée par bandes de 20 lignes pour compatibilité matérielle DMA 16-bit sans dépassement de registre NDTR */
-                const uint16_t band_h = 20;
-                for (uint16_t y = 0; y < EADK_SCREEN_HEIGHT; y += band_h) {
-                    eadk_rect_t band_r = {0, y, EADK_SCREEN_WIDTH, band_h};
-                    eadk_display_push_rect(band_r, wp_ptr + (y * EADK_SCREEN_WIDTH));
+                uintptr_t flash_base = get_app_flash_base();
+                const eadk_color_t* wp_ptr = (const eadk_color_t*)(flash_base + g_equalib_manifest.wallpaper_offset);
+                /* Poussée par bandes via mémoire RAM intermédiaire pour contourner la limitation DMA STM32H7 vers OCTOSPI */
+                for (uint16_t y = 0; y < EADK_SCREEN_HEIGHT; y += WALLPAPER_BAND_HEIGHT) {
+                    eadk_rect_t band_r = {0, y, EADK_SCREEN_WIDTH, WALLPAPER_BAND_HEIGHT};
+                    const eadk_color_t* src = wp_ptr + (y * EADK_SCREEN_WIDTH);
+                    for (int i = 0; i < EADK_SCREEN_WIDTH * WALLPAPER_BAND_HEIGHT; i++) {
+                        s_wallpaper_ram_band[i] = src[i];
+                    }
+                    eadk_display_push_rect(band_r, s_wallpaper_ram_band);
                 }
             } else {
                 eadk_display_push_rect_uniform(eadk_screen_rect, cur_th->screen_bg);

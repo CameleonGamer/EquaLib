@@ -100,12 +100,13 @@ class EquaLibBundler {
     let flags = 0;
     const themeName = (options.theme || this.options?.theme || (typeof window !== 'undefined' && window.userSettings?.theme) || 'default').toLowerCase();
     let themeIndex = 0;
-    if (themeName.includes('sakura')) themeIndex = 1;
+    if (themeName.includes('custom')) themeIndex = 6;
+    else if (themeName.includes('sakura')) themeIndex = 1;
     else if (themeName.includes('hacker') || themeName.includes('matrix') || themeName.includes('cyber')) themeIndex = 2;
     else if (themeName.includes('bee') || themeName.includes('abeille')) themeIndex = 3;
     else if (themeName.includes('mario')) themeIndex = 4;
     else if (themeName.includes('gameboy') || themeName.includes('mono') || themeName.includes('dark')) themeIndex = 5;
-    else if (themeName.includes('custom') || wallpaperBytes) themeIndex = 6;
+    else if (wallpaperBytes) themeIndex = 6;
     flags |= (themeIndex & 0x0F);
 
     const isList = (options.displayMode === 'list' || this.options?.displayMode === 'list' || (typeof window !== 'undefined' && window.userSettings?.displayMode === 'list'));
@@ -357,6 +358,16 @@ class EquaLibBundler {
         finalBuffer.set(p, curPos);
         curPos += p.length;
       }
+
+      // Mise à jour de la taille totale de l'application dans l'en-tête EADK (offset 24..27)
+      // Requis par Epsilon OS pour la configuration MPU (Memory Protection Unit)
+      if (finalBuffer.length > 28 && finalBuffer[0] === 0xba && finalBuffer[1] === 0xbe && finalBuffer[2] === 0xc0 && finalBuffer[3] === 0xde) {
+        finalBuffer[24] = finalBuffer.length & 0xff;
+        finalBuffer[25] = (finalBuffer.length >> 8) & 0xff;
+        finalBuffer[26] = (finalBuffer.length >> 16) & 0xff;
+        finalBuffer[27] = (finalBuffer.length >> 24) & 0xff;
+      }
+
       return finalBuffer;
     }
 

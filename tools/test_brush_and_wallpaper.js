@@ -89,9 +89,9 @@ console.log('✓ Presets de fond (numworks, white, slate) validés');
 // 9. Vérification du code source C pour le bug de l'écran noir
 const mainC = fs.readFileSync('launcher/src/main.c', 'utf8');
 assert(!mainC.includes('.screen_bg = 0x10A2'), 'Le repli theme 6 ne doit plus être 0x10A2 (noir pur)');
-assert(mainC.includes('const uint16_t band_h = 20;'), 'Le rendu du fond doit s\'effectuer par bandes sécurisées de 20 lignes');
-assert(mainC.includes('eadk_display_push_rect(band_r, wp_ptr + (y * EADK_SCREEN_WIDTH));'), 'Transfert LCD par bandes de 20 lignes validé');
-console.log('✓ launcher/src/main.c vérifié (repli screen_bg contrasté et bandes DMA sécurisées)');
+assert(mainC.includes('s_wallpaper_ram_band'), 'Le rendu du fond doit s\'effectuer via un buffer intermédiaire en RAM');
+assert(mainC.includes('eadk_display_push_rect(band_r, s_wallpaper_ram_band);'), 'Transfert LCD depuis la mémoire RAM validé');
+console.log('✓ launcher/src/main.c vérifié (repli screen_bg contrasté et bandes DMA RAM sécurisées)');
 
 // 10. Vérification de bundler.js
 const bundlerJs = fs.readFileSync('web/bundler.js', 'utf8');

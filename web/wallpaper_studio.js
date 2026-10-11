@@ -1186,6 +1186,17 @@
       this.renderCanvas();
       this.renderOverlay();
       this.autoSyncWallpaper();
+      if (typeof window !== 'undefined') {
+        if (typeof window.setAppTheme === 'function') {
+          window.setAppTheme('custom');
+        } else if (window.userSettings) {
+          window.userSettings.theme = 'custom';
+        }
+        if (window.simulator) {
+          window.simulator.theme = 'custom';
+          window.simulator.renderMenu?.();
+        }
+      }
       window.soundFx?.playSuccess?.();
     }
 
