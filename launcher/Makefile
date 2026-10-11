@@ -20,9 +20,10 @@ CFLAGS ?= $(TARGET_ARCH) \
 
 LDFLAGS ?= $(TARGET_ARCH) \
            -Wl,--gc-sections \
+           -Wl,-u,g_equalib_manifest \
            -nostdlib
 
-SRCS = src/main.c src/app_mariokart.c src/app_courses.c src/app_periodic.c src/app_math_tools.c src/app_text_viewer.c src/app_flappy.c src/app_2048.c src/app_snake.c src/app_tetris.c src/app_minesweeper.c src/app_pong.c src/app_dino.c src/app_space_invaders.c src/app_breakout.c src/app_puissance4.c src/app_morpion.c src/app_python.c src/storage.c src/eq_font.c src/mini_libc.c
+SRCS = src/main.c src/manifest.c src/app_mariokart.c src/app_courses.c src/app_periodic.c src/app_math_tools.c src/app_text_viewer.c src/app_flappy.c src/app_2048.c src/app_snake.c src/app_tetris.c src/app_minesweeper.c src/app_pong.c src/app_dino.c src/app_space_invaders.c src/app_breakout.c src/app_puissance4.c src/app_morpion.c src/app_python.c src/storage.c src/eq_font.c src/mini_libc.c
 OBJS = $(SRCS:.c=.o)
 TARGET = build/equalib.nwa
 TARGET_ELF = build/equalib.elf

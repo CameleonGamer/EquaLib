@@ -7,6 +7,7 @@ console.log('=== BUILD EQUALIB NWA & BIN FOR N0120 ===\n');
 // 1. Compile all launcher C files
 const srcFiles = [
   'main.c',
+  'manifest.c',
   'app_mariokart.c',
   'app_courses.c',
   'app_periodic.c',

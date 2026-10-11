@@ -55,22 +55,15 @@ async function testAll() {
   console.log('Patched bundle size:', patched.length);
 
   // Inspect manifest in patched bundle
-  const MAGIC = 0x4C415145; // 'EQAL'
-  let manifestOffset = -1;
   const pBuf = Buffer.from(patched);
-  for (let i = 0; i <= pBuf.length - 4; i += 4) {
-    if (pBuf.readUInt32LE(i) === MAGIC) {
-      manifestOffset = i;
-      break;
-    }
-  }
+  const manifestOffset = bundler.findManifestOffset(pBuf);
   console.log('Manifest offset in bundle: 0x' + manifestOffset.toString(16));
   const appCount = pBuf.readUInt32LE(manifestOffset + 8);
   console.log('Total apps in manifest:', appCount);
   if (appCount !== 5) throw new Error('Bad app count');
 
   // Inspect last app (custom_123)
-  const entry = manifestOffset + 16 + 4 * 144;
+  const entry = manifestOffset + 24 + 4 * 144;
   const id = pBuf.toString('utf8', entry, entry + 16).replace(/\0/g, '');
   const name = pBuf.toString('utf8', entry + 16, entry + 48).replace(/\0/g, '');
   const appType = pBuf.readUInt8(entry + 132);
