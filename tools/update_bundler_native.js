@@ -42,7 +42,7 @@ class EquaLibBundler {
    */
   findManifestOffset(buf) {
     const magic = [0x45, 0x51, 0x41, 0x4C]; // "EQAL"
-    for (let i = 0; i <= buf.length - 16 - 12 * 144; i += 1) {
+    for (let i = 0; i <= buf.length - 24 - 20 * 144; i += 1) {
       if (buf[i] === magic[0] && buf[i+1] === magic[1] && buf[i+2] === magic[2] && buf[i+3] === magic[3]) {
         const version = buf[i+4] | (buf[i+5] << 8) | (buf[i+6] << 16) | (buf[i+7] << 24);
         if (version === 1) {
@@ -80,15 +80,22 @@ class EquaLibBundler {
     u8[offset + 10] = (count >> 16) & 0xFF;
     u8[offset + 11] = (count >> 24) & 0xFF;
 
+    // Custom Wallpaper extraction & injection
+    let wallpaperBytes = options.customWallpaper || this.options?.customWallpaper;
+    if (!wallpaperBytes && typeof window !== 'undefined' && window.customWallpaperRGB565) {
+      wallpaperBytes = window.customWallpaperRGB565;
+    }
+
     // Mise à jour de manifest.flags (thème par défaut et mode d'affichage)
     let flags = 0;
     const themeName = (options.theme || this.options?.theme || (typeof window !== 'undefined' && window.userSettings?.theme) || 'default').toLowerCase();
     let themeIndex = 0;
     if (themeName.includes('sakura')) themeIndex = 1;
-    else if (themeName.includes('cyber') || themeName.includes('bee')) themeIndex = 2;
-    else if (themeName.includes('hacker') || themeName.includes('matrix')) themeIndex = 3;
-    else if (themeName.includes('nordic') || themeName.includes('blue')) themeIndex = 4;
-    else if (themeName.includes('mono') || themeName.includes('gameboy') || themeName.includes('dark')) themeIndex = 5;
+    else if (themeName.includes('hacker') || themeName.includes('matrix') || themeName.includes('cyber')) themeIndex = 2;
+    else if (themeName.includes('bee') || themeName.includes('abeille')) themeIndex = 3;
+    else if (themeName.includes('mario')) themeIndex = 4;
+    else if (themeName.includes('gameboy') || themeName.includes('mono') || themeName.includes('dark')) themeIndex = 5;
+    else if (themeName.includes('custom') || wallpaperBytes) themeIndex = 6;
     flags |= (themeIndex & 0x0F);
 
     const isList = (options.displayMode === 'list' || this.options?.displayMode === 'list' || (typeof window !== 'undefined' && window.userSettings?.displayMode === 'list'));
@@ -99,12 +106,46 @@ class EquaLibBundler {
     u8[offset + 14] = (flags >> 16) & 0xFF;
     u8[offset + 15] = (flags >> 24) & 0xFF;
 
-    // Nettoyage de la table des 20 apps (20 * 144 = 2880 octets)
-    const appsStart = offset + 16;
-    u8.fill(0, appsStart, appsStart + 20 * 144);
-
     let extraPayloads = [];
     let currentExtraOffset = u8.length; // offset relatif au début du slot flash 0x90180000
+
+    // Wallpaper offset (offset + 16) et size (offset + 20)
+    if (wallpaperBytes && wallpaperBytes.length > 0) {
+      const wpOffset = (currentExtraOffset + 3) & ~3;
+      const pad = wpOffset - currentExtraOffset;
+      if (pad > 0) {
+        extraPayloads.push(new Uint8Array(pad));
+        currentExtraOffset += pad;
+      }
+
+      u8[offset + 16] = wpOffset & 0xFF;
+      u8[offset + 17] = (wpOffset >> 8) & 0xFF;
+      u8[offset + 18] = (wpOffset >> 16) & 0xFF;
+      u8[offset + 19] = (wpOffset >> 24) & 0xFF;
+
+      const wpSize = wallpaperBytes.length;
+      u8[offset + 20] = wpSize & 0xFF;
+      u8[offset + 21] = (wpSize >> 8) & 0xFF;
+      u8[offset + 22] = (wpSize >> 16) & 0xFF;
+      u8[offset + 23] = (wpSize >> 24) & 0xFF;
+
+      extraPayloads.push(wallpaperBytes);
+      currentExtraOffset += wpSize;
+    } else {
+      u8[offset + 16] = 0;
+      u8[offset + 17] = 0;
+      u8[offset + 18] = 0;
+      u8[offset + 19] = 0;
+
+      u8[offset + 20] = 0;
+      u8[offset + 21] = 0;
+      u8[offset + 22] = 0;
+      u8[offset + 23] = 0;
+    }
+
+    // Nettoyage de la table des 20 apps (20 * 144 = 2880 octets)
+    const appsStart = offset + 24;
+    u8.fill(0, appsStart, appsStart + 20 * 144);
 
     for (let i = 0; i < count; i++) {
       const app = selectedList[i];

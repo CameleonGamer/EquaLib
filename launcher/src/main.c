@@ -31,7 +31,7 @@ typedef struct {
     uint16_t dock_border;
 } theme_t;
 
-static const theme_t g_themes[6] = {
+static const theme_t g_themes[7] = {
     /* 0: NumWorks Classique */
     {
         .name = "Classique (NumWorks)",
@@ -109,6 +109,19 @@ static const theme_t g_themes[6] = {
         .text_muted = 0x9E03,  /* Vert DMG */
         .dock_bg = 0x3264,
         .dock_border = 0x9E03
+    },
+    /* 6: Custom (Mon Fond Pixel Art / Image) */
+    {
+        .name = "Custom (Mon Fond)",
+        .top_bar = 0x2124,     /* Ardoise sombre tech */
+        .screen_bg = 0x10A2,   /* Fond de repli sombre */
+        .card_bg = 0xFFFF,     /* Blanc pur */
+        .card_sel = 0xFEE0,    /* Ambre pastel clair */
+        .accent = 0xFE60,      /* Jaune NumWorks #FFBB00 */
+        .text_primary = 0x0000,/* Noir pur */
+        .text_muted = 0x52AA,  /* Gris ardoise */
+        .dock_bg = 0xFFFF,     /* Blanc pur */
+        .dock_border = 0xFE60  /* Bordure dorée NumWorks */
     }
 };
 
@@ -118,7 +131,7 @@ enum {
     VIEW_MODE_LIST = 1
 };
 
-static int g_current_theme = 0;      /* 0 = Classique, 1 = Sakura, 2 = Hacker, 3 = Abeille, 4 = Mario, 5 = GameBoy */
+static int g_current_theme = 0;      /* 0 = Classique, 1 = Sakura, 2 = Hacker, 3 = Abeille, 4 = Mario, 5 = GameBoy, 6 = Custom */
 static int g_view_mode = VIEW_MODE_GALLERY; /* Mode Galerie d'images carrées par défaut */
 static bool g_show_tooltips = true;  /* Affichage des raccourcis en bas d'écran */
 
@@ -136,6 +149,8 @@ const equalib_manifest_t g_equalib_manifest __attribute__((used, aligned(4), sec
     .version = 1,
     .app_count = 16,
     .flags = 0,
+    .wallpaper_offset = 0,
+    .wallpaper_size = 0,
     .apps = {
         {"mariokart", "1. Mario Kart", "Jeu / Arcade", "Course Mode 7 3D complete pour N0120", APP_TYPE_MARIOKART, {0,0,0}, 0, 0},
         {"periodique", "2. Tableau Periodique", "Chimie", "118 elements, masses et configurations", APP_TYPE_PERIODIC, {0,0,0}, 0, 0},
@@ -701,8 +716,8 @@ static void draw_settings_row(int i, bool is_s, const theme_t* th) {
 static void run_settings_screen(void) {
     while (eadk_keyboard_scan() != 0) eadk_timing_msleep(20);
 
-    /* Contrôle d'intégrité mémoire */
-    if (g_current_theme < 0 || g_current_theme >= 6) g_current_theme = 0;
+    /* Contrôle d'intégrité mémoire (7 thèmes : 0 à 6) */
+    if (g_current_theme < 0 || g_current_theme >= 7) g_current_theme = 0;
     if (g_view_mode != VIEW_MODE_GALLERY && g_view_mode != VIEW_MODE_LIST) g_view_mode = VIEW_MODE_GALLERY;
 
     int sel_item = 0;
@@ -750,7 +765,7 @@ static void run_settings_screen(void) {
                 }
                 save_persistent_settings();
             } else if (sel_item == 2) {
-                g_current_theme = (g_current_theme + 5) % 6;
+                g_current_theme = (g_current_theme + 6) % 7;
                 full_redraw = true;
                 save_persistent_settings();
             }
@@ -770,7 +785,7 @@ static void run_settings_screen(void) {
                 }
                 save_persistent_settings();
             } else if (sel_item == 2) {
-                g_current_theme = (g_current_theme + 1) % 6;
+                g_current_theme = (g_current_theme + 1) % 7;
                 full_redraw = true;
                 save_persistent_settings();
             }
@@ -790,7 +805,7 @@ static void run_settings_screen(void) {
                 }
                 save_persistent_settings();
             } else if (sel_item == 2) {
-                g_current_theme = (g_current_theme + 1) % 6;
+                g_current_theme = (g_current_theme + 1) % 7;
                 full_redraw = true;
                 save_persistent_settings();
             }
@@ -860,7 +875,7 @@ int main(int argc, char* argv[]) {
 
     while (true) {
         /* Sanitarisation stricte à chaque itération */
-        if (g_current_theme < 0 || g_current_theme >= 6) g_current_theme = 0;
+        if (g_current_theme < 0 || g_current_theme >= 7) g_current_theme = 0;
         if (g_view_mode != VIEW_MODE_GALLERY && g_view_mode != VIEW_MODE_LIST) g_view_mode = VIEW_MODE_GALLERY;
         if (selected < 0) selected = 0;
         if (selected >= (int)total_apps) selected = (int)total_apps - 1;
@@ -972,8 +987,13 @@ int main(int argc, char* argv[]) {
         if (full_redraw) {
             full_redraw = false;
 
-            /* Fond général de l'écran LCD */
-            eadk_display_push_rect_uniform(eadk_screen_rect, cur_th->screen_bg);
+            /* Fond général de l'écran LCD : Fond personnalisé RGB565 si actif, sinon couleur unie */
+            if (g_current_theme == 6 && g_equalib_manifest.wallpaper_size >= 153600 && g_equalib_manifest.wallpaper_offset > 0) {
+                const eadk_color_t* wp_ptr = (const eadk_color_t*)(0x90180000 + g_equalib_manifest.wallpaper_offset);
+                eadk_display_push_rect(eadk_screen_rect, wp_ptr);
+            } else {
+                eadk_display_push_rect_uniform(eadk_screen_rect, cur_th->screen_bg);
+            }
 
             /* Barre supérieure officielle */
             eadk_rect_t top_bar = {0, 0, EADK_SCREEN_WIDTH, 22};
@@ -1043,19 +1063,23 @@ int main(int argc, char* argv[]) {
                     draw_bottom_active_dock(selected, cur_th);
                     old_selected = selected;
                 } else {
-                    eadk_rect_t list_zone = {8, 28, EADK_SCREEN_WIDTH - 16, 155};
-                    eadk_display_push_rect_uniform(list_zone, cur_th->screen_bg);
-                    int visible_count = 4;
-                    if (visible_count > (int)total_apps - scroll_offset) {
-                        visible_count = (int)total_apps - scroll_offset;
+                    if (g_current_theme == 6) {
+                        full_redraw = true;
+                    } else {
+                        eadk_rect_t list_zone = {8, 28, EADK_SCREEN_WIDTH - 16, 155};
+                        eadk_display_push_rect_uniform(list_zone, cur_th->screen_bg);
+                        int visible_count = 4;
+                        if (visible_count > (int)total_apps - scroll_offset) {
+                            visible_count = (int)total_apps - scroll_offset;
+                        }
+                        for (int v = 0; v < visible_count; v++) {
+                            int i = scroll_offset + v;
+                            draw_list_card(i, v, i == selected, cur_th);
+                        }
+                        draw_bottom_active_dock(selected, cur_th);
+                        old_selected = selected;
+                        old_scroll_offset = scroll_offset;
                     }
-                    for (int v = 0; v < visible_count; v++) {
-                        int i = scroll_offset + v;
-                        draw_list_card(i, v, i == selected, cur_th);
-                    }
-                    draw_bottom_active_dock(selected, cur_th);
-                    old_selected = selected;
-                    old_scroll_offset = scroll_offset;
                 }
             }
         }

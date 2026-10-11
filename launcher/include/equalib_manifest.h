@@ -43,10 +43,12 @@ typedef struct {
 } equalib_manifest_app_t;
 
 typedef struct {
-    uint32_t magic;       // 0x4C415145 ("EQAL")
-    uint32_t version;     // 1
-    uint32_t app_count;   // 1 to 12
-    uint32_t flags;       // Flags globaux
+    uint32_t magic;            // 0x4C415145 ("EQAL")
+    uint32_t version;          // 1
+    uint32_t app_count;        // 1 to 20
+    uint32_t flags;            // Flags globaux (bit 0-3: theme index, bit 4: view mode)
+    uint32_t wallpaper_offset; // Offset relatif vers données RGB565 en Flash (320x240)
+    uint32_t wallpaper_size;   // Taille des données en octets (153600 octets pour RGB565 brut)
     equalib_manifest_app_t apps[MAX_MANIFEST_APPS];
 } equalib_manifest_t;
 

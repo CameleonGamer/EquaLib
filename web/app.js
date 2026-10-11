@@ -227,9 +227,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Éléments du DOM - Onglets
   const tabBtnCatalog = document.getElementById('tab-btn-catalog');
   const tabBtnSearch = document.getElementById('tab-btn-search');
+  const tabBtnWallpaper = document.getElementById('tab-btn-wallpaper');
   const tabBtnImport = document.getElementById('tab-btn-import');
   const tabViewCatalog = document.getElementById('tab-view-catalog');
   const tabViewSearch = document.getElementById('tab-view-search');
+  const tabViewWallpaper = document.getElementById('tab-view-wallpaper');
   const tabViewImport = document.getElementById('tab-view-import');
 
   // Éléments du DOM - Recherche Web
@@ -1046,30 +1048,53 @@ document.addEventListener('DOMContentLoaded', async () => {
   // ==================== GESTION DES ONGLETS ====================
   function switchTab(target) {
     window.soundFx?.playClick();
-    [tabBtnCatalog, tabBtnSearch, tabBtnImport].forEach(btn => {
-      btn.className = 'flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all text-slate-300 hover:text-white hover:bg-slate-800 flex items-center justify-center gap-1.5';
+    const allTabBtns = [tabBtnCatalog, tabBtnSearch, tabBtnWallpaper, tabBtnImport].filter(Boolean);
+    allTabBtns.forEach(btn => {
+      btn.className = 'flex-1 py-1.5 px-2.5 rounded text-xs font-mono font-bold transition-all text-[#8b949e] hover:text-[#e6edf3] hover:bg-[#21262d] flex items-center justify-center gap-1.5 cursor-pointer';
     });
 
-    tabViewCatalog.classList.add('hidden');
-    tabViewSearch.classList.add('hidden');
-    tabViewImport.classList.add('hidden');
+    if (tabViewCatalog) tabViewCatalog.classList.add('hidden');
+    if (tabViewSearch) tabViewSearch.classList.add('hidden');
+    if (tabViewWallpaper) tabViewWallpaper.classList.add('hidden');
+    if (tabViewImport) tabViewImport.classList.add('hidden');
 
-    if (target === 'catalog') {
-      tabBtnCatalog.className = 'flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all bg-nw-yellow text-black shadow-sm flex items-center justify-center gap-1.5';
-      tabViewCatalog.classList.remove('hidden');
-    } else if (target === 'search') {
-      tabBtnSearch.className = 'flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all bg-nw-yellow text-black shadow-sm flex items-center justify-center gap-1.5';
-      tabViewSearch.classList.remove('hidden');
-      webSearchInput.focus();
-    } else if (target === 'import') {
-      tabBtnImport.className = 'flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all bg-nw-yellow text-black shadow-sm flex items-center justify-center gap-1.5';
-      tabViewImport.classList.remove('hidden');
+    if (target === 'catalog' && tabBtnCatalog) {
+      tabBtnCatalog.className = 'flex-1 py-1.5 px-2.5 rounded text-xs font-mono font-bold transition-all bg-[#FFBB00] text-black border border-black shadow-[1px_1px_0px_#000] flex items-center justify-center gap-1.5 cursor-pointer';
+      if (tabViewCatalog) tabViewCatalog.classList.remove('hidden');
+    } else if (target === 'search' && tabBtnSearch) {
+      tabBtnSearch.className = 'flex-1 py-1.5 px-2.5 rounded text-xs font-mono font-bold transition-all bg-[#FFBB00] text-black border border-black shadow-[1px_1px_0px_#000] flex items-center justify-center gap-1.5 cursor-pointer';
+      if (tabViewSearch) tabViewSearch.classList.remove('hidden');
+      if (webSearchInput) webSearchInput.focus();
+    } else if (target === 'wallpaper' && tabBtnWallpaper) {
+      tabBtnWallpaper.className = 'flex-1 py-1.5 px-2.5 rounded text-xs font-mono font-bold transition-all bg-[#FFBB00] text-black border border-black shadow-[1px_1px_0px_#000] flex items-center justify-center gap-1.5 cursor-pointer';
+      if (tabViewWallpaper) tabViewWallpaper.classList.remove('hidden');
+    } else if (target === 'import' && tabBtnImport) {
+      tabBtnImport.className = 'flex-1 py-1.5 px-2.5 rounded text-xs font-mono font-bold transition-all bg-[#FFBB00] text-black border border-black shadow-[1px_1px_0px_#000] flex items-center justify-center gap-1.5 cursor-pointer';
+      if (tabViewImport) tabViewImport.classList.remove('hidden');
     }
   }
 
-  tabBtnCatalog.addEventListener('click', () => switchTab('catalog'));
-  tabBtnSearch.addEventListener('click', () => switchTab('search'));
-  tabBtnImport.addEventListener('click', () => switchTab('import'));
+  if (tabBtnCatalog) tabBtnCatalog.addEventListener('click', () => switchTab('catalog'));
+  if (tabBtnSearch) tabBtnSearch.addEventListener('click', () => switchTab('search'));
+  if (tabBtnWallpaper) tabBtnWallpaper.addEventListener('click', () => switchTab('wallpaper'));
+  if (tabBtnImport) tabBtnImport.addEventListener('click', () => switchTab('import'));
+
+  const navWallpaperBtn = document.getElementById('nav-wallpaper-btn');
+  if (navWallpaperBtn) {
+    navWallpaperBtn.addEventListener('click', () => {
+      switchTab('wallpaper');
+      const studioView = document.getElementById('tab-view-wallpaper');
+      if (studioView) studioView.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }
+
+  // Initialisation du Studio Fond d'écran
+  const studioRoot = document.getElementById('wallpaper-studio-root');
+  if (studioRoot && typeof window.EquaLibWallpaperStudio === 'function') {
+    const studio = new window.EquaLibWallpaperStudio();
+    studio.mount(studioRoot);
+    window.wallpaperStudio = studio;
+  }
 
 
   // ==================== FILTRES PAR CATÉGORIE DU CATALOGUE ====================
@@ -2106,7 +2131,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     try {
       showToast(`Génération du binaire natif N0120 avec vos ${selectedApps.length} applications...`, 'info');
-      const bundle = await bundler.buildBundle(selectedApps, 'nwa', { theme: userSettings.theme, displayMode: userSettings.displayMode });
+      const bundle = await bundler.buildBundle(selectedApps, 'nwa', { 
+        theme: userSettings.theme, 
+        displayMode: userSettings.displayMode,
+        customWallpaper: window.customWallpaperRGB565
+      });
       const url = URL.createObjectURL(bundle.blob);
       const a = document.createElement('a');
       a.href = url;
@@ -2175,7 +2204,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       progressText.textContent = `Génération du pack personnalisé (${selectedApps.length} application${selectedApps.length > 1 ? 's' : ''})...`;
 
       // 1. Génération dynamique du binaire natif patché avec les apps sélectionnées
-      const bundle = await bundler.buildBundle(selectedApps, 'bin', { theme: userSettings.theme, displayMode: userSettings.displayMode });
+      const bundle = await bundler.buildBundle(selectedApps, 'bin', { 
+        theme: userSettings.theme, 
+        displayMode: userSettings.displayMode,
+        customWallpaper: window.customWallpaperRGB565
+      });
 
       progressText.textContent = 'Préparation du flash USB...';
 

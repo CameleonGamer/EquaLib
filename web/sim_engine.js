@@ -273,7 +273,8 @@ class NumWorksSimulator {
       hacker: { topbar: '#030712', bg: '#060d17', card: '#0f172a', cardSel: '#1e293b', border: '#38bdf8', text: '#e0f2fe', badge: '💻 Hacker', descText: '#7dd3fc' },
       bee: { topbar: '#fbbf24', bg: '#18181b', card: '#27272a', cardSel: '#3f3f46', border: '#facc15', text: '#fef08a', badge: '🐝 Abeille', descText: '#fde047' },
       mario: { topbar: '#ef4444', bg: '#fef2f2', card: '#ffffff', cardSel: '#fee2e2', border: '#dc2626', text: '#991b1b', badge: '🍄 Mario', descText: '#b91c1c' },
-      gameboy: { topbar: '#8bac0f', bg: '#0f380f', card: '#1f481f', cardSel: '#306230', border: '#9bbc0f', text: '#e0f8d0', badge: '🕹️ GameBoy', descText: '#8bac0f' }
+      gameboy: { topbar: '#8bac0f', bg: '#0f380f', card: '#1f481f', cardSel: '#306230', border: '#9bbc0f', text: '#e0f8d0', badge: '🕹️ GameBoy', descText: '#8bac0f' },
+      custom: { topbar: '#1e293b', bg: '#0f172a', card: '#ffffff', cardSel: '#fef3c7', border: '#FFBB00', text: '#0f172a', badge: '🎨 Custom', descText: '#64748b' }
     };
     return THEME_PALETTES[this.theme] || THEME_PALETTES.default;
   }
@@ -451,7 +452,8 @@ class NumWorksSimulator {
       hacker: '💻 Hacker (Cyber Cyan)',
       bee: '🐝 Abeille (Jaune/Noir)',
       mario: '🍄 Mario (Rouge/Blanc)',
-      gameboy: '🕹️ GameBoy (8-Bit Vert)'
+      gameboy: '🕹️ GameBoy (8-Bit Vert)',
+      custom: '🎨 Custom (Mon Fond)'
     };
 
     let html = `
@@ -512,7 +514,7 @@ class NumWorksSimulator {
       const settingToggle = document.getElementById('setting-tooltips-toggle');
       if (settingToggle) settingToggle.checked = this.showTooltips;
     } else if (this.settingsSubIndex === 2) {
-      const themesList = ['default', 'sakura', 'hacker', 'bee', 'mario', 'gameboy'];
+      const themesList = ['default', 'sakura', 'hacker', 'bee', 'mario', 'gameboy', 'custom'];
       let curIdx = themesList.indexOf(this.theme);
       if (curIdx === -1) curIdx = 0;
       const nextIdx = (curIdx + dir + themesList.length) % themesList.length;
@@ -544,8 +546,18 @@ class NumWorksSimulator {
     const pal = this.getPalette();
     this.topbar.style.backgroundColor = pal.topbar;
     this.title.textContent = `EquaLib Hub ${this.displayMode === 'gallery' ? '[Galerie]' : '[Liste]'}`;
-    this.screen.style.backgroundColor = pal.bg;
-    this.content.style.backgroundColor = pal.bg;
+
+    const customWp = (typeof window !== 'undefined' && window.customWallpaperDataUrl) || safeStorageGet('equalib_custom_wallpaper_dataurl');
+    if (this.theme === 'custom' && customWp) {
+      this.screen.style.backgroundImage = `url(${customWp})`;
+      this.screen.style.backgroundSize = '100% 100%';
+      this.screen.style.backgroundRepeat = 'no-repeat';
+      this.content.style.backgroundColor = 'transparent';
+    } else {
+      this.screen.style.backgroundImage = 'none';
+      this.screen.style.backgroundColor = pal.bg;
+      this.content.style.backgroundColor = pal.bg;
+    }
 
     if (!this.apps || this.apps.length === 0) {
       this.apps = [

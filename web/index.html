@@ -119,11 +119,14 @@
         </a>
       </div>
 
-      <!-- Navigation entre Hub, Convertisseur et Paramètres -->
+      <!-- Navigation entre Hub, Studio Fond, Convertisseur et Paramètres -->
       <nav class="hidden md:flex items-center gap-1 font-ascii text-xs p-1 bg-[#0d1117] border border-[#30363d] rounded-lg shadow-[2px_2px_0px_#000] shrink-0">
         <a href="index.html" class="px-3 py-1.5 rounded bg-[#21262d] text-[#FFBB00] font-bold border border-[#30363d] flex items-center gap-1.5 whitespace-nowrap">
           <span>🎯</span> Hub Apps
         </a>
+        <button id="nav-wallpaper-btn" class="px-3 py-1.5 rounded text-[#8b949e] hover:text-[#e6edf3] hover:bg-[#161b22] transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer">
+          <span>🎨</span> Studio Fond
+        </button>
         <a href="converter.html" class="px-3 py-1.5 rounded text-[#8b949e] hover:text-[#e6edf3] hover:bg-[#161b22] transition-all flex items-center gap-1.5 whitespace-nowrap">
           <span>⚡</span> Convertisseur
         </a>
@@ -393,18 +396,23 @@
       <!-- ==================== COLONNE GAUCHE : CATALOGUE & RECHERCHE (7 COLS) ==================== -->
       <div class="lg:col-span-7 space-y-5">
         
-        <!-- Barre d'onglets Catalogue & Recherche Web -->
+        <!-- Barre d'onglets Catalogue, Recherche Web, Studio Fond & Import -->
         <div class="flex items-center gap-1.5 p-1 bg-[#161b22] border-2 border-[#30363d] rounded-lg shadow-[3px_3px_0px_#000]">
-          <button id="tab-btn-catalog" class="flex-1 py-1.5 px-3 rounded text-xs font-mono font-bold transition-all bg-[#FFBB00] text-black border border-black shadow-[1px_1px_0px_#000] flex items-center justify-center gap-1.5 cursor-pointer">
+          <button id="tab-btn-catalog" class="flex-1 py-1.5 px-2.5 rounded text-xs font-mono font-bold transition-all bg-[#FFBB00] text-black border border-black shadow-[1px_1px_0px_#000] flex items-center justify-center gap-1.5 cursor-pointer">
             <span>📦</span>
-            <span>Apps Intégrées</span>
+            <span>Apps</span>
           </button>
-          <button id="tab-btn-search" class="flex-1 py-1.5 px-3 rounded text-xs font-mono font-bold transition-all text-[#8b949e] hover:text-[#e6edf3] hover:bg-[#21262d] flex items-center justify-center gap-1.5 cursor-pointer">
+          <button id="tab-btn-search" class="flex-1 py-1.5 px-2.5 rounded text-xs font-mono font-bold transition-all text-[#8b949e] hover:text-[#e6edf3] hover:bg-[#21262d] flex items-center justify-center gap-1.5 cursor-pointer">
             <span>🌐</span>
-            <span>Rechercher Web (.nws)</span>
-            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+            <span>Web (.nws)</span>
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
           </button>
-          <button id="tab-btn-import" class="flex-1 py-1.5 px-3 rounded text-xs font-mono font-bold transition-all text-[#8b949e] hover:text-[#e6edf3] hover:bg-[#21262d] flex items-center justify-center gap-1.5 cursor-pointer">
+          <button id="tab-btn-wallpaper" class="flex-1 py-1.5 px-2.5 rounded text-xs font-mono font-bold transition-all text-[#8b949e] hover:text-[#e6edf3] hover:bg-[#21262d] flex items-center justify-center gap-1.5 cursor-pointer" title="Studio Thème & Fond d'écran 320x240">
+            <span>🎨</span>
+            <span>Studio Fond</span>
+            <span class="text-[9px] px-1 py-0.2 rounded bg-amber-400/20 text-amber-300 border border-amber-400/40">Nouveau</span>
+          </button>
+          <button id="tab-btn-import" class="flex-1 py-1.5 px-2.5 rounded text-xs font-mono font-bold transition-all text-[#8b949e] hover:text-[#e6edf3] hover:bg-[#21262d] flex items-center justify-center gap-1.5 cursor-pointer">
             <span>🔗</span>
             <span>Importer</span>
           </button>
@@ -591,6 +599,11 @@
             </p>
             <p class="text-[11px] text-[#8b949e] font-mono mt-0.5">Exécutables natifs ARM Cortex-M7 ou scripts Python</p>
           </div>
+        </div>
+
+        <!-- ================= ONGLET 4 : STUDIO FOND D'ÉCRAN & PIXEL ART ================= -->
+        <div id="tab-view-wallpaper" class="space-y-4 hidden">
+          <div id="wallpaper-studio-root"></div>
         </div>
 
       </div>
@@ -1103,6 +1116,7 @@
   <script src="bundler.js?v=60"></script>
   <script src="webusb.js?v=60"></script>
   <script src="crt_math.js?v=60"></script>
+  <script src="wallpaper_studio.js?v=60"></script>
   <script src="app.js?v=60"></script>
 </body>
 </html>

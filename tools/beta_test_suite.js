@@ -62,6 +62,7 @@ describe('1. Intégrité des Fichiers et Syntaxe Web', () => {
     'web/nwa_linker.js',
     'web/webusb.js',
     'web/sound_fx.js',
+    'web/wallpaper_studio.js',
     'web/catalog.json',
     'web/community_apps.json',
     'web/equalib_n0120.bin',
@@ -539,17 +540,80 @@ describe('7. Compilation et Validité Syntaxique des Jeux Python (.NWS)', () => 
 });
 
 // -------------------------------------------------------------
-// RÉSUMÉ DES TESTS
+// SUITE 8: Studio Fond d'écran & Thème Custom (RGB565 & Manifeste)
 // -------------------------------------------------------------
-console.log(`\n========================================`);
-console.log(`RÉSULTAT FINAL DU BETA TEST :`);
-console.log(`  Tests réussis : ${passedTests}`);
-console.log(`  Tests échoués : ${failedTests}`);
-console.log(`========================================\n`);
+(async () => {
+  console.log(`\n========================================`);
+  console.log(`BETA TEST: 8. Studio Fond d'écran & Thème Custom (RGB565 & Manifeste N0120)`);
+  console.log(`========================================`);
+  const EquaLibBundler = require('../web/bundler.js');
 
-if (failedTests > 0) {
-  process.exit(1);
-} else {
-  console.log('🎉 TOUTES LES FONCTIONNALITÉS SONT 100% OPÉRATIONNELLES ET VALIDÉES !');
-  process.exit(0);
-}
+  it('wallpaper_studio.js contient l\'architecture complète du studio', () => {
+    const code = fs.readFileSync('web/wallpaper_studio.js', 'utf8');
+    assert(code.includes('EquaLibWallpaperStudio'), 'EquaLibWallpaperStudio manquant');
+    assert(code.includes('applyFloydSteinbergDither'), 'Dither Floyd-Steinberg manquant');
+    assert(code.includes('generateRGB565Bytes'), 'Générateur RGB565 manquant');
+    assert(code.includes('applyCustomTheme'), 'Appliquer thème custom manquant');
+  });
+
+  it('Calcul de la taille exacte RGB565 pour l\'écran 320x240 LCD', () => {
+    const width = 320;
+    const height = 240;
+    const bytesPerPixel = 2; // 16 bits RGB565
+    const totalBytes = width * height * bytesPerPixel;
+    assert.strictEqual(totalBytes, 153600, 'Taille LCD 320x240 RGB565 doit être exactement 153,600 octets');
+  });
+
+  await itAsync('Bundler patche correctement le manifeste avec customWallpaper et thème 6', async () => {
+    const bundler = new EquaLibBundler();
+    const mockBin = fs.readFileSync('web/equalib_n0120.bin');
+    const mockWallpaper = new Uint8Array(153600);
+    for (let i = 0; i < mockWallpaper.length; i++) {
+      mockWallpaper[i] = (i & 0xFF);
+    }
+
+    const dummyApps = [
+      { id: 'mariokart', name: 'Mario Kart', format: 'NWA' }
+    ];
+
+    const patched = await bundler.patchManifest(mockBin, dummyApps, {
+      theme: 'custom',
+      customWallpaper: mockWallpaper
+    });
+
+    const offset = bundler.findManifestOffset(patched);
+    assert(offset !== -1, 'Manifeste non trouvé après patch');
+
+    // Vérifier flags (thème 6)
+    const flags = patched[offset + 12] | (patched[offset + 13] << 8);
+    assert.strictEqual(flags & 0x0F, 6, 'Le thème dans manifest.flags doit être 6 (Custom)');
+
+    // Vérifier wallpaper_offset à offset + 16
+    const wpOffset = patched[offset + 16] | (patched[offset + 17] << 8) | (patched[offset + 18] << 16) | (patched[offset + 19] << 24);
+    assert(wpOffset >= mockBin.length, `wpOffset (${wpOffset}) doit pointer après le binaire de base (${mockBin.length})`);
+    assert.strictEqual(wpOffset % 4, 0, 'wpOffset doit être aligné sur 4 octets');
+
+    // Vérifier wallpaper_size à offset + 20
+    const wpSize = patched[offset + 20] | (patched[offset + 21] << 8) | (patched[offset + 22] << 16) | (patched[offset + 23] << 24);
+    assert.strictEqual(wpSize, 153600, 'wallpaper_size doit être 153600 octets');
+
+    // Vérifier que les octets du fond sont bien présents à wpOffset
+    assert(patched.length >= wpOffset + wpSize, 'Le binaire doit contenir l\'intégralité du payload wallpaper');
+    assert.strictEqual(patched[wpOffset], mockWallpaper[0]);
+    assert.strictEqual(patched[wpOffset + 100], mockWallpaper[100]);
+    assert.strictEqual(patched[wpOffset + 153599], mockWallpaper[153599]);
+  });
+
+  console.log(`\n========================================`);
+  console.log(`RÉSULTAT FINAL DU BETA TEST :`);
+  console.log(`  Tests réussis : ${passedTests}`);
+  console.log(`  Tests échoués : ${failedTests}`);
+  console.log(`========================================\n`);
+
+  if (failedTests > 0) {
+    process.exit(1);
+  } else {
+    console.log('🎉 TOUTES LES FONCTIONNALITÉS SONT 100% OPÉRATIONNELLES ET VALIDÉES !');
+    process.exit(0);
+  }
+})();

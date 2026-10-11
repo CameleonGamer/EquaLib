@@ -37,7 +37,7 @@ eq_storage_t* eq_storage_get(void) {
     if (s->magic != EQ_STORAGE_MAGIC || s->checksum != eq_storage_calc_checksum(s)) {
         s->magic = EQ_STORAGE_MAGIC;
         uint32_t init_theme = g_equalib_manifest.flags & 0x0F;
-        s->theme = (init_theme < 6) ? (int32_t)init_theme : 0;
+        s->theme = (init_theme < 7) ? (int32_t)init_theme : 0;
         s->view_mode = (g_equalib_manifest.flags & 0x10) ? 1 : 0; /* GALLERY = 0, LIST = 1 */
         s->tooltips = 1;  /* ON */
         s->record_dino = 0;
