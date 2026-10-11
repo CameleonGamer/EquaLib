@@ -343,6 +343,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       console.warn('Erreur sauvegarde paramètres :', e);
     }
   }
+  window.saveUserSettings = saveUserSettings;
 
   function applyCustomColorVariables(hex) {
     if (!hex || !/^#[0-9a-fA-F]{6}$/i.test(hex)) return;
@@ -412,10 +413,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (settingTooltipsToggle) settingTooltipsToggle.checked = userSettings.showTooltips;
 
     // 2. Thèmes & arrière-plan animé
-    const themeClasses = ['theme-sakura', 'theme-hacker', 'theme-bee', 'theme-mario', 'theme-gameboy'];
+    const themeClasses = ['theme-sakura', 'theme-hacker', 'theme-bee', 'theme-mario', 'theme-gameboy', 'theme-custom'];
     themeClasses.forEach(cls => document.body.classList.remove(cls));
     if (userSettings.theme && userSettings.theme !== 'default') {
       document.body.classList.add(`theme-${userSettings.theme}`);
+    }
+    if (userSettings.theme === 'custom') {
+      const wpUrl = window.customWallpaperDataUrl || (typeof localStorage !== 'undefined' ? localStorage.getItem('equalib_custom_wallpaper_dataurl') : null);
+      if (wpUrl) {
+        document.documentElement.style.setProperty('--custom-wallpaper-url', `url("${wpUrl}")`);
+        document.body.classList.add('has-custom-wallpaper');
+      }
+    } else {
+      document.body.classList.remove('has-custom-wallpaper');
     }
     if (typeof window.setThemeBg === 'function') {
       window.setThemeBg(userSettings.theme);
@@ -461,6 +471,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     updateViewModeButtons();
   }
+  window.applyUserSettings = applyUserSettings;
 
   function updateActiveAppDock(app) {
     if (!app || !activeAppDock) return;
@@ -742,13 +753,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     showToast(userSettings.showTooltips ? 'Affichage des raccourcis et bulles activé' : 'Raccourcis et bulles d\'aide masqués', 'info');
   });
 
-  // Gestion des 6 presets de thèmes
+  // Gestion des 7 presets de thèmes (dont 7e thème Custom)
   const THEME_PRESET_COLORS = {
     sakura: '#f472b6',
     hacker: '#38bdf8',
     bee: '#fbbf24',
     mario: '#ef4444',
     gameboy: '#9bbc0f',
+    custom: '#FFBB00',
     default: '#f59e0b'
   };
 
@@ -759,6 +771,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     applyUserSettings();
     saveUserSettings();
+    if (simulator && typeof simulator.setSimulatorTheme === 'function') {
+      simulator.setSimulatorTheme(themeKey);
+    }
     showToast(`Thème « ${themeKey.toUpperCase()} » activé !`, 'success');
   };
 

@@ -274,13 +274,14 @@ class NumWorksSimulator {
       bee: { topbar: '#fbbf24', bg: '#18181b', card: '#27272a', cardSel: '#3f3f46', border: '#facc15', text: '#fef08a', badge: '🐝 Abeille', descText: '#fde047' },
       mario: { topbar: '#ef4444', bg: '#fef2f2', card: '#ffffff', cardSel: '#fee2e2', border: '#dc2626', text: '#991b1b', badge: '🍄 Mario', descText: '#b91c1c' },
       gameboy: { topbar: '#8bac0f', bg: '#0f380f', card: '#1f481f', cardSel: '#306230', border: '#9bbc0f', text: '#e0f8d0', badge: '🕹️ GameBoy', descText: '#8bac0f' },
-      custom: { topbar: '#1e293b', bg: '#1e293b', card: '#ffffff', cardSel: '#fef3c7', border: '#FFBB00', text: '#0f172a', badge: '🎨 Custom', descText: '#64748b' }
+      custom: { topbar: '#1e293b', bg: '#1e293b', card: 'rgba(255, 255, 255, 0.85)', cardSel: 'rgba(254, 243, 199, 0.94)', border: '#FFBB00', text: '#0f172a', badge: '🎨 Custom', descText: '#cbd5e1' }
     };
     return THEME_PALETTES[this.theme] || THEME_PALETTES.default;
   }
 
   setSimulatorTheme(theme) {
     this.theme = theme || 'default';
+    this.saveCurrentSettings();
     if (this.currentView === 'MENU') this.renderMenu();
     else if (this.currentView === 'SETTINGS') this.startSettingsScreen();
   }
@@ -545,14 +546,30 @@ class NumWorksSimulator {
   renderMenu() {
     const pal = this.getPalette();
     this.topbar.style.backgroundColor = pal.topbar;
-    this.title.textContent = `EquaLib Hub ${this.displayMode === 'gallery' ? '[Galerie]' : '[Liste]'}`;
+    const isDarkHeader = (this.theme === 'hacker' || this.theme === 'custom' || this.theme === 'gameboy');
+    this.topbar.style.color = isDarkHeader ? '#ffffff' : '#000000';
+    if (this.title) {
+      this.title.style.color = isDarkHeader ? '#ffffff' : '#000000';
+      this.title.textContent = `EquaLib Hub ${this.displayMode === 'gallery' ? '[Galerie]' : '[Liste]'}`;
+    }
 
-    const customWp = (typeof window !== 'undefined' && window.customWallpaperDataUrl) || safeStorageGet('equalib_custom_wallpaper_dataurl');
+    let customWp = (typeof window !== 'undefined' && window.customWallpaperDataUrl) || safeStorageGet('equalib_custom_wallpaper_dataurl');
+    if (!customWp && typeof window !== 'undefined' && window.wallpaperStudio && window.wallpaperStudio.canvas) {
+      try {
+        customWp = window.wallpaperStudio.canvas.toDataURL('image/png');
+        window.customWallpaperDataUrl = customWp;
+      } catch (_) {}
+    }
+
     if (this.theme === 'custom' && customWp) {
-      this.screen.style.backgroundImage = `url(${customWp})`;
+      this.screen.style.backgroundImage = `url("${customWp}")`;
       this.screen.style.backgroundSize = '100% 100%';
       this.screen.style.backgroundRepeat = 'no-repeat';
+      this.screen.style.backgroundPosition = 'center';
+      this.screen.style.backgroundColor = 'transparent';
+      this.screen.classList.remove('bg-slate-100');
       this.content.style.backgroundColor = 'transparent';
+      this.content.classList.remove('bg-slate-100');
     } else {
       this.screen.style.backgroundImage = 'none';
       this.screen.style.backgroundColor = pal.bg;
@@ -584,10 +601,14 @@ class NumWorksSimulator {
       visibleApps.forEach((app, relIdx) => {
         const absIdx = pageStart + relIdx;
         const isSel = (absIdx === this.selectedIndex);
+        const cardBg = (this.theme === 'custom')
+          ? (isSel ? 'rgba(254, 243, 199, 0.88)' : 'rgba(255, 255, 255, 0.70)')
+          : (isSel ? pal.cardSel : pal.card);
+        const cardBackdrop = (this.theme === 'custom') ? 'backdrop-filter: blur(4px);' : '';
         html += `
           <div class="sim-item sim-gallery-card cursor-pointer p-0.5 rounded-lg border text-center flex flex-col items-center justify-between transition-all select-none"
             data-index="${absIdx}"
-            style="background-color: ${isSel ? pal.cardSel : pal.card}; border-color: ${isSel ? pal.border : 'rgba(0,0,0,0.1)'}; ${isSel ? 'box-shadow: 0 0 6px ' + pal.border + '66; transform: scale(1.02);' : ''} height: 44px;">
+            style="background-color: ${cardBg}; border-color: ${isSel ? pal.border : 'rgba(0,0,0,0.15)'}; ${isSel ? 'box-shadow: 0 0 6px ' + pal.border + '88; transform: scale(1.02);' : ''} ${cardBackdrop} height: 44px;">
             <span class="text-sm leading-none mt-0.5">${app.icon}</span>
             <span class="text-[8px] font-bold truncate max-w-full leading-tight mb-0.5" style="color: ${isSel ? pal.border : pal.text}">${app.name.replace(/^[0-9]+\.\s*/, '')}</span>
           </div>
@@ -596,15 +617,19 @@ class NumWorksSimulator {
       html += `</div>`;
 
       html += `
-        <div class="flex justify-between items-center text-[7px] px-1 py-0.5" style="color: ${pal.descText}">
+        <div class="flex justify-between items-center text-[7px] px-1 py-0.5 font-bold" style="color: ${this.theme === 'custom' ? '#f8fafc' : pal.descText}; ${this.theme === 'custom' ? 'text-shadow: 0 1px 2px rgba(0,0,0,0.85);' : ''}">
           <span>Page ${page + 1}/${Math.ceil(this.apps.length / 6)}</span>
-          <span>${pal.badge}</span>
+          <span class="bg-black/25 px-1 rounded">${pal.badge}</span>
         </div>
       `;
     } else {
       html += `<div class="space-y-1 overflow-y-auto max-h-[105px] pr-1">`;
       this.apps.forEach((app, idx) => {
         const isSel = idx === this.selectedIndex;
+        const cardBg = (this.theme === 'custom')
+          ? (isSel ? 'rgba(254, 243, 199, 0.90)' : 'rgba(255, 255, 255, 0.75)')
+          : (isSel ? pal.cardSel : pal.card);
+        const cardBackdrop = (this.theme === 'custom') ? 'backdrop-filter: blur(4px);' : '';
         html += `
           <div class="sim-item cursor-pointer p-1 rounded ${
             isSel 
@@ -612,11 +637,11 @@ class NumWorksSimulator {
               : 'hover:opacity-80'
           } text-[9px] flex justify-between items-center transition-all border"
             data-index="${idx}"
-            style="background-color: ${isSel ? pal.cardSel : pal.card}; border-color: ${isSel ? pal.border : 'rgba(0,0,0,0.1)'};">
+            style="background-color: ${cardBg}; border-color: ${isSel ? pal.border : 'rgba(0,0,0,0.15)'}; ${cardBackdrop}">
             <span class="truncate flex items-center gap-1" style="color: ${isSel ? pal.border : pal.text}">
               <span>${app.icon}</span> ${app.name}
             </span>
-            <span class="text-[8px] shrink-0 ml-1 font-mono" style="color: ${pal.descText}">${app.cat}</span>
+            <span class="text-[8px] shrink-0 ml-1 font-mono font-bold" style="color: ${pal.descText}">${app.cat}</span>
           </div>
         `;
       });
@@ -624,9 +649,11 @@ class NumWorksSimulator {
     }
 
     /* BANDEAU EN BAS AU CENTRE : APPLI ACTIVE */
+    const dockBg = (this.theme === 'custom') ? 'rgba(255, 255, 255, 0.85)' : pal.card;
+    const dockBackdrop = (this.theme === 'custom') ? 'backdrop-filter: blur(4px);' : '';
     html += `
       <div class="sim-bottom-dock p-1 rounded-md border shadow-sm flex items-center justify-between text-[9px] select-none transition-all mt-0.5"
-        style="background-color: ${pal.card}; border-color: ${pal.border};">
+        style="background-color: ${dockBg}; border-color: ${pal.border}; ${dockBackdrop}">
         <div class="flex items-center gap-1 min-w-0">
           <span class="text-xs shrink-0">${selApp.icon || '📦'}</span>
           <span class="font-extrabold truncate" style="color: ${pal.text}">${selApp.name}</span>
@@ -638,8 +665,10 @@ class NumWorksSimulator {
 
     /* RACCOURCIS / TOOLTIPS AU BAS DE L'ÉCRAN */
     if (this.showTooltips) {
+      const tipColor = (this.theme === 'custom') ? '#f8fafc' : pal.descText;
+      const tipShadow = (this.theme === 'custom') ? 'text-shadow: 0 1px 2px rgba(0,0,0,0.9);' : '';
       html += `
-        <div class="text-[7px] text-center truncate pt-0.5" style="color: ${pal.descText}">
+        <div class="text-[7px] text-center truncate pt-0.5 font-bold" style="color: ${tipColor}; ${tipShadow}">
           ▲▼◀▶: Naviguer | OK: Lancer | Back: Hub
         </div>
       `;

@@ -410,6 +410,9 @@
     try {
       localStorage.setItem('equalib_theme', currentTheme);
     } catch (_) {}
+    if (canvas) {
+      canvas.style.opacity = (currentTheme === 'custom') ? '0.25' : '1.0';
+    }
     if (currentTheme === 'sakura') initSakura();
     else if (currentTheme === 'bee') initBees();
     else if (currentTheme === 'mario') initStars();

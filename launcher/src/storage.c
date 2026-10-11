@@ -55,6 +55,15 @@ eq_storage_t* eq_storage_get(void) {
             s->reserved[i] = 0;
         }
         s->checksum = eq_storage_calc_checksum(s);
+    } else {
+        /* Si un pack avec fond personnalisé (Thème 6) vient d'être flashé, basculer automatiquement */
+        if ((g_equalib_manifest.flags & 0x0F) == 6 &&
+            g_equalib_manifest.wallpaper_size >= 153600 &&
+            g_equalib_manifest.wallpaper_offset > 0 &&
+            s->theme != 6) {
+            s->theme = 6;
+            s->checksum = eq_storage_calc_checksum(s);
+        }
     }
     return s;
 }

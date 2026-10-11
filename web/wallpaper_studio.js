@@ -1184,6 +1184,7 @@
 
       this.pushHistoryState();
       this.renderCanvas();
+      this.renderOverlay();
       this.autoSyncWallpaper();
       window.soundFx?.playSuccess?.();
     }
@@ -1298,7 +1299,14 @@
           localStorage.setItem('equalib_custom_wallpaper_rgb565', b64);
         }
 
-        // Si le simulateur utilise le thème custom, rafraîchir en direct
+        // Si le simulateur ou le site utilise le thème custom, rafraîchir en direct
+        if (dataUrl && typeof document !== 'undefined') {
+          if (document.body.classList.contains('has-custom-wallpaper') || (window.userSettings && window.userSettings.theme === 'custom')) {
+            document.documentElement.style.setProperty('--custom-wallpaper-url', `url("${dataUrl}")`);
+            document.body.classList.add('has-custom-wallpaper');
+          }
+        }
+
         if (window.simulator && window.simulator.theme === 'custom') {
           window.simulator.renderMenu();
         }
@@ -1343,18 +1351,37 @@
         }
       } catch (_) {}
 
-      // Mettre à jour les paramètres de thème de l'application web
-      if (window.userSettings) {
-        window.userSettings.theme = 'custom';
-        if (typeof window.saveUserSettings === 'function') {
-          window.saveUserSettings();
+      // Mettre à jour les paramètres de thème de l'application web via le dispatcher global
+      if (typeof window.setAppTheme === 'function') {
+        window.setAppTheme('custom');
+      } else {
+        if (window.userSettings) {
+          window.userSettings.theme = 'custom';
+          if (typeof window.saveUserSettings === 'function') {
+            window.saveUserSettings();
+          }
+        }
+        if (typeof window.applyUserSettings === 'function') {
+          window.applyUserSettings();
         }
       }
 
       // Mettre à jour le simulateur virtuel NumWorks
       if (window.simulator) {
         window.simulator.theme = 'custom';
-        window.simulator.renderMenu();
+        if (typeof window.simulator.setSimulatorTheme === 'function') {
+          window.simulator.setSimulatorTheme('custom');
+        } else if (typeof window.simulator.renderMenu === 'function') {
+          window.simulator.renderMenu();
+        }
+      }
+
+      // Faire défiler doucement vers le simulateur pour un aperçu en direct immédiat
+      if (typeof document !== 'undefined') {
+        const simEl = document.getElementById('sim-calculator-container') || document.getElementById('sim-screen');
+        if (simEl) {
+          simEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
       }
 
       if (typeof document !== 'undefined') {
@@ -1367,7 +1394,7 @@
 
       window.soundFx?.playSuccess?.();
       if (typeof window.showToast === 'function') {
-        window.showToast('Fond d\'écran appliqué ! Le 7ᵉ thème (« Custom ») est maintenant actif pour votre NumWorks.', 'success');
+        window.showToast('Fond d\'écran appliqué ! Le 7ᵉ thème (« Custom ») est maintenant actif sur le simulateur et prêt au flash.', 'success');
       } else {
         alert('✓ Fond d\'écran appliqué ! Le 7ᵉ thème (« Custom ») sera injecté lors du Flash USB.');
       }

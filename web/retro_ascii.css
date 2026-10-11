@@ -333,6 +333,36 @@ body.theme-gameboy {
   background-color: #0f380f !important;
 }
 
+body.theme-custom {
+  --theme-bg: #0f172a;
+  --theme-surface: #1e293b;
+  --theme-surface-raised: #334155;
+  --theme-border: #FFBB00;
+  --theme-border-strong: #E5A600;
+  --theme-primary: #FFBB00;
+  --theme-primary-hover: #E5A600;
+  --theme-accent: #fef3c7;
+  --theme-text: #f8fafc;
+  --theme-text-muted: #cbd5e1;
+  --theme-card: #1e293b;
+  background-color: #0f172a !important;
+}
+
+body.has-custom-wallpaper::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: var(--custom-wallpaper-url);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: 0.18;
+  filter: blur(8px);
+  z-index: 0;
+  pointer-events: none;
+}
+
+
 /* ==================== DISABLING TOOLTIPS & SHORTCUTS ==================== */
 body.hide-tooltips .kbd-key,
 body.hide-tooltips .shortcut-badge,
