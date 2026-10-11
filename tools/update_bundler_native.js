@@ -13,10 +13,8 @@ const bundlerJsContent = `/**
  * EquaLib Client-Side Binary Bundler
  * Assemble dynamiquement l'exécutable EquaLib Launcher (.nwa et .bin pour NumWorks N0120)
  * Intègre le manifeste d'applications sélectionnées par l'utilisateur à la volée.
+ * Chargement dynamique et asynchrone (zéro payload binaire Base64 bloquant).
  */
-
-const EQUALIB_NATIVE_NWA_B64 = "${nwaB64}";
-const EQUALIB_NATIVE_BIN_B64 = "${binB64}";
 
 class EquaLibBundler {
   constructor(options = {}) {
@@ -327,7 +325,7 @@ class EquaLibBundler {
     let rawData = null;
     const targetFile = isBin ? 'equalib_n0120.bin' : 'equalib_n0120.nwa';
 
-    if (typeof fetch === 'function') {
+    if (typeof window !== 'undefined' && typeof fetch === 'function') {
       try {
         const resp = await fetch(\`\${targetFile}?v=\${Date.now()}\`, { cache: 'no-store' });
         if (resp.ok) {
@@ -335,13 +333,34 @@ class EquaLibBundler {
           rawData = new Uint8Array(ab);
         }
       } catch (e) {
-        console.warn("[EquaLib] Fetch échoué, utilisation du fallback Base64 intégré :", e);
+        console.warn("[EquaLib] Fetch du binaire échoué :", e);
+      }
+    }
+    
+    // Support Node.js pour les tests unitaires et outils CLI
+    if (!rawData && typeof require === 'function') {
+      try {
+        const nodeFs = require('fs');
+        const nodePath = require('path');
+        const candidates = [
+          nodePath.join(__dirname, targetFile),
+          nodePath.join(__dirname, 'web', targetFile),
+          nodePath.join(process.cwd(), targetFile),
+          nodePath.join(process.cwd(), 'web', targetFile)
+        ];
+        for (const cand of candidates) {
+          if (nodeFs.existsSync(cand)) {
+            rawData = new Uint8Array(nodeFs.readFileSync(cand));
+            break;
+          }
+        }
+      } catch (e) {
+        console.warn("[EquaLib] Chargement local Node.js échoué :", e);
       }
     }
 
     if (!rawData) {
-      const b64 = isBin ? EQUALIB_NATIVE_BIN_B64 : EQUALIB_NATIVE_NWA_B64;
-      rawData = this.base64ToUint8Array(b64);
+      throw new Error(\`[EquaLib] Impossible de charger le binaire source \${targetFile}\`);
     }
 
     const patchedBytes = await this.patchManifest(rawData, apps, options);

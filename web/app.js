@@ -999,6 +999,50 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
+  // Fermeture du dock d'application active
+  const dockCloseBtn = document.getElementById('dock-close-btn');
+  if (dockCloseBtn && activeAppDock) {
+    dockCloseBtn.addEventListener('click', () => {
+      activeAppDock.classList.remove('dock-visible');
+      activeAppDock.classList.add('dock-hidden');
+    });
+  }
+
+  // Fermeture du bandeau Bêta défilant (QOL)
+  const rubyBanner = document.getElementById('ruby-beta-banner');
+  const closeRubyBannerBtn = document.getElementById('close-ruby-banner-btn');
+  if (closeRubyBannerBtn && rubyBanner) {
+    try {
+      if (sessionStorage.getItem('ruby_banner_closed') === 'true') {
+        rubyBanner.style.display = 'none';
+      }
+    } catch (_) {}
+    closeRubyBannerBtn.addEventListener('click', () => {
+      rubyBanner.style.display = 'none';
+      try {
+        sessionStorage.setItem('ruby_banner_closed', 'true');
+      } catch (_) {}
+    });
+  }
+
+  // Bascule repliable du simulateur sur mobile
+  const simMobileToggle = document.getElementById('sim-mobile-toggle');
+  const simMobileToggleText = document.getElementById('sim-mobile-toggle-text');
+  if (simMobileToggle && simCalculatorContainer) {
+    simMobileToggle.addEventListener('click', () => {
+      const isHidden = simCalculatorContainer.classList.contains('hidden');
+      if (isHidden) {
+        simCalculatorContainer.classList.remove('hidden');
+        simMobileToggle.setAttribute('aria-expanded', 'true');
+        if (simMobileToggleText) simMobileToggleText.textContent = 'Masquer le Simulateur Virtuel';
+      } else {
+        simCalculatorContainer.classList.add('hidden');
+        simMobileToggle.setAttribute('aria-expanded', 'false');
+        if (simMobileToggleText) simMobileToggleText.textContent = 'Afficher le Simulateur Virtuel';
+      }
+    });
+  }
+
   // ==================== GESTION DES ONGLETS ====================
   function switchTab(target) {
     window.soundFx?.playClick();

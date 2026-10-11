@@ -23,7 +23,7 @@ async function test() {
   console.log('Result totalBytes:', result.totalBytes);
 
   const view = new DataView(result.arrayBuffer);
-  const magic1 = view.getUint32(0, true);
+  const magic1 = view.getUint32(0, false);
   console.log('Epsilon Magic 1:', '0x' + magic1.toString(16).toUpperCase());
 
   if (magic1 === 0xBABEC0DE) {

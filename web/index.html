@@ -9,7 +9,8 @@
   <title>EquaLib π | Hub Applications & Jeux pour NumWorks N0120</title>
 
   <!-- Favicon officiel avec l'icône π personnalisée -->
-  <link rel="icon" type="image/png" href="favicon.png?v=24">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg?v=25">
+  <link rel="alternate icon" type="image/png" href="favicon.png?v=24">
   <link rel="apple-touch-icon" href="assets/logo.png?v=24">
 
   <!-- Tailwind CSS CDN -->
@@ -60,7 +61,7 @@
   <canvas id="math-canvas" class="fixed inset-0 pointer-events-none z-0"></canvas>
 
   <!-- ==================== GROS BANDEAU DÉFILANT ROUGE RUBY (BETA) ==================== -->
-  <aside class="ruby-beta-banner" role="marquee" aria-label="Bandeau Version Bêta">
+  <aside id="ruby-beta-banner" class="ruby-beta-banner" role="region" aria-label="Bandeau Version Bêta">
     <div class="ruby-beta-marquee-track">
       <!-- Bloc 1 -->
       <div class="ruby-beta-item">
@@ -95,6 +96,7 @@
         <span class="ruby-beta-separator">✦</span>
       </div>
     </div>
+    <button id="close-ruby-banner-btn" class="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-6 h-6 rounded bg-black/60 hover:bg-black text-rose-200 hover:text-white flex items-center justify-center text-xs font-mono border border-rose-300/40 cursor-pointer transition-all" aria-label="Fermer le bandeau d'information" title="Masquer le bandeau">✕</button>
   </aside>
 
   <!-- ==================== BARRE DE NAVIGATION OFFICIELLE DEV ==================== -->
@@ -134,19 +136,19 @@
       <div class="flex items-center gap-2 sm:gap-3 shrink-0">
         <!-- Groupe d'outils compacts (Son, CRT, Aide, Paramètres, GitHub) -->
         <div class="flex items-center bg-[#0d1117] border border-[#30363d] rounded-lg p-0.5 shadow-[2px_2px_0px_#000] shrink-0">
-          <button id="sound-toggle-btn" class="w-8 h-8 rounded hover:bg-[#21262d] text-[#8b949e] hover:text-[#e6edf3] flex items-center justify-center transition-all cursor-pointer text-xs" title="Activer / Désactiver les sons 8-bit">
+          <button id="sound-toggle-btn" class="w-8 h-8 rounded hover:bg-[#21262d] text-[#8b949e] hover:text-[#e6edf3] flex items-center justify-center transition-all cursor-pointer text-xs" title="Activer / Désactiver les sons 8-bit" aria-label="Activer ou désactiver les sons 8-bit">
             <span id="sound-icon">🔊</span>
           </button>
-          <button id="crt-toggle-btn" class="w-8 h-8 rounded hover:bg-[#21262d] text-[#8b949e] hover:text-[#e6edf3] flex items-center justify-center transition-all cursor-pointer text-xs" title="Activer / Désactiver les scanlines CRT">
+          <button id="crt-toggle-btn" class="w-8 h-8 rounded hover:bg-[#21262d] text-[#8b949e] hover:text-[#e6edf3] flex items-center justify-center transition-all cursor-pointer text-xs" title="Activer / Désactiver les scanlines CRT" aria-label="Activer ou désactiver les scanlines CRT">
             <span id="crt-icon">📺</span>
           </button>
-          <button id="help-modal-btn" class="w-8 h-8 rounded hover:bg-[#21262d] text-[#8b949e] hover:text-[#e6edf3] flex items-center justify-center transition-all cursor-pointer text-xs" title="Guide & Aide USB">
+          <button id="help-modal-btn" class="w-8 h-8 rounded hover:bg-[#21262d] text-[#8b949e] hover:text-[#e6edf3] flex items-center justify-center transition-all cursor-pointer text-xs" title="Guide & Aide USB" aria-label="Guide et aide connexion USB">
             <span>❓</span>
           </button>
-          <button id="settings-modal-btn" class="w-8 h-8 rounded bg-[#21262d] hover:bg-[#30363d] text-[#FFBB00] flex items-center justify-center transition-all cursor-pointer text-xs border border-[#30363d]" title="Paramètres & Thèmes de l'Application">
+          <button id="settings-modal-btn" class="w-8 h-8 rounded bg-[#21262d] hover:bg-[#30363d] text-[#FFBB00] flex items-center justify-center transition-all cursor-pointer text-xs border border-[#30363d]" title="Paramètres & Thèmes de l'Application" aria-label="Paramètres et thèmes visuels">
             <span>⚙️</span>
           </button>
-          <a href="https://github.com/CameleonGamer/EquaLib" target="_blank" class="w-8 h-8 rounded hover:bg-[#21262d] text-[#8b949e] hover:text-[#e6edf3] flex items-center justify-center transition-all text-xs" title="GitHub">
+          <a href="https://github.com/CameleonGamer/EquaLib" target="_blank" class="w-8 h-8 rounded hover:bg-[#21262d] text-[#8b949e] hover:text-[#e6edf3] flex items-center justify-center transition-all text-xs" title="GitHub" aria-label="Code source sur GitHub">
             <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
           </a>
         </div>
@@ -204,10 +206,38 @@
               ⚡ Flash USB 1-Clic
             </span>
           </div>
+
+          <!-- Parcours guidé en 3 étapes -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-2">
+            <div class="p-2.5 rounded bg-[#0d1117] border border-[#30363d] shadow-[2px_2px_0px_#000]">
+              <div class="flex items-center gap-1.5 font-mono font-bold text-[11px] text-[#FFBB00]">
+                <span class="w-4 h-4 rounded-full bg-[#FFBB00] text-black text-[9px] font-extrabold flex items-center justify-center">1</span>
+                <span>Choisissez</span>
+              </div>
+              <p class="text-[11px] font-mono text-[#8b949e] mt-1">Sélectionnez vos jeux natifs, cours et outils dans le catalogue.</p>
+            </div>
+            <div class="p-2.5 rounded bg-[#0d1117] border border-[#30363d] shadow-[2px_2px_0px_#000]">
+              <div class="flex items-center gap-1.5 font-mono font-bold text-[11px] text-cyan-400">
+                <span class="w-4 h-4 rounded-full bg-cyan-400 text-black text-[9px] font-extrabold flex items-center justify-center">2</span>
+                <span>Personnalisez</span>
+              </div>
+              <p class="text-[11px] font-mono text-[#8b949e] mt-1">Choisissez votre thème couleur et mode d'affichage.</p>
+            </div>
+            <div class="p-2.5 rounded bg-[#0d1117] border border-[#30363d] shadow-[2px_2px_0px_#000]">
+              <div class="flex items-center gap-1.5 font-mono font-bold text-[11px] text-emerald-400">
+                <span class="w-4 h-4 rounded-full bg-emerald-400 text-black text-[9px] font-extrabold flex items-center justify-center">3</span>
+                <span>Flashez</span>
+              </div>
+              <p class="text-[11px] font-mono text-[#8b949e] mt-1">Branchez votre NumWorks en USB et installez en 1 clic.</p>
+            </div>
+          </div>
         </div>
 
         <!-- Aperçu Interactif de la Calculatrice NumWorks N0120 -->
         <div class="lg:col-span-5 flex flex-col items-center">
+          <button id="sim-mobile-toggle" class="lg:hidden mb-3 w-full max-w-[340px] py-2 px-3 rounded bg-[#0d1117] border border-[#30363d] text-xs font-mono font-bold text-[#FFBB00] shadow-[2px_2px_0px_#000] flex items-center justify-center gap-2 cursor-pointer transition-all" aria-expanded="true">
+            <span>🕹️</span> <span id="sim-mobile-toggle-text">Masquer le Simulateur Virtuel</span>
+          </button>
           <div class="w-full max-w-[340px] nw-shell rounded-xl p-3.5 shadow-[6px_6px_0px_#000] relative transition-all duration-300" id="sim-calculator-container">
             
             <!-- Coque Calculatrice Blanche NumWorks -->
@@ -833,7 +863,7 @@
   </div>
 
   <!-- ==================== BANDEAU FLOTTANT EN BAS AU CENTRE : APP ACTIVE (GALLERY DOCK) ==================== -->
-  <div id="active-app-dock" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-40 max-w-xl w-[92%] sm:w-auto px-4 py-2.5 rounded-lg bg-[#161b22] border-2 border-[#30363d] shadow-[4px_4px_0px_#000] flex items-center justify-between gap-4 dock-visible transition-all">
+  <div id="active-app-dock" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-40 max-w-xl w-[92%] sm:w-auto px-4 py-2.5 rounded-lg bg-[#161b22] border-2 border-[#30363d] shadow-[4px_4px_0px_#000] hidden sm:flex items-center justify-between gap-4 dock-visible transition-all">
     <div class="flex items-center gap-3 min-w-0">
       <div id="dock-app-icon" class="w-10 h-10 rounded border-2 border-black bg-[#FFBB00] text-black flex items-center justify-center font-bold text-xl shadow-[2px_2px_0px_#000] shrink-0">
         🏎️
@@ -854,6 +884,7 @@
       <button id="dock-action-btn" class="px-3.5 py-1.5 rounded bg-[#FFBB00] hover:bg-[#E5A600] text-black text-xs font-mono font-extrabold border-2 border-black shadow-[2px_2px_0px_#000] cursor-pointer transition-all">
         + Ajouter
       </button>
+      <button id="dock-close-btn" class="w-6 h-6 rounded bg-[#0d1117] hover:bg-[#21262d] text-[#8b949e] hover:text-white border border-[#30363d] text-xs font-mono flex items-center justify-center cursor-pointer ml-1" title="Masquer ce dock" aria-label="Fermer le dock">✕</button>
     </div>
   </div>
 

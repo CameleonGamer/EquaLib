@@ -350,8 +350,11 @@
     }
   }
 
-  // Boucle d'animation principale
-  function draw(timestamp) {
+  let isRunning = false;
+  let rafId = null;
+  const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function renderFrame(timestamp) {
     if (!timestamp) timestamp = performance.now();
     const timeSec = timestamp * 0.001;
 
@@ -370,8 +373,35 @@
       // Default / Hacker (grid)
       drawMathGrid(timeSec);
     }
+  }
 
-    requestAnimationFrame(draw);
+  // Boucle d'animation principale avec veille automatique
+  function draw(timestamp) {
+    if (document.hidden || prefersReducedMotion) {
+      isRunning = false;
+      return;
+    }
+    renderFrame(timestamp);
+    rafId = requestAnimationFrame(draw);
+  }
+
+  function startAnimation() {
+    if (prefersReducedMotion) {
+      renderFrame(performance.now());
+      return;
+    }
+    if (!isRunning && !document.hidden) {
+      isRunning = true;
+      rafId = requestAnimationFrame(draw);
+    }
+  }
+
+  function stopAnimation() {
+    isRunning = false;
+    if (rafId) {
+      cancelAnimationFrame(rafId);
+      rafId = null;
+    }
   }
 
   // API publique pour basculer de thème d'arrière-plan à la volée
@@ -384,7 +414,21 @@
     else if (currentTheme === 'bee') initBees();
     else if (currentTheme === 'mario') initStars();
     else initGrid();
+
+    if (prefersReducedMotion) {
+      renderFrame(performance.now());
+    } else {
+      startAnimation();
+    }
   };
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      stopAnimation();
+    } else {
+      startAnimation();
+    }
+  });
 
   document.addEventListener('DOMContentLoaded', () => {
     canvas = document.getElementById('math-canvas');
@@ -398,13 +442,20 @@
 
     const glow = document.getElementById('cursor-glow');
 
-    window.addEventListener('resize', resize);
+    window.addEventListener('resize', () => {
+      resize();
+      if (prefersReducedMotion) renderFrame(performance.now());
+    });
+
     window.addEventListener('mousemove', (e) => {
       targetMouseX = e.clientX;
       targetMouseY = e.clientY;
       if (glow) {
         glow.style.left = e.clientX + 'px';
         glow.style.top = e.clientY + 'px';
+      }
+      if (!isRunning && !document.hidden && !prefersReducedMotion) {
+        startAnimation();
       }
     });
 
@@ -414,6 +465,6 @@
     });
 
     resize();
-    requestAnimationFrame(draw);
+    startAnimation();
   });
 })();
