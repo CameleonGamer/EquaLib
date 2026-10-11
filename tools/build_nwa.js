@@ -24,6 +24,7 @@ const srcFiles = [
   'app_puissance4.c',
   'app_morpion.c',
   'app_python.c',
+  'storage.c',
   'eq_font.c',
   'mini_libc.c'
 ];

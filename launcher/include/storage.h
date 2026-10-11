@@ -41,58 +41,10 @@ static inline uint32_t eq_storage_calc_checksum(const eq_storage_t* s) {
     return chk;
 }
 
-static inline eq_storage_t* eq_storage_get_ptr(void) {
-#if defined(__arm__) || defined(__thumb__)
-    uint32_t sp_val;
-    __asm__ volatile ("mov %0, sp" : "=r"(sp_val));
-    if ((sp_val & 0xFF000000) == 0x24000000) {
-        return (eq_storage_t*)0x24038000; /* N0120 AXI-SRAM sécurisé */
-    } else {
-        return (eq_storage_t*)0x20028000; /* N0110 SRAM sécurisé */
-    }
-#else
-    static eq_storage_t s_pc_storage;
-    return &s_pc_storage;
-#endif
-}
+extern eq_storage_t g_eq_storage;
 
-static inline eq_storage_t* eq_storage_get(void) {
-    eq_storage_t* s = eq_storage_get_ptr();
-    if (s->magic != EQ_STORAGE_MAGIC || s->checksum != eq_storage_calc_checksum(s)) {
-#if defined(__arm__) || defined(__thumb__)
-        /* Vérification si un enregistrement valide existait à l'ancienne adresse 0x2404F000 */
-        eq_storage_t* legacy = (eq_storage_t*)0x2404F000;
-        if (legacy->magic == EQ_STORAGE_MAGIC && legacy->checksum == eq_storage_calc_checksum(legacy)) {
-            *s = *legacy;
-            return s;
-        }
-#endif
-        s->magic = EQ_STORAGE_MAGIC;
-        uint32_t init_theme = g_equalib_manifest.flags & 0x0F;
-        s->theme = (init_theme < 6) ? (int32_t)init_theme : 0;
-        s->view_mode = (g_equalib_manifest.flags & 0x10) ? 1 : 0; /* GALLERY = 0, LIST = 1 */
-        s->tooltips = 1;  /* ON */
-        s->record_dino = 0;
-        s->record_flappy = 0;
-        s->record_snake = 0;
-        s->record_2048 = 0;
-        s->record_tetris = 0;
-        s->record_breakout = 0;
-        s->record_space_invaders = 0;
-        s->record_p4_wins = 0;
-        s->record_morpion_wins = 0;
-        s->record_pong_wins = 0;
-        s->record_minesweeper_wins = 0;
-        for (int i = 0; i < 4; i++) s->reserved[i] = 0;
-        s->checksum = eq_storage_calc_checksum(s);
-    }
-    return s;
-}
-
-static inline void eq_storage_commit(void) {
-    eq_storage_t* s = eq_storage_get_ptr();
-    s->magic = EQ_STORAGE_MAGIC;
-    s->checksum = eq_storage_calc_checksum(s);
-}
+eq_storage_t* eq_storage_get_ptr(void);
+eq_storage_t* eq_storage_get(void);
+void eq_storage_commit(void);
 
 #endif /* EQUALIB_STORAGE_H */
