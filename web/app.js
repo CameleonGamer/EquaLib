@@ -498,6 +498,40 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
   window.applyUserSettings = applyUserSettings;
 
+  const GAME_ICON_URL_MAP = {
+    mariokart: 'assets/icons/mariokart.png',
+    comm_flappy: 'assets/icons/flappy.png',
+    flappy: 'assets/icons/flappy.png',
+    comm_2048: 'assets/icons/2048.png',
+    2048: 'assets/icons/2048.png',
+    comm_snake: 'assets/icons/snake.png',
+    snake: 'assets/icons/snake.png',
+    comm_tetris: 'assets/icons/tetris.png',
+    tetris: 'assets/icons/tetris.png',
+    comm_minesweeper: 'assets/icons/minesweeper.png',
+    minesweeper: 'assets/icons/minesweeper.png',
+    demineur: 'assets/icons/minesweeper.png',
+    dino: 'assets/icons/dino.png',
+    comm_dino: 'assets/icons/dino.png',
+    space_invaders: 'assets/icons/space_invaders.png',
+    comm_space_invaders: 'assets/icons/space_invaders.png',
+    breakout: 'assets/icons/breakout.png',
+    comm_breakout: 'assets/icons/breakout.png',
+    puissance4: 'assets/icons/puissance4.png',
+    comm_puissance4: 'assets/icons/puissance4.png',
+    morpion: 'assets/icons/morpion.png',
+    comm_morpion: 'assets/icons/morpion.png'
+  };
+
+  function getAppIconHtml(app, customClass = 'w-full h-full object-contain p-0.5 rounded') {
+    if (!app) return '📦';
+    const iconUrl = app.icon_url || (app.id && GAME_ICON_URL_MAP[app.id]);
+    if (iconUrl) {
+      return `<img src="${iconUrl}" class="${customClass}" alt="${app.name || ''}" loading="lazy">`;
+    }
+    return app.icon_initial || '📦';
+  }
+
   function updateActiveAppDock(app) {
     if (!app || !activeAppDock) return;
     currentActiveDockApp = app;
@@ -506,7 +540,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     activeAppDock.classList.add('dock-visible');
 
     if (dockAppIcon) {
-      dockAppIcon.textContent = app.icon_initial || '📦';
+      dockAppIcon.innerHTML = getAppIconHtml(app, 'w-full h-full object-contain p-0.5');
       dockAppIcon.style.backgroundColor = app.color || '#F59E0B';
     }
     if (dockAppName) dockAppName.textContent = app.name;
@@ -642,8 +676,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     modalAppName.textContent = app.name;
     modalAppCat.textContent = app.category;
     modalAppMeta.textContent = `v${app.version || '1.0'} • ${app.size_kb} Ko • Par ${app.author || 'Inconnu'}`;
-    modalAppDesc.textContent = app.description || 'Application optimisée pour NumWorks N0120.';
-    modalAppIcon.textContent = app.icon_initial || '📦';
+    modalAppIcon.innerHTML = getAppIconHtml(app, 'w-full h-full object-contain p-1');
     modalAppIcon.style.backgroundColor = app.color || '#F59E0B';
 
     const isSelected = selectedApps.some(s => s.id === app.id);
@@ -1480,7 +1513,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           </div>
 
           <div class="gallery-icon-wrapper" style="background-color: ${app.color || '#FFBB00'}">
-            ${app.icon_initial || '📦'}
+            ${getAppIconHtml(app)}
           </div>
 
           <div class="w-full text-center space-y-0.5 px-1 pointer-events-none">
@@ -1545,8 +1578,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         card.innerHTML = `
           <div class="flex items-center gap-3.5 min-w-0 cursor-pointer app-info-trigger flex-1" title="Cliquez pour afficher les commandes et détails">
-            <div class="w-10 h-10 rounded border-2 border-black flex items-center justify-center font-bold text-lg text-white shadow-[2px_2px_0px_#000] shrink-0" style="background-color: ${app.color || '#FFBB00'}">
-              ${app.icon_initial || '📦'}
+            <div class="w-10 h-10 rounded border-2 border-black flex items-center justify-center font-bold text-lg text-white shadow-[2px_2px_0px_#000] shrink-0 overflow-hidden" style="background-color: ${app.color || '#FFBB00'}">
+              ${getAppIconHtml(app, 'w-full h-full object-contain p-1')}
             </div>
             <div class="space-y-0.5 min-w-0 flex-1 font-mono">
               <div class="flex items-center gap-2 flex-wrap">
@@ -1662,7 +1695,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           </div>
 
           <div class="gallery-icon-wrapper" style="background-color: ${app.color || '#3B82F6'}">
-            ${app.icon_initial || '🌐'}
+            ${getAppIconHtml(app)}
           </div>
 
           <div class="w-full text-center space-y-0.5 px-1 pointer-events-none">
@@ -1727,8 +1760,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         card.innerHTML = `
           <div class="flex items-center gap-3.5 flex-1 min-w-0 cursor-pointer app-info-trigger">
-            <div class="w-10 h-10 rounded border-2 border-black flex items-center justify-center font-bold text-lg text-white shadow-[2px_2px_0px_#000] shrink-0" style="background-color: ${app.color || '#3B82F6'}">
-              ${app.icon_initial || '🌐'}
+            <div class="w-10 h-10 rounded border-2 border-black flex items-center justify-center font-bold text-lg text-white shadow-[2px_2px_0px_#000] shrink-0 overflow-hidden" style="background-color: ${app.color || '#3B82F6'}">
+              ${getAppIconHtml(app, 'w-full h-full object-contain p-1')}
             </div>
             <div class="space-y-0.5 flex-1 min-w-0 font-mono">
               <div class="flex items-center gap-2 flex-wrap">
@@ -1939,8 +1972,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         item.innerHTML = `
           <div class="flex items-center gap-2.5 min-w-0 cursor-pointer app-pack-info flex-1" title="Voir les détails et contrôles de cette application">
             <span class="font-mono text-xs text-[#FFBB00] font-bold w-4">${idx + 1}.</span>
-            <div class="w-7 h-7 rounded border border-[#30363d] flex items-center justify-center font-bold text-sm text-white shrink-0" style="background-color: ${app.color || '#21262d'}">
-              ${app.icon_initial || '📦'}
+            <div class="w-7 h-7 rounded border border-[#30363d] flex items-center justify-center font-bold text-sm text-white shrink-0 overflow-hidden" style="background-color: ${app.color || '#21262d'}">
+              ${getAppIconHtml(app, 'w-full h-full object-contain p-0.5')}
             </div>
             <div class="min-w-0 flex-1">
               <p class="text-xs font-semibold text-[#c9d1d9] truncate hover:text-[#FFBB00] transition-colors">${app.name}</p>
@@ -2012,7 +2045,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       pageApps.forEach((app, i) => {
         html += `
           <div class="sim-item sim-gallery-card p-0.5 rounded-lg border text-center flex flex-col items-center justify-between select-none ${i === 0 ? 'bg-amber-500/20 border-amber-500 shadow-sm' : 'bg-white border-slate-200'}" style="height: 44px;">
-            <span class="text-sm leading-none mt-0.5">${app.icon_initial || '📦'}</span>
+            <span class="w-5 h-5 flex items-center justify-center mt-0.5 overflow-hidden">${getAppIconHtml(app, 'w-full h-full object-contain')}</span>
             <span class="text-[8px] font-bold truncate max-w-full leading-tight mb-0.5 ${i === 0 ? 'text-amber-700' : 'text-slate-800'}">${app.name}</span>
           </div>
         `;
@@ -2022,7 +2055,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       html += `
         <div class="sim-bottom-dock p-1 rounded-md border shadow-sm flex items-center justify-between text-[9px] select-none bg-white border-amber-500 mt-0.5">
           <div class="flex items-center gap-1 min-w-0">
-            <span class="text-xs shrink-0">${topApp.icon_initial || '📦'}</span>
+            <span class="w-4 h-4 flex items-center justify-center shrink-0 overflow-hidden">${getAppIconHtml(topApp, 'w-full h-full object-contain')}</span>
             <span class="font-extrabold truncate text-slate-900">${topApp.name}</span>
           </div>
           <span class="text-[8px] px-1 py-0.2 rounded font-mono font-bold shrink-0 ml-1 border bg-amber-500/20 text-amber-600 border-amber-500/40">${topApp.category || 'Arcade'}</span>

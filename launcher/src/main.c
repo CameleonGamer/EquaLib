@@ -5,6 +5,7 @@
 #include "apps.h"
 #include "equalib_manifest.h"
 #include "storage.h"
+#include "game_icons_data.h"
 
 /* Déclarations mini libc */
 size_t strlen(const char* s);
@@ -409,23 +410,58 @@ void run_native_app(const char* name, const uint8_t* bin_ptr, uint32_t bin_size)
     eadk_timing_msleep(2000);
 }
 
-/* ==================== DESSIN DES ICÔNES PIXEL-ART (24x24) ==================== */
+/* ==================== DESSIN DES ICÔNES PIXEL-ART (20x20) ==================== */
+static void draw_bitmap_icon_20x20(int cx, int cy, const uint16_t* colors, const uint8_t* mask) {
+    int start_x = cx - 10;
+    int start_y = cy - 10;
+    for (int y = 0; y < 20; y++) {
+        int py = start_y + y;
+        if (py < 0 || py >= EADK_SCREEN_HEIGHT) continue;
+        int run_start = -1;
+        for (int x = 0; x < 20; x++) {
+            int bit_idx = y * 20 + x;
+            bool opaque = (mask[bit_idx / 8] & (1 << (bit_idx % 8))) != 0;
+            if (opaque) {
+                if (run_start == -1) run_start = x;
+            } else {
+                if (run_start != -1) {
+                    eadk_rect_t r = {(uint16_t)(start_x + run_start), (uint16_t)py, (uint16_t)(x - run_start), 1};
+                    eadk_display_push_rect(r, &colors[y * 20 + run_start]);
+                    run_start = -1;
+                }
+            }
+        }
+        if (run_start != -1) {
+            eadk_rect_t r = {(uint16_t)(start_x + run_start), (uint16_t)py, (uint16_t)(20 - run_start), 1};
+            eadk_display_push_rect(r, &colors[y * 20 + run_start]);
+        }
+    }
+}
+
 static void draw_app_icon(uint8_t app_type, int cx, int cy, uint16_t accent_col) {
     (void)accent_col;
     if (app_type == APP_TYPE_MARIOKART) {
-        /* Kart Mario rouge avec roues noires et casque blanc */
-        eadk_rect_t wheel_l = {(uint16_t)(cx - 9), (uint16_t)(cy + 2), 4, 7};
-        eadk_rect_t wheel_r = {(uint16_t)(cx + 5), (uint16_t)(cy + 2), 4, 7};
-        eadk_rect_t body = {(uint16_t)(cx - 5), (uint16_t)(cy - 2), 10, 10};
-        eadk_rect_t nose = {(uint16_t)(cx - 3), (uint16_t)(cy + 8), 6, 3};
-        eadk_rect_t helmet = {(uint16_t)(cx - 4), (uint16_t)(cy - 8), 8, 7};
-        eadk_rect_t m_badge = {(uint16_t)(cx - 2), (uint16_t)(cy - 7), 4, 3};
-        eadk_display_push_rect_uniform(wheel_l, 0x18C3);
-        eadk_display_push_rect_uniform(wheel_r, 0x18C3);
-        eadk_display_push_rect_uniform(body, 0xE8A2);
-        eadk_display_push_rect_uniform(nose, 0xFDE0);
-        eadk_display_push_rect_uniform(helmet, 0xFFFF);
-        eadk_display_push_rect_uniform(m_badge, 0xE8A2);
+        draw_bitmap_icon_20x20(cx, cy, s_icon_mariokart_rgb, s_icon_mariokart_mask);
+    } else if (app_type == APP_TYPE_FLAPPY) {
+        draw_bitmap_icon_20x20(cx, cy, s_icon_flappy_rgb, s_icon_flappy_mask);
+    } else if (app_type == APP_TYPE_2048) {
+        draw_bitmap_icon_20x20(cx, cy, s_icon_2048_rgb, s_icon_2048_mask);
+    } else if (app_type == APP_TYPE_SNAKE) {
+        draw_bitmap_icon_20x20(cx, cy, s_icon_snake_rgb, s_icon_snake_mask);
+    } else if (app_type == APP_TYPE_TETRIS) {
+        draw_bitmap_icon_20x20(cx, cy, s_icon_tetris_rgb, s_icon_tetris_mask);
+    } else if (app_type == APP_TYPE_MINESWEEPER) {
+        draw_bitmap_icon_20x20(cx, cy, s_icon_minesweeper_rgb, s_icon_minesweeper_mask);
+    } else if (app_type == APP_TYPE_DINO) {
+        draw_bitmap_icon_20x20(cx, cy, s_icon_dino_rgb, s_icon_dino_mask);
+    } else if (app_type == APP_TYPE_SPACE_INVADERS) {
+        draw_bitmap_icon_20x20(cx, cy, s_icon_space_invaders_rgb, s_icon_space_invaders_mask);
+    } else if (app_type == APP_TYPE_BREAKOUT) {
+        draw_bitmap_icon_20x20(cx, cy, s_icon_breakout_rgb, s_icon_breakout_mask);
+    } else if (app_type == APP_TYPE_PUISSANCE4) {
+        draw_bitmap_icon_20x20(cx, cy, s_icon_puissance4_rgb, s_icon_puissance4_mask);
+    } else if (app_type == APP_TYPE_MORPION) {
+        draw_bitmap_icon_20x20(cx, cy, s_icon_morpion_rgb, s_icon_morpion_mask);
     } else if (app_type == APP_TYPE_PERIODIC) {
         /* Fiole de chimie avec liquide cyan et bulles */
         eadk_rect_t neck = {(uint16_t)(cx - 2), (uint16_t)(cy - 9), 4, 6};
@@ -458,58 +494,6 @@ static void draw_app_icon(uint8_t app_type, int cx, int cy, uint16_t accent_col)
         eadk_display_push_rect_uniform(leg1, 0x3DFE);
         eadk_display_push_rect_uniform(leg2, 0x3DFE);
         eadk_display_push_rect_uniform(foot, 0x3DFE);
-    } else if (app_type == APP_TYPE_FLAPPY) {
-        /* Oiseau Flappy jaune avec aile et bec orange */
-        eadk_rect_t bird_body = {(uint16_t)(cx - 7), (uint16_t)(cy - 6), 14, 12};
-        eadk_rect_t bird_wing = {(uint16_t)(cx - 8), (uint16_t)(cy - 1), 6, 5};
-        eadk_rect_t bird_beak = {(uint16_t)(cx + 5), (uint16_t)(cy - 2), 6, 5};
-        eadk_rect_t bird_eye = {(uint16_t)(cx + 1), (uint16_t)(cy - 5), 4, 4};
-        eadk_rect_t bird_pupil = {(uint16_t)(cx + 3), (uint16_t)(cy - 4), 2, 2};
-        eadk_display_push_rect_uniform(bird_body, 0xFFE0);
-        eadk_display_push_rect_uniform(bird_wing, 0xFFFF);
-        eadk_display_push_rect_uniform(bird_beak, 0xFBA0);
-        eadk_display_push_rect_uniform(bird_eye, 0xFFFF);
-        eadk_display_push_rect_uniform(bird_pupil, 0x0000);
-    } else if (app_type == APP_TYPE_2048) {
-        /* Tuile dorée 2048 */
-        eadk_rect_t tile = {(uint16_t)(cx - 9), (uint16_t)(cy - 9), 18, 18};
-        eadk_rect_t inner = {(uint16_t)(cx - 7), (uint16_t)(cy - 7), 14, 14};
-        eadk_display_push_rect_uniform(tile, 0xFDE0);
-        eadk_display_push_rect_uniform(inner, 0xFBE0);
-        eadk_point_t p2 = {(uint16_t)(cx - 5), (uint16_t)(cy - 4)};
-        eadk_display_draw_string("2K", p2, false, 0xFFFF, 0xFBE0);
-    } else if (app_type == APP_TYPE_SNAKE) {
-        /* Serpent pixel vert et pomme rouge */
-        eadk_rect_t s1 = {(uint16_t)(cx - 8), (uint16_t)(cy + 2), 5, 5};
-        eadk_rect_t s2 = {(uint16_t)(cx - 4), (uint16_t)(cy - 3), 5, 5};
-        eadk_rect_t s3 = {(uint16_t)(cx), (uint16_t)(cy - 3), 5, 5};
-        eadk_rect_t head = {(uint16_t)(cx + 4), (uint16_t)(cy - 7), 5, 5};
-        eadk_rect_t apple = {(uint16_t)(cx + 3), (uint16_t)(cy + 2), 4, 4};
-        eadk_display_push_rect_uniform(s1, 0x05E0);
-        eadk_display_push_rect_uniform(s2, 0x07E0);
-        eadk_display_push_rect_uniform(s3, 0x07E0);
-        eadk_display_push_rect_uniform(head, 0x2FE0);
-        eadk_display_push_rect_uniform(apple, 0xF800);
-    } else if (app_type == APP_TYPE_TETRIS) {
-        /* Bloc Tetris en T cyan/violet */
-        eadk_rect_t b1 = {(uint16_t)(cx - 8), (uint16_t)(cy - 6), 5, 5};
-        eadk_rect_t b2 = {(uint16_t)(cx - 2), (uint16_t)(cy - 6), 5, 5};
-        eadk_rect_t b3 = {(uint16_t)(cx + 4), (uint16_t)(cy - 6), 5, 5};
-        eadk_rect_t b4 = {(uint16_t)(cx - 2), (uint16_t)(cy), 5, 5};
-        eadk_display_push_rect_uniform(b1, 0x981F);
-        eadk_display_push_rect_uniform(b2, 0x981F);
-        eadk_display_push_rect_uniform(b3, 0x981F);
-        eadk_display_push_rect_uniform(b4, 0x981F);
-    } else if (app_type == APP_TYPE_MINESWEEPER) {
-        /* Bombe démineur noire avec mèche rouge */
-        eadk_rect_t bomb = {(uint16_t)(cx - 6), (uint16_t)(cy - 4), 12, 12};
-        eadk_rect_t fuse = {(uint16_t)(cx + 1), (uint16_t)(cy - 8), 3, 5};
-        eadk_rect_t spark = {(uint16_t)(cx + 3), (uint16_t)(cy - 9), 3, 3};
-        eadk_rect_t glint = {(uint16_t)(cx - 3), (uint16_t)(cy - 2), 3, 3};
-        eadk_display_push_rect_uniform(bomb, 0x18C3);
-        eadk_display_push_rect_uniform(fuse, 0x8BE0);
-        eadk_display_push_rect_uniform(spark, 0xF800);
-        eadk_display_push_rect_uniform(glint, 0xFFFF);
     } else if (app_type == APP_TYPE_PYTHON) {
         /* Logo Python bleu & jaune */
         eadk_rect_t py_top = {(uint16_t)(cx - 6), (uint16_t)(cy - 8), 12, 7};
@@ -562,82 +546,6 @@ static void draw_app_icon(uint8_t app_type, int cx, int cy, uint16_t accent_col)
         eadk_display_push_rect_uniform(p1, 0x3DFE);
         eadk_display_push_rect_uniform(p2, 0xFA80);
         eadk_display_push_rect_uniform(ball, 0xFFFF);
-    } else if (app_type == APP_TYPE_DINO) {
-        /* Petit T-Rex pixel */
-        eadk_rect_t head = {(uint16_t)(cx - 1), (uint16_t)(cy - 8), 8, 6};
-        eadk_rect_t eye = {(uint16_t)(cx + 1), (uint16_t)(cy - 7), 2, 2};
-        eadk_rect_t body = {(uint16_t)(cx - 6), (uint16_t)(cy - 2), 10, 8};
-        eadk_rect_t arm = {(uint16_t)(cx + 2), (uint16_t)(cy), 3, 2};
-        eadk_rect_t leg1 = {(uint16_t)(cx - 4), (uint16_t)(cy + 6), 2, 4};
-        eadk_rect_t leg2 = {(uint16_t)(cx), (uint16_t)(cy + 6), 2, 4};
-        eadk_display_push_rect_uniform(head, 0x52AA);
-        eadk_display_push_rect_uniform(eye, 0xFFFF);
-        eadk_display_push_rect_uniform(body, 0x52AA);
-        eadk_display_push_rect_uniform(arm, 0x52AA);
-        eadk_display_push_rect_uniform(leg1, 0x52AA);
-        eadk_display_push_rect_uniform(leg2, 0x52AA);
-    } else if (app_type == APP_TYPE_SPACE_INVADERS) {
-        /* Alien Space Invaders vert pixel */
-        eadk_rect_t body = {(uint16_t)(cx - 6), (uint16_t)(cy - 4), 12, 8};
-        eadk_rect_t eye1 = {(uint16_t)(cx - 4), (uint16_t)(cy - 2), 2, 2};
-        eadk_rect_t eye2 = {(uint16_t)(cx + 2), (uint16_t)(cy - 2), 2, 2};
-        eadk_rect_t ant1 = {(uint16_t)(cx - 5), (uint16_t)(cy - 7), 2, 3};
-        eadk_rect_t ant2 = {(uint16_t)(cx + 3), (uint16_t)(cy - 7), 2, 3};
-        eadk_rect_t leg1 = {(uint16_t)(cx - 7), (uint16_t)(cy + 4), 3, 3};
-        eadk_rect_t leg2 = {(uint16_t)(cx + 4), (uint16_t)(cy + 4), 3, 3};
-        eadk_display_push_rect_uniform(body, 0x07E0);
-        eadk_display_push_rect_uniform(eye1, 0x0000);
-        eadk_display_push_rect_uniform(eye2, 0x0000);
-        eadk_display_push_rect_uniform(ant1, 0x07E0);
-        eadk_display_push_rect_uniform(ant2, 0x07E0);
-        eadk_display_push_rect_uniform(leg1, 0x07E0);
-        eadk_display_push_rect_uniform(leg2, 0x07E0);
-    } else if (app_type == APP_TYPE_BREAKOUT) {
-        /* Casse-briques : briques colorées, raquette et balle */
-        eadk_rect_t b1 = {(uint16_t)(cx - 8), (uint16_t)(cy - 8), 5, 3};
-        eadk_rect_t b2 = {(uint16_t)(cx - 2), (uint16_t)(cy - 8), 5, 3};
-        eadk_rect_t b3 = {(uint16_t)(cx + 4), (uint16_t)(cy - 8), 5, 3};
-        eadk_rect_t b4 = {(uint16_t)(cx - 5), (uint16_t)(cy - 4), 5, 3};
-        eadk_rect_t b5 = {(uint16_t)(cx + 1), (uint16_t)(cy - 4), 5, 3};
-        eadk_rect_t pad = {(uint16_t)(cx - 8), (uint16_t)(cy + 6), 16, 3};
-        eadk_rect_t ball = {(uint16_t)(cx - 1), (uint16_t)(cy + 1), 3, 3};
-        eadk_display_push_rect_uniform(b1, 0xF800);
-        eadk_display_push_rect_uniform(b2, 0xFA80);
-        eadk_display_push_rect_uniform(b3, 0xFFE0);
-        eadk_display_push_rect_uniform(b4, 0x07E0);
-        eadk_display_push_rect_uniform(b5, 0x3DFE);
-        eadk_display_push_rect_uniform(pad, 0xFFFF);
-        eadk_display_push_rect_uniform(ball, 0xFFFF);
-    } else if (app_type == APP_TYPE_PUISSANCE4) {
-        /* Grille bleue avec 4 jetons jaunes et rouges */
-        eadk_rect_t board = {(uint16_t)(cx - 8), (uint16_t)(cy - 7), 16, 14};
-        eadk_display_push_rect_uniform(board, 0x11FD);
-        eadk_rect_t y1 = {(uint16_t)(cx - 6), (uint16_t)(cy - 5), 4, 4};
-        eadk_rect_t r1 = {(uint16_t)(cx + 2), (uint16_t)(cy - 5), 4, 4};
-        eadk_rect_t r2 = {(uint16_t)(cx - 6), (uint16_t)(cy + 1), 4, 4};
-        eadk_rect_t y2 = {(uint16_t)(cx + 2), (uint16_t)(cy + 1), 4, 4};
-        eadk_display_push_rect_uniform(y1, 0xFFE0);
-        eadk_display_push_rect_uniform(r1, 0xF800);
-        eadk_display_push_rect_uniform(r2, 0xF800);
-        eadk_display_push_rect_uniform(y2, 0xFFE0);
-    } else if (app_type == APP_TYPE_MORPION) {
-        /* Mini grille 3x3 avec X cyan et O rouge */
-        eadk_rect_t g_v1 = {(uint16_t)(cx - 3), (uint16_t)(cy - 7), 1, 14};
-        eadk_rect_t g_v2 = {(uint16_t)(cx + 3), (uint16_t)(cy - 7), 1, 14};
-        eadk_rect_t g_h1 = {(uint16_t)(cx - 7), (uint16_t)(cy - 3), 14, 1};
-        eadk_rect_t g_h2 = {(uint16_t)(cx - 7), (uint16_t)(cy + 3), 14, 1};
-        eadk_display_push_rect_uniform(g_v1, 0x7BEF);
-        eadk_display_push_rect_uniform(g_v2, 0x7BEF);
-        eadk_display_push_rect_uniform(g_h1, 0x7BEF);
-        eadk_display_push_rect_uniform(g_h2, 0x7BEF);
-        eadk_rect_t x1 = {(uint16_t)(cx - 6), (uint16_t)(cy - 6), 2, 2};
-        eadk_rect_t x2 = {(uint16_t)(cx - 5), (uint16_t)(cy - 5), 1, 1};
-        eadk_rect_t x3 = {(uint16_t)(cx - 6), (uint16_t)(cy - 4), 2, 2};
-        eadk_display_push_rect_uniform(x1, 0x3DFE);
-        eadk_display_push_rect_uniform(x2, 0xFFFF);
-        eadk_display_push_rect_uniform(x3, 0x3DFE);
-        eadk_rect_t o1 = {(uint16_t)(cx + 3), (uint16_t)(cy + 3), 3, 3};
-        eadk_display_push_rect_uniform(o1, 0xFA80);
     } else {
         /* Application générique / Boîte d'outils */
         eadk_rect_t box = {(uint16_t)(cx - 7), (uint16_t)(cy - 7), 14, 14};

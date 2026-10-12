@@ -8,6 +8,7 @@
     "category": "Jeux / Arcade",
     "description": "Vrai jeu 3D Mode 7 complet pour NumWorks N0120 avec 8 karts, IA, courses et objets.",
     "icon_initial": "🏎️",
+    "icon_url": "assets/icons/mariokart.png",
     "color": "#EF4444",
     "recommended": true
   },
@@ -56,6 +57,7 @@
     "category": "Jeux / Arcade",
     "description": "Le célèbre jeu Flappy Bird adapté en C natif 60 FPS pour NumWorks N0120.",
     "icon_initial": "🐦",
+    "icon_url": "assets/icons/flappy.png",
     "color": "#EAB308",
     "recommended": true
   },
@@ -68,6 +70,7 @@
     "category": "Jeux / Arcade",
     "description": "Le puzzle 2048 en C natif 60 FPS : fusionnez les tuiles avec les flèches directionnelles.",
     "icon_initial": "🔢",
+    "icon_url": "assets/icons/2048.png",
     "color": "#F97316",
     "recommended": true
   },
@@ -80,6 +83,7 @@
     "category": "Jeux / Arcade",
     "description": "Le jeu du serpent rétro en C natif 60 FPS avec vitesse progressive et gestion de records.",
     "icon_initial": "🐍",
+    "icon_url": "assets/icons/snake.png",
     "color": "#22C55E",
     "recommended": true
   },
@@ -92,6 +96,7 @@
     "category": "Jeux / Arcade",
     "description": "Le jeu de briques légendaire en C natif 60 FPS avec 7 tétraminos et score.",
     "icon_initial": "🧱",
+    "icon_url": "assets/icons/tetris.png",
     "color": "#06B6D4",
     "recommended": true
   },
@@ -104,6 +109,7 @@
     "category": "Jeux / Arcade",
     "description": "Démineur complet en C natif 60 FPS avec drapeaux, révélation auto et smiley.",
     "icon_initial": "💣",
+    "icon_url": "assets/icons/minesweeper.png",
     "color": "#EF4444",
     "recommended": true
   },
@@ -128,6 +134,7 @@
     "category": "Jeux / Arcade",
     "description": "Courez et sautez au-dessus des cactus et ptérodactyles dans ce runner rétro infini.",
     "icon_initial": "🦖",
+    "icon_url": "assets/icons/dino.png",
     "color": "#78716C",
     "recommended": true
   },
@@ -140,6 +147,7 @@
     "category": "Jeux / Arcade",
     "description": "Défendez la Terre contre les vagues d'aliens avec votre canon laser et bunkers protecteurs.",
     "icon_initial": "👾",
+    "icon_url": "assets/icons/space_invaders.png",
     "color": "#10B981",
     "recommended": true
   },
@@ -152,6 +160,7 @@
     "category": "Jeux / Arcade",
     "description": "Détruisez les briques colorées avec votre balle rebondissante et raquette dynamique.",
     "icon_initial": "🧱",
+    "icon_url": "assets/icons/breakout.png",
     "color": "#F59E0B",
     "recommended": true
   },
@@ -164,6 +173,7 @@
     "category": "Jeux / Arcade",
     "description": "Le duel stratégique : alignez 4 jetons contre l'IA intelligente ou un ami.",
     "icon_initial": "🟡",
+    "icon_url": "assets/icons/puissance4.png",
     "color": "#3B82F6",
     "recommended": true
   },
@@ -176,8 +186,8 @@
     "category": "Jeux / Arcade",
     "description": "Alignez 3 symboles face à une IA imbattable (Minimax) ou en mode 2 joueurs.",
     "icon_initial": "❌",
+    "icon_url": "assets/icons/morpion.png",
     "color": "#EC4899",
     "recommended": true
   }
 ]
-

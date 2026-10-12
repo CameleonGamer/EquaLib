@@ -20,6 +20,42 @@ function safeStorageSet(key, val) {
   } catch (_) {}
 }
 
+const SIM_GAME_ICON_URL_MAP = {
+  mariokart: 'assets/icons/mariokart.png',
+  comm_flappy: 'assets/icons/flappy.png',
+  flappy: 'assets/icons/flappy.png',
+  comm_2048: 'assets/icons/2048.png',
+  2048: 'assets/icons/2048.png',
+  comm_snake: 'assets/icons/snake.png',
+  snake: 'assets/icons/snake.png',
+  comm_tetris: 'assets/icons/tetris.png',
+  tetris: 'assets/icons/tetris.png',
+  comm_minesweeper: 'assets/icons/minesweeper.png',
+  minesweeper: 'assets/icons/minesweeper.png',
+  demineur: 'assets/icons/minesweeper.png',
+  dino: 'assets/icons/dino.png',
+  comm_dino: 'assets/icons/dino.png',
+  space_invaders: 'assets/icons/space_invaders.png',
+  comm_space_invaders: 'assets/icons/space_invaders.png',
+  breakout: 'assets/icons/breakout.png',
+  comm_breakout: 'assets/icons/breakout.png',
+  puissance4: 'assets/icons/puissance4.png',
+  comm_puissance4: 'assets/icons/puissance4.png',
+  morpion: 'assets/icons/morpion.png',
+  comm_morpion: 'assets/icons/morpion.png'
+};
+
+function getSimAppIconUrl(app) {
+  if (!app) return null;
+  if (app.icon_url) return app.icon_url;
+  if (app.id && SIM_GAME_ICON_URL_MAP[app.id]) return SIM_GAME_ICON_URL_MAP[app.id];
+  const idL = (app.id || '').toLowerCase();
+  for (const [k, v] of Object.entries(SIM_GAME_ICON_URL_MAP)) {
+    if (idL.includes(k)) return v;
+  }
+  return null;
+}
+
 class NumWorksSimulator {
   constructor(containerId) {
     this.container = document.getElementById(containerId);
@@ -34,19 +70,21 @@ class NumWorksSimulator {
     window.simulator = this;
 
     this.apps = [
-      { id: 'mariokart', name: '1. Mario Kart', cat: 'Arcade', type: 'MARIO', icon: '🏎️' },
+      { id: 'mariokart', name: '1. Mario Kart', cat: 'Arcade', type: 'MARIO', icon: '🏎️', icon_url: 'assets/icons/mariokart.png' },
       { id: 'periodique', name: '2. Tableau Périodique', cat: 'Chimie', type: 'PERIODIC', icon: '🧪' },
       { id: 'fiches', name: '3. Fiches de Cours', cat: 'Révision', type: 'COURSES', icon: '📚' },
-      { id: 'flappy', name: '4. Flappy Bird', cat: 'Arcade', type: 'FLAPPY', icon: '🐦' },
-      { id: '2048', name: '5. 2048 Ultimate', cat: 'Arcade', type: '2048', icon: '🔢' },
-      { id: 'snake', name: '6. Snake Classic', cat: 'Arcade', type: 'SNAKE', icon: '🐍' },
-      { id: 'pong', name: '7. Pong Retro', cat: 'Arcade', type: 'PONG', icon: '🏓' },
-      { id: 'dino', name: '8. Chrome Dino', cat: 'Arcade', type: 'DINO', icon: '🦖' },
-      { id: 'space_invaders', name: '9. Space Invaders', cat: 'Arcade', type: 'SPACE_INVADERS', icon: '👾' },
-      { id: 'breakout', name: '10. Casse-Briques', cat: 'Arcade', type: 'BREAKOUT', icon: '🧱' },
-      { id: 'puissance4', name: '11. Puissance 4', cat: 'Arcade', type: 'PUISSANCE4', icon: '🟡' },
-      { id: 'morpion', name: '12. Morpion (Tic-Tac-Toe)', cat: 'Arcade', type: 'MORPION', icon: '❌' },
-      { id: 'settings', name: '13. Paramètres & Thèmes', cat: 'Options', type: 'SETTINGS', icon: '⚙️' }
+      { id: 'flappy', name: '4. Flappy Bird', cat: 'Arcade', type: 'FLAPPY', icon: '🐦', icon_url: 'assets/icons/flappy.png' },
+      { id: '2048', name: '5. 2048 Ultimate', cat: 'Arcade', type: '2048', icon: '🔢', icon_url: 'assets/icons/2048.png' },
+      { id: 'snake', name: '6. Snake Classic', cat: 'Arcade', type: 'SNAKE', icon: '🐍', icon_url: 'assets/icons/snake.png' },
+      { id: 'tetris', name: '7. Tetris Master', cat: 'Puzzle', type: 'GENERIC', icon: '🧱', icon_url: 'assets/icons/tetris.png' },
+      { id: 'demineur', name: '8. Démineur', cat: 'Logique', type: 'GENERIC', icon: '💣', icon_url: 'assets/icons/minesweeper.png' },
+      { id: 'pong', name: '9. Pong Retro', cat: 'Arcade', type: 'PONG', icon: '🏓' },
+      { id: 'dino', name: '10. Chrome Dino', cat: 'Arcade', type: 'DINO', icon: '🦖', icon_url: 'assets/icons/dino.png' },
+      { id: 'space_invaders', name: '11. Space Invaders', cat: 'Arcade', type: 'SPACE_INVADERS', icon: '👾', icon_url: 'assets/icons/space_invaders.png' },
+      { id: 'breakout', name: '12. Casse-Briques', cat: 'Arcade', type: 'BREAKOUT', icon: '🧱', icon_url: 'assets/icons/breakout.png' },
+      { id: 'puissance4', name: '13. Puissance 4', cat: 'Tactique', type: 'PUISSANCE4', icon: '🟡', icon_url: 'assets/icons/puissance4.png' },
+      { id: 'morpion', name: '14. Morpion (Tic-Tac-Toe)', cat: 'Tactique', type: 'MORPION', icon: '❌', icon_url: 'assets/icons/morpion.png' },
+      { id: 'settings', name: '15. Paramètres & Thèmes', cat: 'Options', type: 'SETTINGS', icon: '⚙️' }
     ];
 
     let savedSettings = null;
@@ -754,7 +792,9 @@ class NumWorksSimulator {
           <div class="sim-item sim-gallery-card ${isSel ? 'is-selected' : ''} cursor-pointer p-0.5 ${cardRadius} border text-center flex flex-col items-center justify-between transition-all select-none"
             data-index="${absIdx}"
             style="background-color: ${cardBg}; border-color: ${cardBorder}; ${cardShadow} ${cardBackdrop} height: 44px;">
-            <span class="text-sm leading-none mt-0.5">${app.icon}</span>
+            ${(app.icon_url || getSimAppIconUrl(app))
+              ? `<img src="${app.icon_url || getSimAppIconUrl(app)}" class="w-5 h-5 object-contain my-0.5 pointer-events-none drop-shadow" alt="">`
+              : `<span class="text-sm leading-none mt-0.5">${app.icon}</span>`}
             <span class="text-[8px] font-bold truncate max-w-full leading-tight mb-0.5" style="color: ${isSel ? pal.border : pal.text}">${app.name.replace(/^[0-9]+\.\s*/, '')}</span>
           </div>
         `;
@@ -792,8 +832,11 @@ class NumWorksSimulator {
           } text-[9px] flex justify-between items-center transition-all border"
             data-index="${idx}"
             style="background-color: ${cardBg}; border-color: ${cardBorder}; ${cardBackdrop}">
-            <span class="truncate flex items-center gap-1" style="color: ${isSel ? pal.border : pal.text}">
-              <span>${app.icon}</span> ${app.name}
+            <span class="truncate flex items-center gap-1.5" style="color: ${isSel ? pal.border : pal.text}">
+              ${(app.icon_url || getSimAppIconUrl(app))
+                ? `<img src="${app.icon_url || getSimAppIconUrl(app)}" class="w-3.5 h-3.5 object-contain inline-block shrink-0 pointer-events-none" alt="">`
+                : `<span>${app.icon}</span>`}
+              <span>${app.name}</span>
             </span>
             <span class="text-[8px] shrink-0 ml-1 font-mono font-bold" style="color: ${pal.descText}">${app.cat}</span>
           </div>
@@ -819,8 +862,10 @@ class NumWorksSimulator {
     html += `
       <div class="sim-bottom-dock p-1 ${dockRadius} border ${dockShadow} flex items-center justify-between text-[9px] select-none transition-all mt-0.5"
         style="background-color: ${dockBg}; border-color: ${dockBorder}; ${dockBackdrop}">
-        <div class="flex items-center gap-1 min-w-0">
-          <span class="text-xs shrink-0">${selApp.icon || '📦'}</span>
+        <div class="flex items-center gap-1.5 min-w-0">
+          ${(selApp.icon_url || getSimAppIconUrl(selApp))
+            ? `<img src="${selApp.icon_url || getSimAppIconUrl(selApp)}" class="w-4 h-4 object-contain inline-block shrink-0 pointer-events-none drop-shadow-sm" alt="">`
+            : `<span class="text-xs shrink-0">${selApp.icon || '📦'}</span>`}
           <span class="font-extrabold truncate" style="color: ${pal.text}">${selApp.name}</span>
         </div>
         <span class="text-[8px] px-1 py-0.2 rounded font-mono font-bold shrink-0 ml-1 border"
@@ -865,19 +910,21 @@ class NumWorksSimulator {
   syncWithPack(pack) {
     if (!pack || pack.length === 0) {
       this.apps = [
-        { id: 'mariokart', name: '1. Mario Kart', cat: 'Arcade', type: 'MARIO', icon: '🏎️' },
+        { id: 'mariokart', name: '1. Mario Kart', cat: 'Arcade', type: 'MARIO', icon: '🏎️', icon_url: 'assets/icons/mariokart.png' },
         { id: 'periodique', name: '2. Tableau Périodique', cat: 'Chimie', type: 'PERIODIC', icon: '🧪' },
         { id: 'fiches', name: '3. Fiches de Cours', cat: 'Révision', type: 'COURSES', icon: '📚' },
-        { id: 'flappy', name: '4. Flappy Bird', cat: 'Arcade', type: 'FLAPPY', icon: '🐦' },
-        { id: '2048', name: '5. 2048 Ultimate', cat: 'Arcade', type: '2048', icon: '🔢' },
-        { id: 'snake', name: '6. Snake Classic', cat: 'Arcade', type: 'SNAKE', icon: '🐍' },
-        { id: 'pong', name: '7. Pong Retro', cat: 'Arcade', type: 'PONG', icon: '🏓' },
-        { id: 'dino', name: '8. Chrome Dino', cat: 'Arcade', type: 'DINO', icon: '🦖' },
-        { id: 'space_invaders', name: '9. Space Invaders', cat: 'Arcade', type: 'SPACE_INVADERS', icon: '👾' },
-        { id: 'breakout', name: '10. Casse-Briques', cat: 'Arcade', type: 'BREAKOUT', icon: '🧱' },
-        { id: 'puissance4', name: '11. Puissance 4', cat: 'Arcade', type: 'PUISSANCE4', icon: '🟡' },
-        { id: 'morpion', name: '12. Morpion (Tic-Tac-Toe)', cat: 'Arcade', type: 'MORPION', icon: '❌' },
-        { id: 'settings', name: '13. Paramètres & Thèmes', cat: 'Options', type: 'SETTINGS', icon: '⚙️' }
+        { id: 'flappy', name: '4. Flappy Bird', cat: 'Arcade', type: 'FLAPPY', icon: '🐦', icon_url: 'assets/icons/flappy.png' },
+        { id: '2048', name: '5. 2048 Ultimate', cat: 'Arcade', type: '2048', icon: '🔢', icon_url: 'assets/icons/2048.png' },
+        { id: 'snake', name: '6. Snake Classic', cat: 'Arcade', type: 'SNAKE', icon: '🐍', icon_url: 'assets/icons/snake.png' },
+        { id: 'tetris', name: '7. Tetris Master', cat: 'Puzzle', type: 'GENERIC', icon: '🧱', icon_url: 'assets/icons/tetris.png' },
+        { id: 'demineur', name: '8. Démineur', cat: 'Logique', type: 'GENERIC', icon: '💣', icon_url: 'assets/icons/minesweeper.png' },
+        { id: 'pong', name: '9. Pong Retro', cat: 'Arcade', type: 'PONG', icon: '🏓' },
+        { id: 'dino', name: '10. Chrome Dino', cat: 'Arcade', type: 'DINO', icon: '🦖', icon_url: 'assets/icons/dino.png' },
+        { id: 'space_invaders', name: '11. Space Invaders', cat: 'Arcade', type: 'SPACE_INVADERS', icon: '👾', icon_url: 'assets/icons/space_invaders.png' },
+        { id: 'breakout', name: '12. Casse-Briques', cat: 'Arcade', type: 'BREAKOUT', icon: '🧱', icon_url: 'assets/icons/breakout.png' },
+        { id: 'puissance4', name: '13. Puissance 4', cat: 'Tactique', type: 'PUISSANCE4', icon: '🟡', icon_url: 'assets/icons/puissance4.png' },
+        { id: 'morpion', name: '14. Morpion (Tic-Tac-Toe)', cat: 'Tactique', type: 'MORPION', icon: '❌', icon_url: 'assets/icons/morpion.png' },
+        { id: 'settings', name: '15. Paramètres & Thèmes', cat: 'Options', type: 'SETTINGS', icon: '⚙️' }
       ];
     } else {
       this.apps = pack.map((app, i) => {
@@ -902,12 +949,15 @@ class NumWorksSimulator {
         else if (idL.includes('puissance') || nameL.includes('puissance') || idL.includes('connect4') || nameL.includes('connect4')) { type = 'PUISSANCE4'; icon = '🟡'; }
         else if (idL.includes('morpion') || nameL.includes('morpion') || idL.includes('tic') || nameL.includes('tic tac toe')) { type = 'MORPION'; icon = '❌'; }
 
+        const iconUrl = app.icon_url || getSimAppIconUrl(app) || null;
+
         return {
           id: app.id,
           name: `${i + 1}. ${app.name.replace(/^[0-9]+\.\s*/, '')}`,
           cat: (app.category || 'Arcade').split('/')[0].trim(),
           type: type,
-          icon: icon
+          icon: icon,
+          icon_url: iconUrl
         };
       });
 

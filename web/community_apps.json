@@ -12,7 +12,14 @@
     "color": "#EAB308",
     "download_url": "apps/flappy.nws",
     "source": "GitHub Community",
-    "tags": ["flappy", "bird", "jeu", "arcade", "score"]
+    "tags": [
+      "flappy",
+      "bird",
+      "jeu",
+      "arcade",
+      "score"
+    ],
+    "icon_url": "assets/icons/flappy.png"
   },
   {
     "id": "comm_2048",
@@ -27,7 +34,14 @@
     "color": "#F97316",
     "download_url": "apps/2048.nws",
     "source": "NumWorks Workshop",
-    "tags": ["2048", "puzzle", "jeu", "tuiles", "maths"]
+    "tags": [
+      "2048",
+      "puzzle",
+      "jeu",
+      "tuiles",
+      "maths"
+    ],
+    "icon_url": "assets/icons/2048.png"
   },
   {
     "id": "comm_snake",
@@ -42,7 +56,13 @@
     "color": "#22C55E",
     "download_url": "apps/snake.nws",
     "source": "GitHub Community",
-    "tags": ["snake", "serpent", "retro", "arcade"]
+    "tags": [
+      "snake",
+      "serpent",
+      "retro",
+      "arcade"
+    ],
+    "icon_url": "assets/icons/snake.png"
   },
   {
     "id": "comm_tetris",
@@ -57,9 +77,14 @@
     "color": "#06B6D4",
     "download_url": "apps/tetris.nws",
     "source": "GitHub Community",
-    "tags": ["tetris", "briques", "retro", "lignes"]
+    "tags": [
+      "tetris",
+      "briques",
+      "retro",
+      "lignes"
+    ],
+    "icon_url": "assets/icons/tetris.png"
   },
-
   {
     "id": "comm_minesweeper",
     "name": "Démineur NumWorks",
@@ -73,7 +98,13 @@
     "color": "#EF4444",
     "download_url": "apps/minesweeper.nws",
     "source": "NumWorks Workshop",
-    "tags": ["demineur", "mines", "bombes", "reflexion"]
+    "tags": [
+      "demineur",
+      "mines",
+      "bombes",
+      "reflexion"
+    ],
+    "icon_url": "assets/icons/minesweeper.png"
   },
   {
     "id": "comm_pong",
@@ -88,7 +119,13 @@
     "color": "#6366F1",
     "download_url": "apps/pong.nws",
     "source": "GitHub Community",
-    "tags": ["pong", "tennis", "arcade", "retro", "balle"]
+    "tags": [
+      "pong",
+      "tennis",
+      "arcade",
+      "retro",
+      "balle"
+    ]
   },
   {
     "id": "comm_dino",
@@ -103,7 +140,14 @@
     "color": "#78716C",
     "download_url": "apps/dino.nws",
     "source": "NumWorks Workshop",
-    "tags": ["dino", "runner", "t-rex", "chrome", "cactus"]
+    "tags": [
+      "dino",
+      "runner",
+      "t-rex",
+      "chrome",
+      "cactus"
+    ],
+    "icon_url": "assets/icons/dino.png"
   },
   {
     "id": "comm_space_invaders",
@@ -118,7 +162,14 @@
     "color": "#10B981",
     "download_url": "apps/space_invaders.nws",
     "source": "NW Retro",
-    "tags": ["space", "invaders", "aliens", "laser", "shoot"]
+    "tags": [
+      "space",
+      "invaders",
+      "aliens",
+      "laser",
+      "shoot"
+    ],
+    "icon_url": "assets/icons/space_invaders.png"
   },
   {
     "id": "comm_breakout",
@@ -133,7 +184,13 @@
     "color": "#F59E0B",
     "download_url": "apps/breakout.nws",
     "source": "GitHub Community",
-    "tags": ["breakout", "casse-briques", "briques", "arcade"]
+    "tags": [
+      "breakout",
+      "casse-briques",
+      "briques",
+      "arcade"
+    ],
+    "icon_url": "assets/icons/breakout.png"
   },
   {
     "id": "comm_puissance4",
@@ -148,7 +205,13 @@
     "color": "#3B82F6",
     "download_url": "apps/puissance4.nws",
     "source": "Jeux de societe",
-    "tags": ["puissance4", "connect4", "jetons", "strategie"]
+    "tags": [
+      "puissance4",
+      "connect4",
+      "jetons",
+      "strategie"
+    ],
+    "icon_url": "assets/icons/puissance4.png"
   },
   {
     "id": "comm_morpion",
@@ -163,7 +226,13 @@
     "color": "#EF4444",
     "download_url": "apps/morpion.nws",
     "source": "Jeux de societe",
-    "tags": ["morpion", "tictactoe", "grille", "duel"]
+    "tags": [
+      "morpion",
+      "tictactoe",
+      "grille",
+      "duel"
+    ],
+    "icon_url": "assets/icons/morpion.png"
   },
   {
     "id": "comm_wordle_fr",
@@ -178,7 +247,12 @@
     "color": "#10B981",
     "download_url": "apps/wordle.nws",
     "source": "GitHub Community",
-    "tags": ["wordle", "mot", "francais", "lettres"]
+    "tags": [
+      "wordle",
+      "mot",
+      "francais",
+      "lettres"
+    ]
   },
   {
     "id": "comm_fiches_bac_maths",
@@ -193,7 +267,14 @@
     "color": "#8B5CF6",
     "download_url": "apps/bac_maths.nws",
     "source": "Éducation & Partage",
-    "tags": ["bac", "maths", "terminale", "spe", "cours", "formules"]
+    "tags": [
+      "bac",
+      "maths",
+      "terminale",
+      "spe",
+      "cours",
+      "formules"
+    ]
   },
   {
     "id": "comm_fiches_bac_pc",
@@ -208,7 +289,14 @@
     "color": "#3B82F6",
     "download_url": "apps/bac_physique.nws",
     "source": "Éducation & Partage",
-    "tags": ["bac", "physique", "chimie", "formules", "newton", "ondes"]
+    "tags": [
+      "bac",
+      "physique",
+      "chimie",
+      "formules",
+      "newton",
+      "ondes"
+    ]
   },
   {
     "id": "comm_fiches_prepa",
@@ -223,7 +311,14 @@
     "color": "#6366F1",
     "download_url": "apps/prepa_mpsi.nws",
     "source": "CPGE Libre",
-    "tags": ["prepa", "mpsi", "pcsi", "algebre", "analyse", "matrices"]
+    "tags": [
+      "prepa",
+      "mpsi",
+      "pcsi",
+      "algebre",
+      "analyse",
+      "matrices"
+    ]
   },
   {
     "id": "comm_fiches_philo",
@@ -238,7 +333,13 @@
     "color": "#A855F7",
     "download_url": "apps/philo.nws",
     "source": "Bac Libre",
-    "tags": ["philo", "philosophie", "bac", "citations", "notions"]
+    "tags": [
+      "philo",
+      "philosophie",
+      "bac",
+      "citations",
+      "notions"
+    ]
   },
   {
     "id": "comm_matrix_solver",
@@ -253,7 +354,13 @@
     "color": "#EC4899",
     "download_url": "apps/matrices.nws",
     "source": "GitHub Community",
-    "tags": ["matrices", "gauss", "systemes", "determinant", "algebre"]
+    "tags": [
+      "matrices",
+      "gauss",
+      "systemes",
+      "determinant",
+      "algebre"
+    ]
   },
   {
     "id": "comm_syracuse",
@@ -268,7 +375,12 @@
     "color": "#0284C7",
     "download_url": "apps/syracuse.nws",
     "source": "NumWorks Workshop",
-    "tags": ["syracuse", "collatz", "suites", "graphes"]
+    "tags": [
+      "syracuse",
+      "collatz",
+      "suites",
+      "graphes"
+    ]
   },
   {
     "id": "comm_constantes",
@@ -283,7 +395,12 @@
     "color": "#14B8A6",
     "download_url": "apps/constantes.nws",
     "source": "Science Hub",
-    "tags": ["constantes", "physique", "codata", "unites", "planck"]
+    "tags": [
+      "constantes",
+      "physique",
+      "codata",
+      "unites",
+      "planck"
+    ]
   }
 ]
-
