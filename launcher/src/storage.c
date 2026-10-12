@@ -54,13 +54,25 @@ eq_storage_t* eq_storage_get(void) {
         s->record_morpion_wins = 0;
         s->record_pong_wins = 0;
         s->record_minesweeper_wins = 0;
-        s->glass_mode = (g_equalib_manifest.flags & 0x20) ? 1 : 0;
-        s->smooth_corners = (g_equalib_manifest.flags & 0x40) ? 1 : 0;
-        for (int i = 0; i < 2; i++) {
-            s->reserved[i] = 0;
-        }
+        s->glass_mode = (g_equalib_manifest.flags & MANIFEST_FLAG_GLASS_MODE) ? 1 : 0;
+        s->smooth_corners = (g_equalib_manifest.flags & MANIFEST_FLAG_SMOOTH_CORNERS) ? 1 : 0;
+        s->last_manifest_flags = g_equalib_manifest.flags;
+        s->reserved = 0;
         s->checksum = eq_storage_calc_checksum(s);
     } else {
+        /* Si les options du manifeste flashé ont été modifiées depuis le site web */
+        if (s->last_manifest_flags != g_equalib_manifest.flags) {
+            s->glass_mode = (g_equalib_manifest.flags & MANIFEST_FLAG_GLASS_MODE) ? 1 : 0;
+            s->smooth_corners = (g_equalib_manifest.flags & MANIFEST_FLAG_SMOOTH_CORNERS) ? 1 : 0;
+            s->view_mode = (g_equalib_manifest.flags & MANIFEST_FLAG_VIEW_MODE_LIST) ? 1 : 0;
+            uint32_t m_theme = g_equalib_manifest.flags & MANIFEST_FLAG_THEME_MASK;
+            if (m_theme < 7) {
+                s->theme = (int32_t)m_theme;
+            }
+            s->last_manifest_flags = g_equalib_manifest.flags;
+            s->checksum = eq_storage_calc_checksum(s);
+        }
+
         /* Si un pack avec fond personnalisé (Thème 6) vient d'être flashé, basculer automatiquement */
         if ((g_equalib_manifest.flags & 0x0F) == 6 &&
             g_equalib_manifest.wallpaper_size >= 153600 &&

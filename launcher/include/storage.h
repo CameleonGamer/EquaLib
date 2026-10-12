@@ -6,7 +6,7 @@
 #include <stdbool.h>
 #include "equalib_manifest.h"
 
-#define EQ_STORAGE_MAGIC 0x45515356 /* "EQSV" */
+#define EQ_STORAGE_MAGIC 0x474C5332 /* "GLS2" (Glass UI v2) */
 
 #pragma pack(push, 4)
 typedef struct {
@@ -28,7 +28,8 @@ typedef struct {
     int32_t record_minesweeper_wins;
     int32_t glass_mode;
     int32_t smooth_corners;
-    uint32_t reserved[2];
+    uint32_t last_manifest_flags;
+    uint32_t reserved;
 } eq_storage_t;
 #pragma pack(pop)
 

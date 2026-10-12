@@ -237,15 +237,18 @@ static void __attribute__((noinline)) draw_styled_container(
 ) {
     if (w <= 0 || h <= 0 || w > EADK_SCREEN_WIDTH) return;
 
-    /* Masque d'arrondi de rayon R=4 px pour bords lisses */
-    static const uint8_t corner_indents[4] = { 3, 2, 1, 0 };
+    /* Masque d'arrondi de rayon R=6 px pour de superbes bords lisses */
+    static const uint8_t corner_indents[6] = { 5, 3, 2, 1, 1, 0 };
 
     for (int r = 0; r < h; r++) {
         int py = y + r;
         int ind = 0;
-        if (g_smooth_corners && h >= 10) {
-            if (r < 4) ind = corner_indents[r];
-            else if (r >= h - 4) ind = corner_indents[h - 1 - r];
+        if (g_smooth_corners && h >= 16) {
+            if (r < 6) ind = corner_indents[r];
+            else if (r >= h - 6) ind = corner_indents[h - 1 - r];
+        } else if (g_smooth_corners && h >= 10) {
+            if (r < 3) ind = corner_indents[r + 3];
+            else if (r >= h - 3) ind = corner_indents[h - 1 - r + 3];
         }
 
         int x_start = ind;
@@ -277,16 +280,21 @@ static void __attribute__((noinline)) draw_styled_container(
             }
 
             if (is_border) {
-                if (is_specular && !is_sel) {
-                    /* Liséré spéculaire supérieur et gauche façon Apple Glass */
-                    s_styled_line_buf[c] = rgb565_blend_50_50(card_color, 0xFFFF);
+                if (is_sel) {
+                    s_styled_line_buf[c] = border_color;
+                } else if (is_specular) {
+                    /* Liséré spéculaire supérieur façon Apple Glass : reflet blanc pur éclatant */
+                    s_styled_line_buf[c] = 0xFFFF;
+                } else if (g_glass_mode) {
+                    /* Bordure translucide lumineuse façon verre biseauté */
+                    s_styled_line_buf[c] = rgb565_blend_50_50(0xFFFF, bg_pix);
                 } else {
                     s_styled_line_buf[c] = border_color;
                 }
             } else {
-                /* Corps du conteneur : mélange verre dépoli ou couleur pleine */
+                /* Corps du conteneur : mélange verre dépoli 50/50 ou couleur pleine */
                 if (g_glass_mode) {
-                    s_styled_line_buf[c] = rgb565_blend_75_25(card_color, bg_pix);
+                    s_styled_line_buf[c] = rgb565_blend_50_50(card_color, bg_pix);
                 } else {
                     s_styled_line_buf[c] = card_color;
                 }
@@ -688,7 +696,7 @@ static void draw_gallery_card(int app_index, int col, int row, bool is_sel, cons
 
     eadk_color_t text_bg = base_card_col;
     if (g_glass_mode) {
-        text_bg = rgb565_blend_75_25(base_card_col, get_bg_pixel(txt_x + (txt_len * 3), y + 54, theme, wp_ptr));
+        text_bg = rgb565_blend_50_50(base_card_col, get_bg_pixel(txt_x + (txt_len * 3), y + 54, theme, wp_ptr));
     }
     eadk_color_t text_col = get_contrast_text_color(text_bg);
 
@@ -723,7 +731,7 @@ static void draw_list_card(int app_index, int v_slot, bool is_sel, const theme_t
 
     eadk_color_t text_bg = base_card_col;
     if (g_glass_mode) {
-        text_bg = rgb565_blend_75_25(base_card_col, get_bg_pixel(80, y + 17, theme, wp_ptr));
+        text_bg = rgb565_blend_50_50(base_card_col, get_bg_pixel(80, y + 17, theme, wp_ptr));
     }
     eadk_color_t text_col = get_contrast_text_color(text_bg);
 
@@ -754,7 +762,7 @@ static void draw_bottom_active_dock(int app_index, const theme_t* theme) {
 
     eadk_color_t dock_text_bg = theme->dock_bg;
     if (g_glass_mode) {
-        dock_text_bg = rgb565_blend_75_25(theme->dock_bg, get_bg_pixel(dock_x + 100, dock_y + 12, theme, wp_ptr));
+        dock_text_bg = rgb565_blend_50_50(theme->dock_bg, get_bg_pixel(dock_x + 100, dock_y + 12, theme, wp_ptr));
     }
     eadk_color_t dock_text_col = get_contrast_text_color(dock_text_bg);
 
@@ -1183,16 +1191,16 @@ int main(int argc, char* argv[]) {
                     for (int c = 0; c < EADK_SCREEN_WIDTH; c++) {
                         eadk_color_t bg_pix = get_bg_pixel(c, r, cur_th, wp_ptr);
                         if (r == 21) {
-                            /* Liséré inférieur fin 1px */
+                            /* Liséré inférieur blanc translucide fin 1px façon Apple Glass */
                             s_styled_line_buf[c] = rgb565_blend_50_50(cur_th->top_bar, 0xFFFF);
                         } else {
-                            s_styled_line_buf[c] = rgb565_blend_75_25(cur_th->top_bar, bg_pix);
+                            s_styled_line_buf[c] = rgb565_blend_50_50(cur_th->top_bar, bg_pix);
                         }
                     }
                     eadk_rect_t r_line = {0, (uint16_t)r, EADK_SCREEN_WIDTH, 1};
                     eadk_display_push_rect(r_line, s_styled_line_buf);
                 }
-                bar_text_bg = rgb565_blend_75_25(cur_th->top_bar, get_bg_pixel(50, 10, cur_th, wp_ptr));
+                bar_text_bg = rgb565_blend_50_50(cur_th->top_bar, get_bg_pixel(50, 10, cur_th, wp_ptr));
             } else {
                 eadk_rect_t top_bar = {0, 0, EADK_SCREEN_WIDTH, 22};
                 eadk_display_push_rect_uniform(top_bar, cur_th->top_bar);
