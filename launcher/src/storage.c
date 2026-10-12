@@ -38,7 +38,7 @@ eq_storage_t* eq_storage_get(void) {
         s->magic = EQ_STORAGE_MAGIC;
         uint32_t init_theme = g_equalib_manifest.flags & 0x0F;
         s->theme = (init_theme < 7) ? (int32_t)init_theme : 0;
-        if (s->theme == 6 && (g_equalib_manifest.wallpaper_size < 153600 || g_equalib_manifest.wallpaper_offset == 0)) {
+        if (s->theme == 6 && (g_equalib_manifest.wallpaper_size < 153600 || g_equalib_manifest.wallpaper_offset < 0x10000)) {
             s->theme = 0;
         }
         s->view_mode = (g_equalib_manifest.flags & 0x10) ? 1 : 0; /* GALLERY = 0, LIST = 1 */
@@ -62,11 +62,11 @@ eq_storage_t* eq_storage_get(void) {
         /* Si un pack avec fond personnalisé (Thème 6) vient d'être flashé, basculer automatiquement */
         if ((g_equalib_manifest.flags & 0x0F) == 6 &&
             g_equalib_manifest.wallpaper_size >= 153600 &&
-            g_equalib_manifest.wallpaper_offset > 0 &&
+            g_equalib_manifest.wallpaper_offset >= 0x10000 &&
             s->theme != 6) {
             s->theme = 6;
             s->checksum = eq_storage_calc_checksum(s);
-        } else if (s->theme == 6 && (g_equalib_manifest.wallpaper_size < 153600 || g_equalib_manifest.wallpaper_offset == 0)) {
+        } else if (s->theme == 6 && (g_equalib_manifest.wallpaper_size < 153600 || g_equalib_manifest.wallpaper_offset < 0x10000)) {
             /* Si l'ancien stockage conservait le Thème 6 mais que le binaire flashé n'a pas de fond personnalisé */
             uint32_t init_theme = g_equalib_manifest.flags & 0x0F;
             s->theme = (init_theme < 6) ? (int32_t)init_theme : 0;

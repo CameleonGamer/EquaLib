@@ -67,18 +67,16 @@ class EquaLibBundler {
       return u8;
     }
 
-    if (!apps || apps.length === 0) {
-      return u8;
-    }
-
-    const selectedList = apps.slice(0, 20);
+    const selectedList = (apps && apps.length > 0) ? apps.slice(0, 20) : [];
     const count = selectedList.length;
 
-    // Mise à jour de app_count
-    u8[offset + 8] = count & 0xFF;
-    u8[offset + 9] = (count >> 8) & 0xFF;
-    u8[offset + 10] = (count >> 16) & 0xFF;
-    u8[offset + 11] = (count >> 24) & 0xFF;
+    if (count > 0) {
+      // Mise à jour de app_count
+      u8[offset + 8] = count & 0xFF;
+      u8[offset + 9] = (count >> 8) & 0xFF;
+      u8[offset + 10] = (count >> 16) & 0xFF;
+      u8[offset + 11] = (count >> 24) & 0xFF;
+    }
 
     // Custom Wallpaper extraction & injection
     let wallpaperBytes = options.customWallpaper || this.options?.customWallpaper;
@@ -154,11 +152,12 @@ class EquaLibBundler {
       u8[offset + 23] = 0;
     }
 
-    // Nettoyage de la table des 20 apps (20 * 144 = 2880 octets)
-    const appsStart = offset + 24;
-    u8.fill(0, appsStart, appsStart + 20 * 144);
+    if (count > 0) {
+      // Nettoyage de la table des 20 apps (20 * 144 = 2880 octets)
+      const appsStart = offset + 24;
+      u8.fill(0, appsStart, appsStart + 20 * 144);
 
-    for (let i = 0; i < count; i++) {
+      for (let i = 0; i < count; i++) {
       const app = selectedList[i];
       const entryOffset = appsStart + i * 144;
 
@@ -348,6 +347,7 @@ class EquaLibBundler {
         }
       }
     }
+  }
 
     if (extraPayloads.length > 0) {
       const totalExtra = extraPayloads.reduce((sum, p) => sum + p.length, 0);

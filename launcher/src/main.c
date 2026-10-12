@@ -151,12 +151,35 @@ static void save_persistent_settings(void) {
 #define WALLPAPER_BAND_HEIGHT 8
 static eadk_color_t s_wallpaper_ram_band[EADK_SCREEN_WIDTH * WALLPAPER_BAND_HEIGHT];
 
+#define EQUALIB_FLASH_BASE 0x90180000UL
+
 static inline uintptr_t get_app_flash_base(void) {
-    uintptr_t cand = (uintptr_t)eadk_app_name - 32;
-    if (*(const uint32_t*)cand == 0xDEC0BEBA) {
-        return cand;
+    return EQUALIB_FLASH_BASE;
+}
+
+/* Rendu sécurisé du fond d'écran ou fond uni avec vérification MPU et protection anti-HardFault */
+static void __attribute__((noinline)) draw_screen_background(const theme_t* cur_th) {
+    if (g_current_theme == 6 &&
+        g_equalib_manifest.wallpaper_size >= 153600 &&
+        g_equalib_manifest.wallpaper_offset >= 0x10000 &&
+        g_equalib_manifest.wallpaper_offset <= 0x400000) {
+
+        const uintptr_t flash_base = EQUALIB_FLASH_BASE;
+        uint32_t total_app_size = *(const uint32_t*)(flash_base + 24);
+        if (g_equalib_manifest.wallpaper_offset + g_equalib_manifest.wallpaper_size <= total_app_size) {
+            const eadk_color_t* wp_ptr = (const eadk_color_t*)(flash_base + g_equalib_manifest.wallpaper_offset);
+            for (uint16_t y = 0; y < EADK_SCREEN_HEIGHT; y += WALLPAPER_BAND_HEIGHT) {
+                eadk_rect_t band_r = {0, y, EADK_SCREEN_WIDTH, WALLPAPER_BAND_HEIGHT};
+                const eadk_color_t* src = wp_ptr + ((uint32_t)y * EADK_SCREEN_WIDTH);
+                for (int i = 0; i < EADK_SCREEN_WIDTH * WALLPAPER_BAND_HEIGHT; i++) {
+                    s_wallpaper_ram_band[i] = src[i];
+                }
+                eadk_display_push_rect(band_r, s_wallpaper_ram_band);
+            }
+            return;
+        }
     }
-    return 0x90180000;
+    eadk_display_push_rect_uniform(eadk_screen_rect, cur_th->screen_bg);
 }
 
 /* Wrapper d'exécution sécurisé ARM Thumb avec alignement AAPCS et sauvegarde intégrale des registres */
@@ -842,6 +865,9 @@ int main(int argc, char* argv[]) {
     /* Restauration de l'état persistant depuis le stockage AXI-SRAM haut */
     eq_storage_t* st = eq_storage_get();
     g_current_theme = st->theme;
+    if (g_current_theme == 6 && (g_equalib_manifest.wallpaper_size < 153600 || g_equalib_manifest.wallpaper_offset < 0x10000)) {
+        g_current_theme = 0;
+    }
     g_view_mode = st->view_mode;
     g_show_tooltips = (st->tooltips != 0);
 
@@ -978,21 +1004,7 @@ int main(int argc, char* argv[]) {
             full_redraw = false;
 
             /* Fond général de l'écran LCD : Fond personnalisé RGB565 si actif, sinon couleur unie */
-            if (g_current_theme == 6 && g_equalib_manifest.wallpaper_size >= 153600 && g_equalib_manifest.wallpaper_offset > 0) {
-                uintptr_t flash_base = get_app_flash_base();
-                const eadk_color_t* wp_ptr = (const eadk_color_t*)(flash_base + g_equalib_manifest.wallpaper_offset);
-                /* Poussée par bandes via mémoire RAM intermédiaire pour contourner la limitation DMA STM32H7 vers OCTOSPI */
-                for (uint16_t y = 0; y < EADK_SCREEN_HEIGHT; y += WALLPAPER_BAND_HEIGHT) {
-                    eadk_rect_t band_r = {0, y, EADK_SCREEN_WIDTH, WALLPAPER_BAND_HEIGHT};
-                    const eadk_color_t* src = wp_ptr + (y * EADK_SCREEN_WIDTH);
-                    for (int i = 0; i < EADK_SCREEN_WIDTH * WALLPAPER_BAND_HEIGHT; i++) {
-                        s_wallpaper_ram_band[i] = src[i];
-                    }
-                    eadk_display_push_rect(band_r, s_wallpaper_ram_band);
-                }
-            } else {
-                eadk_display_push_rect_uniform(eadk_screen_rect, cur_th->screen_bg);
-            }
+            draw_screen_background(cur_th);
 
             /* Barre supérieure officielle */
             eadk_rect_t top_bar = {0, 0, EADK_SCREEN_WIDTH, 22};
