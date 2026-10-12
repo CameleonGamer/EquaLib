@@ -134,12 +134,16 @@ enum {
 static int g_current_theme = 0;      /* 0 = Classique, 1 = Sakura, 2 = Hacker, 3 = Abeille, 4 = Mario, 5 = GameBoy, 6 = Custom */
 static int g_view_mode = VIEW_MODE_GALLERY; /* Mode Galerie d'images carrées par défaut */
 static bool g_show_tooltips = true;  /* Affichage des raccourcis en bas d'écran */
+static bool g_glass_mode = true;     /* Mode Glassmorphism (effet verre dépoli Apple) */
+static bool g_smooth_corners = true; /* Bords lisses et coins arrondis */
 
 static void save_persistent_settings(void) {
     eq_storage_t* s = eq_storage_get();
     s->theme = g_current_theme;
     s->view_mode = g_view_mode;
     s->tooltips = g_show_tooltips ? 1 : 0;
+    s->glass_mode = g_glass_mode ? 1 : 0;
+    s->smooth_corners = g_smooth_corners ? 1 : 0;
     eq_storage_commit();
 }
 
@@ -180,6 +184,118 @@ static void __attribute__((noinline)) draw_screen_background(const theme_t* cur_
         }
     }
     eadk_display_push_rect_uniform(eadk_screen_rect, cur_th->screen_bg);
+}
+
+/* ==================== RENDU GLASSMORPHISM & BORDS LISSES ==================== */
+
+/* Mélange 50/50 rapide RGB565 sans débordement de canal (4 instructions ARM) */
+static inline uint16_t rgb565_blend_50_50(uint16_t c1, uint16_t c2) {
+    return (uint16_t)(((c1 & 0xF7DE) >> 1) + ((c2 & 0xF7DE) >> 1));
+}
+
+/* Mélange 75/25 rapide RGB565 (75% c1 + 25% c2) pour effet verre dépoli translucide Apple */
+static inline uint16_t rgb565_blend_75_25(uint16_t c1, uint16_t c2) {
+    return rgb565_blend_50_50(c1, rgb565_blend_50_50(c1, c2));
+}
+
+/* Calcul du contraste adaptatif (noir ou blanc) selon la luminance RGB565 */
+static inline eadk_color_t get_contrast_text_color(eadk_color_t bg_color) {
+    uint32_t r = (bg_color >> 11) & 0x1F;
+    uint32_t g = (bg_color >> 5) & 0x3F;
+    uint32_t b = bg_color & 0x1F;
+    uint32_t brightness = r * 3 + g * 2 + b;
+    return (brightness > 115) ? 0x0000 : 0xFFFF;
+}
+
+static inline const eadk_color_t* get_wallpaper_flash_ptr(void) {
+    if (g_current_theme == 6 &&
+        g_equalib_manifest.wallpaper_size >= 153600 &&
+        g_equalib_manifest.wallpaper_offset >= 0x10000 &&
+        g_equalib_manifest.wallpaper_offset <= 0x400000) {
+        return (const eadk_color_t*)(EQUALIB_FLASH_BASE + g_equalib_manifest.wallpaper_offset);
+    }
+    return NULL;
+}
+
+static inline eadk_color_t get_bg_pixel(int px, int py, const theme_t* th, const eadk_color_t* wp_ptr) {
+    if (wp_ptr && px >= 0 && px < EADK_SCREEN_WIDTH && py >= 0 && py < EADK_SCREEN_HEIGHT) {
+        return wp_ptr[(uint32_t)py * EADK_SCREEN_WIDTH + px];
+    }
+    return th->screen_bg;
+}
+
+static eadk_color_t s_styled_line_buf[EADK_SCREEN_WIDTH];
+
+/* Tracé d'un conteneur stylisé (Mode Glass Apple et/ou Bords Lisses arrondis) */
+static void __attribute__((noinline)) draw_styled_container(
+    int x, int y, int w, int h,
+    bool is_sel,
+    eadk_color_t card_color,
+    eadk_color_t border_color,
+    const theme_t* theme,
+    const eadk_color_t* wp_ptr
+) {
+    if (w <= 0 || h <= 0 || w > EADK_SCREEN_WIDTH) return;
+
+    /* Masque d'arrondi de rayon R=4 px pour bords lisses */
+    static const uint8_t corner_indents[4] = { 3, 2, 1, 0 };
+
+    for (int r = 0; r < h; r++) {
+        int py = y + r;
+        int ind = 0;
+        if (g_smooth_corners && h >= 10) {
+            if (r < 4) ind = corner_indents[r];
+            else if (r >= h - 4) ind = corner_indents[h - 1 - r];
+        }
+
+        int x_start = ind;
+        int x_end = w - 1 - ind;
+
+        for (int c = 0; c < w; c++) {
+            int px = x + c;
+            eadk_color_t bg_pix = get_bg_pixel(px, py, theme, wp_ptr);
+
+            if (c < x_start || c > x_end) {
+                /* Pixel en dehors de l'arrondi du conteneur : afficher le fond sous-jacent */
+                s_styled_line_buf[c] = bg_pix;
+                continue;
+            }
+
+            /* Détection des pixels de bordure */
+            bool is_border = false;
+            bool is_specular = false;
+
+            if (r == 0 || r == h - 1) {
+                is_border = true;
+                if (r == 0 && g_glass_mode) is_specular = true;
+            } else if (c == x_start || c == x_end) {
+                is_border = true;
+                if (c == x_start && g_glass_mode && r < h - 2) is_specular = true;
+            } else if (is_sel && (r == 1 || r == h - 2 || c == x_start + 1 || c == x_end - 1)) {
+                /* Bordure élargie à 2px pour l'élément actif sélectionné */
+                is_border = true;
+            }
+
+            if (is_border) {
+                if (is_specular && !is_sel) {
+                    /* Liséré spéculaire supérieur et gauche façon Apple Glass */
+                    s_styled_line_buf[c] = rgb565_blend_50_50(card_color, 0xFFFF);
+                } else {
+                    s_styled_line_buf[c] = border_color;
+                }
+            } else {
+                /* Corps du conteneur : mélange verre dépoli ou couleur pleine */
+                if (g_glass_mode) {
+                    s_styled_line_buf[c] = rgb565_blend_75_25(card_color, bg_pix);
+                } else {
+                    s_styled_line_buf[c] = card_color;
+                }
+            }
+        }
+
+        eadk_rect_t row_rect = {(uint16_t)x, (uint16_t)py, (uint16_t)w, 1};
+        eadk_display_push_rect(row_rect, s_styled_line_buf);
+    }
 }
 
 /* Wrapper d'exécution sécurisé ARM Thumb avec alignement AAPCS et sauvegarde intégrale des registres */
@@ -533,20 +649,11 @@ static void draw_gallery_card(int app_index, int col, int row, bool is_sel, cons
     int x = 16 + col * (card_w + 12);
     int y = 28 + row * (card_h + 8);
 
-    /* Fond de la tuile carrée */
-    eadk_rect_t card = {(uint16_t)x, (uint16_t)y, (uint16_t)card_w, (uint16_t)card_h};
-    eadk_display_push_rect_uniform(card, is_sel ? theme->card_sel : theme->card_bg);
+    const eadk_color_t* wp_ptr = get_wallpaper_flash_ptr();
+    eadk_color_t base_card_col = is_sel ? theme->card_sel : theme->card_bg;
+    eadk_color_t border_col = is_sel ? theme->accent : (g_glass_mode ? rgb565_blend_50_50(theme->card_bg, theme->screen_bg) : theme->screen_bg);
 
-    /* Bordure : 2px lumineuse si sélectionné, sinon 1px discrète */
-    uint16_t border_col = is_sel ? theme->accent : theme->screen_bg;
-    eadk_rect_t b_top = {(uint16_t)x, (uint16_t)y, (uint16_t)card_w, (uint16_t)(is_sel ? 2 : 1)};
-    eadk_rect_t b_bot = {(uint16_t)x, (uint16_t)(y + card_h - (is_sel ? 2 : 1)), (uint16_t)card_w, (uint16_t)(is_sel ? 2 : 1)};
-    eadk_rect_t b_lft = {(uint16_t)x, (uint16_t)y, (uint16_t)(is_sel ? 2 : 1), (uint16_t)card_h};
-    eadk_rect_t b_rgt = {(uint16_t)(x + card_w - (is_sel ? 2 : 1)), (uint16_t)y, (uint16_t)(is_sel ? 2 : 1), (uint16_t)card_h};
-    eadk_display_push_rect_uniform(b_top, border_col);
-    eadk_display_push_rect_uniform(b_bot, border_col);
-    eadk_display_push_rect_uniform(b_lft, border_col);
-    eadk_display_push_rect_uniform(b_rgt, border_col);
+    draw_styled_container(x, y, card_w, card_h, is_sel, base_card_col, border_col, theme, wp_ptr);
 
     /* Icône centrée dans la carte */
     int icon_cx = x + card_w / 2;
@@ -578,8 +685,15 @@ static void draw_gallery_card(int app_index, int col, int row, bool is_sel, cons
     int txt_len = sn_i;
     int txt_x = x + (card_w - txt_len * 6) / 2;
     if (txt_x < x + 3) txt_x = x + 3;
+
+    eadk_color_t text_bg = base_card_col;
+    if (g_glass_mode) {
+        text_bg = rgb565_blend_75_25(base_card_col, get_bg_pixel(txt_x + (txt_len * 3), y + 54, theme, wp_ptr));
+    }
+    eadk_color_t text_col = get_contrast_text_color(text_bg);
+
     eadk_point_t p_lbl = {(uint16_t)txt_x, (uint16_t)(y + 52)};
-    eadk_display_draw_string(short_name, p_lbl, false, theme->text_primary, is_sel ? theme->card_sel : theme->card_bg);
+    eadk_display_draw_string(short_name, p_lbl, false, text_col, text_bg);
 }
 
 /* ==================== RENDU DU MODE LISTE ==================== */
@@ -590,11 +704,15 @@ static void draw_list_card(int app_index, int v_slot, bool is_sel, const theme_t
     int card_w = EADK_SCREEN_WIDTH - 16;
     int y = start_y + v_slot * (card_h + 5);
 
-    eadk_rect_t card = {8, (uint16_t)y, (uint16_t)card_w, (uint16_t)card_h};
-    eadk_display_push_rect_uniform(card, is_sel ? theme->card_sel : theme->card_bg);
+    const eadk_color_t* wp_ptr = get_wallpaper_flash_ptr();
+    eadk_color_t base_card_col = is_sel ? theme->card_sel : theme->card_bg;
+    eadk_color_t border_col = is_sel ? theme->accent : (g_glass_mode ? rgb565_blend_50_50(theme->card_bg, theme->screen_bg) : theme->screen_bg);
+
+    draw_styled_container(8, y, card_w, card_h, is_sel, base_card_col, border_col, theme, wp_ptr);
 
     if (is_sel) {
-        eadk_rect_t accent = {8, (uint16_t)y, 4, (uint16_t)card_h};
+        int acc_x = g_smooth_corners ? 10 : 8;
+        eadk_rect_t accent = {(uint16_t)acc_x, (uint16_t)(y + 4), 3, (uint16_t)(card_h - 8)};
         eadk_display_push_rect_uniform(accent, theme->accent);
     }
 
@@ -603,14 +721,21 @@ static void draw_list_card(int app_index, int v_slot, bool is_sel, const theme_t
     /* Petite icône sur la gauche */
     draw_app_icon(cur_app->app_type, 22, y + 17, theme->accent);
 
+    eadk_color_t text_bg = base_card_col;
+    if (g_glass_mode) {
+        text_bg = rgb565_blend_75_25(base_card_col, get_bg_pixel(80, y + 17, theme, wp_ptr));
+    }
+    eadk_color_t text_col = get_contrast_text_color(text_bg);
+
     eadk_point_t p_name = {36, (uint16_t)(y + 4)};
-    eadk_display_draw_string((const char*)cur_app->name, p_name, false, theme->text_primary, is_sel ? theme->card_sel : theme->card_bg);
+    eadk_display_draw_string((const char*)cur_app->name, p_name, false, text_col, text_bg);
 
     eadk_point_t p_cat = {(uint16_t)(EADK_SCREEN_WIDTH - 110), (uint16_t)(y + 4)};
-    eadk_display_draw_string((const char*)cur_app->category, p_cat, false, theme->accent, is_sel ? theme->card_sel : theme->card_bg);
+    eadk_display_draw_string((const char*)cur_app->category, p_cat, false, theme->accent, text_bg);
 
     eadk_point_t p_desc = {36, (uint16_t)(y + 19)};
-    eadk_display_draw_string((const char*)cur_app->desc, p_desc, false, theme->text_muted, is_sel ? theme->card_sel : theme->card_bg);
+    eadk_color_t desc_col = (text_col == 0x0000) ? 0x52AA : theme->text_muted;
+    eadk_display_draw_string((const char*)cur_app->desc, p_desc, false, desc_col, text_bg);
 }
 
 /* ==================== BANDEAU ACTIF BAS AU CENTRE ==================== */
@@ -624,21 +749,16 @@ static void draw_bottom_active_dock(int app_index, const theme_t* theme) {
     int dock_w = 288;
     int dock_h = 24;
 
-    /* Fond du dock */
-    eadk_rect_t dock = {(uint16_t)dock_x, (uint16_t)dock_y, (uint16_t)dock_w, (uint16_t)dock_h};
-    eadk_display_push_rect_uniform(dock, theme->dock_bg);
+    const eadk_color_t* wp_ptr = get_wallpaper_flash_ptr();
+    draw_styled_container(dock_x, dock_y, dock_w, dock_h, false, theme->dock_bg, theme->dock_border, theme, wp_ptr);
 
-    /* Bordure lumineuse nette 2px */
-    eadk_rect_t d_top = {(uint16_t)dock_x, (uint16_t)dock_y, (uint16_t)dock_w, 2};
-    eadk_rect_t d_bot = {(uint16_t)dock_x, (uint16_t)(dock_y + dock_h - 2), (uint16_t)dock_w, 2};
-    eadk_rect_t d_lft = {(uint16_t)dock_x, (uint16_t)dock_y, 2, (uint16_t)dock_h};
-    eadk_rect_t d_rgt = {(uint16_t)(dock_x + dock_w - 2), (uint16_t)dock_y, 2, (uint16_t)dock_h};
-    eadk_display_push_rect_uniform(d_top, theme->dock_border);
-    eadk_display_push_rect_uniform(d_bot, theme->dock_border);
-    eadk_display_push_rect_uniform(d_lft, theme->dock_border);
-    eadk_display_push_rect_uniform(d_rgt, theme->dock_border);
+    eadk_color_t dock_text_bg = theme->dock_bg;
+    if (g_glass_mode) {
+        dock_text_bg = rgb565_blend_75_25(theme->dock_bg, get_bg_pixel(dock_x + 100, dock_y + 12, theme, wp_ptr));
+    }
+    eadk_color_t dock_text_col = get_contrast_text_color(dock_text_bg);
 
-    /* Nom de l'application à gauche avec contraste maximal (text_primary) */
+    /* Nom de l'application à gauche avec contraste maximal */
     char safe_name[33];
     int ni = 0;
     while (app->name[ni] && ni < 32) {
@@ -651,8 +771,8 @@ static void draw_bottom_active_dock(int app_index, const theme_t* theme) {
         ni = 3;
     }
 
-    eadk_point_t p_app = {(uint16_t)(dock_x + 8), (uint16_t)(dock_y + 8)};
-    eadk_display_draw_string(safe_name, p_app, false, theme->text_primary, theme->dock_bg);
+    eadk_point_t p_app = {(uint16_t)(dock_x + 8), (uint16_t)(dock_y + 6)};
+    eadk_display_draw_string(safe_name, p_app, false, dock_text_col, dock_text_bg);
 
     /* Catégorie alignée à droite */
     char safe_cat[21];
@@ -665,8 +785,8 @@ static void draw_bottom_active_dock(int app_index, const theme_t* theme) {
     int cat_len = ci;
     int cat_x = dock_x + dock_w - (cat_len * 6) - 8;
     if (cat_x > dock_x + 8 + (ni * 6) + 8) {
-        eadk_point_t p_cat = {(uint16_t)cat_x, (uint16_t)(dock_y + 8)};
-        eadk_display_draw_string(safe_cat, p_cat, false, theme->accent, theme->dock_bg);
+        eadk_point_t p_cat = {(uint16_t)cat_x, (uint16_t)(dock_y + 6)};
+        eadk_display_draw_string(safe_cat, p_cat, false, theme->accent, dock_text_bg);
     }
 }
 
@@ -691,35 +811,58 @@ static void draw_theme_decorations(const theme_t* theme) {
     }
 }
 
-/* Rendu d'une rangée du menu Paramètres */
+/* Rendu d'une rangée du menu Paramètres (6 rangées au total) */
 static void draw_settings_row(int i, bool is_s, const theme_t* th) {
-    int y = 35 + i * 40;
-    eadk_rect_t c = {16, (uint16_t)y, 288, 32};
-    eadk_display_push_rect_uniform(c, is_s ? th->card_sel : th->card_bg);
+    int y = 28 + i * 30;
+    int row_w = 288;
+    int row_h = 26;
+
+    const eadk_color_t* wp_ptr = get_wallpaper_flash_ptr();
+    eadk_color_t base_bg = is_s ? th->card_sel : th->card_bg;
+    eadk_color_t border_col = is_s ? th->accent : (g_glass_mode ? rgb565_blend_50_50(th->card_bg, th->screen_bg) : th->screen_bg);
+
+    draw_styled_container(16, y, row_w, row_h, is_s, base_bg, border_col, th, wp_ptr);
+
+    eadk_color_t text_bg = base_bg;
+    if (g_glass_mode) {
+        text_bg = rgb565_blend_75_25(base_bg, get_bg_pixel(100, y + 13, th, wp_ptr));
+    }
+    eadk_color_t text_col = get_contrast_text_color(text_bg);
 
     if (is_s) {
-        eadk_rect_t acc = {16, (uint16_t)y, 4, 32};
+        int acc_x = g_smooth_corners ? 18 : 16;
+        eadk_rect_t acc = {(uint16_t)acc_x, (uint16_t)(y + 3), 3, (uint16_t)(row_h - 6)};
         eadk_display_push_rect_uniform(acc, th->accent);
     }
 
     if (i == 0) {
-        eadk_point_t p1 = {26, (uint16_t)(y + 10)};
-        eadk_display_draw_string("Mode d'Affichage :", p1, false, th->text_primary, is_s ? th->card_sel : th->card_bg);
-        eadk_point_t p2 = {180, (uint16_t)(y + 10)};
-        eadk_display_draw_string(g_view_mode == VIEW_MODE_GALLERY ? "< GALERIE >" : "< LISTE >", p2, false, th->accent, is_s ? th->card_sel : th->card_bg);
+        eadk_point_t p1 = {26, (uint16_t)(y + 8)};
+        eadk_display_draw_string("Mode d'Affichage :", p1, false, text_col, text_bg);
+        eadk_point_t p2 = {180, (uint16_t)(y + 8)};
+        eadk_display_draw_string(g_view_mode == VIEW_MODE_GALLERY ? "< GALERIE >" : "< LISTE >", p2, false, th->accent, text_bg);
     } else if (i == 1) {
-        eadk_point_t p1 = {26, (uint16_t)(y + 10)};
-        eadk_display_draw_string("Raccourcis / Tooltips :", p1, false, th->text_primary, is_s ? th->card_sel : th->card_bg);
-        eadk_point_t p2 = {200, (uint16_t)(y + 10)};
-        eadk_display_draw_string(g_show_tooltips ? "< OUI >" : "< NON >", p2, false, th->accent, is_s ? th->card_sel : th->card_bg);
+        eadk_point_t p1 = {26, (uint16_t)(y + 8)};
+        eadk_display_draw_string("Effet Verre (Apple Glass) :", p1, false, text_col, text_bg);
+        eadk_point_t p2 = {220, (uint16_t)(y + 8)};
+        eadk_display_draw_string(g_glass_mode ? "< OUI >" : "< NON >", p2, false, th->accent, text_bg);
     } else if (i == 2) {
-        eadk_point_t p1 = {26, (uint16_t)(y + 4)};
-        eadk_display_draw_string("Theme Visuel :", p1, false, th->text_primary, is_s ? th->card_sel : th->card_bg);
-        eadk_point_t p2 = {26, (uint16_t)(y + 17)};
-        eadk_display_draw_string(th->name, p2, false, th->accent, is_s ? th->card_sel : th->card_bg);
+        eadk_point_t p1 = {26, (uint16_t)(y + 8)};
+        eadk_display_draw_string("Coins Arrondis / Lisses :", p1, false, text_col, text_bg);
+        eadk_point_t p2 = {220, (uint16_t)(y + 8)};
+        eadk_display_draw_string(g_smooth_corners ? "< OUI >" : "< NON >", p2, false, th->accent, text_bg);
     } else if (i == 3) {
-        eadk_point_t p1 = {26, (uint16_t)(y + 10)};
-        eadk_display_draw_string("[ OK / Back ] : Valider & Revenir", p1, false, th->accent, is_s ? th->card_sel : th->card_bg);
+        eadk_point_t p1 = {26, (uint16_t)(y + 4)};
+        eadk_display_draw_string("Theme Visuel :", p1, false, text_col, text_bg);
+        eadk_point_t p2 = {26, (uint16_t)(y + 14)};
+        eadk_display_draw_string(th->name, p2, false, th->accent, text_bg);
+    } else if (i == 4) {
+        eadk_point_t p1 = {26, (uint16_t)(y + 8)};
+        eadk_display_draw_string("Raccourcis / Tooltips :", p1, false, text_col, text_bg);
+        eadk_point_t p2 = {200, (uint16_t)(y + 8)};
+        eadk_display_draw_string(g_show_tooltips ? "< OUI >" : "< NON >", p2, false, th->accent, text_bg);
+    } else if (i == 5) {
+        eadk_point_t p1 = {26, (uint16_t)(y + 8)};
+        eadk_display_draw_string("[ OK / Back ] : Valider & Revenir", p1, false, th->accent, text_bg);
     }
 }
 
@@ -741,7 +884,7 @@ static void run_settings_screen(void) {
 
         if (eadk_keyboard_key_down(pressed, eadk_key_back) || 
             eadk_keyboard_key_down(kbd, eadk_key_home) ||
-            (eadk_keyboard_key_down(pressed, eadk_key_ok) && sel_item == 3)) {
+            (eadk_keyboard_key_down(pressed, eadk_key_ok) && sel_item == 5)) {
             break;
         }
 
@@ -755,7 +898,7 @@ static void run_settings_screen(void) {
                 draw_settings_row(sel_item, true, th);
             }
         } else if (eadk_keyboard_key_down(pressed, eadk_key_down)) {
-            if (sel_item < 3) {
+            if (sel_item < 5) {
                 sel_item++;
                 draw_settings_row(old_sel, false, th);
                 draw_settings_row(sel_item, true, th);
@@ -766,18 +909,26 @@ static void run_settings_screen(void) {
                 draw_settings_row(0, true, th);
                 save_persistent_settings();
             } else if (sel_item == 1) {
+                g_glass_mode = !g_glass_mode;
+                full_redraw = true;
+                save_persistent_settings();
+            } else if (sel_item == 2) {
+                g_smooth_corners = !g_smooth_corners;
+                full_redraw = true;
+                save_persistent_settings();
+            } else if (sel_item == 3) {
+                g_current_theme = (g_current_theme + 6) % 7;
+                full_redraw = true;
+                save_persistent_settings();
+            } else if (sel_item == 4) {
                 g_show_tooltips = !g_show_tooltips;
-                draw_settings_row(1, true, th);
+                draw_settings_row(4, true, th);
                 eadk_rect_t bot = {0, EADK_SCREEN_HEIGHT - 16, EADK_SCREEN_WIDTH, 16};
                 eadk_display_push_rect_uniform(bot, g_show_tooltips ? th->card_bg : th->screen_bg);
                 if (g_show_tooltips) {
                     eadk_point_t p_h = {8, EADK_SCREEN_HEIGHT - 13};
                     eadk_display_draw_string("Fleches: Changer | OK / Back: Sauvegarder", p_h, false, th->text_muted, th->card_bg);
                 }
-                save_persistent_settings();
-            } else if (sel_item == 2) {
-                g_current_theme = (g_current_theme + 6) % 7;
-                full_redraw = true;
                 save_persistent_settings();
             }
         } else if (eadk_keyboard_key_down(pressed, eadk_key_right)) {
@@ -786,18 +937,26 @@ static void run_settings_screen(void) {
                 draw_settings_row(0, true, th);
                 save_persistent_settings();
             } else if (sel_item == 1) {
+                g_glass_mode = !g_glass_mode;
+                full_redraw = true;
+                save_persistent_settings();
+            } else if (sel_item == 2) {
+                g_smooth_corners = !g_smooth_corners;
+                full_redraw = true;
+                save_persistent_settings();
+            } else if (sel_item == 3) {
+                g_current_theme = (g_current_theme + 1) % 7;
+                full_redraw = true;
+                save_persistent_settings();
+            } else if (sel_item == 4) {
                 g_show_tooltips = !g_show_tooltips;
-                draw_settings_row(1, true, th);
+                draw_settings_row(4, true, th);
                 eadk_rect_t bot = {0, EADK_SCREEN_HEIGHT - 16, EADK_SCREEN_WIDTH, 16};
                 eadk_display_push_rect_uniform(bot, g_show_tooltips ? th->card_bg : th->screen_bg);
                 if (g_show_tooltips) {
                     eadk_point_t p_h = {8, EADK_SCREEN_HEIGHT - 13};
                     eadk_display_draw_string("Fleches: Changer | OK / Back: Sauvegarder", p_h, false, th->text_muted, th->card_bg);
                 }
-                save_persistent_settings();
-            } else if (sel_item == 2) {
-                g_current_theme = (g_current_theme + 1) % 7;
-                full_redraw = true;
                 save_persistent_settings();
             }
         } else if (eadk_keyboard_key_down(pressed, eadk_key_ok) || eadk_keyboard_key_down(pressed, eadk_key_exe)) {
@@ -806,18 +965,26 @@ static void run_settings_screen(void) {
                 draw_settings_row(0, true, th);
                 save_persistent_settings();
             } else if (sel_item == 1) {
+                g_glass_mode = !g_glass_mode;
+                full_redraw = true;
+                save_persistent_settings();
+            } else if (sel_item == 2) {
+                g_smooth_corners = !g_smooth_corners;
+                full_redraw = true;
+                save_persistent_settings();
+            } else if (sel_item == 3) {
+                g_current_theme = (g_current_theme + 1) % 7;
+                full_redraw = true;
+                save_persistent_settings();
+            } else if (sel_item == 4) {
                 g_show_tooltips = !g_show_tooltips;
-                draw_settings_row(1, true, th);
+                draw_settings_row(4, true, th);
                 eadk_rect_t bot = {0, EADK_SCREEN_HEIGHT - 16, EADK_SCREEN_WIDTH, 16};
                 eadk_display_push_rect_uniform(bot, g_show_tooltips ? th->card_bg : th->screen_bg);
                 if (g_show_tooltips) {
                     eadk_point_t p_h = {8, EADK_SCREEN_HEIGHT - 13};
                     eadk_display_draw_string("Fleches: Changer | OK / Back: Sauvegarder", p_h, false, th->text_muted, th->card_bg);
                 }
-                save_persistent_settings();
-            } else if (sel_item == 2) {
-                g_current_theme = (g_current_theme + 1) % 7;
-                full_redraw = true;
                 save_persistent_settings();
             }
         }
@@ -836,8 +1003,8 @@ static void run_settings_screen(void) {
             eadk_point_t p_t = {8, 5};
             eadk_display_draw_string("Parametres & Themes EquaLib", p_t, false, th->text_primary, th->top_bar);
 
-            /* Cadre paramètres */
-            for (int i = 0; i < 4; i++) {
+            /* Cadre paramètres (6 rangées) */
+            for (int i = 0; i < 6; i++) {
                 draw_settings_row(i, i == sel_item, th);
             }
 
@@ -870,6 +1037,8 @@ int main(int argc, char* argv[]) {
     }
     g_view_mode = st->view_mode;
     g_show_tooltips = (st->tooltips != 0);
+    g_glass_mode = (st->glass_mode != 0);
+    g_smooth_corners = (st->smooth_corners != 0);
 
     while (eadk_keyboard_scan() != 0) {
         eadk_timing_msleep(20);
@@ -1006,16 +1175,36 @@ int main(int argc, char* argv[]) {
             /* Fond général de l'écran LCD : Fond personnalisé RGB565 si actif, sinon couleur unie */
             draw_screen_background(cur_th);
 
-            /* Barre supérieure officielle */
-            eadk_rect_t top_bar = {0, 0, EADK_SCREEN_WIDTH, 22};
-            eadk_display_push_rect_uniform(top_bar, cur_th->top_bar);
+            /* Barre supérieure officielle (avec effet verre dépoli si actif) */
+            eadk_color_t bar_text_bg = cur_th->top_bar;
+            if (g_glass_mode) {
+                const eadk_color_t* wp_ptr = get_wallpaper_flash_ptr();
+                for (int r = 0; r < 22; r++) {
+                    for (int c = 0; c < EADK_SCREEN_WIDTH; c++) {
+                        eadk_color_t bg_pix = get_bg_pixel(c, r, cur_th, wp_ptr);
+                        if (r == 21) {
+                            /* Liséré inférieur fin 1px */
+                            s_styled_line_buf[c] = rgb565_blend_50_50(cur_th->top_bar, 0xFFFF);
+                        } else {
+                            s_styled_line_buf[c] = rgb565_blend_75_25(cur_th->top_bar, bg_pix);
+                        }
+                    }
+                    eadk_rect_t r_line = {0, (uint16_t)r, EADK_SCREEN_WIDTH, 1};
+                    eadk_display_push_rect(r_line, s_styled_line_buf);
+                }
+                bar_text_bg = rgb565_blend_75_25(cur_th->top_bar, get_bg_pixel(50, 10, cur_th, wp_ptr));
+            } else {
+                eadk_rect_t top_bar = {0, 0, EADK_SCREEN_WIDTH, 22};
+                eadk_display_push_rect_uniform(top_bar, cur_th->top_bar);
+            }
+            eadk_color_t bar_text_col = get_contrast_text_color(bar_text_bg);
 
             eadk_point_t p_title = {8, 5};
-            eadk_display_draw_string("EquaLib Hub (Cameleon & Gemini)", p_title, false, cur_th->text_primary, cur_th->top_bar);
+            eadk_display_draw_string("EquaLib Hub (Cameleon & Gemini)", p_title, false, bar_text_col, bar_text_bg);
 
             /* Badge du mode actuel dans la barre supérieure */
             eadk_point_t p_badge = {(uint16_t)(EADK_SCREEN_WIDTH - 65), 5};
-            eadk_display_draw_string(g_view_mode == VIEW_MODE_GALLERY ? "[Galerie]" : "[Liste]", p_badge, false, cur_th->text_primary, cur_th->top_bar);
+            eadk_display_draw_string(g_view_mode == VIEW_MODE_GALLERY ? "[Galerie]" : "[Liste]", p_badge, false, bar_text_col, bar_text_bg);
 
             /* Décorations de thème */
             draw_theme_decorations(cur_th);

@@ -611,3 +611,48 @@ body.hide-tooltips [data-shortcut-hint] {
   }
 }
 
+/* ==================== APPLE GLASSMORPHISM & SMOOTH CORNERS ==================== */
+
+/* Mode Verre Dépoli (Apple Glass) pour le simulateur et l'interface */
+.glass-mode .sim-gallery-card,
+.glass-mode .sim-item,
+.glass-mode .sim-bottom-dock,
+.glass-mode .sim-settings-row {
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  background: rgba(255, 255, 255, 0.22) !important;
+  border-color: rgba(255, 255, 255, 0.40) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.6) !important;
+}
+
+.glass-mode .sim-gallery-card.is-selected,
+.glass-mode .sim-item.is-selected {
+  background: rgba(254, 243, 199, 0.45) !important;
+  border-color: rgba(255, 187, 0, 0.90) !important;
+  box-shadow: 0 4px 20px rgba(255, 187, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.85) !important;
+}
+
+.glass-mode #sim-topbar {
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.35) !important;
+}
+
+/* Mode Bords Lisses (Coins Arrondis / Smooth Rounded Corners) */
+.smooth-corners .sim-gallery-card {
+  border-radius: 10px !important;
+}
+
+.smooth-corners .sim-bottom-dock {
+  border-radius: 8px !important;
+}
+
+.smooth-corners .sim-item {
+  border-radius: 8px !important;
+}
+
+.smooth-corners .sim-settings-row {
+  border-radius: 6px !important;
+}
+
+

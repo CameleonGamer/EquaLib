@@ -67,7 +67,31 @@ class EquaLibBundler {
       return u8;
     }
 
-    const selectedList = (apps && apps.length > 0) ? apps.slice(0, 20) : [];
+    let selectedList = (apps && apps.length > 0) ? apps.slice(0, 20) : [];
+    const includeSettings = (options.includeSettingsApp !== undefined ? options.includeSettingsApp : ((this.options?.includeSettingsApp !== undefined ? this.options.includeSettingsApp : ((typeof window !== 'undefined' && window.userSettings?.includeSettingsApp !== undefined) ? window.userSettings.includeSettingsApp : true))));
+
+    if (!includeSettings) {
+      selectedList = selectedList.filter(app => {
+        const idLower = (app.id || '').toLowerCase();
+        const nameLower = (app.name || '').toLowerCase();
+        return idLower !== 'settings' && idLower !== 'comm_settings' && !nameLower.includes('options & themes') && !nameLower.includes('paramètres') && !nameLower.includes('parametres');
+      });
+    } else {
+      const hasSettings = selectedList.some(app => {
+        const idLower = (app.id || '').toLowerCase();
+        const nameLower = (app.name || '').toLowerCase();
+        return idLower === 'settings' || idLower === 'comm_settings' || nameLower.includes('options & themes') || nameLower.includes('paramètres') || nameLower.includes('parametres');
+      });
+      if (!hasSettings && selectedList.length > 0 && selectedList.length < 20) {
+        selectedList.push({
+          id: 'settings',
+          name: 'Options & Themes',
+          category: 'Systeme',
+          description: 'Themes, mode galerie/liste et aide'
+        });
+      }
+    }
+
     const count = selectedList.length;
 
     if (count > 0) {
@@ -109,6 +133,12 @@ class EquaLibBundler {
 
     const isList = (options.displayMode === 'list' || this.options?.displayMode === 'list' || (typeof window !== 'undefined' && window.userSettings?.displayMode === 'list'));
     if (isList) flags |= 0x10;
+
+    const isGlass = (options.glassMode !== undefined ? options.glassMode : (this.options?.glassMode !== undefined ? this.options.glassMode : ((typeof window !== 'undefined' && window.userSettings?.glassMode !== undefined) ? window.userSettings.glassMode : true)));
+    if (isGlass) flags |= 0x20;
+
+    const isSmooth = (options.smoothCorners !== undefined ? options.smoothCorners : (this.options?.smoothCorners !== undefined ? this.options.smoothCorners : ((typeof window !== 'undefined' && window.userSettings?.smoothCorners !== undefined) ? window.userSettings.smoothCorners : true)));
+    if (isSmooth) flags |= 0x40;
 
     u8[offset + 12] = flags & 0xFF;
     u8[offset + 13] = (flags >> 8) & 0xFF;
@@ -230,6 +260,8 @@ class EquaLibBundler {
         appType = 19; // Puissance 4 natif C 60 FPS
       } else if (appIdLower === 'morpion' || appIdLower === 'comm_morpion' || appNameLower.includes('morpion') || appNameLower.includes('tic tac toe')) {
         appType = 20; // Morpion natif C 60 FPS
+      } else if (appIdLower === 'settings' || appIdLower === 'comm_settings' || appIdLower.includes('setting') || appNameLower.includes('option') || appNameLower.includes('param')) {
+        appType = 14; // Options & Themes natif C (APP_TYPE_SETTINGS)
       } else if (isNative) {
         appType = 13; // Exécutable natif ARM EADK (.bin ou .nwa)
       } else if ((app.format === 'NWS') || (app.format === 'PY') || appIdLower.includes('.nws') || appNameLower.includes('.nws') || (app.data && !isNative)) {

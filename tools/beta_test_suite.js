@@ -314,7 +314,7 @@ describe('5. Simulateur Virtuel et Jeux NumWorks', () => {
     getElementById: (id) => ({
       id,
       style: {},
-      classList: { add: () => {}, remove: () => {} },
+      classList: { add: () => {}, remove: () => {}, toggle: () => {}, contains: () => false },
       addEventListener: () => {},
       innerHTML: '',
       textContent: '',
@@ -602,6 +602,81 @@ describe('7. Compilation et Validité Syntaxique des Jeux Python (.NWS)', () => 
     assert.strictEqual(patched[wpOffset], mockWallpaper[0]);
     assert.strictEqual(patched[wpOffset + 100], mockWallpaper[100]);
     assert.strictEqual(patched[wpOffset + 153599], mockWallpaper[153599]);
+  });
+
+  console.log(`\n========================================`);
+  console.log(`BETA TEST: 9. Mode Apple Glass & Bords Lisses (Manifeste & Simulateur)`);
+  console.log(`========================================`);
+
+  it('Définition C des flags de manifeste dans equalib_manifest.h', () => {
+    const headerContent = fs.readFileSync('launcher/include/equalib_manifest.h', 'utf8');
+    assert(/#define\s+MANIFEST_FLAG_GLASS_MODE\s+0x20/.test(headerContent), 'MANIFEST_FLAG_GLASS_MODE 0x20 manquant');
+    assert(/#define\s+MANIFEST_FLAG_SMOOTH_CORNERS\s+0x40/.test(headerContent), 'MANIFEST_FLAG_SMOOTH_CORNERS 0x40 manquant');
+  });
+
+  it('Persistance AXI-SRAM dans storage.h avec glass_mode et smooth_corners', () => {
+    const storageHeader = fs.readFileSync('launcher/include/storage.h', 'utf8');
+    assert(storageHeader.includes('glass_mode'), 'Champ glass_mode manquant dans eq_storage_t');
+    assert(storageHeader.includes('smooth_corners'), 'Champ smooth_corners manquant dans eq_storage_t');
+  });
+
+  await itAsync('Encodage bit-exact des options Glass (0x20) et Smooth Corners (0x40) dans le manifeste', async () => {
+    const bundler = new EquaLibBundler({ targetModel: 'N0120' });
+    const mockBin = fs.readFileSync('web/equalib_n0120.bin');
+    const offset = bundler.findManifestOffset(mockBin);
+    assert(offset !== -1, 'Manifeste non trouvé dans le binaire');
+
+    // Cas 1 : Glass = true, Smooth = true
+    let patched = await bundler.patchManifest(mockBin, [], {
+      glassMode: true,
+      smoothCorners: true
+    });
+    let flags = patched[offset + 12];
+    assert.strictEqual(flags & 0x20, 0x20, 'Bit 5 (0x20) Glass doit être actif');
+    assert.strictEqual(flags & 0x40, 0x40, 'Bit 6 (0x40) Smooth doit être actif');
+
+    // Cas 2 : Glass = false, Smooth = true
+    patched = await bundler.patchManifest(mockBin, [], {
+      glassMode: false,
+      smoothCorners: true
+    });
+    flags = patched[offset + 12];
+    assert.strictEqual(flags & 0x20, 0, 'Bit 5 (0x20) Glass doit être inactif');
+    assert.strictEqual(flags & 0x40, 0x40, 'Bit 6 (0x40) Smooth doit être actif');
+
+    // Cas 3 : Glass = true, Smooth = false
+    patched = await bundler.patchManifest(mockBin, [], {
+      glassMode: true,
+      smoothCorners: false
+    });
+    flags = patched[offset + 12];
+    assert.strictEqual(flags & 0x20, 0x20, 'Bit 5 (0x20) Glass doit être actif');
+    assert.strictEqual(flags & 0x40, 0, 'Bit 6 (0x40) Smooth doit être inactif');
+
+    // Cas 4 : Glass = false, Smooth = false
+    patched = await bundler.patchManifest(mockBin, [], {
+      glassMode: false,
+      smoothCorners: false
+    });
+    flags = patched[offset + 12];
+    assert.strictEqual(flags & 0x20, 0, 'Bit 5 (0x20) Glass doit être inactif');
+    assert.strictEqual(flags & 0x40, 0, 'Bit 6 (0x40) Smooth doit être inactif');
+  });
+
+  it('Méthodes de contrôle du simulateur pour Glass Mode et Smooth Corners', () => {
+    const sim = new window.NumWorksSimulator('sim-screen');
+    assert.strictEqual(typeof sim.setSimulatorGlassMode, 'function');
+    assert.strictEqual(typeof sim.setSimulatorSmoothCorners, 'function');
+
+    sim.setSimulatorGlassMode(true);
+    assert.strictEqual(sim.glassMode, true);
+    sim.setSimulatorGlassMode(false);
+    assert.strictEqual(sim.glassMode, false);
+
+    sim.setSimulatorSmoothCorners(true);
+    assert.strictEqual(sim.smoothCorners, true);
+    sim.setSimulatorSmoothCorners(false);
+    assert.strictEqual(sim.smoothCorners, false);
   });
 
   console.log(`\n========================================`);

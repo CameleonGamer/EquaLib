@@ -58,6 +58,8 @@ class NumWorksSimulator {
     this.displayMode = (savedSettings && savedSettings.displayMode) || (window.userSettings && window.userSettings.displayMode) || 'gallery';
     this.theme = (savedSettings && savedSettings.theme) || safeStorageGet('equalib_theme') || (window.userSettings && window.userSettings.theme) || 'default';
     this.showTooltips = (savedSettings && savedSettings.showTooltips !== undefined) ? savedSettings.showTooltips : ((window.userSettings && window.userSettings.showTooltips !== undefined) ? window.userSettings.showTooltips : true);
+    this.glassMode = (savedSettings && savedSettings.glassMode !== undefined) ? savedSettings.glassMode : ((window.userSettings && window.userSettings.glassMode !== undefined) ? window.userSettings.glassMode : true);
+    this.smoothCorners = (savedSettings && savedSettings.smoothCorners !== undefined) ? savedSettings.smoothCorners : ((window.userSettings && window.userSettings.smoothCorners !== undefined) ? window.userSettings.smoothCorners : true);
     this.settingsSubIndex = 0;
 
     this.gameLoopId = null;
@@ -69,7 +71,9 @@ class NumWorksSimulator {
       const cfg = {
         displayMode: this.displayMode,
         theme: this.theme,
-        showTooltips: this.showTooltips
+        showTooltips: this.showTooltips,
+        glassMode: this.glassMode,
+        smoothCorners: this.smoothCorners
       };
       safeStorageSet('equalib_user_settings', JSON.stringify(cfg));
       safeStorageSet('equalib_theme', this.theme);
@@ -77,6 +81,8 @@ class NumWorksSimulator {
         window.userSettings.displayMode = this.displayMode;
         window.userSettings.theme = this.theme;
         window.userSettings.showTooltips = this.showTooltips;
+        window.userSettings.glassMode = this.glassMode;
+        window.userSettings.smoothCorners = this.smoothCorners;
       }
     } catch (_) {}
   }
@@ -297,6 +303,20 @@ class NumWorksSimulator {
     if (this.currentView === 'MENU') this.renderMenu();
   }
 
+  setSimulatorGlassMode(glass) {
+    this.glassMode = !!glass;
+    this.saveCurrentSettings();
+    if (this.currentView === 'MENU') this.renderMenu();
+    else if (this.currentView === 'SETTINGS') this.startSettingsScreen();
+  }
+
+  setSimulatorSmoothCorners(smooth) {
+    this.smoothCorners = !!smooth;
+    this.saveCurrentSettings();
+    if (this.currentView === 'MENU') this.renderMenu();
+    else if (this.currentView === 'SETTINGS') this.startSettingsScreen();
+  }
+
   handleInput(action) {
     if (this.currentView === 'MENU') {
       if (this.displayMode === 'gallery') {
@@ -319,7 +339,11 @@ class NumWorksSimulator {
       else if (action === 'DOWN') this.settingsMove(1);
       else if (action === 'LEFT') this.settingsChange(-1);
       else if (action === 'RIGHT') this.settingsChange(1);
-      else if (action === 'OK' || action === 'BACK') this.returnToMenu();
+      else if (action === 'OK') {
+        if (this.settingsSubIndex === 5) this.returnToMenu();
+        else this.settingsChange(1);
+      }
+      else if (action === 'BACK') this.returnToMenu();
     } else if (this.currentView === 'FLAPPY') {
       if (action === 'OK' || action === 'UP') this.flappyFlap();
       else if (action === 'BACK') this.returnToMenu();
@@ -447,6 +471,11 @@ class NumWorksSimulator {
     this.screen.style.backgroundColor = pal.bg;
     this.content.style.backgroundColor = pal.bg;
 
+    if (this.screen && this.screen.classList && typeof this.screen.classList.toggle === 'function') {
+      this.screen.classList.toggle('glass-mode', !!this.glassMode);
+      this.screen.classList.toggle('smooth-corners', !!this.smoothCorners);
+    }
+
     const themeLabels = {
       default: '⚡ NumWorks (Jaune)',
       sakura: '🌸 Sakura (Rose)',
@@ -457,45 +486,102 @@ class NumWorksSimulator {
       custom: '🎨 Custom (Mon Fond)'
     };
 
+    const getRowStyle = (idx) => {
+      const isSel = (this.settingsSubIndex === idx);
+      const radius = this.smoothCorners ? 'rounded-lg' : 'rounded-sm';
+      let bg = isSel ? pal.cardSel : pal.card;
+      let border = isSel ? pal.border : 'rgba(0,0,0,0.1)';
+      let backdrop = '';
+      if (this.glassMode) {
+        backdrop = 'backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);';
+        bg = isSel ? 'rgba(254, 243, 199, 0.55)' : 'rgba(255, 255, 255, 0.22)';
+        border = isSel ? pal.border : 'rgba(255, 255, 255, 0.40)';
+      }
+      return { isSel, radius, bg, border, backdrop };
+    };
+
+    const r0 = getRowStyle(0);
+    const r1 = getRowStyle(1);
+    const r2 = getRowStyle(2);
+    const r3 = getRowStyle(3);
+    const r4 = getRowStyle(4);
+    const r5 = getRowStyle(5);
+
     let html = `
-      <div class="space-y-1.5 p-1 text-[10px]" style="background-color: ${pal.bg}; color: ${pal.text};">
-        <div class="p-1 rounded border ${this.settingsSubIndex === 0 ? 'ring-1' : ''}" style="background-color: ${this.settingsSubIndex === 0 ? pal.cardSel : pal.card}; border-color: ${this.settingsSubIndex === 0 ? pal.border : 'rgba(0,0,0,0.1)'};">
+      <div class="space-y-1 p-1 text-[9px]" style="background-color: ${pal.bg}; color: ${pal.text};">
+        <div class="sim-settings-row sim-setting-item p-1 ${r0.radius} border cursor-pointer ${r0.isSel ? 'ring-1' : ''}" data-row="0"
+          style="background-color: ${r0.bg}; border-color: ${r0.border}; ${r0.backdrop}">
           <div class="flex justify-between font-bold">
             <span>Mode d'Affichage :</span>
             <span style="color: ${pal.border}">◀ ${this.displayMode === 'gallery' ? 'GALERIE' : 'LISTE'} ▶</span>
           </div>
-          <div class="text-[8px] text-slate-400">Tuiles carrées ou cartes horizontales</div>
+          <div class="text-[7.5px] text-slate-400">Tuiles carrées ou cartes horizontales</div>
         </div>
 
-        <div class="p-1 rounded border ${this.settingsSubIndex === 1 ? 'ring-1' : ''}" style="background-color: ${this.settingsSubIndex === 1 ? pal.cardSel : pal.card}; border-color: ${this.settingsSubIndex === 1 ? pal.border : 'rgba(0,0,0,0.1)'};">
+        <div class="sim-settings-row sim-setting-item p-1 ${r1.radius} border cursor-pointer ${r1.isSel ? 'ring-1' : ''}" data-row="1"
+          style="background-color: ${r1.bg}; border-color: ${r1.border}; ${r1.backdrop}">
+          <div class="flex justify-between font-bold">
+            <span>Effet Verre (Apple Glass) :</span>
+            <span style="color: ${pal.border}">◀ ${this.glassMode ? 'ACTIVÉ' : 'DÉSACTIVÉ'} ▶</span>
+          </div>
+          <div class="text-[7.5px] text-slate-400">Translucidité dépolie & reflet spéculaire</div>
+        </div>
+
+        <div class="sim-settings-row sim-setting-item p-1 ${r2.radius} border cursor-pointer ${r2.isSel ? 'ring-1' : ''}" data-row="2"
+          style="background-color: ${r2.bg}; border-color: ${r2.border}; ${r2.backdrop}">
+          <div class="flex justify-between font-bold">
+            <span>Coins Arrondis & Lisses :</span>
+            <span style="color: ${pal.border}">◀ ${this.smoothCorners ? 'ACTIVÉS' : 'DÉSACTIVÉS'} ▶</span>
+          </div>
+          <div class="text-[7.5px] text-slate-400">Contours adoucis R=4px anti-crénelés</div>
+        </div>
+
+        <div class="sim-settings-row sim-setting-item p-1 ${r3.radius} border cursor-pointer ${r3.isSel ? 'ring-1' : ''}" data-row="3"
+          style="background-color: ${r3.bg}; border-color: ${r3.border}; ${r3.backdrop}">
+          <div class="font-bold">Thème Visuel :</div>
+          <div class="font-extrabold text-[8.5px] mt-0.5" style="color: ${pal.border}">◀ ${themeLabels[this.theme] || this.theme} ▶</div>
+        </div>
+
+        <div class="sim-settings-row sim-setting-item p-1 ${r4.radius} border cursor-pointer ${r4.isSel ? 'ring-1' : ''}" data-row="4"
+          style="background-color: ${r4.bg}; border-color: ${r4.border}; ${r4.backdrop}">
           <div class="flex justify-between font-bold">
             <span>Raccourcis / Tooltips :</span>
             <span style="color: ${pal.border}">◀ ${this.showTooltips ? 'ACTIVÉS' : 'MASQUÉS'} ▶</span>
           </div>
-          <div class="text-[8px] text-slate-400">Légendes et touches d'aide</div>
+          <div class="text-[7.5px] text-slate-400">Légendes et touches d'aide au bas de l'écran</div>
         </div>
 
-        <div class="p-1 rounded border ${this.settingsSubIndex === 2 ? 'ring-1' : ''}" style="background-color: ${this.settingsSubIndex === 2 ? pal.cardSel : pal.card}; border-color: ${this.settingsSubIndex === 2 ? pal.border : 'rgba(0,0,0,0.1)'};">
-          <div class="font-bold">Thème Visuel :</div>
-          <div class="font-extrabold text-[9px] mt-0.5" style="color: ${pal.border}">◀ ${themeLabels[this.theme] || this.theme} ▶</div>
-        </div>
-
-        <div class="p-1 rounded border text-center font-bold cursor-pointer ${this.settingsSubIndex === 3 ? 'ring-1' : ''}" id="sim-settings-back" style="background-color: ${this.settingsSubIndex === 3 ? pal.cardSel : pal.card}; border-color: ${this.settingsSubIndex === 3 ? pal.border : 'rgba(0,0,0,0.1)'}; color: ${pal.border};">
-          [ OK / Back : Revenir au Hub ]
+        <div class="sim-settings-row sim-setting-item p-1 ${r5.radius} border text-center font-bold cursor-pointer ${r5.isSel ? 'ring-1' : ''}" id="sim-settings-back" data-row="5"
+          style="background-color: ${r5.bg}; border-color: ${r5.border}; color: ${pal.border}; ${r5.backdrop}">
+          [ OK / Back : Valider & Revenir ]
         </div>
       </div>
-      <div class="text-[8px] text-center text-slate-500 pt-0.5">▲▼: Choisir | ◀▶: Modifier | OK: Valider</div>
+      <div class="text-[7.5px] text-center text-slate-500 pt-0.5">▲▼: Choisir | ◀▶: Modifier | OK: Valider</div>
     `;
 
     this.content.innerHTML = html;
 
-    const backBtn = document.getElementById('sim-settings-back');
-    if (backBtn) backBtn.addEventListener('click', () => this.returnToMenu());
+    const rowEls = this.content.querySelectorAll('.sim-setting-item');
+    rowEls.forEach(el => {
+      el.addEventListener('click', () => {
+        const row = parseInt(el.getAttribute('data-row'), 10);
+        if (this.settingsSubIndex === row) {
+          if (row === 5) {
+            this.returnToMenu();
+          } else {
+            this.settingsChange(1);
+          }
+        } else {
+          this.settingsSubIndex = row;
+          this.startSettingsScreen();
+        }
+      });
+    });
   }
 
   settingsMove(dir) {
     window.soundFx?.playClick();
-    this.settingsSubIndex = (this.settingsSubIndex + dir + 4) % 4;
+    this.settingsSubIndex = (this.settingsSubIndex + dir + 6) % 6;
     this.startSettingsScreen();
   }
 
@@ -507,14 +593,26 @@ class NumWorksSimulator {
         window.setDisplayMode(this.displayMode);
       }
     } else if (this.settingsSubIndex === 1) {
-      this.showTooltips = !this.showTooltips;
+      this.glassMode = !this.glassMode;
       if (window.userSettings) {
-        window.userSettings.showTooltips = this.showTooltips;
+        window.userSettings.glassMode = this.glassMode;
       }
-      document.body.classList.toggle('hide-tooltips', !this.showTooltips);
-      const settingToggle = document.getElementById('setting-tooltips-toggle');
-      if (settingToggle) settingToggle.checked = this.showTooltips;
+      const glassToggle = document.getElementById('setting-glass-mode-toggle');
+      if (glassToggle) glassToggle.checked = this.glassMode;
+      if (typeof window.applyUserSettings === 'function') {
+        window.applyUserSettings();
+      }
     } else if (this.settingsSubIndex === 2) {
+      this.smoothCorners = !this.smoothCorners;
+      if (window.userSettings) {
+        window.userSettings.smoothCorners = this.smoothCorners;
+      }
+      const smoothToggle = document.getElementById('setting-smooth-corners-toggle');
+      if (smoothToggle) smoothToggle.checked = this.smoothCorners;
+      if (typeof window.applyUserSettings === 'function') {
+        window.applyUserSettings();
+      }
+    } else if (this.settingsSubIndex === 3) {
       const themesList = ['default', 'sakura', 'hacker', 'bee', 'mario', 'gameboy', 'custom'];
       let curIdx = themesList.indexOf(this.theme);
       if (curIdx === -1) curIdx = 0;
@@ -525,6 +623,19 @@ class NumWorksSimulator {
       } else if (typeof window.setThemeBg === 'function') {
         window.setThemeBg(this.theme);
       }
+    } else if (this.settingsSubIndex === 4) {
+      this.showTooltips = !this.showTooltips;
+      if (window.userSettings) {
+        window.userSettings.showTooltips = this.showTooltips;
+      }
+      if (typeof document !== 'undefined' && document.body && document.body.classList && typeof document.body.classList.toggle === 'function') {
+        document.body.classList.toggle('hide-tooltips', !this.showTooltips);
+      }
+      const settingToggle = document.getElementById('setting-tooltips-toggle');
+      if (settingToggle) settingToggle.checked = this.showTooltips;
+    } else if (this.settingsSubIndex === 5) {
+      this.returnToMenu();
+      return;
     }
     this.saveCurrentSettings();
     if (typeof window.saveUserSettings === 'function') {
@@ -551,6 +662,27 @@ class NumWorksSimulator {
     if (this.title) {
       this.title.style.color = isDarkHeader ? '#ffffff' : '#000000';
       this.title.textContent = `EquaLib Hub ${this.displayMode === 'gallery' ? '[Galerie]' : '[Liste]'}`;
+    }
+
+    if (this.screen && this.screen.classList && typeof this.screen.classList.toggle === 'function') {
+      this.screen.classList.toggle('glass-mode', !!this.glassMode);
+      this.screen.classList.toggle('smooth-corners', !!this.smoothCorners);
+    }
+    if (this.container && this.container.classList && typeof this.container.classList.toggle === 'function') {
+      this.container.classList.toggle('glass-mode', !!this.glassMode);
+      this.container.classList.toggle('smooth-corners', !!this.smoothCorners);
+    }
+
+    if (this.glassMode) {
+      this.topbar.style.backdropFilter = 'blur(10px)';
+      this.topbar.style.webkitBackdropFilter = 'blur(10px)';
+      this.topbar.style.borderBottom = '1px solid rgba(255, 255, 255, 0.35)';
+      this.topbar.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.4)';
+    } else {
+      this.topbar.style.backdropFilter = '';
+      this.topbar.style.webkitBackdropFilter = '';
+      this.topbar.style.borderBottom = '';
+      this.topbar.style.boxShadow = '';
     }
 
     let customWp = (typeof window !== 'undefined' && window.customWallpaperDataUrl) || safeStorageGet('equalib_custom_wallpaper_dataurl');
@@ -601,14 +733,27 @@ class NumWorksSimulator {
       visibleApps.forEach((app, relIdx) => {
         const absIdx = pageStart + relIdx;
         const isSel = (absIdx === this.selectedIndex);
-        const cardBg = (this.theme === 'custom')
+        let cardBg = (this.theme === 'custom')
           ? (isSel ? 'rgba(254, 243, 199, 0.88)' : 'rgba(255, 255, 255, 0.70)')
           : (isSel ? pal.cardSel : pal.card);
-        const cardBackdrop = (this.theme === 'custom') ? 'backdrop-filter: blur(4px);' : '';
+        let cardBackdrop = (this.theme === 'custom') ? 'backdrop-filter: blur(4px);' : '';
+        let cardBorder = isSel ? pal.border : 'rgba(0,0,0,0.15)';
+        let cardShadow = isSel ? `box-shadow: 0 0 6px ${pal.border}88; transform: scale(1.02);` : '';
+        const cardRadius = this.smoothCorners ? 'rounded-xl' : 'rounded-sm';
+
+        if (this.glassMode) {
+          cardBackdrop = 'backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);';
+          cardBg = isSel ? 'rgba(254, 243, 199, 0.50)' : 'rgba(255, 255, 255, 0.22)';
+          cardBorder = isSel ? pal.border : 'rgba(255, 255, 255, 0.40)';
+          cardShadow = isSel
+            ? `box-shadow: 0 4px 16px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.7), 0 0 10px ${pal.border}88; transform: scale(1.02);`
+            : `box-shadow: 0 4px 12px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.5);`;
+        }
+
         html += `
-          <div class="sim-item sim-gallery-card cursor-pointer p-0.5 rounded-lg border text-center flex flex-col items-center justify-between transition-all select-none"
+          <div class="sim-item sim-gallery-card ${isSel ? 'is-selected' : ''} cursor-pointer p-0.5 ${cardRadius} border text-center flex flex-col items-center justify-between transition-all select-none"
             data-index="${absIdx}"
-            style="background-color: ${cardBg}; border-color: ${isSel ? pal.border : 'rgba(0,0,0,0.15)'}; ${isSel ? 'box-shadow: 0 0 6px ' + pal.border + '88; transform: scale(1.02);' : ''} ${cardBackdrop} height: 44px;">
+            style="background-color: ${cardBg}; border-color: ${cardBorder}; ${cardShadow} ${cardBackdrop} height: 44px;">
             <span class="text-sm leading-none mt-0.5">${app.icon}</span>
             <span class="text-[8px] font-bold truncate max-w-full leading-tight mb-0.5" style="color: ${isSel ? pal.border : pal.text}">${app.name.replace(/^[0-9]+\.\s*/, '')}</span>
           </div>
@@ -626,18 +771,27 @@ class NumWorksSimulator {
       html += `<div class="space-y-1 overflow-y-auto max-h-[105px] pr-1">`;
       this.apps.forEach((app, idx) => {
         const isSel = idx === this.selectedIndex;
-        const cardBg = (this.theme === 'custom')
+        let cardBg = (this.theme === 'custom')
           ? (isSel ? 'rgba(254, 243, 199, 0.90)' : 'rgba(255, 255, 255, 0.75)')
           : (isSel ? pal.cardSel : pal.card);
-        const cardBackdrop = (this.theme === 'custom') ? 'backdrop-filter: blur(4px);' : '';
+        let cardBackdrop = (this.theme === 'custom') ? 'backdrop-filter: blur(4px);' : '';
+        let cardBorder = isSel ? pal.border : 'rgba(0,0,0,0.15)';
+        const cardRadius = this.smoothCorners ? 'rounded-lg' : 'rounded-sm';
+
+        if (this.glassMode) {
+          cardBackdrop = 'backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);';
+          cardBg = isSel ? 'rgba(254, 243, 199, 0.50)' : 'rgba(255, 255, 255, 0.22)';
+          cardBorder = isSel ? pal.border : 'rgba(255, 255, 255, 0.40)';
+        }
+
         html += `
-          <div class="sim-item cursor-pointer p-1 rounded ${
+          <div class="sim-item ${isSel ? 'is-selected' : ''} cursor-pointer p-1 ${cardRadius} ${
             isSel 
               ? 'font-bold shadow-sm' 
               : 'hover:opacity-80'
           } text-[9px] flex justify-between items-center transition-all border"
             data-index="${idx}"
-            style="background-color: ${cardBg}; border-color: ${isSel ? pal.border : 'rgba(0,0,0,0.15)'}; ${cardBackdrop}">
+            style="background-color: ${cardBg}; border-color: ${cardBorder}; ${cardBackdrop}">
             <span class="truncate flex items-center gap-1" style="color: ${isSel ? pal.border : pal.text}">
               <span>${app.icon}</span> ${app.name}
             </span>
@@ -649,11 +803,22 @@ class NumWorksSimulator {
     }
 
     /* BANDEAU EN BAS AU CENTRE : APPLI ACTIVE */
-    const dockBg = (this.theme === 'custom') ? 'rgba(255, 255, 255, 0.85)' : pal.card;
-    const dockBackdrop = (this.theme === 'custom') ? 'backdrop-filter: blur(4px);' : '';
+    let dockBg = (this.theme === 'custom') ? 'rgba(255, 255, 255, 0.85)' : pal.card;
+    let dockBackdrop = (this.theme === 'custom') ? 'backdrop-filter: blur(4px);' : '';
+    let dockBorder = pal.border;
+    let dockShadow = 'shadow-sm';
+    const dockRadius = this.smoothCorners ? 'rounded-xl' : 'rounded-sm';
+
+    if (this.glassMode) {
+      dockBackdrop = 'backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);';
+      dockBg = 'rgba(255, 255, 255, 0.28)';
+      dockBorder = 'rgba(255, 255, 255, 0.50)';
+      dockShadow = 'box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.6);';
+    }
+
     html += `
-      <div class="sim-bottom-dock p-1 rounded-md border shadow-sm flex items-center justify-between text-[9px] select-none transition-all mt-0.5"
-        style="background-color: ${dockBg}; border-color: ${pal.border}; ${dockBackdrop}">
+      <div class="sim-bottom-dock p-1 ${dockRadius} border ${dockShadow} flex items-center justify-between text-[9px] select-none transition-all mt-0.5"
+        style="background-color: ${dockBg}; border-color: ${dockBorder}; ${dockBackdrop}">
         <div class="flex items-center gap-1 min-w-0">
           <span class="text-xs shrink-0">${selApp.icon || '📦'}</span>
           <span class="font-extrabold truncate" style="color: ${pal.text}">${selApp.name}</span>

@@ -26,7 +26,9 @@ typedef struct {
     int32_t record_morpion_wins;
     int32_t record_pong_wins;
     int32_t record_minesweeper_wins;
-    uint32_t reserved[4];
+    int32_t glass_mode;
+    int32_t smooth_corners;
+    uint32_t reserved[2];
 } eq_storage_t;
 #pragma pack(pop)
 

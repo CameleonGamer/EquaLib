@@ -957,7 +957,55 @@
         </label>
       </div>
 
-      <!-- 3. Thèmes Prédéfinis (Presets) -->
+      <!-- 3. Effet Verre Dépoli (Apple Glass) -->
+      <div class="p-3.5 rounded-lg bg-[#0d1117] border border-[#30363d] flex items-center justify-between gap-4 font-mono shadow-[2px_2px_0px_#000]">
+        <div>
+          <h4 class="font-bold text-xs text-[#e6edf3] flex items-center gap-1.5">
+            <span>✨</span> Effet Verre Dépoli (Apple Glass)
+          </h4>
+          <p class="text-[11px] text-[#8b949e] mt-0.5">
+            Translucidité, reflet spéculaire fin et dégradé lumineux sur les cartes et le dock.
+          </p>
+        </div>
+        <label class="relative inline-flex items-center cursor-pointer shrink-0">
+          <input type="checkbox" id="setting-glass-mode-toggle" class="sr-only peer" checked>
+          <div class="w-10 h-5 bg-[#21262d] peer-focus:outline-none rounded border border-[#30363d] peer peer-checked:after:translate-x-full peer-checked:after:border-black after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500"></div>
+        </label>
+      </div>
+
+      <!-- 4. Coins Arrondis & Bords Lisses -->
+      <div class="p-3.5 rounded-lg bg-[#0d1117] border border-[#30363d] flex items-center justify-between gap-4 font-mono shadow-[2px_2px_0px_#000]">
+        <div>
+          <h4 class="font-bold text-xs text-[#e6edf3] flex items-center gap-1.5">
+            <span>🔘</span> Coins Arrondis & Bords Lisses
+          </h4>
+          <p class="text-[11px] text-[#8b949e] mt-0.5">
+            Adoucit les angles des tuiles, de la barre d'état et du dock (coins anti-crénelés).
+          </p>
+        </div>
+        <label class="relative inline-flex items-center cursor-pointer shrink-0">
+          <input type="checkbox" id="setting-smooth-corners-toggle" class="sr-only peer" checked>
+          <div class="w-10 h-5 bg-[#21262d] peer-focus:outline-none rounded border border-[#30363d] peer peer-checked:after:translate-x-full peer-checked:after:border-black after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500"></div>
+        </label>
+      </div>
+
+      <!-- 5. Inclure l'application Paramètres dans le Hub -->
+      <div class="p-3.5 rounded-lg bg-[#0d1117] border border-[#30363d] flex items-center justify-between gap-4 font-mono shadow-[2px_2px_0px_#000]">
+        <div>
+          <h4 class="font-bold text-xs text-[#e6edf3] flex items-center gap-1.5">
+            <span>⚙️</span> Tuile « Paramètres & Options » dans le Hub
+          </h4>
+          <p class="text-[11px] text-[#8b949e] mt-0.5">
+            Affiche l'application Paramètres directement parmi les tuiles du Hub sur la calculatrice.
+          </p>
+        </div>
+        <label class="relative inline-flex items-center cursor-pointer shrink-0">
+          <input type="checkbox" id="setting-settings-app-toggle" class="sr-only peer" checked>
+          <div class="w-10 h-5 bg-[#21262d] peer-focus:outline-none rounded border border-[#30363d] peer peer-checked:after:translate-x-full peer-checked:after:border-black after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500"></div>
+        </label>
+      </div>
+
+      <!-- 5. Thèmes Prédéfinis (Presets) -->
       <div class="space-y-2">
         <label class="text-xs font-bold font-mono uppercase tracking-wider text-[#8b949e] flex items-center gap-1.5">
           <span>🎨</span> Thèmes Prédéfinis (Presets)

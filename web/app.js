@@ -303,6 +303,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   const settingModeGallery = document.getElementById('setting-mode-gallery');
   const settingModeList = document.getElementById('setting-mode-list');
   const settingTooltipsToggle = document.getElementById('setting-tooltips-toggle');
+  const settingGlassModeToggle = document.getElementById('setting-glass-mode-toggle');
+  const settingSmoothCornersToggle = document.getElementById('setting-smooth-corners-toggle');
+  const settingSettingsAppToggle = document.getElementById('setting-settings-app-toggle');
 
   const viewModeGalleryBtn = document.getElementById('view-mode-gallery-btn');
   const viewModeListBtn = document.getElementById('view-mode-list-btn');
@@ -319,6 +322,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   let userSettings = {
     displayMode: 'gallery', // Défaut : galerie carrée comme demandé
     showTooltips: true,
+    glassMode: true,
+    smoothCorners: true,
+    includeSettingsApp: true,
     theme: localStorage.getItem('equalib_theme') || 'default',
     customColor: '#f59e0b'
   };
@@ -463,10 +469,29 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     });
 
+    // 5. Glassmorphism et Bords Lisses
+    if (settingGlassModeToggle) settingGlassModeToggle.checked = (userSettings.glassMode !== false);
+    if (settingSmoothCornersToggle) settingSmoothCornersToggle.checked = (userSettings.smoothCorners !== false);
+    if (settingSettingsAppToggle) settingSettingsAppToggle.checked = (userSettings.includeSettingsApp !== false);
+
+    const simScreen = document.getElementById('sim-screen');
+    if (simScreen) {
+      simScreen.classList.toggle('glass-mode', userSettings.glassMode !== false);
+      simScreen.classList.toggle('smooth-corners', userSettings.smoothCorners !== false);
+    }
+    document.body.classList.toggle('glass-mode', userSettings.glassMode !== false);
+    document.body.classList.toggle('smooth-corners', userSettings.smoothCorners !== false);
+
     if (simulator) {
       if (typeof simulator.setSimulatorTheme === 'function') simulator.setSimulatorTheme(userSettings.theme);
       if (typeof simulator.setSimulatorDisplayMode === 'function') simulator.setSimulatorDisplayMode(userSettings.displayMode);
       if (typeof simulator.setSimulatorTooltips === 'function') simulator.setSimulatorTooltips(userSettings.showTooltips);
+      if (typeof simulator.setSimulatorGlassMode === 'function') simulator.setSimulatorGlassMode(userSettings.glassMode !== false);
+      if (typeof simulator.setSimulatorSmoothCorners === 'function') simulator.setSimulatorSmoothCorners(userSettings.smoothCorners !== false);
+    }
+
+    if (window.wallpaperStudio?.syncSettingsFromGlobal) {
+      window.wallpaperStudio.syncSettingsFromGlobal();
     }
 
     updateViewModeButtons();
@@ -752,6 +777,33 @@ document.addEventListener('DOMContentLoaded', async () => {
     saveUserSettings();
     showToast(userSettings.showTooltips ? 'Affichage des raccourcis et bulles activé' : 'Raccourcis et bulles d\'aide masqués', 'info');
   });
+
+  settingGlassModeToggle?.addEventListener('change', (e) => {
+    window.soundFx?.playClick();
+    userSettings.glassMode = e.target.checked;
+    saveUserSettings();
+    applyUserSettings();
+    showToast(userSettings.glassMode ? 'Effet Verre Dépoli (Apple Glass) activé' : 'Effet Verre Dépoli désactivé', 'info');
+  });
+
+  settingSmoothCornersToggle?.addEventListener('change', (e) => {
+    window.soundFx?.playClick();
+    userSettings.smoothCorners = e.target.checked;
+    saveUserSettings();
+    applyUserSettings();
+    showToast(userSettings.smoothCorners ? 'Coins Arrondis & Bords Lisses activés' : 'Coins Arrondis désactivés', 'info');
+  });
+
+  settingSettingsAppToggle?.addEventListener('change', (e) => {
+    window.soundFx?.playClick();
+    userSettings.includeSettingsApp = e.target.checked;
+    saveUserSettings();
+    applyUserSettings();
+    showToast(userSettings.includeSettingsApp ? 'Tuile « Paramètres & Options » affichée dans le Hub' : 'Tuile « Paramètres & Options » masquée du Hub', 'info');
+  });
+
+  window.openSettingsModal = openSettingsModal;
+  window.closeSettingsModal = closeSettingsModal;
 
   // Gestion des 7 presets de thèmes (dont 7e thème Custom)
   const THEME_PRESET_COLORS = {
@@ -2151,6 +2203,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       const bundle = await bundler.buildBundle(selectedApps, 'nwa', { 
         theme: effectiveTheme, 
         displayMode: userSettings.displayMode,
+        glassMode: userSettings.glassMode !== false,
+        smoothCorners: userSettings.smoothCorners !== false,
+        includeSettingsApp: userSettings.includeSettingsApp !== false,
         customWallpaper: wpBytes
       });
       const url = URL.createObjectURL(bundle.blob);
@@ -2226,6 +2281,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       const bundle = await bundler.buildBundle(selectedApps, 'bin', { 
         theme: effectiveTheme, 
         displayMode: userSettings.displayMode,
+        glassMode: userSettings.glassMode !== false,
+        smoothCorners: userSettings.smoothCorners !== false,
+        includeSettingsApp: userSettings.includeSettingsApp !== false,
         customWallpaper: wpBytes
       });
 

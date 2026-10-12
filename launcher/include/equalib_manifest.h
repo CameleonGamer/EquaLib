@@ -29,6 +29,11 @@
 
 #define MAX_MANIFEST_APPS 20
 
+#define MANIFEST_FLAG_THEME_MASK     0x0F
+#define MANIFEST_FLAG_VIEW_MODE_LIST 0x10
+#define MANIFEST_FLAG_GLASS_MODE     0x20
+#define MANIFEST_FLAG_SMOOTH_CORNERS 0x40
+
 #pragma pack(push, 1)
 
 typedef struct {

@@ -58,6 +58,12 @@
       this.overlayOpacity = 0.5; // 0 to 1
       this.useDithering = true;
 
+      // Paramètres d'interface et d'affichage Hub
+      this.glassMode = true;
+      this.smoothCorners = true;
+      this.includeSettingsApp = true;
+      this.displayMode = 'gallery';
+
       // État de dessin et curseur
       this.isDrawing = false;
       this.startX = 0;
@@ -112,6 +118,7 @@
       this.updateZoomCSS();
       this.checkStoredWallpaper();
       this.autoSyncWallpaper();
+      this.syncSettingsFromGlobal();
     }
 
     renderHTML() {
@@ -141,6 +148,71 @@
               <button id="ws-export-bin-btn" class="px-2.5 py-1.5 rounded bg-[#21262d] hover:bg-[#30363d] text-[#e6edf3] text-xs font-bold border border-[#30363d] shadow-[1px_1px_0px_#000] transition-all flex items-center gap-1 cursor-pointer" title="Télécharger les octets RGB565 bruts (153.6 Ko)">
                 <span>📦</span> BIN (RGB565)
               </button>
+            </div>
+          </div>
+
+          <!-- Section Contrôle des Paramètres & Options dans le Studio -->
+          <div class="bg-[#161b22] border-2 border-[#30363d] rounded-lg p-3 shadow-[3px_3px_0px_#000] space-y-3">
+            <div class="flex flex-wrap items-center justify-between gap-2 border-b border-[#30363d] pb-2">
+              <span class="text-xs font-bold text-[#c9d1d9] flex items-center gap-2">
+                <span>⚙️</span> Paramètres d'Affichage & Personnalisation Hub
+              </span>
+              <div class="flex items-center gap-2">
+                <span class="text-[10px] text-[#8b949e]">Configurable directement dans le Studio</span>
+                <button id="ws-open-settings-modal-btn" class="px-2.5 py-1 rounded bg-[#0d1117] hover:bg-[#21262d] text-[#FFBB00] text-xs font-bold border border-[#30363d] transition-all flex items-center gap-1 cursor-pointer shadow-[1px_1px_0px_#000]" title="Ouvrir le panneau complet des paramètres">
+                  <span>⚙️</span> Tous les Paramètres...
+                </button>
+              </div>
+            </div>
+
+            <!-- Toggles rapides intégrés au Studio -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 text-xs">
+              <!-- 1. Effet Verre Apple Glass -->
+              <label class="flex items-center justify-between p-2.5 rounded bg-[#0d1117] border border-[#30363d] hover:border-[#FFBB00] transition-colors cursor-pointer shadow-[1px_1px_0px_#000]">
+                <div class="space-y-0.5">
+                  <div class="font-bold text-[#e6edf3] flex items-center gap-1.5">
+                    <span>✨</span> Effet Verre (Apple Glass)
+                  </div>
+                  <div class="text-[10px] text-[#8b949e]">Translucidité dépolie & reflets</div>
+                </div>
+                <input type="checkbox" id="ws-glass-toggle" class="accent-[#FFBB00] w-4 h-4 cursor-pointer" checked>
+              </label>
+
+              <!-- 2. Coins Arrondis & Bords Lisses -->
+              <label class="flex items-center justify-between p-2.5 rounded bg-[#0d1117] border border-[#30363d] hover:border-[#FFBB00] transition-colors cursor-pointer shadow-[1px_1px_0px_#000]">
+                <div class="space-y-0.5">
+                  <div class="font-bold text-[#e6edf3] flex items-center gap-1.5">
+                    <span>🔘</span> Coins Arrondis & Lisses
+                  </div>
+                  <div class="text-[10px] text-[#8b949e]">Angles adoucis R=4px</div>
+                </div>
+                <input type="checkbox" id="ws-smooth-toggle" class="accent-[#FFBB00] w-4 h-4 cursor-pointer" checked>
+              </label>
+
+              <!-- 3. Tuile Paramètres dans le Hub -->
+              <label class="flex items-center justify-between p-2.5 rounded bg-[#0d1117] border border-[#30363d] hover:border-[#FFBB00] transition-colors cursor-pointer shadow-[1px_1px_0px_#000]">
+                <div class="space-y-0.5">
+                  <div class="font-bold text-[#e6edf3] flex items-center gap-1.5">
+                    <span>⚙️</span> Tuile Paramètres au Hub
+                  </div>
+                  <div class="text-[10px] text-[#8b949e]">Afficher l'app Paramètres</div>
+                </div>
+                <input type="checkbox" id="ws-settings-app-toggle" class="accent-[#FFBB00] w-4 h-4 cursor-pointer" checked>
+              </label>
+
+              <!-- 4. Mode d'Affichage Galerie / Liste -->
+              <div class="flex items-center justify-between p-2.5 rounded bg-[#0d1117] border border-[#30363d] shadow-[1px_1px_0px_#000]">
+                <div class="space-y-0.5">
+                  <div class="font-bold text-[#e6edf3] flex items-center gap-1.5">
+                    <span>📱</span> Mode d'Affichage
+                  </div>
+                  <div class="text-[10px] text-[#8b949e]" id="ws-display-mode-label">Galerie</div>
+                </div>
+                <div class="flex items-center gap-1 bg-[#161b22] border border-[#30363d] p-0.5 rounded">
+                  <button id="ws-mode-gallery-btn" class="px-2 py-0.5 rounded text-[10px] font-bold bg-[#FFBB00] text-black cursor-pointer shadow-[1px_1px_0px_#000]" title="Mode Galerie (Tuiles carrées)">⏹️</button>
+                  <button id="ws-mode-list-btn" class="px-2 py-0.5 rounded text-[10px] font-bold text-[#8b949e] hover:text-white cursor-pointer" title="Mode Liste (Cartes horizontales)">☰</button>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -596,9 +668,90 @@
       });
 
       // Exportations
-      container.querySelector('#ws-export-png-btn').addEventListener('click', () => this.exportPNG());
-      container.querySelector('#ws-export-bin-btn').addEventListener('click', () => this.exportBIN());
-      container.querySelector('#ws-apply-theme-btn').addEventListener('click', () => this.applyCustomTheme());
+      container.querySelector('#ws-export-png-btn')?.addEventListener('click', () => this.exportPNG());
+      container.querySelector('#ws-export-bin-btn')?.addEventListener('click', () => this.exportBIN());
+      container.querySelector('#ws-apply-theme-btn')?.addEventListener('click', () => this.applyCustomTheme());
+
+      // Contrôles des Paramètres d'Affichage & Personnalisation dans le Studio
+      const glassToggle = container.querySelector('#ws-glass-toggle');
+      if (glassToggle) {
+        glassToggle.addEventListener('change', (e) => {
+          this.glassMode = e.target.checked;
+          if (typeof window !== 'undefined' && window.userSettings) {
+            window.userSettings.glassMode = this.glassMode;
+            window.saveUserSettings?.();
+            window.applyUserSettings?.();
+          }
+          this.renderOverlay();
+          window.soundFx?.playClick?.();
+        });
+      }
+
+      const smoothToggle = container.querySelector('#ws-smooth-toggle');
+      if (smoothToggle) {
+        smoothToggle.addEventListener('change', (e) => {
+          this.smoothCorners = e.target.checked;
+          if (typeof window !== 'undefined' && window.userSettings) {
+            window.userSettings.smoothCorners = this.smoothCorners;
+            window.saveUserSettings?.();
+            window.applyUserSettings?.();
+          }
+          this.renderOverlay();
+          window.soundFx?.playClick?.();
+        });
+      }
+
+      const settingsAppToggle = container.querySelector('#ws-settings-app-toggle');
+      if (settingsAppToggle) {
+        settingsAppToggle.addEventListener('change', (e) => {
+          this.includeSettingsApp = e.target.checked;
+          if (typeof window !== 'undefined' && window.userSettings) {
+            window.userSettings.includeSettingsApp = this.includeSettingsApp;
+            window.saveUserSettings?.();
+            window.applyUserSettings?.();
+          }
+          this.renderOverlay();
+          window.soundFx?.playClick?.();
+        });
+      }
+
+      const modeGalleryBtn = container.querySelector('#ws-mode-gallery-btn');
+      const modeListBtn = container.querySelector('#ws-mode-list-btn');
+
+      if (modeGalleryBtn) {
+        modeGalleryBtn.addEventListener('click', () => {
+          this.displayMode = 'gallery';
+          if (typeof window !== 'undefined' && window.userSettings) {
+            window.userSettings.displayMode = 'gallery';
+            window.saveUserSettings?.();
+            window.applyUserSettings?.();
+          }
+          this.syncSettingsFromGlobal();
+          window.soundFx?.playClick?.();
+        });
+      }
+
+      if (modeListBtn) {
+        modeListBtn.addEventListener('click', () => {
+          this.displayMode = 'list';
+          if (typeof window !== 'undefined' && window.userSettings) {
+            window.userSettings.displayMode = 'list';
+            window.saveUserSettings?.();
+            window.applyUserSettings?.();
+          }
+          this.syncSettingsFromGlobal();
+          window.soundFx?.playClick?.();
+        });
+      }
+
+      const openSettingsBtn = container.querySelector('#ws-open-settings-modal-btn');
+      if (openSettingsBtn) {
+        openSettingsBtn.addEventListener('click', () => {
+          if (typeof window !== 'undefined' && typeof window.openSettingsModal === 'function') {
+            window.openSettingsModal();
+          }
+        });
+      }
 
       this.renderPaletteSwatches();
     }
@@ -661,6 +814,47 @@
       if (coordEl && this.cursorX >= 0) {
         coordEl.textContent = `Curseur : X: ${this.cursorX}, Y: ${this.cursorY} | Outil : ${this.getToolLabel()} (${this.brushSize}px)`;
       }
+    }
+
+    /**
+     * Synchronise les paramètres visuels depuis l'état global et met à jour le Studio
+     */
+    syncSettingsFromGlobal() {
+      if (typeof window !== 'undefined' && window.userSettings) {
+        this.glassMode = (window.userSettings.glassMode !== false);
+        this.smoothCorners = (window.userSettings.smoothCorners !== false);
+        this.includeSettingsApp = (window.userSettings.includeSettingsApp !== false);
+        this.displayMode = window.userSettings.displayMode || 'gallery';
+      }
+
+      if (typeof document !== 'undefined') {
+        const glassToggle = document.getElementById('ws-glass-toggle');
+        const smoothToggle = document.getElementById('ws-smooth-toggle');
+        const settingsAppToggle = document.getElementById('ws-settings-app-toggle');
+        const modeLabel = document.getElementById('ws-display-mode-label');
+        const modeGalleryBtn = document.getElementById('ws-mode-gallery-btn');
+        const modeListBtn = document.getElementById('ws-mode-list-btn');
+
+        if (glassToggle) glassToggle.checked = this.glassMode;
+        if (smoothToggle) smoothToggle.checked = this.smoothCorners;
+        if (settingsAppToggle) settingsAppToggle.checked = this.includeSettingsApp;
+
+        if (modeLabel) {
+          modeLabel.textContent = (this.displayMode === 'gallery') ? 'Galerie (Tuiles)' : 'Liste (Compact)';
+        }
+
+        if (modeGalleryBtn && modeListBtn) {
+          if (this.displayMode === 'gallery') {
+            modeGalleryBtn.className = 'px-2 py-0.5 rounded text-[10px] font-bold bg-[#FFBB00] text-black cursor-pointer shadow-[1px_1px_0px_#000]';
+            modeListBtn.className = 'px-2 py-0.5 rounded text-[10px] font-bold text-[#8b949e] hover:text-white cursor-pointer';
+          } else {
+            modeGalleryBtn.className = 'px-2 py-0.5 rounded text-[10px] font-bold text-[#8b949e] hover:text-white cursor-pointer';
+            modeListBtn.className = 'px-2 py-0.5 rounded text-[10px] font-bold bg-[#FFBB00] text-black cursor-pointer shadow-[1px_1px_0px_#000]';
+          }
+        }
+      }
+
+      this.renderOverlay();
     }
 
     applyBackgroundPreset(presetKey) {
@@ -1037,64 +1231,223 @@
       // 2. Hub UI exact superposé
       if (this.showOverlay) {
         const op = this.overlayOpacity;
-        this.overlayCtx.save();
+        const ctx = this.overlayCtx;
+        ctx.save();
+
+        const isGlass = (this.glassMode !== false);
+        const isSmooth = (this.smoothCorners !== false);
+        const radius = isSmooth ? 5 : 0;
+        const isList = (this.displayMode === 'list');
+
+        const drawCardBox = (x, y, w, h, isSelected) => {
+          ctx.beginPath();
+          if (radius > 0 && typeof ctx.roundRect === 'function') {
+            ctx.roundRect(x, y, w, h, radius);
+          } else if (radius > 0) {
+            ctx.moveTo(x + radius, y);
+            ctx.lineTo(x + w - radius, y);
+            ctx.arcTo(x + w, y, x + w, y + radius, radius);
+            ctx.arcTo(x + w, y + h, x + w - radius, y + h, radius);
+            ctx.arcTo(x, y + h, x, y + h - radius, radius);
+            ctx.arcTo(x, y, x + radius, y, radius);
+            ctx.closePath();
+          } else {
+            ctx.rect(x, y, w, h);
+          }
+
+          if (isGlass) {
+            // Effet Apple Glass : fond translucide avec reflet spéculaire
+            ctx.fillStyle = isSelected 
+              ? `rgba(254, 243, 199, ${op * 0.42})` 
+              : `rgba(255, 255, 255, ${op * 0.22})`;
+            ctx.fill();
+
+            // Bordure translucide
+            ctx.strokeStyle = isSelected 
+              ? `rgba(255, 187, 0, ${op * 0.95})` 
+              : `rgba(255, 255, 255, ${op * 0.45})`;
+            ctx.lineWidth = isSelected ? 2 : 1;
+            ctx.stroke();
+
+            // Liséré spéculaire supérieur (reflet fin de verre 1px blanc translucide)
+            ctx.save();
+            ctx.beginPath();
+            if (radius > 0) {
+              ctx.moveTo(x + radius, y + 1);
+              ctx.lineTo(x + w - radius, y + 1);
+            } else {
+              ctx.moveTo(x + 1, y + 1);
+              ctx.lineTo(x + w - 1, y + 1);
+            }
+            ctx.strokeStyle = `rgba(255, 255, 255, ${op * 0.75})`;
+            ctx.lineWidth = 1;
+            ctx.stroke();
+            ctx.restore();
+          } else {
+            // Rendu opaque classique
+            ctx.fillStyle = isSelected 
+              ? `rgba(254, 243, 199, ${op * 0.95})` 
+              : `rgba(240, 243, 246, ${op * 0.92})`;
+            ctx.fill();
+
+            ctx.strokeStyle = isSelected 
+              ? `rgba(245, 158, 11, ${op})` 
+              : `rgba(203, 213, 225, ${op * 0.9})`;
+            ctx.lineWidth = isSelected ? 2 : 1;
+            ctx.stroke();
+          }
+        };
 
         // Top Bar (h: 22px)
-        this.overlayCtx.fillStyle = `rgba(33, 38, 45, ${op * 0.95})`;
-        this.overlayCtx.fillRect(0, 0, SCREEN_WIDTH, 22);
-        this.overlayCtx.fillStyle = `rgba(255, 187, 0, ${op})`;
-        this.overlayCtx.font = 'bold 9px monospace';
-        this.overlayCtx.fillText('EquaLib Hub [Galerie]', 8, 15);
-        this.overlayCtx.fillStyle = `rgba(255, 255, 255, ${op})`;
-        this.overlayCtx.fillText('12:00', SCREEN_WIDTH - 35, 15);
+        if (isGlass) {
+          ctx.fillStyle = `rgba(15, 23, 42, ${op * 0.65})`;
+          ctx.fillRect(0, 0, SCREEN_WIDTH, 22);
+          ctx.strokeStyle = `rgba(255, 255, 255, ${op * 0.35})`;
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(0, 22);
+          ctx.lineTo(SCREEN_WIDTH, 22);
+          ctx.stroke();
+        } else {
+          ctx.fillStyle = `rgba(33, 38, 45, ${op * 0.95})`;
+          ctx.fillRect(0, 0, SCREEN_WIDTH, 22);
+        }
 
-        // Cartes Galerie (3 cols x 2 rows)
-        const cardW = 88;
-        const cardH = 70;
-        for (let row = 0; row < 2; row++) {
-          for (let col = 0; col < 3; col++) {
+        ctx.fillStyle = `rgba(255, 187, 0, ${op})`;
+        ctx.font = 'bold 9px monospace';
+        ctx.textAlign = 'left';
+        ctx.fillText(`EquaLib Hub [${isList ? 'Liste' : 'Galerie'}]`, 8, 15);
+        ctx.fillStyle = `rgba(255, 255, 255, ${op})`;
+        ctx.textAlign = 'right';
+        ctx.fillText('12:00', SCREEN_WIDTH - 8, 15);
+
+        // Liste des cartes du Hub simulées
+        const hubApps = [
+          { name: '1. Mario Kart', icon: '🏎️', cat: 'Jeu / Arcade' },
+          { name: '2. Tableau Périodique', icon: '🧪', cat: 'Sciences' },
+          { name: '3. Fiches de Cours', icon: '📚', cat: 'Révision' },
+          { name: '4. Solveur de Maths', icon: '📐', cat: 'Maths' },
+          { name: '5. Flappy Bird', icon: '🐦', cat: 'Jeu / Arcade' },
+          (this.includeSettingsApp !== false)
+            ? { name: '16. Options & Themes', icon: '⚙️', cat: 'Système' }
+            : { name: '6. 2048 Ultimate', icon: '🎲', cat: 'Jeu / Arcade' }
+        ];
+
+        if (!isList) {
+          // --- Mode Galerie (3 colonnes x 2 lignes de tuiles) ---
+          const cardW = 88;
+          const cardH = 70;
+          for (let i = 0; i < 6; i++) {
+            const row = Math.floor(i / 3);
+            const col = i % 3;
             const x = 16 + col * 100;
             const y = 28 + row * 78;
-            const isSel = (row === 0 && col === 0);
+            const isSel = (i === 0);
+            const app = hubApps[i];
 
-            this.overlayCtx.fillStyle = isSel ? `rgba(254, 243, 199, ${op * 0.9})` : `rgba(255, 255, 255, ${op * 0.85})`;
-            this.overlayCtx.fillRect(x, y, cardW, cardH);
+            drawCardBox(x, y, cardW, cardH, isSel);
 
-            this.overlayCtx.strokeStyle = isSel ? `rgba(245, 158, 11, ${op})` : `rgba(226, 232, 240, ${op * 0.8})`;
-            this.overlayCtx.lineWidth = isSel ? 2 : 1;
-            this.overlayCtx.strokeRect(x, y, cardW, cardH);
+            ctx.textAlign = 'center';
+            ctx.fillStyle = isSel ? (isGlass ? '#ffffff' : '#000000') : (isGlass ? '#f1f5f9' : '#334155');
+            ctx.font = 'bold 8px monospace';
+            ctx.fillText(app.name.length > 13 ? app.name.slice(0, 11) + '..' : app.name, x + cardW / 2, y + 54);
+            ctx.font = '16px monospace';
+            ctx.fillText(app.icon, x + cardW / 2, y + 34);
+          }
+        } else {
+          // --- Mode Liste (Cartes horizontales pleine largeur) ---
+          const rowH = 34;
+          const listStartX = 16;
+          const listW = 288;
+          const listApps = hubApps.slice(0, 4);
 
-            this.overlayCtx.fillStyle = isSel ? '#000000' : '#334155';
-            this.overlayCtx.font = 'bold 8px monospace';
-            this.overlayCtx.textAlign = 'center';
-            this.overlayCtx.fillText(isSel ? 'Mario Kart' : 'App ' + (row * 3 + col + 1), x + cardW / 2, y + 54);
-            this.overlayCtx.font = '16px monospace';
-            this.overlayCtx.fillText(isSel ? '🏎️' : '📦', x + cardW / 2, y + 34);
+          for (let i = 0; i < listApps.length; i++) {
+            const y = 28 + i * 38;
+            const isSel = (i === 0);
+            const app = listApps[i];
+
+            drawCardBox(listStartX, y, listW, rowH, isSel);
+
+            ctx.textAlign = 'left';
+            ctx.font = '14px monospace';
+            ctx.fillText(app.icon, listStartX + 8, y + 22);
+
+            ctx.font = 'bold 9px monospace';
+            ctx.fillStyle = isSel ? (isGlass ? '#ffffff' : '#000000') : (isGlass ? '#f1f5f9' : '#1e293b');
+            ctx.fillText(app.name, listStartX + 28, y + 16);
+
+            ctx.font = '8px monospace';
+            ctx.fillStyle = isSel ? (isGlass ? '#fef08a' : '#b45309') : (isGlass ? '#94a3b8' : '#64748b');
+            ctx.fillText(app.cat, listStartX + 28, y + 27);
           }
         }
 
-        // Dock bas (h: 24px à y: 188)
-        this.overlayCtx.fillStyle = `rgba(255, 255, 255, ${op * 0.9})`;
-        this.overlayCtx.fillRect(16, 188, 288, 24);
-        this.overlayCtx.strokeStyle = `rgba(255, 187, 0, ${op})`;
-        this.overlayCtx.lineWidth = 2;
-        this.overlayCtx.strokeRect(16, 188, 288, 24);
+        // Dock bas flottant (h: 24px à y: 188)
+        const dockX = 16;
+        const dockY = 188;
+        const dockW = 288;
+        const dockH = 24;
 
-        this.overlayCtx.textAlign = 'left';
-        this.overlayCtx.fillStyle = `rgba(0, 0, 0, ${op})`;
-        this.overlayCtx.font = 'bold 9px monospace';
-        this.overlayCtx.fillText('1. Mario Kart', 24, 204);
-        this.overlayCtx.fillStyle = `rgba(217, 119, 6, ${op})`;
-        this.overlayCtx.fillText('Jeu / Arcade', 230, 204);
+        ctx.beginPath();
+        if (radius > 0 && typeof ctx.roundRect === 'function') {
+          ctx.roundRect(dockX, dockY, dockW, dockH, radius);
+        } else if (radius > 0) {
+          ctx.moveTo(dockX + radius, dockY);
+          ctx.lineTo(dockX + dockW - radius, dockY);
+          ctx.arcTo(dockX + dockW, dockY, dockX + dockW, dockY + radius, radius);
+          ctx.arcTo(dockX + dockW, dockY + dockH, dockX + dockW - radius, dockY + dockH, radius);
+          ctx.arcTo(dockX, dockY + dockH, dockX, dockY + dockH - radius, radius);
+          ctx.arcTo(dockX, dockY, dockX + radius, dockY, radius);
+          ctx.closePath();
+        } else {
+          ctx.rect(dockX, dockY, dockW, dockH);
+        }
 
-        // Barre raccourcis (y: 224)
-        this.overlayCtx.fillStyle = `rgba(255, 255, 255, ${op * 0.85})`;
-        this.overlayCtx.fillRect(0, 224, SCREEN_WIDTH, 16);
-        this.overlayCtx.fillStyle = `rgba(100, 116, 139, ${op})`;
-        this.overlayCtx.font = '8px monospace';
-        this.overlayCtx.fillText('OK: Lancer | Toolbox: Options | Back: Epsilon', 8, 235);
+        if (isGlass) {
+          ctx.fillStyle = `rgba(15, 23, 42, ${op * 0.55})`;
+          ctx.fill();
+          ctx.strokeStyle = `rgba(255, 187, 0, ${op * 0.85})`;
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
 
-        this.overlayCtx.restore();
+          // Reflet supérieur
+          ctx.beginPath();
+          ctx.moveTo(dockX + 2, dockY + 1);
+          ctx.lineTo(dockX + dockW - 2, dockY + 1);
+          ctx.strokeStyle = `rgba(255, 255, 255, ${op * 0.6})`;
+          ctx.lineWidth = 1;
+          ctx.stroke();
+        } else {
+          ctx.fillStyle = `rgba(255, 255, 255, ${op * 0.92})`;
+          ctx.fill();
+          ctx.strokeStyle = `rgba(255, 187, 0, ${op})`;
+          ctx.lineWidth = 2;
+          ctx.stroke();
+        }
+
+        ctx.textAlign = 'left';
+        ctx.fillStyle = isGlass ? `rgba(255, 255, 255, ${op})` : `rgba(0, 0, 0, ${op})`;
+        ctx.font = 'bold 9px monospace';
+        ctx.fillText('1. Mario Kart', 24, 204);
+
+        ctx.textAlign = 'right';
+        ctx.fillStyle = `rgba(255, 187, 0, ${op})`;
+        ctx.fillText('Jeu / Arcade', dockX + dockW - 8, 204);
+
+        // Barre de raccourcis inférieure (y: 224, h: 16)
+        if (isGlass) {
+          ctx.fillStyle = `rgba(15, 23, 42, ${op * 0.5})`;
+          ctx.fillRect(0, 224, SCREEN_WIDTH, 16);
+        } else {
+          ctx.fillStyle = `rgba(255, 255, 255, ${op * 0.85})`;
+          ctx.fillRect(0, 224, SCREEN_WIDTH, 16);
+        }
+        ctx.textAlign = 'left';
+        ctx.fillStyle = isGlass ? `rgba(203, 213, 225, ${op})` : `rgba(100, 116, 139, ${op})`;
+        ctx.font = '8px monospace';
+        ctx.fillText('OK: Lancer | Toolbox: Options | Back: Epsilon', 8, 235);
+
+        ctx.restore();
       }
 
       // 3. Aperçu visuel du curseur Pinceau / Gomme (Cercle ou Carré en pointillé)

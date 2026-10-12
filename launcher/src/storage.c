@@ -54,7 +54,9 @@ eq_storage_t* eq_storage_get(void) {
         s->record_morpion_wins = 0;
         s->record_pong_wins = 0;
         s->record_minesweeper_wins = 0;
-        for (int i = 0; i < 4; i++) {
+        s->glass_mode = (g_equalib_manifest.flags & 0x20) ? 1 : 0;
+        s->smooth_corners = (g_equalib_manifest.flags & 0x40) ? 1 : 0;
+        for (int i = 0; i < 2; i++) {
             s->reserved[i] = 0;
         }
         s->checksum = eq_storage_calc_checksum(s);

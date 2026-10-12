@@ -4,7 +4,7 @@ const equalib_manifest_t g_equalib_manifest __attribute__((used, aligned(4), sec
     .magic = EQUALIB_MANIFEST_MAGIC,
     .version = 1,
     .app_count = 16,
-    .flags = 0,
+    .flags = MANIFEST_FLAG_GLASS_MODE | MANIFEST_FLAG_SMOOTH_CORNERS,
     .wallpaper_offset = 0,
     .wallpaper_size = 0,
     .apps = {
