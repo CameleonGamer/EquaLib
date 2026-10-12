@@ -833,12 +833,12 @@ static void draw_settings_row(int i, bool is_s, const theme_t* th) {
 
     eadk_color_t text_bg = base_bg;
     if (g_glass_mode) {
-        text_bg = rgb565_blend_75_25(base_bg, get_bg_pixel(100, y + 13, th, wp_ptr));
+        text_bg = rgb565_blend_50_50(base_bg, get_bg_pixel(100, y + 13, th, wp_ptr));
     }
     eadk_color_t text_col = get_contrast_text_color(text_bg);
 
     if (is_s) {
-        int acc_x = g_smooth_corners ? 18 : 16;
+        int acc_x = g_smooth_corners ? 20 : 16;
         eadk_rect_t acc = {(uint16_t)acc_x, (uint16_t)(y + 3), 3, (uint16_t)(row_h - 6)};
         eadk_display_push_rect_uniform(acc, th->accent);
     }
@@ -930,13 +930,7 @@ static void run_settings_screen(void) {
                 save_persistent_settings();
             } else if (sel_item == 4) {
                 g_show_tooltips = !g_show_tooltips;
-                draw_settings_row(4, true, th);
-                eadk_rect_t bot = {0, EADK_SCREEN_HEIGHT - 16, EADK_SCREEN_WIDTH, 16};
-                eadk_display_push_rect_uniform(bot, g_show_tooltips ? th->card_bg : th->screen_bg);
-                if (g_show_tooltips) {
-                    eadk_point_t p_h = {8, EADK_SCREEN_HEIGHT - 13};
-                    eadk_display_draw_string("Fleches: Changer | OK / Back: Sauvegarder", p_h, false, th->text_muted, th->card_bg);
-                }
+                full_redraw = true;
                 save_persistent_settings();
             }
         } else if (eadk_keyboard_key_down(pressed, eadk_key_right)) {
@@ -958,13 +952,7 @@ static void run_settings_screen(void) {
                 save_persistent_settings();
             } else if (sel_item == 4) {
                 g_show_tooltips = !g_show_tooltips;
-                draw_settings_row(4, true, th);
-                eadk_rect_t bot = {0, EADK_SCREEN_HEIGHT - 16, EADK_SCREEN_WIDTH, 16};
-                eadk_display_push_rect_uniform(bot, g_show_tooltips ? th->card_bg : th->screen_bg);
-                if (g_show_tooltips) {
-                    eadk_point_t p_h = {8, EADK_SCREEN_HEIGHT - 13};
-                    eadk_display_draw_string("Fleches: Changer | OK / Back: Sauvegarder", p_h, false, th->text_muted, th->card_bg);
-                }
+                full_redraw = true;
                 save_persistent_settings();
             }
         } else if (eadk_keyboard_key_down(pressed, eadk_key_ok) || eadk_keyboard_key_down(pressed, eadk_key_exe)) {
@@ -986,13 +974,7 @@ static void run_settings_screen(void) {
                 save_persistent_settings();
             } else if (sel_item == 4) {
                 g_show_tooltips = !g_show_tooltips;
-                draw_settings_row(4, true, th);
-                eadk_rect_t bot = {0, EADK_SCREEN_HEIGHT - 16, EADK_SCREEN_WIDTH, 16};
-                eadk_display_push_rect_uniform(bot, g_show_tooltips ? th->card_bg : th->screen_bg);
-                if (g_show_tooltips) {
-                    eadk_point_t p_h = {8, EADK_SCREEN_HEIGHT - 13};
-                    eadk_display_draw_string("Fleches: Changer | OK / Back: Sauvegarder", p_h, false, th->text_muted, th->card_bg);
-                }
+                full_redraw = true;
                 save_persistent_settings();
             }
         }
@@ -1004,12 +986,35 @@ static void run_settings_screen(void) {
             th = &g_themes[g_current_theme];
             save_persistent_settings();
 
-            /* Fond et barre */
-            eadk_display_push_rect_uniform(eadk_screen_rect, th->screen_bg);
-            eadk_rect_t bar = {0, 0, EADK_SCREEN_WIDTH, 22};
-            eadk_display_push_rect_uniform(bar, th->top_bar);
+            /* Fond général de l'écran LCD : Fond personnalisé RGB565 ou couleur de fond du thème */
+            draw_screen_background(th);
+
+            /* Barre supérieure officielle (avec effet verre dépoli si actif) */
+            eadk_color_t bar_text_bg = th->top_bar;
+            if (g_glass_mode) {
+                const eadk_color_t* wp_ptr = get_wallpaper_flash_ptr();
+                for (int r = 0; r < 22; r++) {
+                    for (int c = 0; c < EADK_SCREEN_WIDTH; c++) {
+                        eadk_color_t bg_pix = get_bg_pixel(c, r, th, wp_ptr);
+                        if (r == 21) {
+                            /* Liséré inférieur blanc translucide fin 1px façon Apple Glass */
+                            s_styled_line_buf[c] = rgb565_blend_50_50(th->top_bar, 0xFFFF);
+                        } else {
+                            s_styled_line_buf[c] = rgb565_blend_50_50(th->top_bar, bg_pix);
+                        }
+                    }
+                    eadk_rect_t r_line = {0, (uint16_t)r, EADK_SCREEN_WIDTH, 1};
+                    eadk_display_push_rect(r_line, s_styled_line_buf);
+                }
+                bar_text_bg = rgb565_blend_50_50(th->top_bar, get_bg_pixel(50, 10, th, wp_ptr));
+            } else {
+                eadk_rect_t bar = {0, 0, EADK_SCREEN_WIDTH, 22};
+                eadk_display_push_rect_uniform(bar, th->top_bar);
+            }
+            eadk_color_t bar_text_col = get_contrast_text_color(bar_text_bg);
+
             eadk_point_t p_t = {8, 5};
-            eadk_display_draw_string("Parametres & Themes EquaLib", p_t, false, th->text_primary, th->top_bar);
+            eadk_display_draw_string("Parametres & Themes EquaLib", p_t, false, bar_text_col, bar_text_bg);
 
             /* Cadre paramètres (6 rangées) */
             for (int i = 0; i < 6; i++) {
@@ -1018,10 +1023,30 @@ static void run_settings_screen(void) {
 
             /* Pied d'écran */
             if (g_show_tooltips) {
-                eadk_rect_t bot = {0, EADK_SCREEN_HEIGHT - 16, EADK_SCREEN_WIDTH, 16};
-                eadk_display_push_rect_uniform(bot, th->card_bg);
+                eadk_color_t bot_bg = th->card_bg;
+                if (g_glass_mode) {
+                    const eadk_color_t* wp_ptr = get_wallpaper_flash_ptr();
+                    for (int r = EADK_SCREEN_HEIGHT - 16; r < EADK_SCREEN_HEIGHT; r++) {
+                        for (int c = 0; c < EADK_SCREEN_WIDTH; c++) {
+                            eadk_color_t bg_pix = get_bg_pixel(c, r, th, wp_ptr);
+                            if (r == EADK_SCREEN_HEIGHT - 16) {
+                                /* Liséré supérieur blanc translucide fin 1px façon Apple Glass */
+                                s_styled_line_buf[c] = rgb565_blend_50_50(th->card_bg, 0xFFFF);
+                            } else {
+                                s_styled_line_buf[c] = rgb565_blend_50_50(th->card_bg, bg_pix);
+                            }
+                        }
+                        eadk_rect_t r_line = {0, (uint16_t)r, EADK_SCREEN_WIDTH, 1};
+                        eadk_display_push_rect(r_line, s_styled_line_buf);
+                    }
+                    bot_bg = rgb565_blend_50_50(th->card_bg, get_bg_pixel(100, EADK_SCREEN_HEIGHT - 8, th, wp_ptr));
+                } else {
+                    eadk_rect_t bot = {0, EADK_SCREEN_HEIGHT - 16, EADK_SCREEN_WIDTH, 16};
+                    eadk_display_push_rect_uniform(bot, th->card_bg);
+                }
+                eadk_color_t bot_text_col = get_contrast_text_color(bot_bg);
                 eadk_point_t p_h = {8, EADK_SCREEN_HEIGHT - 13};
-                eadk_display_draw_string("Fleches: Changer | OK / Back: Sauvegarder", p_h, false, th->text_muted, th->card_bg);
+                eadk_display_draw_string("Fleches: Changer | OK / Back: Sauvegarder", p_h, false, (bot_text_col == 0x0000) ? 0x52AA : th->text_muted, bot_bg);
             }
         }
 
@@ -1243,11 +1268,31 @@ int main(int argc, char* argv[]) {
             draw_bottom_active_dock(selected, cur_th);
 
             if (g_show_tooltips) {
-                eadk_rect_t bottom_bar = {0, EADK_SCREEN_HEIGHT - 16, EADK_SCREEN_WIDTH, 16};
-                eadk_display_push_rect_uniform(bottom_bar, cur_th->card_bg);
+                eadk_color_t bot_bg = cur_th->card_bg;
+                if (g_glass_mode) {
+                    const eadk_color_t* wp_ptr = get_wallpaper_flash_ptr();
+                    for (int r = EADK_SCREEN_HEIGHT - 16; r < EADK_SCREEN_HEIGHT; r++) {
+                        for (int c = 0; c < EADK_SCREEN_WIDTH; c++) {
+                            eadk_color_t bg_pix = get_bg_pixel(c, r, cur_th, wp_ptr);
+                            if (r == EADK_SCREEN_HEIGHT - 16) {
+                                /* Liséré supérieur blanc translucide fin 1px façon Apple Glass */
+                                s_styled_line_buf[c] = rgb565_blend_50_50(cur_th->card_bg, 0xFFFF);
+                            } else {
+                                s_styled_line_buf[c] = rgb565_blend_50_50(cur_th->card_bg, bg_pix);
+                            }
+                        }
+                        eadk_rect_t r_line = {0, (uint16_t)r, EADK_SCREEN_WIDTH, 1};
+                        eadk_display_push_rect(r_line, s_styled_line_buf);
+                    }
+                    bot_bg = rgb565_blend_50_50(cur_th->card_bg, get_bg_pixel(100, EADK_SCREEN_HEIGHT - 8, cur_th, wp_ptr));
+                } else {
+                    eadk_rect_t bottom_bar = {0, EADK_SCREEN_HEIGHT - 16, EADK_SCREEN_WIDTH, 16};
+                    eadk_display_push_rect_uniform(bottom_bar, cur_th->card_bg);
+                }
+                eadk_color_t bot_text_col = get_contrast_text_color(bot_bg);
 
                 eadk_point_t p_help = {8, EADK_SCREEN_HEIGHT - 13};
-                eadk_display_draw_string("OK: Lancer | Toolbox: Options | Back: Epsilon", p_help, false, cur_th->text_muted, cur_th->card_bg);
+                eadk_display_draw_string("OK: Lancer | Toolbox: Options | Back: Epsilon", p_help, false, (bot_text_col == 0x0000) ? 0x52AA : cur_th->text_muted, bot_bg);
             }
             old_selected = selected;
             old_scroll_offset = scroll_offset;
