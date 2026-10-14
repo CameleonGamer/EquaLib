@@ -374,7 +374,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (modelText) {
       const modeSuffix = (usb && usb.isConnected) ? ` (${usb.mode})` : '';
-      modelText.textContent = `${userSettings.targetModel}${modeSuffix}`;
+      const slotAddr = (usb && usb.isConnected && usb.flashAddress) 
+        ? ` - Slot 0x${usb.flashAddress.toString(16)}` 
+        : (isN110 ? ' - Slot 0x90200000' : ' - Slot 0x90180000');
+      modelText.textContent = `${userSettings.targetModel}${modeSuffix}${slotAddr}`;
     }
 
     if (downloadBtn) {
@@ -2396,13 +2399,17 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       progressText.textContent = 'Préparation du flash USB...';
 
-      // 2. Flashage USB DFU réel vers le slot 0x90180000
+      // 2. Flashage USB DFU réel vers le slot approprié (0x90200000 sur N0110, 0x90180000 sur N0120)
+      const targetFlashAddr = (usb && usb.flashAddress) 
+        ? usb.flashAddress 
+        : (targetModel === 'N0110' ? 0x90200000 : 0x90180000);
+
       await usb.flashBinary(bundle.arrayBuffer, (progress) => {
         const percent = (typeof progress === 'number') ? progress : progress.percent;
         const msg = (typeof progress === 'object' && progress.message) ? progress.message : `Progression : ${percent}%`;
         flashProgress.style.width = `${percent}%`;
         progressText.textContent = msg;
-      });
+      }, targetFlashAddr);
 
       connectionDot.className = 'w-2.5 h-2.5 rounded-full bg-slate-500';
       connectionText.textContent = 'Installé ✓';

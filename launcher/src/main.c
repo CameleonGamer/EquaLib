@@ -156,14 +156,18 @@ static void save_persistent_settings(void) {
 #define WALLPAPER_BAND_HEIGHT 8
 static eadk_color_t s_wallpaper_ram_band[EADK_SCREEN_WIDTH * WALLPAPER_BAND_HEIGHT];
 
-#define EQUALIB_FLASH_BASE 0x90180000UL
+#define EQUALIB_FLASH_BASE_N0120 0x90180000UL
+#define EQUALIB_FLASH_BASE_N0110 0x90200000UL
 
 static inline uintptr_t get_app_flash_base(void) {
     uintptr_t cand = (uintptr_t)eadk_app_name - 32;
     if (*(const uint32_t*)cand == 0xDEC0BEBA) {
         return cand;
     }
-    return EQUALIB_FLASH_BASE;
+    if ((uintptr_t)eadk_app_name >= 0x90200000UL) {
+        return EQUALIB_FLASH_BASE_N0110;
+    }
+    return EQUALIB_FLASH_BASE_N0120;
 }
 
 /* Rendu sécurisé du fond d'écran ou fond uni avec vérification MPU et protection anti-HardFault */

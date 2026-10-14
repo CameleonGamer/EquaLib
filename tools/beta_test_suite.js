@@ -516,13 +516,23 @@ describe('6. Intégrité des Binaires Natifs & Manifeste (N0120 & N0110)', () =>
     assert.strictEqual(nwa[5], 1); // Little endian
   });
 
-  it('equalib_n0110.bin est lié pour la mémoire RAM N0110 (0x20000000) sans HardFault', () => {
+  it('equalib_n0110.bin est lié pour la mémoire RAM N0110 (0x20000000) et Flash Slot (0x90200000) sans HardFault', () => {
     const bin = fs.readFileSync('web/equalib_n0110.bin');
     assert(bin.length > 500000, `Binaire N0110 trop petit (${bin.length} octets)`);
     // Vérifier le magic EADK 0xDEC0BEBA en tête
     assert.strictEqual(bin.readUInt32LE(0), 0xdec0beba);
     // Vérifier l'adresse RAM d'initialisation de data à 0x1748 = 0x20000000 (SRAM N0110)
     assert.strictEqual(bin.readUInt32LE(0x1748), 0x20000000);
+    // Vérifier que les pointeurs Flash pointent dans le slot externe officiel N0110 (0x90200000)
+    const flashPtr = bin.readUInt32LE(0x1750);
+    assert(flashPtr >= 0x90200000 && flashPtr < 0x90400000, `Pointeur Flash N0110 hors du slot 0x90200000 (valeur: 0x${flashPtr.toString(16)})`);
+  });
+
+  it('equalib_n0120.bin est lié pour le slot officiel N0120 (Flash: 0x90180000, RAM: 0x240118a4)', () => {
+    const bin = fs.readFileSync('web/equalib_n0120.bin');
+    assert.strictEqual(bin.readUInt32LE(0x1748), 0x240118a4);
+    const flashPtr = bin.readUInt32LE(0x1750);
+    assert(flashPtr >= 0x90180000 && flashPtr < 0x90280000, `Pointeur Flash N0120 hors du slot 0x90180000 (valeur: 0x${flashPtr.toString(16)})`);
   });
 
   it('equalib_n0110.nwa est un objet ELF ARM Cortex-M7 valide', () => {

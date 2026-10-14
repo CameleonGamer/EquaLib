@@ -278,8 +278,11 @@ class EquaLibBundler {
           // Détection d'un fichier ELF .nwa qui doit être lié dynamiquement à l'adresse Flash du pack
           const isElf = (binBytes.length >= 4 && binBytes[0] === 0x7F && binBytes[1] === 0x45 && binBytes[2] === 0x4C && binBytes[3] === 0x46);
           if (isElf) {
-            const targetFlash = 0x90180000 + currentExtraOffset;
-            const targetRam = 0x24020000 + (extraPayloads.length * 0x8000);
+            const modelOpt = (options.targetModel || this.options?.targetModel || 'N0120').toUpperCase();
+            const isModel110 = modelOpt.includes('110');
+            const baseFlash = isModel110 ? 0x90200000 : 0x90180000;
+            const targetFlash = baseFlash + currentExtraOffset;
+            const targetRam = (isModel110 ? 0x20010000 : 0x24020000) + (extraPayloads.length * 0x8000);
             console.log('[EquaLib Bundler] Liaison dynamique de "' + app.name + '" pour Flash 0x' + targetFlash.toString(16) + ', RAM 0x' + targetRam.toString(16) + '...');
             if (typeof EquaLibLinker !== 'undefined' && EquaLibLinker.convertNwaToBin) {
               try {
