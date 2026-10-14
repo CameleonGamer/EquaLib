@@ -401,15 +401,17 @@ class NumWorksWebUSB {
     if (uint8[0] === 0x7F && uint8[1] === 0x45 && uint8[2] === 0x4C && uint8[3] === 0x46) {
       console.warn("[WebUSB] Détection d'un fichier ELF .nwa. Liaison automatique vers binaire exécutable .bin...");
       if (typeof EquaLibLinker !== 'undefined' && EquaLibLinker.convertNwaToBin) {
+        const isN0110 = (this.model === 'NumWorks N0110');
         const converted = await EquaLibLinker.convertNwaToBin(uint8, {
           flashStart: '0x' + (targetFlashAddr || DEFAULT_FLASH_ADDR).toString(16),
-          ramStart: '0x24020000',
+          ramStart: isN0110 ? '0x20000000' : '0x24020000',
           ldWasmUrl: 'toolchain/ld.wasm',
           objcopyWasmUrl: 'toolchain/objcopy.wasm'
         });
         return await this.flashBinary(converted, onProgress, targetFlashAddr);
       }
-      const binResp = await fetch(`equalib_n0120.bin?v=${Date.now()}`);
+      const modelBin = (this.model === 'NumWorks N0110') ? 'equalib_n0110.bin' : 'equalib_n0120.bin';
+      const binResp = await fetch(`${modelBin}?v=${Date.now()}`);
       if (binResp.ok) {
         return await this.flashBinary(await binResp.arrayBuffer(), onProgress, targetFlashAddr);
       }

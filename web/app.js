@@ -255,6 +255,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   const modelText = document.getElementById('model-text');
   
   const flashBtn = document.getElementById('flash-btn');
+  const modelSelectN0120 = document.getElementById('model-select-n0120');
+  const modelSelectN0110 = document.getElementById('model-select-n0110');
   const downloadBtn = document.getElementById('download-btn');
   const downloadNwsBtn = document.getElementById('download-nws-btn');
   const progressContainer = document.getElementById('progress-container');
@@ -323,6 +325,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const SETTINGS_STORAGE_KEY = 'equalib_user_settings';
   let userSettings = {
+    targetModel: 'N0120',
     displayMode: 'gallery', // Défaut : galerie carrée comme demandé
     showTooltips: true,
     glassMode: true,
@@ -353,6 +356,46 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
   window.saveUserSettings = saveUserSettings;
+
+  function setTargetModel(model, save = true) {
+    const isN110 = (model === 'N0110' || (model && model.includes('110')));
+    userSettings.targetModel = isN110 ? 'N0110' : 'N0120';
+    if (save) saveUserSettings();
+
+    if (modelSelectN0120 && modelSelectN0110) {
+      if (isN110) {
+        modelSelectN0110.className = 'px-2.5 py-1 rounded text-xs font-mono font-bold transition-all bg-[#FFBB00] text-black border border-black cursor-pointer shadow-[1px_1px_0px_#000]';
+        modelSelectN0120.className = 'px-2.5 py-1 rounded text-xs font-mono font-semibold transition-all text-[#8b949e] hover:text-[#e6edf3] cursor-pointer';
+      } else {
+        modelSelectN0120.className = 'px-2.5 py-1 rounded text-xs font-mono font-bold transition-all bg-[#FFBB00] text-black border border-black cursor-pointer shadow-[1px_1px_0px_#000]';
+        modelSelectN0110.className = 'px-2.5 py-1 rounded text-xs font-mono font-semibold transition-all text-[#8b949e] hover:text-[#e6edf3] cursor-pointer';
+      }
+    }
+
+    if (modelText) {
+      const modeSuffix = (usb && usb.isConnected) ? ` (${usb.mode})` : '';
+      modelText.textContent = `${userSettings.targetModel}${modeSuffix}`;
+    }
+
+    if (downloadBtn) {
+      downloadBtn.innerHTML = `<span>💾</span> <span>Télécharger .nwa (${userSettings.targetModel})</span>`;
+    }
+  }
+
+  modelSelectN0120?.addEventListener('click', () => {
+    window.soundFx?.playClick();
+    setTargetModel('N0120');
+    showToast('Modèle cible : NumWorks N0120 (Cortex-M7 @ 550MHz)', 'info');
+  });
+
+  modelSelectN0110?.addEventListener('click', () => {
+    window.soundFx?.playClick();
+    setTargetModel('N0110');
+    showToast('Modèle cible : NumWorks N0110 (Cortex-M7 @ 216MHz)', 'info');
+  });
+
+  // Initialisation du modèle cible
+  setTargetModel(userSettings.targetModel || 'N0120', false);
 
   function applyCustomColorVariables(hex) {
     if (!hex || !/^#[0-9a-fA-F]{6}$/i.test(hex)) return;
@@ -2201,7 +2244,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       await usb.disconnect();
       connectionDot.className = 'w-2.5 h-2.5 rounded-full bg-slate-500';
       connectionText.textContent = 'Non connectée';
-      modelText.textContent = 'Cible : N0120';
+      modelText.textContent = `${userSettings.targetModel || 'N0120'}`;
       connectBtn.innerHTML = '<span>🔌</span> <span class="hidden sm:inline">Connecter</span>';
       showToast('Calculatrice déconnectée', 'info');
     } else {
@@ -2212,6 +2255,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         const slotText = res.flashAddress ? ` - Slot 0x${res.flashAddress.toString(16)}` : '';
         modelText.textContent = `${res.model} (${res.mode})${slotText}`;
         connectBtn.innerHTML = '<span>✕</span> <span class="hidden sm:inline">Déconnecter</span>';
+        const detectedModel = res.model.includes('N0110') ? 'N0110' : 'N0120';
+        setTargetModel(detectedModel, true);
         showToast(`NumWorks connectée (${res.model} - ${res.mode}) !`, 'success');
       } catch (err) {
         showToast(err.message || 'Échec de connexion USB', 'error');
@@ -2234,10 +2279,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     try {
-      showToast(`Génération du binaire natif N0120 avec vos ${selectedApps.length} applications...`, 'info');
+      const activeModel = (userSettings.targetModel || 'N0120').toUpperCase();
+      const isN110 = activeModel.includes('110');
+      const modelSuffix = isN110 ? 'n0110' : 'n0120';
+      showToast(`Génération du pack natif ${isN110 ? 'N0110' : 'N0120'} avec vos ${selectedApps.length} applications...`, 'info');
       const wpBytes = window.customWallpaperRGB565 || (window.wallpaperStudio?.generateRGB565Bytes?.());
       const effectiveTheme = (wpBytes && (userSettings.theme === 'custom' || userSettings.theme === 'default')) ? 'custom' : userSettings.theme;
       const bundle = await bundler.buildBundle(selectedApps, 'nwa', { 
+        targetModel: isN110 ? 'N0110' : 'N0120',
         theme: effectiveTheme, 
         displayMode: userSettings.displayMode,
         glassMode: userSettings.glassMode !== false,
@@ -2248,13 +2297,13 @@ document.addEventListener('DOMContentLoaded', async () => {
       const url = URL.createObjectURL(bundle.blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'equalib_n0120.nwa';
+      a.download = `equalib_${modelSuffix}.nwa`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
       window.soundFx?.playSuccess();
-      showToast(`✓ Fichier equalib_n0120.nwa téléchargé avec vos ${selectedApps.length} applications !`, 'success');
+      showToast(`✓ Fichier equalib_${modelSuffix}.nwa téléchargé avec vos ${selectedApps.length} applications !`, 'success');
     } catch (err) {
       console.error("Erreur téléchargement .nwa :", err);
       window.soundFx?.playHit();
@@ -2297,6 +2346,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         const slotText = res.flashAddress ? ` - Slot 0x${res.flashAddress.toString(16)}` : '';
         modelText.textContent = `${res.model} (${res.mode})${slotText}`;
         connectBtn.innerHTML = '<span>✕</span> <span class="hidden sm:inline">Déconnecter</span>';
+        const detectedModel = res.model.includes('N0110') ? 'N0110' : 'N0120';
+        setTargetModel(detectedModel, true);
         window.soundFx?.playClick();
         showToast(`NumWorks détectée (${res.model} - ${res.mode}) !`, 'success');
       } catch (e) {
@@ -2313,9 +2364,13 @@ document.addEventListener('DOMContentLoaded', async () => {
       progressText.textContent = `Génération du pack personnalisé (${selectedApps.length} application${selectedApps.length > 1 ? 's' : ''})...`;
 
       // 1. Génération dynamique du binaire natif patché avec les apps sélectionnées
+      const targetModel = (usb.isConnected && usb.model.includes('N0110')) 
+        ? 'N0110' 
+        : ((userSettings.targetModel && userSettings.targetModel.includes('110')) ? 'N0110' : 'N0120');
       const wpBytes = window.customWallpaperRGB565 || (window.wallpaperStudio?.generateRGB565Bytes?.());
       const effectiveTheme = (wpBytes && (userSettings.theme === 'custom' || userSettings.theme === 'default')) ? 'custom' : userSettings.theme;
       const bundle = await bundler.buildBundle(selectedApps, 'bin', { 
+        targetModel: targetModel,
         theme: effectiveTheme, 
         displayMode: userSettings.displayMode,
         glassMode: userSettings.glassMode !== false,

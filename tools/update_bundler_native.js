@@ -414,14 +414,21 @@ class EquaLibBundler {
    */
   async buildBundle(apps = [], format = 'bin', options = {}) {
     const isBin = (format === 'bin');
-    console.log(\`[EquaLib] Génération du pack personnalisé (\${apps.length} apps, format: \${format})...\`);
+    const modelOption = (options.targetModel || this.options?.targetModel || (typeof window !== 'undefined' && window.userSettings?.targetModel) || 'N0120').toUpperCase();
+    const isN0110 = modelOption.includes('110');
+    const modelSuffix = isN0110 ? 'n0110' : 'n0120';
+    const targetFile = isBin ? \`equalib_\${modelSuffix}.bin\` : \`equalib_\${modelSuffix}.nwa\`;
+    const fallbackFile = isBin ? 'equalib_n0120.bin' : 'equalib_n0120.nwa';
+    console.log(\`[EquaLib] Génération du pack personnalisé (\${apps.length} apps, format: \${format}, modèle: \${isN0110 ? 'N0110' : 'N0120'})...\`);
 
     let rawData = null;
-    const targetFile = isBin ? 'equalib_n0120.bin' : 'equalib_n0120.nwa';
 
-    if (typeof window !== 'undefined' && typeof fetch === 'function') {
+    if (typeof window !== 'undefined' && typeof window.fetch === 'function') {
       try {
-        const resp = await fetch(\`\${targetFile}?v=\${Date.now()}\`, { cache: 'no-store' });
+        let resp = await window.fetch(\`\${targetFile}?v=\${Date.now()}\`, { cache: 'no-store' });
+        if (!resp.ok && targetFile !== fallbackFile) {
+          resp = await window.fetch(\`\${fallbackFile}?v=\${Date.now()}\`, { cache: 'no-store' });
+        }
         if (resp.ok) {
           const ab = await resp.arrayBuffer();
           rawData = new Uint8Array(ab);
@@ -440,7 +447,11 @@ class EquaLibBundler {
           nodePath.join(__dirname, targetFile),
           nodePath.join(__dirname, 'web', targetFile),
           nodePath.join(process.cwd(), targetFile),
-          nodePath.join(process.cwd(), 'web', targetFile)
+          nodePath.join(process.cwd(), 'web', targetFile),
+          nodePath.join(__dirname, fallbackFile),
+          nodePath.join(__dirname, 'web', fallbackFile),
+          nodePath.join(process.cwd(), fallbackFile),
+          nodePath.join(process.cwd(), 'web', fallbackFile)
         ];
         for (const cand of candidates) {
           if (nodeFs.existsSync(cand)) {

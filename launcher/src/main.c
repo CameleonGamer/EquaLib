@@ -159,6 +159,10 @@ static eadk_color_t s_wallpaper_ram_band[EADK_SCREEN_WIDTH * WALLPAPER_BAND_HEIG
 #define EQUALIB_FLASH_BASE 0x90180000UL
 
 static inline uintptr_t get_app_flash_base(void) {
+    uintptr_t cand = (uintptr_t)eadk_app_name - 32;
+    if (*(const uint32_t*)cand == 0xDEC0BEBA) {
+        return cand;
+    }
     return EQUALIB_FLASH_BASE;
 }
 
@@ -169,7 +173,7 @@ static void __attribute__((noinline)) draw_screen_background(const theme_t* cur_
         g_equalib_manifest.wallpaper_offset >= 0x10000 &&
         g_equalib_manifest.wallpaper_offset <= 0x400000) {
 
-        const uintptr_t flash_base = EQUALIB_FLASH_BASE;
+        const uintptr_t flash_base = get_app_flash_base();
         uint32_t total_app_size = *(const uint32_t*)(flash_base + 24);
         if (g_equalib_manifest.wallpaper_offset + g_equalib_manifest.wallpaper_size <= total_app_size) {
             const eadk_color_t* wp_ptr = (const eadk_color_t*)(flash_base + g_equalib_manifest.wallpaper_offset);
@@ -213,7 +217,7 @@ static inline const eadk_color_t* get_wallpaper_flash_ptr(void) {
         g_equalib_manifest.wallpaper_size >= 153600 &&
         g_equalib_manifest.wallpaper_offset >= 0x10000 &&
         g_equalib_manifest.wallpaper_offset <= 0x400000) {
-        return (const eadk_color_t*)(EQUALIB_FLASH_BASE + g_equalib_manifest.wallpaper_offset);
+        return (const eadk_color_t*)(get_app_flash_base() + g_equalib_manifest.wallpaper_offset);
     }
     return NULL;
 }

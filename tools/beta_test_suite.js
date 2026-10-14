@@ -66,7 +66,9 @@ describe('1. Intégrité des Fichiers et Syntaxe Web', () => {
     'web/catalog.json',
     'web/community_apps.json',
     'web/equalib_n0120.bin',
-    'web/equalib_n0120.nwa'
+    'web/equalib_n0120.nwa',
+    'web/equalib_n0110.bin',
+    'web/equalib_n0110.nwa'
   ];
 
   filesToCheck.forEach(file => {
@@ -485,9 +487,9 @@ describe('5. Simulateur Virtuel et Jeux NumWorks', () => {
 });
 
 // -------------------------------------------------------------
-// SUITE 6: Intégrité des Binaires Natifs & Manifeste N0120
+// SUITE 6: Intégrité des Binaires Natifs & Manifeste (N0120 & N0110)
 // -------------------------------------------------------------
-describe('6. Intégrité des Binaires Natifs & Manifeste N0120', () => {
+describe('6. Intégrité des Binaires Natifs & Manifeste (N0120 & N0110)', () => {
   it('equalib_n0120.bin contient la signature magique et un format correct', () => {
     const bin = fs.readFileSync('web/equalib_n0120.bin');
     assert(bin.length > 500000, `Binaire trop petit (${bin.length} octets)`);
@@ -512,6 +514,37 @@ describe('6. Intégrité des Binaires Natifs & Manifeste N0120', () => {
     assert.strictEqual(nwa[3], 0x46); // 'F'
     assert.strictEqual(nwa[4], 1); // 32-bit architecture
     assert.strictEqual(nwa[5], 1); // Little endian
+  });
+
+  it('equalib_n0110.bin est lié pour la mémoire RAM N0110 (0x20000000) sans HardFault', () => {
+    const bin = fs.readFileSync('web/equalib_n0110.bin');
+    assert(bin.length > 500000, `Binaire N0110 trop petit (${bin.length} octets)`);
+    // Vérifier le magic EADK 0xDEC0BEBA en tête
+    assert.strictEqual(bin.readUInt32LE(0), 0xdec0beba);
+    // Vérifier l'adresse RAM d'initialisation de data à 0x1748 = 0x20000000 (SRAM N0110)
+    assert.strictEqual(bin.readUInt32LE(0x1748), 0x20000000);
+  });
+
+  it('equalib_n0110.nwa est un objet ELF ARM Cortex-M7 valide', () => {
+    const nwa = fs.readFileSync('web/equalib_n0110.nwa');
+    assert.strictEqual(nwa[0], 0x7f);
+    assert.strictEqual(nwa[1], 0x45);
+    assert.strictEqual(nwa[2], 0x4c);
+    assert.strictEqual(nwa[3], 0x46);
+  });
+
+  itAsync('Bundler génère dynamiquement des packs adaptés selon le modèle cible N0110 ou N0120', async () => {
+    const EquaLibBundler = require('../web/bundler.js');
+    const bundler = new EquaLibBundler();
+    const testApps = [{ id: 'mariokart', name: '1. Mario Kart', category: 'Jeu / Arcade' }];
+
+    const pack120 = await bundler.buildBundle(testApps, 'bin', { targetModel: 'N0120' });
+    const dv120 = new DataView(pack120.arrayBuffer);
+    assert.strictEqual(dv120.getUint32(0x1748, true), 0x240118a4);
+
+    const pack110 = await bundler.buildBundle(testApps, 'bin', { targetModel: 'N0110' });
+    const dv110 = new DataView(pack110.arrayBuffer);
+    assert.strictEqual(dv110.getUint32(0x1748, true), 0x20000000);
   });
 });
 

@@ -181,13 +181,13 @@
         <!-- Texte de présentation -->
         <div class="lg:col-span-7 space-y-4">
           <div class="inline-flex items-center gap-2 px-2.5 py-1 rounded border border-[#30363d] bg-[#0d1117] text-[#FFBB00] font-mono text-xs font-bold shadow-[2px_2px_0px_#000]">
-            <span>⚡</span> NUMWORKS N0120 • EADK NATIVE HUB
+            <span>⚡</span> NUMWORKS N0120 & N0110 • EADK NATIVE HUB
           </div>
           <h2 class="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#e6edf3] tracking-tight leading-snug">
             Toutes vos applications et jeux dans <span class="text-[#FFBB00] underline decoration-[#FFBB00]/40 underline-offset-4">un seul lanceur</span>.
           </h2>
           <p class="text-xs sm:text-sm text-[#8b949e] leading-relaxed max-w-2xl">
-            Sur la NumWorks N0120, le système Epsilon n'autorise qu'un seul emplacement pour application externe. 
+            Sur les calculatrices NumWorks (N0120 & N0110), le système Epsilon n'autorise qu'un seul emplacement pour application externe. 
             <strong>EquaLib contourne cette limitation</strong> en fournissant un lanceur modulaire autonome tout-en-un avec jeux natifs 60 FPS, outils scientifiques et fiches de révision.
           </p>
 
@@ -699,6 +699,21 @@
 
           <!-- Boutons d'Action Principaux -->
           <div class="space-y-2 pt-2">
+            <!-- Sélecteur de Modèle de Calculatrice -->
+            <div class="flex items-center justify-between p-2 rounded-lg bg-[#0d1117] border border-[#30363d] text-xs font-mono shadow-[2px_2px_0px_#000]">
+              <span class="text-[#c9d1d9] font-bold flex items-center gap-1.5">
+                <span>📟</span> Modèle cible :
+              </span>
+              <div class="flex items-center gap-1 bg-[#161b22] border border-[#30363d] p-0.5 rounded shadow-[1px_1px_0px_#000]">
+                <button type="button" id="model-select-n0120" class="px-2.5 py-1 rounded text-xs font-mono font-bold transition-all bg-[#FFBB00] text-black border border-black cursor-pointer shadow-[1px_1px_0px_#000]" title="NumWorks N0120 (Cortex-M7 @ 550MHz)">
+                  N0120
+                </button>
+                <button type="button" id="model-select-n0110" class="px-2.5 py-1 rounded text-xs font-mono font-semibold transition-all text-[#8b949e] hover:text-[#e6edf3] cursor-pointer" title="NumWorks N0110 (Cortex-M7 @ 216MHz)">
+                  N0110
+                </button>
+              </div>
+            </div>
+
             <!-- Bouton Principal Recommandé : Flash USB Direct -->
             <button id="flash-btn" class="w-full py-3.5 px-4 rounded-lg bg-[#FFBB00] hover:bg-[#E5A600] active:translate-x-[2px] active:translate-y-[2px] active:shadow-[1px_1px_0px_#000] text-black font-extrabold text-xs font-mono uppercase tracking-wider border-2 border-black shadow-[4px_4px_0px_#000] flex items-center justify-center gap-2 cursor-pointer transition-all">
               <span>⚡</span>
