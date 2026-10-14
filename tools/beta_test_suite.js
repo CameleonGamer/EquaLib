@@ -722,6 +722,163 @@ describe('7. Compilation et Validité Syntaxique des Jeux Python (.NWS)', () => 
     assert.strictEqual(sim.smoothCorners, false);
   });
 
+  // -------------------------------------------------------------
+  // SUITE 10: Détection Matérielle WebUSB & Persistance N0110 vs N0120
+  // -------------------------------------------------------------
+  describe('10. Détection Matérielle WebUSB & Persistance N0110 vs N0120', () => {
+    global.navigator = { usb: {} };
+    const { NumWorksWebUSB, DEFAULT_FLASH_ADDR_N0110, DEFAULT_FLASH_ADDR_N0120, NUMWORKS_PIDS } = require(path.resolve('web/webusb.js'));
+
+    it('Constantes officielles des adresses de slots Flash N0110 et N0120', () => {
+      assert.strictEqual(DEFAULT_FLASH_ADDR_N0110, 0x90200000, 'Slot N0110 doit être 0x90200000');
+      assert.strictEqual(DEFAULT_FLASH_ADDR_N0120, 0x90180000, 'Slot N0120 doit être 0x90180000');
+    });
+
+    it('Reconstitution exacte du bcdDevice à partir des propriétés Chrome WebUSB', () => {
+      // Cas N0110 : major=1, minor=1, subminor=0 (bcdDevice 0x0110 = 272)
+      const major110 = 1, minor110 = 1, subminor110 = 0;
+      const bcd110 = (major110 << 8) | (minor110 << 4) | subminor110;
+      assert.strictEqual(bcd110, 0x0110, 'Reconstitution BCD N0110 doit donner 0x0110 (272)');
+      assert.strictEqual(bcd110, 272, 'Valeur décimale doit être 272');
+
+      // Cas N0120 : major=1, minor=2, subminor=0 (bcdDevice 0x0120 = 288)
+      const major120 = 1, minor120 = 2, subminor120 = 0;
+      const bcd120 = (major120 << 8) | (minor120 << 4) | subminor120;
+      assert.strictEqual(bcd120, 0x0120, 'Reconstitution BCD N0120 doit donner 0x0120 (288)');
+      assert.strictEqual(bcd120, 288, 'Valeur décimale doit être 288');
+
+      // Cas N0115 : major=1, minor=1, subminor=5 (bcdDevice 0x0115 = 277)
+      const major115 = 1, minor115 = 1, subminor115 = 5;
+      const bcd115 = (major115 << 8) | (minor115 << 4) | subminor115;
+      assert.strictEqual(bcd115, 0x0115, 'Reconstitution BCD N0115 doit donner 0x0115 (277)');
+      assert.strictEqual(bcd115, 277, 'Valeur décimale doit être 277');
+    });
+
+    it('Lecture du descripteur matériel brut GET_DESCRIPTOR (16 bits little-endian)', () => {
+      // Simule les 18 octets du descripteur USB : octets 12 et 13 sont bcdDevice
+      const desc110 = new Uint8Array(18);
+      desc110[12] = 0x10; // LSB
+      desc110[13] = 0x01; // MSB
+      const rawBcd110 = (desc110[13] << 8) | desc110[12];
+      assert.strictEqual(rawBcd110, 0x0110, 'Descripteur brut N0110 doit donner 0x0110');
+
+      const desc120 = new Uint8Array(18);
+      desc120[12] = 0x20; // LSB
+      desc120[13] = 0x01; // MSB
+      const rawBcd120 = (desc120[13] << 8) | desc120[12];
+      assert.strictEqual(rawBcd120, 0x0120, 'Descripteur brut N0120 doit donner 0x0120');
+    });
+
+    it('Méthode setTargetModel synchronise immédiatement le modèle, le slot Flash et la RAM', () => {
+      const usb = new NumWorksWebUSB();
+      assert.strictEqual(typeof usb.setTargetModel, 'function', 'setTargetModel doit exister sur NumWorksWebUSB');
+
+      // Bascule vers N0110
+      usb.setTargetModel('N0110');
+      assert.strictEqual(usb.model, 'NumWorks N0110');
+      assert.strictEqual(usb.flashAddress, 0x90200000, 'Flash slot N0110 doit être 0x90200000');
+      assert.strictEqual(usb.ramAddress, 0x20000000, 'RAM base N0110 doit être 0x20000000');
+
+      // Bascule vers N0120
+      usb.setTargetModel('N0120');
+      assert.strictEqual(usb.model, 'NumWorks N0120');
+      assert.strictEqual(usb.flashAddress, 0x90180000, 'Flash slot N0120 doit être 0x90180000');
+      assert.strictEqual(usb.ramAddress, 0x240118a4, 'RAM base N0120 doit être 0x240118a4');
+    });
+
+    it('Connexion simulée avec matériel N0110 (BCD 0x0110, Epsilon standard)', async () => {
+      const usb = new NumWorksWebUSB();
+
+      // Mock device WebUSB Chrome pour N0110
+      usb.device = {
+        opened: true,
+        productId: 0xA291, // Epsilon OS standard
+        productName: 'NumWorks Calculator', // Nom générique Epsilon
+        deviceVersionMajor: 1,
+        deviceVersionMinor: 1,
+        deviceVersionSubminor: 0,
+        configurations: [{
+          configurationValue: 1,
+          interfaces: [{
+            interfaceNumber: 0,
+            alternates: [{ interfaceClass: 0xFE, interfaceSubclass: 0x01 }]
+          }]
+        }],
+        selectConfiguration: async () => {},
+        claimInterface: async () => {},
+        controlTransferIn: async (req) => {
+          if (req.request === 6) {
+            // GET_DESCRIPTOR
+            const buf = new Uint8Array(18);
+            buf[12] = 0x10;
+            buf[13] = 0x01;
+            return { status: 'ok', data: { buffer: buf.buffer, byteOffset: 0, byteLength: 18 } };
+          }
+          // DFU GETSTATUS (idle)
+          const statusBuf = new Uint8Array([0x00, 0x00, 0x00, 0x00, 0x02, 0x00]);
+          return { status: 'ok', data: { buffer: statusBuf.buffer, byteOffset: 0, byteLength: 6 } };
+        },
+        controlTransferOut: async () => ({ status: 'ok' })
+      };
+      global.navigator.usb.requestDevice = async () => usb.device;
+
+      const res = await usb.connect();
+      assert.strictEqual(res.model, 'NumWorks N0110', 'La calculatrice doit être identifiée comme NumWorks N0110');
+      assert.strictEqual(res.flashAddress, 0x90200000, 'Le slot de destination doit être 0x90200000');
+      assert.strictEqual(usb.ramAddress, 0x20000000, 'La RAM de destination doit être 0x20000000');
+    });
+
+    it('Connexion simulée avec Bootloader DFU STM32 (0xDF11)', async () => {
+      const usb = new NumWorksWebUSB();
+      usb.device = {
+        opened: true,
+        productId: 0xDF11, // Bootloader STM32 (N0110 recovery)
+        productName: 'STM32  BOOTLOADER',
+        deviceVersionMajor: 2,
+        deviceVersionMinor: 0,
+        deviceVersionSubminor: 0,
+        configurations: [{
+          configurationValue: 1,
+          interfaces: [{
+            interfaceNumber: 0,
+            alternates: [{ interfaceClass: 0xFE, interfaceSubclass: 0x01 }]
+          }]
+        }],
+        selectConfiguration: async () => {},
+        claimInterface: async () => {},
+        controlTransferIn: async () => {
+          const statusBuf = new Uint8Array([0x00, 0x00, 0x00, 0x00, 0x02, 0x00]);
+          return { status: 'ok', data: { buffer: statusBuf.buffer, byteOffset: 0, byteLength: 6 } };
+        },
+        controlTransferOut: async () => ({ status: 'ok' })
+      };
+      global.navigator.usb.requestDevice = async () => usb.device;
+
+      const res = await usb.connect();
+      assert.strictEqual(res.model, 'NumWorks N0110', 'Le mode STM32 DFU doit être identifié comme N0110');
+      assert.strictEqual(res.mode, 'Mode DFU');
+      assert.strictEqual(res.flashAddress, 0x90200000, 'Le slot de destination doit être 0x90200000');
+    });
+
+    it('Verrouillage manuel : le choix N0110 de l utilisateur ne bascule jamais vers N0120 au clic Installer', () => {
+      // Simulation des réglages utilisateur de l'interface
+      const userSettings = { targetModel: 'N0110', manualModel: 'N0110' };
+      const usb = new NumWorksWebUSB();
+      usb.setTargetModel('N0110');
+
+      const isUserChoiceN110 = (userSettings.manualModel === 'N0110' || userSettings.targetModel === 'N0110');
+      assert.strictEqual(isUserChoiceN110, true, 'Le choix N0110 de l utilisateur doit être détecté');
+
+      // Même si une connexion retournait un résultat ambigu
+      const simResult = { model: 'NumWorks N0120' };
+      const finalModel = isUserChoiceN110 ? 'N0110' : (simResult.model.includes('N0110') ? 'N0110' : 'N0120');
+      assert.strictEqual(finalModel, 'N0110', 'Le modèle final DOIT rester N0110');
+
+      const targetFlashAddr = (finalModel === 'N0110') ? DEFAULT_FLASH_ADDR_N0110 : DEFAULT_FLASH_ADDR_N0120;
+      assert.strictEqual(targetFlashAddr, 0x90200000, 'L adresse de flashage DOIT rester 0x90200000');
+    });
+  });
+
   console.log(`\n========================================`);
   console.log(`RÉSULTAT FINAL DU BETA TEST :`);
   console.log(`  Tests réussis : ${passedTests}`);

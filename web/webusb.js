@@ -131,9 +131,46 @@ class NumWorksWebUSB {
   }
 
   /**
+   * Force ou synchronise manuellement le modèle cible et ses adresses mémoire
+   * @param {string} model 'N0110' ou 'N0120'
+   */
+  setTargetModel(model) {
+    const isN110 = (model === 'N0110' || (model && model.includes('110')));
+    this.model = isN110 ? 'NumWorks N0110' : 'NumWorks N0120';
+    this.flashAddress = isN110 ? DEFAULT_FLASH_ADDR_N0110 : DEFAULT_FLASH_ADDR_N0120;
+    this.ramAddress = isN110 ? 0x20000000 : 0x240118a4;
+    console.log(`[WebUSB] Modèle synchronisé : ${this.model} (Flash: 0x${this.flashAddress.toString(16)}, RAM: 0x${this.ramAddress.toString(16)})`);
+  }
+
+  /**
+   * Lit directement le descripteur de périphérique USB officiel (GET_DESCRIPTOR)
+   * pour récupérer le bcdDevice brut (16 bits) sans approximation du navigateur
+   */
+  async getDeviceDescriptor() {
+    try {
+      if (!this.device || !this.device.opened) return null;
+      const res = await this.device.controlTransferIn({
+        requestType: 'standard',
+        recipient: 'device',
+        request: 6, // GET_DESCRIPTOR
+        value: (1 << 8), // DEVICE Descriptor (Type 1, Index 0)
+        index: 0
+      }, 18);
+      if (res && res.status === 'ok' && res.data && res.data.byteLength >= 14) {
+        const u8 = new Uint8Array(res.data.buffer, res.data.byteOffset, res.data.byteLength);
+        const bcd = (u8[13] << 8) | u8[12];
+        return bcd;
+      }
+    } catch (e) {
+      console.warn('[WebUSB] Impossible de lire le descripteur matériel brut :', e);
+    }
+    return null;
+  }
+
+  /**
    * Ouvre la boîte de dialogue de sélection WebUSB du navigateur et initialise la liaison DFU
    */
-  async connect() {
+  async connect(preferredModel = null) {
     if (!this.isSupported()) {
       throw new Error("WebUSB n'est pas supporté par votre navigateur. Veuillez utiliser Google Chrome, Microsoft Edge ou Brave.");
     }
@@ -185,10 +222,39 @@ class NumWorksWebUSB {
       // Détection du modèle et du mode d'exécution
       const pid = this.device.productId;
       const prodName = this.device.productName || '';
-      const bcd = (this.device.deviceVersionMajor << 8) | this.device.deviceVersionMinor;
+
+      // Reconstitution exacte du bcdDevice à partir des propriétés WebUSB de Chrome (spec USB : 0xJJMN)
+      const major = this.device.deviceVersionMajor || 0;
+      const minor = this.device.deviceVersionMinor || 0;
+      const subminor = this.device.deviceVersionSubminor || 0;
+      const bcdFromProps = (major << 8) | (minor << 4) | subminor;
+
+      // Lecture directe du descripteur USB matériel pour une fiabilité absolue
+      let rawBcd = null;
+      try {
+        rawBcd = await this.getDeviceDescriptor();
+      } catch (_) {}
+
+      const effectiveBcd = (rawBcd !== null) ? rawBcd : bcdFromProps;
 
       let modelName = 'NumWorks N0120';
-      if (bcd === 0x0110 || prodName.includes('N0110') || prodName.includes('F7')) {
+      const isPrefN110 = (preferredModel === 'N0110' || (preferredModel && preferredModel.includes('110')));
+
+      // Détection exhaustive du modèle conforme au protocole officiel nwlink :
+      // - 0x0110 (272) ou 0x0115 (277) : NumWorks N0110 (STM32F730)
+      // - 0x0120 (288) : NumWorks N0120 (STM32H725)
+      // - Mode DFU STM32 (0xDF11) : NumWorks N0110
+      // - Bootloader Scandium (0xA51A) : NumWorks N0120
+      if (effectiveBcd === 0x0110 || effectiveBcd === 0x0115 || (major === 1 && minor === 1)) {
+        modelName = 'NumWorks N0110';
+      } else if (effectiveBcd === 0x0120 || (major === 1 && minor === 2)) {
+        modelName = 'NumWorks N0120';
+      } else if (pid === NUMWORKS_PIDS.DFU_STM32 || prodName.includes('STM32') || prodName.includes('N0110') || prodName.includes('F7')) {
+        modelName = 'NumWorks N0110';
+      } else if (pid === NUMWORKS_PIDS.SCANDIUM || prodName.includes('N0120') || prodName.includes('H7') || prodName.includes('Scandium')) {
+        modelName = 'NumWorks N0120';
+      } else if (isPrefN110) {
+        // En cas de chaîne générique 'NumWorks Calculator', respecter le choix explicite de l'utilisateur
         modelName = 'NumWorks N0110';
       }
 
@@ -205,7 +271,7 @@ class NumWorksWebUSB {
       this.flashAddress = isN0110 ? DEFAULT_FLASH_ADDR_N0110 : DEFAULT_FLASH_ADDR_N0120;
       this.ramAddress = isN0110 ? 0x20000000 : 0x240118a4;
 
-      console.log(`[WebUSB] Connecté à ${this.model} (${this.mode}) sur interface ${this.interfaceNumber}`);
+      console.log(`[WebUSB] Connecté à ${this.model} (${this.mode}, BCD=0x${effectiveBcd.toString(16)}) sur interface ${this.interfaceNumber}`);
 
       // Réinitialisation de l'état DFU vers dfuIDLE
       await this.abortToIdle();
@@ -586,4 +652,15 @@ class NumWorksWebUSB {
 
 if (typeof window !== 'undefined') {
   window.NumWorksWebUSB = NumWorksWebUSB;
+  window.DEFAULT_FLASH_ADDR_N0110 = DEFAULT_FLASH_ADDR_N0110;
+  window.DEFAULT_FLASH_ADDR_N0120 = DEFAULT_FLASH_ADDR_N0120;
+}
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = {
+    NumWorksWebUSB,
+    DEFAULT_FLASH_ADDR_N0110,
+    DEFAULT_FLASH_ADDR_N0120,
+    NUMWORKS_PIDS
+  };
 }

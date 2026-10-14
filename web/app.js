@@ -362,6 +362,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     userSettings.targetModel = isN110 ? 'N0110' : 'N0120';
     if (save) saveUserSettings();
 
+    if (usb && typeof usb.setTargetModel === 'function') {
+      usb.setTargetModel(userSettings.targetModel);
+    }
+
     if (modelSelectN0120 && modelSelectN0110) {
       if (isN110) {
         modelSelectN0110.className = 'px-2.5 py-1 rounded text-xs font-mono font-bold transition-all bg-[#FFBB00] text-black border border-black cursor-pointer shadow-[1px_1px_0px_#000]';
@@ -402,13 +406,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   modelSelectN0120?.addEventListener('click', () => {
     window.soundFx?.playClick();
-    setTargetModel('N0120');
+    userSettings.manualModel = 'N0120';
+    setTargetModel('N0120', true);
     showToast('Modèle cible : NumWorks N0120 (Cortex-M7 @ 550MHz)', 'info');
   });
 
   modelSelectN0110?.addEventListener('click', () => {
     window.soundFx?.playClick();
-    setTargetModel('N0110');
+    userSettings.manualModel = 'N0110';
+    setTargetModel('N0110', true);
     showToast('Modèle cible : NumWorks N0110 (Cortex-M7 @ 216MHz)', 'info');
   });
 
@@ -2267,15 +2273,20 @@ document.addEventListener('DOMContentLoaded', async () => {
       showToast('Calculatrice déconnectée', 'info');
     } else {
       try {
-        const res = await usb.connect();
+        const preferred = userSettings.manualModel || userSettings.targetModel || 'N0120';
+        const res = await usb.connect(preferred);
         connectionDot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse';
         connectionText.textContent = 'Connectée';
         const slotText = res.flashAddress ? ` - Slot 0x${res.flashAddress.toString(16)}` : '';
         modelText.textContent = `${res.model} (${res.mode})${slotText}`;
         connectBtn.innerHTML = '<span>✕</span> <span class="hidden sm:inline">Déconnecter</span>';
-        const detectedModel = res.model.includes('N0110') ? 'N0110' : 'N0120';
+        
+        let detectedModel = res.model.includes('N0110') ? 'N0110' : 'N0120';
+        if (userSettings.manualModel === 'N0110') {
+          detectedModel = 'N0110';
+        }
         setTargetModel(detectedModel, true);
-        showToast(`NumWorks connectée (${res.model} - ${res.mode}) !`, 'success');
+        showToast(`NumWorks connectée (${detectedModel} - ${res.mode}) !`, 'success');
       } catch (err) {
         showToast(err.message || 'Échec de connexion USB', 'error');
       }
@@ -2297,7 +2308,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     try {
-      const activeModel = (userSettings.targetModel || 'N0120').toUpperCase();
+      const activeModel = (userSettings.manualModel || userSettings.targetModel || 'N0120').toUpperCase();
       const isN110 = activeModel.includes('110');
       const modelSuffix = isN110 ? 'n0110' : 'n0120';
       showToast(`Génération du pack natif ${isN110 ? 'N0110' : 'N0120'} avec vos ${selectedApps.length} applications...`, 'info');
@@ -2355,19 +2366,25 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   flashBtn.addEventListener('click', async () => {
+    // Si l'utilisateur a choisi N0110 dans l'interface, on préserve impérativement son choix
+    const isUserChoiceN110 = (userSettings.manualModel === 'N0110' || userSettings.targetModel === 'N0110');
+
     if (!usb.isConnected) {
       showToast('Ouverture du sélecteur USB...', 'info');
       try {
-        const res = await usb.connect();
+        const preferred = isUserChoiceN110 ? 'N0110' : 'N0120';
+        const res = await usb.connect(preferred);
         connectionDot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse';
         connectionText.textContent = 'Connectée';
         const slotText = res.flashAddress ? ` - Slot 0x${res.flashAddress.toString(16)}` : '';
         modelText.textContent = `${res.model} (${res.mode})${slotText}`;
         connectBtn.innerHTML = '<span>✕</span> <span class="hidden sm:inline">Déconnecter</span>';
-        const detectedModel = res.model.includes('N0110') ? 'N0110' : 'N0120';
+        
+        // Si l'utilisateur a choisi N0110, préserver IMPÉRATIVEMENT son choix
+        const detectedModel = isUserChoiceN110 ? 'N0110' : (res.model.includes('N0110') ? 'N0110' : 'N0120');
         setTargetModel(detectedModel, true);
         window.soundFx?.playClick();
-        showToast(`NumWorks détectée (${res.model} - ${res.mode}) !`, 'success');
+        showToast(`NumWorks détectée (${detectedModel} - ${res.mode}) !`, 'success');
       } catch (e) {
         window.soundFx?.playHit();
         showToast(e.message || 'Échec de connexion USB', 'error');
@@ -2381,10 +2398,15 @@ document.addEventListener('DOMContentLoaded', async () => {
       flashProgress.style.width = '0%';
       progressText.textContent = `Génération du pack personnalisé (${selectedApps.length} application${selectedApps.length > 1 ? 's' : ''})...`;
 
-      // 1. Génération dynamique du binaire natif patché avec les apps sélectionnées
-      const targetModel = (usb.isConnected && usb.model.includes('N0110')) 
-        ? 'N0110' 
-        : ((userSettings.targetModel && userSettings.targetModel.includes('110')) ? 'N0110' : 'N0120');
+      // 1. Détermination STRICTE du modèle cible : si userSettings est N0110 ou usb est N0110 -> N0110 !
+      const isTargetN110 = (isUserChoiceN110 || userSettings.targetModel === 'N0110' || (usb.isConnected && usb.model.includes('N0110')));
+      const targetModel = isTargetN110 ? 'N0110' : 'N0120';
+
+      // Synchroniser usb avec le modèle cible
+      if (usb && typeof usb.setTargetModel === 'function') {
+        usb.setTargetModel(targetModel);
+      }
+
       const wpBytes = window.customWallpaperRGB565 || (window.wallpaperStudio?.generateRGB565Bytes?.());
       const effectiveTheme = (wpBytes && (userSettings.theme === 'custom' || userSettings.theme === 'default')) ? 'custom' : userSettings.theme;
       const bundle = await bundler.buildBundle(selectedApps, 'bin', { 
@@ -2400,9 +2422,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       progressText.textContent = 'Préparation du flash USB...';
 
       // 2. Flashage USB DFU réel vers le slot approprié (0x90200000 sur N0110, 0x90180000 sur N0120)
-      const targetFlashAddr = (usb && usb.flashAddress) 
-        ? usb.flashAddress 
-        : (targetModel === 'N0110' ? 0x90200000 : 0x90180000);
+      const targetFlashAddr = isTargetN110 
+        ? DEFAULT_FLASH_ADDR_N0110 
+        : (usb.flashAddress || DEFAULT_FLASH_ADDR_N0120);
 
       await usb.flashBinary(bundle.arrayBuffer, (progress) => {
         const percent = (typeof progress === 'number') ? progress : progress.percent;
