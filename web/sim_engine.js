@@ -21,6 +21,7 @@ function safeStorageSet(key, val) {
 }
 
 const SIM_GAME_ICON_URL_MAP = {
+  comm_mariokart: 'assets/icons/mariokart.png',
   mariokart: 'assets/icons/mariokart.png',
   comm_flappy: 'assets/icons/flappy.png',
   flappy: 'assets/icons/flappy.png',
@@ -280,6 +281,16 @@ class NumWorksSimulator {
         if (e.key === 'ArrowRight' || keyL === 'd') { e.preventDefault(); this.nextCoursePage(1); }
         else if (e.key === 'ArrowLeft' || keyL === 'q' || keyL === 'a') { e.preventDefault(); this.nextCoursePage(-1); }
         else if (e.key === 'Escape' || e.key === 'Backspace') { e.preventDefault(); this.returnToMenu(); }
+      } else if (this.currentView === 'MARIO') {
+        if (e.key === 'ArrowLeft' || keyL === 'q' || keyL === 'a') { e.preventDefault(); this.marioSteer?.(-1); }
+        else if (e.key === 'ArrowRight' || keyL === 'd') { e.preventDefault(); this.marioSteer?.(1); }
+        else if (e.key === 'ArrowUp' || keyL === 'z' || keyL === 'w') { e.preventDefault(); this.marioAccel?.(true); }
+        else if (e.key === 'ArrowDown' || keyL === 's') { e.preventDefault(); this.marioBrake?.(true); }
+        else if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); this.marioAction?.(); }
+        else if (e.key === 'Shift' || e.key === '9') { e.preventDefault(); this.marioHop?.(); }
+        else if (e.key === '*' || e.key === '+' || keyL === 'x') { e.preventDefault(); this.marioUseItem?.(); }
+        else if (keyL === 'm' || keyL === 'v') { e.preventDefault(); this.marioToggleMinimap?.(); }
+        else if (e.key === 'Escape' || e.key === 'Backspace') { e.preventDefault(); this.returnToMenu(); }
       } else {
         if (e.key === 'Escape' || e.key === 'Backspace') {
           e.preventDefault();
@@ -292,6 +303,10 @@ class NumWorksSimulator {
       const keyL = (e.key || '').toLowerCase();
       if (this.currentView === 'DINO' && (e.key === 'ArrowDown' || e.key === '2' || keyL === 's')) {
         this.dinoDuck?.(false);
+      } else if (this.currentView === 'MARIO') {
+        if (e.key === 'ArrowUp' || keyL === 'z' || keyL === 'w') this.marioAccel?.(false);
+        if (e.key === 'ArrowDown' || keyL === 's') this.marioBrake?.(false);
+        if (e.key === 'ArrowLeft' || e.key === 'ArrowRight' || keyL === 'q' || keyL === 'd' || keyL === 'a') this.marioSteer?.(0);
       }
     });
 
@@ -432,6 +447,13 @@ class NumWorksSimulator {
     } else if (this.currentView === 'COURSES') {
       if (action === 'RIGHT') this.nextCoursePage(1);
       else if (action === 'LEFT') this.nextCoursePage(-1);
+      else if (action === 'BACK') this.returnToMenu();
+    } else if (this.currentView === 'MARIO') {
+      if (action === 'UP') this.marioAccel?.(true);
+      else if (action === 'DOWN') this.marioBrake?.(true);
+      else if (action === 'LEFT') this.marioSteer?.(-1);
+      else if (action === 'RIGHT') this.marioSteer?.(1);
+      else if (action === 'OK') this.marioAction?.();
       else if (action === 'BACK') this.returnToMenu();
     } else {
       if (action === 'BACK') this.returnToMenu();
@@ -3221,42 +3243,536 @@ class NumWorksSimulator {
   }
 
   // ==================== MARIO KART PREVIEW ====================
+  // ==================== SUPER MARIO KART 3D (MathDS) ====================
   startMarioKartPreview() {
-    this.title.textContent = 'Super Mario Kart 3D';
+    this.title.textContent = 'Super Mario Kart 3D (MathDS)';
     this.topbar.style.backgroundColor = '#ef4444';
 
     this.content.innerHTML = `
-      <div class="w-full h-full flex flex-col justify-between bg-sky-300 rounded overflow-hidden relative">
-        <canvas id="mario-cvs" width="280" height="150" class="w-full h-full block"></canvas>
-        <div class="absolute bottom-1 w-full text-center text-[8px] text-white font-bold drop-shadow">
-          Mode 7 3D Temps Réel (MathDS) • Back : Hub
+      <div class="w-full h-full flex flex-col justify-between bg-black rounded overflow-hidden relative select-none">
+        <canvas id="mario-cvs" width="280" height="150" class="w-full h-full block cursor-pointer"></canvas>
+        <div id="mario-controls-hint" class="absolute bottom-0.5 w-full text-center text-[7px] text-white/90 font-mono font-bold drop-shadow pointer-events-none px-1 truncate">
+          OK: Démarrer | ▲: Accélérer | ◀▶: Braquer | Back: Hub
         </div>
       </div>
     `;
 
     const canvas = document.getElementById('mario-cvs');
     const ctx = canvas.getContext('2d');
-    let offset = 0;
+    const hintEl = document.getElementById('mario-controls-hint');
 
-    const loop = () => {
-      offset += 2;
-      ctx.fillStyle = '#60a5fa';
-      ctx.fillRect(0, 0, canvas.width, 60);
-
-      ctx.fillStyle = '#15803d';
-      ctx.fillRect(0, 60, canvas.width, 90);
-
-      for (let y = 60; y < 150; y += 4) {
-        const stripe = ((y + offset) % 16 < 8);
-        ctx.fillStyle = stripe ? '#e2e8f0' : '#94a3b8';
-        const w = (y - 50) * 2;
-        ctx.fillRect((canvas.width - w) / 2, y, w, 4);
+    // Définition des 4 circuits authentiques de MathDS
+    const TRACKS = [
+      {
+        name: 'MARIO CIRCUIT 1',
+        subtitle: 'Asphalte, Vibreurs Rouge/Blanc & Tuyaux',
+        skyTop: '#38bdf8',
+        skyBottom: '#93c5fd',
+        ground: '#15803d',
+        road: '#64748b',
+        curbLight: '#ffffff',
+        curbDark: '#dc2626',
+        roadType: 'asphalt',
+        curvePattern: [0, 0.4, 0.8, 0.2, -0.6, -1.0, -0.3, 0]
+      },
+      {
+        name: 'DONUT PLAINS 1',
+        subtitle: 'Piste de Terre, Lacs & Pont en Bois',
+        skyTop: '#60a5fa',
+        skyBottom: '#bfdbfe',
+        ground: '#166534',
+        road: '#b45309',
+        curbLight: '#f59e0b',
+        curbDark: '#78350f',
+        roadType: 'dirt',
+        curvePattern: [0, -0.5, -0.9, -0.2, 0.5, 0.9, 0.4, 0]
+      },
+      {
+        name: 'GHOST VALLEY 1',
+        subtitle: 'Planches de Bois & Nuit Mystique',
+        skyTop: '#090d16',
+        skyBottom: '#1e293b',
+        ground: '#020617',
+        road: '#475569',
+        curbLight: '#94a3b8',
+        curbDark: '#334155',
+        roadType: 'wood',
+        curvePattern: [0, 0.7, 0.2, -0.8, -0.4, 0.8, 0, -0.6]
+      },
+      {
+        name: 'BOWSER CASTLE 1',
+        subtitle: 'Château de Pierre & Lave Ardente',
+        skyTop: '#7f1d1d',
+        skyBottom: '#991b1b',
+        ground: '#ea580c',
+        road: '#334155',
+        curbLight: '#facc15',
+        curbDark: '#991b1b',
+        roadType: 'stone',
+        curvePattern: [0, -0.7, -1.1, 0, 0.8, 1.2, 0.3, -0.5]
       }
+    ];
 
-      ctx.fillStyle = '#dc2626';
-      ctx.fillRect(132, 115, 16, 12);
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(136, 118, 8, 4);
+    // Les 8 pilotes originaux de Super Mario Kart
+    const DRIVERS = [
+      { name: 'Mario', color: '#ef4444', suit: '#3b82f6', speed: '3.5', weight: 'Moyen' },
+      { name: 'Luigi', color: '#22c55e', suit: '#3b82f6', speed: '3.5', weight: 'Moyen' },
+      { name: 'Peach', color: '#ec4899', suit: '#fbcfe8', speed: '3.2', weight: 'Léger' },
+      { name: 'Toad', color: '#3b82f6', suit: '#ffffff', speed: '3.3', weight: 'Léger' },
+      { name: 'Yoshi', color: '#84cc16', suit: '#ffffff', speed: '3.4', weight: 'Léger' },
+      { name: 'Bowser', color: '#eab308', suit: '#15803d', speed: '3.8', weight: 'Lourd' },
+      { name: 'D.K. Jr', color: '#78350f', suit: '#ffffff', speed: '3.7', weight: 'Lourd' },
+      { name: 'Koopa', color: '#f97316', suit: '#22c55e', speed: '3.3', weight: 'Léger' }
+    ];
+
+    let gameState = 'TITLE'; // 'TITLE', 'CHAR_SELECT', 'COURSE_SELECT', 'RACING'
+    let selectedDriverIdx = 0;
+    let selectedTrackIdx = 0;
+    let frame = 0;
+
+    // Variables de course
+    let playerX = 0;       // -1.0 (gauche) à +1.0 (droite)
+    let speed = 0;         // 0 à 100 km/h
+    let maxSpeed = 80;
+    let distance = 0;
+    let steering = 0;
+    let accel = false;
+    let brake = false;
+    let isHopping = false;
+    let hopTimer = 0;
+    let isDrifting = false;
+    let currentLap = 1;
+    let totalLaps = 5;
+    let coins = 0;
+    let currentItem = 'MUSHROOM'; // 'MUSHROOM', 'SHELL', 'BANANA', 'STAR'
+    let itemActive = false;
+    let starTimer = 0;
+    let boostTimer = 0;
+    let spinTimer = 0;
+    let showMinimap = true;
+    let rivals = [
+      { dist: 400, x: -0.3, charIdx: 1, color: DRIVERS[1].color },
+      { dist: 850, x: 0.4, charIdx: 5, color: DRIVERS[5].color }
+    ];
+
+    // Fonctions de contrôle appelées depuis bindControls / handleInput
+    this.marioSteer = (dir) => {
+      steering = dir;
+      if (gameState === 'CHAR_SELECT') {
+        selectedDriverIdx = (selectedDriverIdx + dir + DRIVERS.length) % DRIVERS.length;
+        window.soundFx?.playClick?.();
+      } else if (gameState === 'COURSE_SELECT') {
+        selectedTrackIdx = (selectedTrackIdx + dir + TRACKS.length) % TRACKS.length;
+        window.soundFx?.playClick?.();
+      }
+    };
+
+    this.marioAccel = (down) => {
+      accel = down;
+      if (down && gameState === 'COURSE_SELECT') {
+        selectedTrackIdx = (selectedTrackIdx + 3) % TRACKS.length;
+        window.soundFx?.playClick?.();
+      }
+    };
+
+    this.marioBrake = (down) => {
+      brake = down;
+      if (down && gameState === 'COURSE_SELECT') {
+        selectedTrackIdx = (selectedTrackIdx + 1) % TRACKS.length;
+        window.soundFx?.playClick?.();
+      }
+    };
+
+    this.marioHop = () => {
+      if (gameState === 'RACING' && !isHopping && speed > 20) {
+        isHopping = true;
+        hopTimer = 14;
+        if (steering !== 0) isDrifting = true;
+        window.soundFx?.playClick?.();
+      }
+    };
+
+    this.marioUseItem = () => {
+      if (gameState !== 'RACING' || !currentItem) return;
+      window.soundFx?.playSuccess?.();
+      if (currentItem === 'MUSHROOM') {
+        boostTimer = 70;
+        speed = Math.min(speed + 35, 120);
+      } else if (currentItem === 'STAR') {
+        starTimer = 160;
+        speed = Math.min(speed + 25, 110);
+      } else if (currentItem === 'BANANA') {
+        coins += 2;
+      } else if (currentItem === 'SHELL') {
+        // Envoie une carapace qui touche le premier rival
+        if (rivals[0]) rivals[0].dist -= 80;
+      }
+      currentItem = null;
+      setTimeout(() => {
+        const itemPool = ['MUSHROOM', 'SHELL', 'BANANA', 'STAR'];
+        currentItem = itemPool[Math.floor(Math.random() * itemPool.length)];
+      }, 3500);
+    };
+
+    this.marioToggleMinimap = () => {
+      showMinimap = !showMinimap;
+      window.soundFx?.playClick?.();
+    };
+
+    this.marioAction = () => {
+      window.soundFx?.playClick?.();
+      if (gameState === 'TITLE') {
+        gameState = 'CHAR_SELECT';
+        if (hintEl) hintEl.textContent = '◀▶: Pilote | OK: Valider | Back: Titre';
+      } else if (gameState === 'CHAR_SELECT') {
+        gameState = 'COURSE_SELECT';
+        if (hintEl) hintEl.textContent = '▲▼◀▶: Circuit (4 au choix) | OK: Lancer Course';
+      } else if (gameState === 'COURSE_SELECT') {
+        gameState = 'RACING';
+        speed = 20;
+        distance = 0;
+        currentLap = 1;
+        coins = 0;
+        if (hintEl) hintEl.textContent = '▲/OK: Gaz | ◀▶: Braquer | Shift: Drift | Back: Hub';
+      } else if (gameState === 'RACING') {
+        if (!accel) accel = true;
+        else this.marioUseItem();
+      }
+    };
+
+    canvas.addEventListener('click', () => {
+      this.marioAction();
+    });
+
+    // ==================== RENDU GRAPHIQUE 60 FPS ====================
+    const loop = () => {
+      frame++;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      if (gameState === 'TITLE') {
+        // Fond à damier rétro SNES
+        for (let y = 0; y < 150; y += 12) {
+          for (let x = 0; x < 280; x += 16) {
+            ctx.fillStyle = ((Math.floor(x / 16) + Math.floor(y / 12)) % 2 === 0) ? '#081226' : '#020617';
+            ctx.fillRect(x, y, 16, 12);
+          }
+        }
+
+        // Bannière centrale titre
+        ctx.fillStyle = '#dc2626';
+        ctx.fillRect(20, 16, 240, 42);
+        ctx.strokeStyle = '#fef08a';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(20, 16, 240, 42);
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 15px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText('SUPER MARIO KART 3D', 140, 36);
+
+        ctx.fillStyle = '#fef08a';
+        ctx.font = 'bold 9px monospace';
+        ctx.fillText('★ 4 CIRCUITS EDITION • MathDS ★', 140, 50);
+
+        // Menu d'options
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
+        ctx.fillRect(50, 68, 180, 50);
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(50, 68, 180, 50);
+
+        ctx.fillStyle = '#fde047';
+        ctx.font = 'bold 10px monospace';
+        ctx.textAlign = 'left';
+        ctx.fillText('▶ MARIO GP (100 CC)', 62, 86);
+        ctx.fillStyle = '#94a3b8';
+        ctx.fillText('  TIME TRIAL (50 CC)', 62, 104);
+
+        // Clignotement "Appuyez sur OK"
+        if (Math.floor(frame / 25) % 2 === 0) {
+          ctx.fillStyle = '#ffffff';
+          ctx.font = 'bold 9px monospace';
+          ctx.textAlign = 'center';
+          ctx.fillText('APPUYEZ SUR OK POUR JOUER', 140, 134);
+        }
+      } else if (gameState === 'CHAR_SELECT') {
+        // Écran de sélection des pilotes
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(0, 0, 280, 150);
+
+        ctx.fillStyle = '#fde047';
+        ctx.font = 'bold 11px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText('CHOISISSEZ VOTRE PILOTE', 140, 18);
+
+        // Grille 4x2 des 8 karts
+        for (let i = 0; i < DRIVERS.length; i++) {
+          const d = DRIVERS[i];
+          const col = i % 4;
+          const row = Math.floor(i / 4);
+          const x = 32 + col * 56;
+          const y = 30 + row * 44;
+          const isSel = (i === selectedDriverIdx);
+
+          ctx.fillStyle = isSel ? 'rgba(253, 224, 71, 0.25)' : 'rgba(30, 41, 59, 0.8)';
+          ctx.fillRect(x, y, 50, 40);
+          ctx.strokeStyle = isSel ? '#fde047' : '#475569';
+          ctx.lineWidth = isSel ? 2 : 1;
+          ctx.strokeRect(x, y, 50, 40);
+
+          // Dessin du mini kart
+          ctx.fillStyle = d.color;
+          ctx.fillRect(x + 16, y + 10, 18, 12);
+          ctx.fillStyle = d.suit;
+          ctx.fillRect(x + 21, y + 14, 8, 5);
+          ctx.fillStyle = '#000000';
+          ctx.fillRect(x + 13, y + 12, 3, 8);
+          ctx.fillRect(x + 34, y + 12, 3, 8);
+
+          ctx.fillStyle = isSel ? '#fef08a' : '#ffffff';
+          ctx.font = 'bold 8px monospace';
+          ctx.textAlign = 'center';
+          ctx.fillText(d.name, x + 25, y + 34);
+        }
+
+        const sel = DRIVERS[selectedDriverIdx];
+        ctx.fillStyle = '#e2e8f0';
+        ctx.font = 'bold 9px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(`Pilote: ${sel.name} • Vitesse: ${sel.speed} • Poids: ${sel.weight}`, 140, 132);
+      } else if (gameState === 'COURSE_SELECT') {
+        // Écran de sélection des 4 circuits authentiques de MathDS
+        ctx.fillStyle = '#090d16';
+        ctx.fillRect(0, 0, 280, 150);
+
+        ctx.fillStyle = '#38bdf8';
+        ctx.font = 'bold 11px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText('SÉLECTION DU CIRCUIT (MathDS)', 140, 18);
+
+        for (let i = 0; i < TRACKS.length; i++) {
+          const trk = TRACKS[i];
+          const y = 28 + i * 26;
+          const isSel = (i === selectedTrackIdx);
+
+          ctx.fillStyle = isSel ? 'rgba(56, 189, 248, 0.2)' : 'rgba(15, 23, 42, 0.8)';
+          ctx.fillRect(20, y, 240, 22);
+          ctx.strokeStyle = isSel ? '#38bdf8' : '#334155';
+          ctx.lineWidth = isSel ? 2 : 1;
+          ctx.strokeRect(20, y, 240, 22);
+
+          // Pastille de couleur du thème de piste
+          ctx.fillStyle = trk.road;
+          ctx.fillRect(26, y + 4, 14, 14);
+          ctx.fillStyle = trk.curbDark;
+          ctx.fillRect(30, y + 4, 6, 14);
+
+          ctx.fillStyle = isSel ? '#ffffff' : '#94a3b8';
+          ctx.font = 'bold 9px monospace';
+          ctx.textAlign = 'left';
+          ctx.fillText(`${isSel ? '▶ ' : '  '}${trk.name}`, 46, y + 14);
+
+          ctx.fillStyle = '#38bdf8';
+          ctx.font = '7px monospace';
+          ctx.fillText(trk.subtitle, 160, y + 14);
+        }
+
+        ctx.fillStyle = '#fde047';
+        ctx.font = 'bold 8px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText('▲▼: Naviguer | OK: Lancer la course 3D', 140, 140);
+      } else if (gameState === 'RACING') {
+        const trk = TRACKS[selectedTrackIdx];
+        const drv = DRIVERS[selectedDriverIdx];
+
+        // 1. Physique de conduite
+        if (accel) speed = Math.min(speed + 1.2, boostTimer > 0 ? 120 : maxSpeed);
+        else if (brake) speed = Math.max(speed - 2.5, 0);
+        else speed = Math.max(speed - 0.5, 0);
+
+        if (boostTimer > 0) boostTimer--;
+        if (starTimer > 0) starTimer--;
+        if (hopTimer > 0) {
+          hopTimer--;
+          if (hopTimer === 0) isHopping = false;
+        }
+
+        distance += speed * 0.15;
+        if (distance >= 3000) {
+          distance = 0;
+          currentLap = Math.min(currentLap + 1, totalLaps);
+          window.soundFx?.playSuccess?.();
+        }
+
+        // Calcul de virage selon le profil de circuit MathDS
+        const segIdx = Math.floor(distance / 375) % trk.curvePattern.length;
+        const targetCurve = trk.curvePattern[segIdx];
+        playerX += (steering * 0.035) - (targetCurve * speed * 0.00035);
+
+        // Ralentissement hors-piste
+        if (Math.abs(playerX) > 0.85 && starTimer === 0) {
+          speed = Math.max(speed - 1.5, 20);
+        }
+
+        // 2. Rendu Ciel & Défilement Parallaxe
+        const skyGrad = ctx.createLinearGradient(0, 0, 0, 60);
+        skyGrad.addColorStop(0, trk.skyTop);
+        skyGrad.addColorStop(1, trk.skyBottom);
+        ctx.fillStyle = skyGrad;
+        ctx.fillRect(0, 0, canvas.width, 62);
+
+        // Collines ou remparts à l'horizon
+        ctx.fillStyle = trk.roadType === 'stone' ? '#450a0a' : '#14532d';
+        const hillOffset = (distance * 0.05) % 120;
+        ctx.beginPath();
+        ctx.moveTo(0, 62);
+        for (let x = 0; x <= 280; x += 20) {
+          const hy = 50 + Math.sin((x + hillOffset) * 0.05) * 8;
+          ctx.lineTo(x, hy);
+        }
+        ctx.lineTo(280, 62);
+        ctx.closePath();
+        ctx.fill();
+
+        // 3. Rendu Mode 7 (Projection perspective de la piste)
+        for (let y = 62; y < 150; y += 2) {
+          const p = (y - 62) / 88; // 0.0 à 1.0
+          const scale = p * p;
+          const roadWidth = 26 + scale * 210;
+          const curveOffset = targetCurve * (1 - p) * 55;
+          const centerX = (canvas.width / 2) - (playerX * 130 * p) + curveOffset;
+
+          // Sol extérieur (herbe, terre, vide ou lave)
+          const isStripe = (Math.floor((distance + (150 - y) * 3) / 16) % 2 === 0);
+          ctx.fillStyle = isStripe ? trk.ground : (trk.roadType === 'stone' ? '#c2410c' : '#166534');
+          ctx.fillRect(0, y, canvas.width, 2);
+
+          // Piste
+          ctx.fillStyle = isStripe ? trk.road : '#475569';
+          ctx.fillRect(centerX - roadWidth / 2, y, roadWidth, 2);
+
+          // Vibreurs / Bordures
+          const curbW = Math.max(3, 14 * p);
+          ctx.fillStyle = isStripe ? trk.curbDark : trk.curbLight;
+          ctx.fillRect(centerX - roadWidth / 2 - curbW, y, curbW, 2);
+          ctx.fillRect(centerX + roadWidth / 2, y, curbW, 2);
+        }
+
+        // Ligne d'arrivée à damier
+        const finishDist = (3000 - (distance % 3000));
+        if (finishDist < 350) {
+          const fy = 62 + (1 - finishDist / 350) * 80;
+          const fw = (1 - finishDist / 350) * 160;
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect((canvas.width - fw) / 2, fy, fw, 4);
+        }
+
+        // 4. Rivaux en course
+        rivals.forEach((riv, idx) => {
+          const relDist = riv.dist - (distance % 1200);
+          if (relDist > 20 && relDist < 600) {
+            const ry = 64 + (1 - relDist / 600) * 65;
+            const rScale = Math.max(0.4, (1 - relDist / 600) * 1.3);
+            const rx = 140 + riv.x * 120 * (ry - 62) / 88;
+            ctx.fillStyle = riv.color;
+            ctx.fillRect(rx - 7 * rScale, ry - 6 * rScale, 14 * rScale, 10 * rScale);
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(rx - 9 * rScale, ry - 3 * rScale, 3 * rScale, 5 * rScale);
+            ctx.fillRect(rx + 6 * rScale, ry - 3 * rScale, 3 * rScale, 5 * rScale);
+          }
+        });
+
+        // 5. Kart du joueur
+        const kartY = 118 - (isHopping ? 10 : 0);
+        const kartX = 132 + (steering * 4);
+
+        // Clignotement étoile
+        let kartColor = drv.color;
+        if (starTimer > 0) {
+          const rainbow = ['#ef4444', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6'];
+          kartColor = rainbow[Math.floor(frame / 4) % rainbow.length];
+        }
+
+        // Roues du kart
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(kartX - 5, kartY + 4, 4, 10);
+        ctx.fillRect(kartX + 17, kartY + 4, 4, 10);
+
+        // Châssis
+        ctx.fillStyle = kartColor;
+        ctx.fillRect(kartX, kartY, 16, 13);
+        // Casque / Pilote
+        ctx.fillStyle = drv.suit;
+        ctx.fillRect(kartX + 4, kartY + 3, 8, 5);
+
+        // Fumée de dérapage
+        if (isDrifting && speed > 40 && Math.floor(frame / 3) % 2 === 0) {
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+          ctx.beginPath();
+          ctx.arc(kartX - 3, kartY + 12, 3, 0, Math.PI * 2);
+          ctx.arc(kartX + 19, kartY + 12, 3, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // 6. Affichage Tête Haute (HUD)
+        // Tour en haut à gauche
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+        ctx.fillRect(6, 6, 52, 14);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 8px monospace';
+        ctx.textAlign = 'left';
+        ctx.fillText(`LAP ${currentLap}/${totalLaps}`, 10, 16);
+
+        // Boîte à objet en haut au centre
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+        ctx.fillRect(128, 6, 24, 16);
+        ctx.strokeStyle = '#fde047';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(128, 6, 24, 16);
+        ctx.font = '10px monospace';
+        ctx.textAlign = 'center';
+        const itemIcon = currentItem === 'MUSHROOM' ? '🍄' : (currentItem === 'STAR' ? '⭐' : (currentItem === 'SHELL' ? '🟢' : '🍌'));
+        ctx.fillText(currentItem ? itemIcon : '❓', 140, 18);
+
+        // Position en haut à droite
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+        ctx.fillRect(222, 6, 52, 14);
+        ctx.fillStyle = '#fde047';
+        ctx.font = 'bold 8px monospace';
+        ctx.textAlign = 'right';
+        ctx.fillText('1st / 8', 268, 16);
+
+        // Vitesse & Pièces en bas à gauche
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.65)';
+        ctx.fillRect(6, 128, 72, 16);
+        ctx.fillStyle = '#38bdf8';
+        ctx.font = 'bold 8px monospace';
+        ctx.textAlign = 'left';
+        ctx.fillText(`${Math.round(speed)} km/h • 🪙 ${coins}`, 10, 139);
+
+        // Minimap temps réel en bas à droite
+        if (showMinimap) {
+          ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+          ctx.fillRect(234, 106, 40, 38);
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 1;
+          ctx.strokeRect(234, 106, 40, 38);
+
+          // Tracé simplifié du circuit
+          ctx.strokeStyle = '#64748b';
+          ctx.lineWidth = 2;
+          ctx.strokeRect(240, 112, 28, 26);
+
+          // Point joueur
+          const pAngle = (distance / 3000) * Math.PI * 2;
+          const mx = 254 + Math.cos(pAngle) * 12;
+          const my = 125 + Math.sin(pAngle) * 10;
+          ctx.fillStyle = '#fde047';
+          ctx.beginPath();
+          ctx.arc(mx, my, 2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
 
       this.gameLoopId = requestAnimationFrame(loop);
     };

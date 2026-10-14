@@ -1,5 +1,29 @@
 [
   {
+    "id": "comm_mariokart",
+    "name": "Super Mario Kart 3D",
+    "author": "MathDS & EquaLib",
+    "version": "2.0",
+    "size_kb": 750,
+    "category": "Jeux / Arcade",
+    "format": "NWA",
+    "description": "Portage complet en C natif 60 FPS de Super Mario Kart (Mode 7 3D, 8 pilotes, 4 circuits cultes, objets).",
+    "icon_initial": "🏎️",
+    "color": "#EF4444",
+    "download_url": "apps/mariokart.nwa",
+    "source": "MathDS Native C",
+    "tags": [
+      "mario",
+      "kart",
+      "course",
+      "3d",
+      "mode7",
+      "snes",
+      "arcade"
+    ],
+    "icon_url": "assets/icons/mariokart.png"
+  },
+  {
     "id": "comm_flappy",
     "name": "Flappy Bird NW",
     "author": "Community GitHub",

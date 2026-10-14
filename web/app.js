@@ -9,10 +9,13 @@ const APP_DETAILS_MAP = {
     controls: [
       { key: 'Flèches Gauche / Droite', desc: 'Braquer et diriger le kart' },
       { key: 'OK ou Flèche Haut', desc: 'Accélérer plein gaz' },
-      { key: 'Flèche Bas', desc: 'Freiner / Dérapage' },
+      { key: 'Flèche Bas', desc: 'Freiner / Marche arrière' },
+      { key: 'Shift / ( ) / 9', desc: 'Sauter et déclencher le dérapage (Hop/Drift)' },
+      { key: '* / Backspace / +', desc: 'Utiliser l\'objet en réserve (champignon, carapace, banane...)' },
+      { key: 'Var ou Toolbox', desc: 'Afficher / masquer la minimap du circuit' },
       { key: 'Back', desc: 'Quitter et revenir au Hub' }
     ],
-    tips: 'Moteur 3D Mode 7 temps réel optimisé pour le microcontrôleur STM32H725 @ 550 MHz.'
+    tips: 'Véritable moteur 3D Mode 7 avec 8 pilotes, IA, objets et 4 circuits cultes (Mario Circuit 1, Donut Plains 1, Ghost Valley 1, Bowser Castle 1).'
   },
   'periodique': {
     controls: [
@@ -499,6 +502,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   window.applyUserSettings = applyUserSettings;
 
   const GAME_ICON_URL_MAP = {
+    comm_mariokart: 'assets/icons/mariokart.png',
     mariokart: 'assets/icons/mariokart.png',
     comm_flappy: 'assets/icons/flappy.png',
     flappy: 'assets/icons/flappy.png',

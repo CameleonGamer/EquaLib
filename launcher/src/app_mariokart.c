@@ -69,8 +69,9 @@ void run_mariokart_app(void) {
                          eadk_keyboard_key_down(kbd, eadk_key_plus) ||
                          eadk_keyboard_key_down(kbd, eadk_key_division);
 
-        /* Basculer la minimap avec [Toolbox] */
-        bool cur_tb_key = eadk_keyboard_key_down(kbd, eadk_key_toolbox);
+        /* Basculer la minimap avec [Toolbox] ou [Var] */
+        bool cur_tb_key = eadk_keyboard_key_down(kbd, eadk_key_toolbox) ||
+                           eadk_keyboard_key_down(kbd, eadk_key_var);
         if (cur_tb_key && !prev_tb_key) {
             s_game.show_minimap = !s_game.show_minimap;
         }
