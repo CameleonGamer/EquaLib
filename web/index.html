@@ -653,7 +653,7 @@
           <!-- Jauge de Stockage Flash QSPI -->
           <div class="space-y-2 bg-[#0d1117] p-3.5 rounded-lg border border-[#30363d] shadow-[2px_2px_0px_#000]">
             <div class="flex items-center justify-between text-xs font-mono">
-              <span class="font-semibold text-[#c9d1d9]">Mémoire Flash QSPI (N0120)</span>
+              <span id="memory-flash-label" class="font-semibold text-[#c9d1d9]">Mémoire Flash QSPI (N0120)</span>
               <span id="memory-percent" class="font-bold text-white">0%</span>
             </div>
             <div class="w-full h-2.5 bg-[#161b22] rounded overflow-hidden border border-[#30363d]">
@@ -787,7 +787,7 @@
           <span>⚡</span> En collaboration avec <strong>Gemini</strong> (Google DeepMind)
         </span>
         <span>•</span>
-        <span>NumWorks N0120 (STM32H725 @ 550 MHz)</span>
+        <span id="footer-model-spec">NumWorks N0120 (STM32H725 @ 550 MHz)</span>
       </div>
       <p class="text-[#8b949e] text-[11px]">NumWorks est une marque déposée de NumWorks SAS. EquaLib est un projet libre et communautaire.</p>
     </div>
@@ -825,7 +825,7 @@
       <!-- Commandes et touches sur la NumWorks -->
       <div class="space-y-1">
         <h4 class="text-xs font-bold font-mono uppercase tracking-wider text-[#FFBB00] flex items-center gap-1.5">
-          <span>🕹️</span> Touches sur NumWorks N0120
+          <span>🕹️</span> Touches sur NumWorks <span id="modal-controls-model">N0120</span>
         </h4>
         <div id="modal-app-controls" class="space-y-1 text-xs text-[#c9d1d9] bg-[#0d1117] p-3 rounded border border-[#30363d] font-mono">
           <!-- Injecté dynamiquement -->
@@ -854,7 +854,7 @@
           <span class="text-xl">🔌</span>
           <div>
             <h3 class="font-extrabold text-[#e6edf3] text-sm font-mono uppercase tracking-wider">Assistant Connexion USB</h3>
-            <p class="text-[11px] text-[#8b949e] font-mono">NumWorks N0120 (STM32H725 @ 550 MHz)</p>
+            <p id="help-modal-model" class="text-[11px] text-[#8b949e] font-mono">NumWorks N0120 (STM32H725 @ 550 MHz)</p>
           </div>
         </div>
         <button id="help-close-btn" class="p-1.5 rounded bg-[#0d1117] hover:bg-[#21262d] text-[#8b949e] hover:text-white border border-[#30363d] transition-all cursor-pointer font-mono">✕</button>

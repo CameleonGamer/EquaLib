@@ -380,6 +380,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (downloadBtn) {
       downloadBtn.innerHTML = `<span>💾</span> <span>Télécharger .nwa (${userSettings.targetModel})</span>`;
     }
+
+    const memLabel = document.getElementById('memory-flash-label');
+    if (memLabel) {
+      memLabel.textContent = `Mémoire Flash QSPI (${userSettings.targetModel})`;
+    }
+
+    const specText = isN110 ? 'NumWorks N0110 (STM32F730 @ 216 MHz)' : 'NumWorks N0120 (STM32H725 @ 550 MHz)';
+    const footerSpec = document.getElementById('footer-model-spec');
+    if (footerSpec) footerSpec.textContent = specText;
+
+    const helpModel = document.getElementById('help-modal-model');
+    if (helpModel) helpModel.textContent = specText;
+
+    const modalControls = document.getElementById('modal-controls-model');
+    if (modalControls) modalControls.textContent = userSettings.targetModel;
   }
 
   modelSelectN0120?.addEventListener('click', () => {
