@@ -61,8 +61,12 @@ void run_mariokart_app(void) {
         input.back_pressed = raw_back;
 
         input.hop_drift = eadk_keyboard_key_down(kbd, eadk_key_shift) ||
+                          eadk_keyboard_key_down(kbd, eadk_key_left_parenthesis) ||
                           eadk_keyboard_key_down(kbd, eadk_key_right_parenthesis) ||
-                          eadk_keyboard_key_down(kbd, eadk_key_nine);
+                          eadk_keyboard_key_down(kbd, eadk_key_nine) ||
+                          eadk_keyboard_key_down(kbd, eadk_key_dot) ||
+                          eadk_keyboard_key_down(kbd, eadk_key_square) ||
+                          eadk_keyboard_key_down(kbd, eadk_key_power);
 
         input.use_item = eadk_keyboard_key_down(kbd, eadk_key_multiplication) ||
                          eadk_keyboard_key_down(kbd, eadk_key_backspace) ||

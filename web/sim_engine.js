@@ -3350,6 +3350,12 @@ class NumWorksSimulator {
     let boostTimer = 0;
     let spinTimer = 0;
     let showMinimap = true;
+    let courseRecords = [
+      safeStorageGet('smk_rec_mc1', "1'28\"42"),
+      safeStorageGet('smk_rec_dp1', "1'34\"15"),
+      safeStorageGet('smk_rec_gv1', "1'19\"80"),
+      safeStorageGet('smk_rec_bc1', "1'42\"60")
+    ];
     let rivals = [
       { dist: 400, x: -0.3, charIdx: 1, color: DRIVERS[1].color },
       { dist: 850, x: 0.4, charIdx: 5, color: DRIVERS[5].color }
@@ -3572,9 +3578,10 @@ class NumWorksSimulator {
           ctx.textAlign = 'left';
           ctx.fillText(`${isSel ? '▶ ' : '  '}${trk.name}`, 46, y + 14);
 
-          ctx.fillStyle = '#38bdf8';
-          ctx.font = '7px monospace';
-          ctx.fillText(trk.subtitle, 160, y + 14);
+          ctx.fillStyle = '#fde047';
+          ctx.font = 'bold 8px monospace';
+          ctx.textAlign = 'right';
+          ctx.fillText(`REC ${courseRecords[i]}`, 252, y + 14);
         }
 
         ctx.fillStyle = '#fde047';
