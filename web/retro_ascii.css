@@ -160,13 +160,13 @@ h1, h2, h3, h4, h5, h6, .font-heading, .font-orbitron {
   width: 100vw;
   height: 100vh;
   pointer-events: none;
-  z-index: 1;
+  z-index: 45;
   background: linear-gradient(
     rgba(5, 11, 20, 0) 50%,
-    rgba(2, 6, 13, 0.38) 50%
+    rgba(2, 6, 13, 0.32) 50%
   );
   background-size: 100% 3px;
-  opacity: 0.7;
+  opacity: 0.65;
 }
 
 .crt-vignette {
@@ -176,13 +176,32 @@ h1, h2, h3, h4, h5, h6, .font-heading, .font-orbitron {
   width: 100vw;
   height: 100vh;
   pointer-events: none;
-  z-index: 1;
-  box-shadow: inset 0 0 120px rgba(2, 6, 13, 0.85);
+  z-index: 45;
+  box-shadow: inset 0 0 100px rgba(2, 6, 13, 0.75);
 }
 
 body.crt-off .crt-scanlines,
 body.crt-off .crt-vignette {
   display: none !important;
+}
+
+/* Lueur interactive sous le curseur */
+.cursor-glow {
+  position: fixed;
+  width: 360px;
+  height: 360px;
+  border-radius: 50%;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle, rgba(var(--theme-primary-rgb, 255, 215, 0), 0.14) 0%, rgba(var(--theme-primary-rgb, 255, 215, 0), 0.04) 45%, rgba(0, 0, 0, 0) 70%);
+  z-index: 2;
+  will-change: left, top;
+}
+
+/* Mise en pause automatique des animations CSS quand l'onglet est en arrière-plan */
+body.tab-paused .solar-perspective-grid,
+body.tab-paused .ruby-beta-marquee-track {
+  animation-play-state: paused !important;
 }
 
 /* Fallback lisible pour glow-cyan / glow-purple */
@@ -902,16 +921,17 @@ body.hide-tooltips [data-shortcut-hint] {
 
 /* ==================== ACCESSIBILITÉ & PREFERS-REDUCED-MOTION ==================== */
 @media (prefers-reduced-motion: reduce) {
-  .ruby-beta-marquee-track {
+  body.reduce-motion .ruby-beta-marquee-track,
+  body.reduce-motion .solar-perspective-grid {
     animation: none !important;
   }
-  .crt-scanlines,
-  .crt-vignette {
+  body.reduce-motion .crt-scanlines,
+  body.reduce-motion .crt-vignette {
     display: none !important;
   }
-  *,
-  *::before,
-  *::after {
+  body.reduce-motion *,
+  body.reduce-motion *::before,
+  body.reduce-motion *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;

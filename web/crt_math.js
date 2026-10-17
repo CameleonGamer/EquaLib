@@ -317,10 +317,10 @@
         mouseFactor = 1 - (dNorm * dNorm * (3 - 2 * dNorm));
       }
 
-      const targetOpacity = p.baseOpacity + (waveFactor * 0.14) + (mouseFactor * 0.65);
+      const targetOpacity = p.baseOpacity + (waveFactor * 0.22) + (mouseFactor * 0.55);
       p.currentOpacity += (targetOpacity - p.currentOpacity) * 0.22;
       p.scale = 1.0 + (waveFactor * 0.28) + (mouseFactor * 0.22);
-      p.glow = (mouseFactor > 0.1) ? mouseFactor : (waveFactor * 0.35);
+      p.glow = Math.max(mouseFactor, waveFactor * 0.45);
 
       ctx.save();
       ctx.translate(p.x, p.y);
@@ -341,9 +341,9 @@
           : `rgba(${primaryRgb}, ${p.currentOpacity.toFixed(2)})`;
       }
 
-      if (p.glow > 0.2) {
+      if (p.glow > 0.15) {
         ctx.shadowColor = isHacker ? '#00f0ff' : (window.themePrimaryHex || '#FFD700');
-        ctx.shadowBlur = 12 * p.glow;
+        ctx.shadowBlur = 10 * p.glow;
       } else {
         ctx.shadowBlur = 0;
       }
@@ -355,7 +355,12 @@
 
   let isRunning = false;
   let rafId = null;
-  const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let lastActiveTime = performance.now();
+  const IDLE_TIMEOUT_MS = 60000; // Veille éco-énergie après 60s d'inactivité
+
+  function isMotionReduced() {
+    return document.body.classList.contains('reduce-motion');
+  }
 
   function renderFrame(timestamp) {
     if (!timestamp) timestamp = performance.now();
@@ -380,7 +385,12 @@
 
   // Boucle d'animation principale avec veille automatique
   function draw(timestamp) {
-    if (document.hidden || prefersReducedMotion) {
+    if (document.hidden || isMotionReduced()) {
+      isRunning = false;
+      return;
+    }
+    // Veille automatique après 60s d'inactivité pour préserver la batterie / CPU
+    if (timestamp - lastActiveTime > IDLE_TIMEOUT_MS) {
       isRunning = false;
       return;
     }
@@ -389,7 +399,7 @@
   }
 
   function startAnimation() {
-    if (prefersReducedMotion) {
+    if (isMotionReduced()) {
       renderFrame(performance.now());
       return;
     }
@@ -407,6 +417,13 @@
     }
   }
 
+  function recordActivity() {
+    lastActiveTime = performance.now();
+    if (!isRunning && !document.hidden && !isMotionReduced()) {
+      startAnimation();
+    }
+  }
+
   // API publique pour basculer de thème d'arrière-plan à la volée
   window.setThemeBg = function (themeName) {
     currentTheme = themeName || 'default';
@@ -421,17 +438,21 @@
     else if (currentTheme === 'mario') initStars();
     else initGrid();
 
-    if (prefersReducedMotion) {
+    if (isMotionReduced()) {
       renderFrame(performance.now());
     } else {
+      recordActivity();
       startAnimation();
     }
   };
 
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
+      document.body.classList.add('tab-paused');
       stopAnimation();
     } else {
+      document.body.classList.remove('tab-paused');
+      recordActivity();
       startAnimation();
     }
   });
@@ -450,20 +471,22 @@
 
     window.addEventListener('resize', () => {
       resize();
-      if (prefersReducedMotion) renderFrame(performance.now());
+      if (isMotionReduced()) renderFrame(performance.now());
     });
 
     window.addEventListener('mousemove', (e) => {
+      recordActivity();
       targetMouseX = e.clientX;
       targetMouseY = e.clientY;
       if (glow) {
         glow.style.left = e.clientX + 'px';
         glow.style.top = e.clientY + 'px';
       }
-      if (!isRunning && !document.hidden && !prefersReducedMotion) {
-        startAnimation();
-      }
     });
+
+    window.addEventListener('scroll', recordActivity, { passive: true });
+    window.addEventListener('keydown', recordActivity, { passive: true });
+    window.addEventListener('touchstart', recordActivity, { passive: true });
 
     window.addEventListener('mouseleave', () => {
       targetMouseX = -1000;
@@ -471,6 +494,7 @@
     });
 
     resize();
+    recordActivity();
     startAnimation();
   });
 })();
