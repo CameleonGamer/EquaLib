@@ -435,6 +435,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Si hex est falsy ou vaut la couleur par défaut (#FFD700), on restaure le Solar Gold par défaut
     if (!hex || hex.toUpperCase() === DEFAULT_PRIMARY) {
+      window.themePrimaryHex = DEFAULT_PRIMARY;
+      window.themePrimaryRgb = DEFAULT_PRIMARY_RGB;
+      window.themeAccentRgb = DEFAULT_ACCENT_RGB;
       document.documentElement.style.setProperty('--theme-primary', DEFAULT_PRIMARY);
       document.documentElement.style.setProperty('--theme-primary-hover', DEFAULT_PRIMARY_HOVER);
       document.documentElement.style.setProperty('--theme-primary-rgb', DEFAULT_PRIMARY_RGB);
@@ -461,6 +464,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     const toHex = (n) => n.toString(16).padStart(2, '0');
     const hoverHex = `#${toHex(hoverR)}${toHex(hoverG)}${toHex(hoverB)}`;
 
+    window.themePrimaryHex = hex;
+    window.themePrimaryRgb = `${r}, ${g}, ${b}`;
+    window.themeAccentRgb = `${hoverR}, ${hoverG}, ${hoverB}`;
+
     // Mise à jour des variables CSS globales de :root
     document.documentElement.style.setProperty('--theme-primary', hex);
     document.documentElement.style.setProperty('--theme-primary-hover', hoverHex);
@@ -479,21 +486,106 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     dynStyle.textContent = `
-      .text-\\[\\#FFD700\\] { color: ${hex} !important; }
-      .bg-\\[\\#FFD700\\] { background-color: ${hex} !important; }
-      .border-\\[\\#FFD700\\] { border-color: ${hex} !important; }
-      .border-t-\\[\\#FFD700\\] { border-top-color: ${hex} !important; }
-      .hover\\:border-\\[\\#FFD700\\]:hover { border-color: ${hex} !important; }
-      .hover\\:text-\\[\\#FFD700\\]:hover { color: ${hex} !important; }
-      .hover\\:bg-\\[\\#FFD700\\]:hover { background-color: ${hoverHex} !important; }
-      #memory-progress-bar { background: linear-gradient(90deg, ${hoverHex}, ${hex}) !important; }
-      #flash-progress { background: linear-gradient(90deg, ${hoverHex}, ${hex}) !important; }
-      #dock-action-btn { background-color: ${hex} !important; }
-      #dock-action-btn:hover { background-color: ${hoverHex} !important; }
-      #dock-app-icon { background-color: ${hex} !important; }
-      #active-app-dock { border-color: ${hex} !important; box-shadow: 6px 6px 0px #01040A, 0 0 28px rgba(${r}, ${g}, ${b}, 0.45) !important; }
-      .text-glow-gold { text-shadow: 0 0 12px rgba(${r}, ${g}, ${b}, 0.7), 0 0 24px rgba(${hoverR}, ${hoverG}, ${hoverB}, 0.45) !important; }
-      .box-glow-gold { box-shadow: 0 0 25px rgba(${r}, ${g}, ${b}, 0.45) !important; }
+      [class*="text-[#FFD700]"],
+      [class*="text-nw-yellow"],
+      [class*="text-nw-gold"] {
+        color: ${hex} !important;
+      }
+      [class*="bg-[#FFD700]"],
+      [class*="bg-[#FFBB00]"],
+      [class*="bg-nw-yellow"],
+      [class*="bg-nw-gold"],
+      [class*="bg-nw-yellowHover"] {
+        background-color: ${hex} !important;
+      }
+      [class*="border-[#FFD700]"],
+      [class*="border-nw-yellow"],
+      [class*="border-nw-gold"] {
+        border-color: ${hex} !important;
+      }
+      [class*="border-t-[#FFD700]"],
+      [class*="border-t-"][class*="[#FFD700]"] {
+        border-top-color: ${hex} !important;
+      }
+      [class*="border-b-[#FFD700]"] {
+        border-bottom-color: ${hex} !important;
+      }
+      [class*="border-l-[#FFD700]"] {
+        border-left-color: ${hex} !important;
+      }
+      [class*="border-r-[#FFD700]"] {
+        border-right-color: ${hex} !important;
+      }
+      [class*="from-[#FFD700]"] {
+        --tw-gradient-from: ${hex} !important;
+        --tw-gradient-stops: ${hex}, ${hoverHex}, transparent !important;
+      }
+      .btn-cyber-gold {
+        background: linear-gradient(135deg, ${hex} 0%, ${hoverHex} 100%) !important;
+        box-shadow: 3px 3px 0px #02060D, 0 0 18px rgba(${r}, ${g}, ${b}, 0.45) !important;
+      }
+      .btn-cyber-gold:hover {
+        background: linear-gradient(135deg, ${hoverHex} 0%, ${hex} 100%) !important;
+        box-shadow: 4px 4px 0px #02060D, 0 0 24px rgba(${hoverR}, ${hoverG}, ${hoverB}, 0.55) !important;
+      }
+      #tab-btn-catalog.active,
+      #tab-btn-catalog[class*="bg-[#FFD700]"] {
+        background-color: ${hex} !important;
+      }
+      .cat-pill.active {
+        background-color: ${hex} !important;
+      }
+      #quick-view-gallery-btn[class*="bg-[#FFD700]"],
+      #quick-view-list-btn[class*="bg-[#FFD700]"],
+      #quick-view-gallery-btn[class*="from-[#FFD700]"],
+      #quick-view-list-btn[class*="from-[#FFD700]"] {
+        background: linear-gradient(90deg, ${hex}, ${hoverHex}) !important;
+        border-color: ${hex} !important;
+      }
+      #model-select-n0120[class*="bg-[#FFD700]"],
+      #model-select-n0110[class*="bg-[#FFD700]"] {
+        background-color: ${hex} !important;
+      }
+      #sim-topbar {
+        background-color: ${hex} !important;
+      }
+      #sim-dpad-ok {
+        background-color: ${hex} !important;
+      }
+      #dock-action-btn {
+        background-color: ${hex} !important;
+      }
+      #dock-action-btn:hover {
+        background-color: ${hoverHex} !important;
+      }
+      #dock-app-icon {
+        background-color: ${hex} !important;
+      }
+      #active-app-dock {
+        border-color: ${hex} !important;
+        box-shadow: 6px 6px 0px #01040A, 0 0 28px rgba(${r}, ${g}, ${b}, 0.45) !important;
+      }
+      #memory-progress-bar {
+        background: linear-gradient(90deg, ${hoverHex}, ${hex}) !important;
+      }
+      #flash-progress {
+        background: linear-gradient(90deg, ${hoverHex}, ${hex}) !important;
+      }
+      .text-glow-gold {
+        text-shadow: 0 0 12px rgba(${r}, ${g}, ${b}, 0.7), 0 0 24px rgba(${hoverR}, ${hoverG}, ${hoverB}, 0.45) !important;
+      }
+      .box-glow-gold {
+        box-shadow: 0 0 25px rgba(${r}, ${g}, ${b}, 0.45) !important;
+      }
+      .solar-perspective-grid {
+        background-image: 
+          linear-gradient(to right, rgba(${r}, ${g}, ${b}, 0.4) 1.5px, transparent 1.5px),
+          linear-gradient(to bottom, rgba(${hoverR}, ${hoverG}, ${hoverB}, 0.45) 1.5px, transparent 1.5px) !important;
+      }
+      .solar-horizon-line {
+        background: linear-gradient(90deg, transparent 0%, ${hoverHex} 20%, ${hex} 50%, ${hoverHex} 80%, transparent 100%) !important;
+        box-shadow: 0 0 16px ${hex}, 0 0 32px ${hoverHex} !important;
+      }
     `;
   }
 
@@ -1563,6 +1655,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
+  // ==================== INITIALISATION VISUELLE & ROUE CHROMATIQUE (IMMÉDIATE) ====================
+  applyUserSettings();
+  initColorWheel();
+
   // ==================== CHARGEMENT DES BASES DE DONNÉES ====================
   try {
     const [catRes, commRes] = await Promise.all([
@@ -1583,9 +1679,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       updateActiveAppDock(catalogApps[0]);
     }
 
-    // Initialisation des paramètres visuels & roue chromatique
+    // Réapplication après rendu du catalogue
     applyUserSettings();
-    initColorWheel();
 
     // Vérification d'une application envoyée depuis converter.html
     const pendingAppStr = sessionStorage.getItem('equalib_imported_app');

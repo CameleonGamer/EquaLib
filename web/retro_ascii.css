@@ -560,6 +560,112 @@ body.has-custom-wallpaper::before {
   pointer-events: none;
 }
 
+/* ==================== PROPAGATION DES THÈMES SUR LES PANNEAUX & BORDURES ==================== */
+body.theme-sakura [class*="bg-[#09152B]"],
+body.theme-sakura [class*="bg-[#0D1B36]"],
+body.theme-sakura [class*="bg-[#162E56]"],
+body.theme-sakura header,
+body.theme-sakura footer,
+body.theme-sakura #app-details-modal > div,
+body.theme-sakura #settings-modal > div {
+  background-color: var(--theme-surface) !important;
+}
+body.theme-sakura [class*="bg-[#030814]"],
+body.theme-sakura [class*="bg-[#050B14]"] {
+  background-color: var(--theme-bg) !important;
+}
+body.theme-sakura [class*="border-[#1B3B6F]"],
+body.theme-sakura [class*="border-[#1E3A68]"] {
+  border-color: var(--theme-border) !important;
+}
+
+body.theme-hacker [class*="bg-[#09152B]"],
+body.theme-hacker [class*="bg-[#0D1B36]"],
+body.theme-hacker [class*="bg-[#162E56]"],
+body.theme-hacker header,
+body.theme-hacker footer,
+body.theme-hacker #app-details-modal > div,
+body.theme-hacker #settings-modal > div {
+  background-color: var(--theme-surface) !important;
+}
+body.theme-hacker [class*="bg-[#030814]"],
+body.theme-hacker [class*="bg-[#050B14]"] {
+  background-color: var(--theme-bg) !important;
+}
+body.theme-hacker [class*="border-[#1B3B6F]"],
+body.theme-hacker [class*="border-[#1E3A68]"] {
+  border-color: var(--theme-border) !important;
+}
+
+body.theme-bee [class*="bg-[#09152B]"],
+body.theme-bee [class*="bg-[#0D1B36]"],
+body.theme-bee [class*="bg-[#162E56]"],
+body.theme-bee header,
+body.theme-bee footer,
+body.theme-bee #app-details-modal > div,
+body.theme-bee #settings-modal > div {
+  background-color: var(--theme-surface) !important;
+}
+body.theme-bee [class*="bg-[#030814]"],
+body.theme-bee [class*="bg-[#050B14]"] {
+  background-color: var(--theme-bg) !important;
+}
+body.theme-bee [class*="border-[#1B3B6F]"],
+body.theme-bee [class*="border-[#1E3A68]"] {
+  border-color: var(--theme-border) !important;
+}
+
+body.theme-mario [class*="bg-[#09152B]"],
+body.theme-mario [class*="bg-[#0D1B36]"],
+body.theme-mario [class*="bg-[#162E56]"],
+body.theme-mario header,
+body.theme-mario footer,
+body.theme-mario #app-details-modal > div,
+body.theme-mario #settings-modal > div {
+  background-color: var(--theme-surface) !important;
+}
+body.theme-mario [class*="bg-[#030814]"],
+body.theme-mario [class*="bg-[#050B14]"] {
+  background-color: var(--theme-bg) !important;
+}
+body.theme-mario [class*="border-[#1B3B6F]"],
+body.theme-mario [class*="border-[#1E3A68]"] {
+  border-color: var(--theme-border) !important;
+}
+
+body.theme-gameboy [class*="bg-[#09152B]"],
+body.theme-gameboy [class*="bg-[#0D1B36]"],
+body.theme-gameboy [class*="bg-[#162E56]"],
+body.theme-gameboy header,
+body.theme-gameboy footer,
+body.theme-gameboy #app-details-modal > div,
+body.theme-gameboy #settings-modal > div {
+  background-color: var(--theme-surface) !important;
+}
+body.theme-gameboy [class*="bg-[#030814]"],
+body.theme-gameboy [class*="bg-[#050B14]"] {
+  background-color: var(--theme-bg) !important;
+}
+body.theme-gameboy [class*="border-[#1B3B6F]"],
+body.theme-gameboy [class*="border-[#1E3A68]"] {
+  border-color: var(--theme-border) !important;
+}
+
+/* Base de propagation de la couleur primaire */
+[class*="text-[#FFD700]"],
+[class*="text-nw-yellow"],
+[class*="text-nw-gold"] {
+  color: var(--theme-primary, #FFD700);
+}
+[class*="border-[#FFD700]"],
+[class*="border-nw-yellow"],
+[class*="border-nw-gold"] {
+  border-color: var(--theme-border-gold, var(--theme-primary, #FFD700));
+}
+[class*="border-t-[#FFD700]"] {
+  border-top-color: var(--theme-border-gold, var(--theme-primary, #FFD700));
+}
+
 
 /* ==================== DISABLING TOOLTIPS & SHORTCUTS ==================== */
 body.hide-tooltips .kbd-key,
