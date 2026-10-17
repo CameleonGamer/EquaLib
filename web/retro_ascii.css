@@ -44,7 +44,9 @@
   --theme-border-gold: #FFD700;      /* Bordure Laser Or Solaire */
   --theme-primary: #FFD700;          /* Or Solaire Pur (Hero Color) */
   --theme-primary-hover: #FF9100;    /* Ambre Solaire Hover */
+  --theme-primary-rgb: 255, 215, 0;  /* Valeur RGB pour glows et opacités dynamiques */
   --theme-accent: #FF9100;           /* Jaune Orangé / Ambre Vibrant */
+  --theme-accent-rgb: 255, 145, 0;   /* Valeur RGB pour accentuation */
   --theme-accent-blue: #00E5FF;      /* Cyan Électrique */
   --theme-accent-cobalt: #2563EB;    /* Bleu Cobalt */
   --theme-text: #F8FAFC;             /* Blanc Chiffon Haute Lisibilité */
@@ -111,8 +113,8 @@ h1, h2, h3, h4, h5, h6, .font-heading, .font-orbitron {
   width: 200%;
   height: 54vh;
   background-image: 
-    linear-gradient(to right, rgba(255, 215, 0, 0.4) 1.5px, transparent 1.5px),
-    linear-gradient(to bottom, rgba(255, 145, 0, 0.45) 1.5px, transparent 1.5px);
+    linear-gradient(to right, rgba(var(--theme-primary-rgb, 255, 215, 0), 0.4) 1.5px, transparent 1.5px),
+    linear-gradient(to bottom, rgba(var(--theme-accent-rgb, 255, 145, 0), 0.45) 1.5px, transparent 1.5px);
   background-size: 44px 44px;
   transform: perspective(280px) rotateX(68deg);
   transform-origin: bottom center;
@@ -130,8 +132,8 @@ h1, h2, h3, h4, h5, h6, .font-heading, .font-orbitron {
   left: 0;
   width: 100vw;
   height: 2px;
-  background: linear-gradient(90deg, transparent 0%, #FF9100 20%, #FFD700 50%, #FF9100 80%, transparent 100%);
-  box-shadow: 0 0 16px #FFD700, 0 0 32px #FF9100;
+  background: linear-gradient(90deg, transparent 0%, var(--theme-primary-hover) 20%, var(--theme-primary) 50%, var(--theme-primary-hover) 80%, transparent 100%);
+  box-shadow: 0 0 16px var(--theme-primary), 0 0 32px var(--theme-primary-hover);
   z-index: 0;
   pointer-events: none;
   opacity: 0.85;
@@ -144,7 +146,7 @@ h1, h2, h3, h4, h5, h6, .font-heading, .font-orbitron {
   width: 580px;
   height: 580px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 145, 0, 0.22) 0%, rgba(255, 215, 0, 0.12) 35%, rgba(3, 8, 20, 0) 70%);
+  background: radial-gradient(circle, rgba(var(--theme-accent-rgb, 255, 145, 0), 0.22) 0%, rgba(var(--theme-primary-rgb, 255, 215, 0), 0.12) 35%, rgba(3, 8, 20, 0) 70%);
   filter: blur(44px);
   pointer-events: none;
   z-index: 0;
@@ -200,10 +202,10 @@ body.crt-off .crt-vignette {
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  background: linear-gradient(135deg, #FFD700 0%, #FFB800 100%) !important;
+  background: linear-gradient(135deg, var(--theme-primary) 0%, var(--theme-primary-hover) 100%) !important;
   color: #050B14 !important;
   border: 2px solid #000000 !important;
-  box-shadow: 3px 3px 0px #02060D, 0 0 16px rgba(255, 215, 0, 0.35) !important;
+  box-shadow: 3px 3px 0px #02060D, 0 0 16px rgba(var(--theme-primary-rgb, 255, 215, 0), 0.35) !important;
   transform: skewX(-6deg);
   transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
   user-select: none;
@@ -213,9 +215,9 @@ body.crt-off .crt-vignette {
   transform: skewX(6deg);
 }
 .btn-cyber-gold:hover {
-  background: linear-gradient(135deg, #FF9100 0%, #FF7A00 100%) !important;
+  background: linear-gradient(135deg, var(--theme-primary-hover) 0%, var(--theme-primary) 100%) !important;
   transform: skewX(0deg) translateY(-1px) !important;
-  box-shadow: 4px 4px 0px #02060D, 0 0 24px rgba(255, 145, 0, 0.5) !important;
+  box-shadow: 4px 4px 0px #02060D, 0 0 24px rgba(var(--theme-accent-rgb, 255, 145, 0), 0.5) !important;
 }
 .btn-cyber-gold:active {
   transform: skewX(0deg) translate(2px, 2px) !important;
@@ -284,7 +286,7 @@ body.crt-off .crt-vignette {
 
 /* ==================== EFFETS DE GLOW & NÉON TEXTUELS ==================== */
 .text-glow-gold {
-  text-shadow: 0 0 12px rgba(255, 215, 0, 0.7), 0 0 24px rgba(255, 145, 0, 0.45);
+  text-shadow: 0 0 12px rgba(var(--theme-primary-rgb, 255, 215, 0), 0.7), 0 0 24px rgba(var(--theme-accent-rgb, 255, 145, 0), 0.45);
 }
 .text-glow-amber {
   text-shadow: 0 0 12px rgba(255, 145, 0, 0.7), 0 0 24px rgba(255, 110, 0, 0.45);
@@ -293,7 +295,7 @@ body.crt-off .crt-vignette {
   text-shadow: 0 0 12px rgba(0, 229, 255, 0.7), 0 0 24px rgba(37, 99, 235, 0.45);
 }
 .box-glow-gold {
-  box-shadow: 0 0 25px rgba(255, 215, 0, 0.45);
+  box-shadow: 0 0 25px rgba(var(--theme-primary-rgb, 255, 215, 0), 0.45);
 }
 .box-glow-blue {
   box-shadow: 0 0 25px rgba(0, 229, 255, 0.4);
@@ -317,7 +319,26 @@ select, textarea {
   border-radius: 0px !important;
   border: 2px solid var(--theme-border-gold) !important;
   border-top: 4px solid var(--theme-accent) !important;
-  box-shadow: 8px 8px 0px #01040A, 0 0 35px rgba(255, 215, 0, 0.35) !important;
+  box-shadow: 8px 8px 0px #01040A, 0 0 35px rgba(var(--theme-primary-rgb, 255, 215, 0), 0.35) !important;
+}
+
+/* Scrollbar personnalisée des fenêtres modales */
+.custom-modal-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--theme-border) #030814;
+}
+.custom-modal-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.custom-modal-scrollbar::-webkit-scrollbar-track {
+  background: #030814;
+}
+.custom-modal-scrollbar::-webkit-scrollbar-thumb {
+  background: #1B3B6F;
+  border-radius: 0px;
+}
+.custom-modal-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--theme-primary);
 }
 
 /* ==================== CADRES, BOÎTES & BADGES DEV TECH ==================== */
@@ -333,7 +354,7 @@ select, textarea {
 
 .ascii-box:hover {
   border-color: var(--theme-primary);
-  box-shadow: var(--shadow-hard-lg), 0 0 20px rgba(255, 215, 0, 0.25);
+  box-shadow: var(--shadow-hard-lg), 0 0 20px rgba(var(--theme-primary-rgb, 255, 215, 0), 0.25);
 }
 
 .ascii-badge {

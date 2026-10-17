@@ -332,7 +332,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     smoothCorners: true,
     includeSettingsApp: true,
     theme: localStorage.getItem('equalib_theme') || 'default',
-    customColor: '#f59e0b'
+    customColor: null
   };
   window.userSettings = userSettings;
 
@@ -340,6 +340,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const savedSettings = localStorage.getItem(SETTINGS_STORAGE_KEY);
     if (savedSettings) {
       userSettings = { ...userSettings, ...JSON.parse(savedSettings) };
+      if (userSettings.customColor === '#f59e0b') {
+        userSettings.customColor = null;
+      }
       window.userSettings = userSettings;
     }
   } catch (e) {
@@ -422,9 +425,76 @@ document.addEventListener('DOMContentLoaded', async () => {
   setTargetModel(userSettings.targetModel || 'N0120', false);
 
   function applyCustomColorVariables(hex) {
-    if (!hex || !/^#[0-9a-fA-F]{6}$/i.test(hex)) return;
+    const DEFAULT_PRIMARY = '#FFD700';
+    const DEFAULT_PRIMARY_HOVER = '#FF9100';
+    const DEFAULT_PRIMARY_RGB = '255, 215, 0';
+    const DEFAULT_ACCENT_RGB = '255, 145, 0';
+
+    const dynStyleId = 'dynamic-theme-custom-style';
+    let dynStyle = document.getElementById(dynStyleId);
+
+    // Si hex est falsy ou vaut la couleur par défaut (#FFD700), on restaure le Solar Gold par défaut
+    if (!hex || hex.toUpperCase() === DEFAULT_PRIMARY) {
+      document.documentElement.style.setProperty('--theme-primary', DEFAULT_PRIMARY);
+      document.documentElement.style.setProperty('--theme-primary-hover', DEFAULT_PRIMARY_HOVER);
+      document.documentElement.style.setProperty('--theme-primary-rgb', DEFAULT_PRIMARY_RGB);
+      document.documentElement.style.setProperty('--theme-accent', DEFAULT_PRIMARY_HOVER);
+      document.documentElement.style.setProperty('--theme-accent-rgb', DEFAULT_ACCENT_RGB);
+      document.documentElement.style.setProperty('--theme-border-gold', DEFAULT_PRIMARY);
+      document.documentElement.style.setProperty('--theme-border', '#1B3B6F');
+      document.documentElement.style.setProperty('--theme-text-gold', '#FDE68A');
+      if (dynStyle) dynStyle.remove();
+      return;
+    }
+
+    if (!/^#[0-9a-fA-F]{6}$/i.test(hex)) return;
+
+    // Calcul des composantes RGB
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+
+    // Calcul d'une couleur d'accentuation / hover assortie (légèrement décalée)
+    const hoverR = Math.min(255, Math.max(0, Math.round(r * 0.88 + 18)));
+    const hoverG = Math.min(255, Math.max(0, Math.round(g * 0.82)));
+    const hoverB = Math.min(255, Math.max(0, Math.round(b * 0.80)));
+    const toHex = (n) => n.toString(16).padStart(2, '0');
+    const hoverHex = `#${toHex(hoverR)}${toHex(hoverG)}${toHex(hoverB)}`;
+
+    // Mise à jour des variables CSS globales de :root
     document.documentElement.style.setProperty('--theme-primary', hex);
+    document.documentElement.style.setProperty('--theme-primary-hover', hoverHex);
+    document.documentElement.style.setProperty('--theme-primary-rgb', `${r}, ${g}, ${b}`);
+    document.documentElement.style.setProperty('--theme-accent', hoverHex);
+    document.documentElement.style.setProperty('--theme-accent-rgb', `${hoverR}, ${hoverG}, ${hoverB}`);
+    document.documentElement.style.setProperty('--theme-border-gold', hex);
     document.documentElement.style.setProperty('--theme-border', hex);
+    document.documentElement.style.setProperty('--theme-text-gold', hex);
+
+    // Injection ou mise à jour du style dynamique pour répercuter la couleur partout
+    if (!dynStyle) {
+      dynStyle = document.createElement('style');
+      dynStyle.id = dynStyleId;
+      document.head.appendChild(dynStyle);
+    }
+
+    dynStyle.textContent = `
+      .text-\\[\\#FFD700\\] { color: ${hex} !important; }
+      .bg-\\[\\#FFD700\\] { background-color: ${hex} !important; }
+      .border-\\[\\#FFD700\\] { border-color: ${hex} !important; }
+      .border-t-\\[\\#FFD700\\] { border-top-color: ${hex} !important; }
+      .hover\\:border-\\[\\#FFD700\\]:hover { border-color: ${hex} !important; }
+      .hover\\:text-\\[\\#FFD700\\]:hover { color: ${hex} !important; }
+      .hover\\:bg-\\[\\#FFD700\\]:hover { background-color: ${hoverHex} !important; }
+      #memory-progress-bar { background: linear-gradient(90deg, ${hoverHex}, ${hex}) !important; }
+      #flash-progress { background: linear-gradient(90deg, ${hoverHex}, ${hex}) !important; }
+      #dock-action-btn { background-color: ${hex} !important; }
+      #dock-action-btn:hover { background-color: ${hoverHex} !important; }
+      #dock-app-icon { background-color: ${hex} !important; }
+      #active-app-dock { border-color: ${hex} !important; box-shadow: 6px 6px 0px #01040A, 0 0 28px rgba(${r}, ${g}, ${b}, 0.45) !important; }
+      .text-glow-gold { text-shadow: 0 0 12px rgba(${r}, ${g}, ${b}, 0.7), 0 0 24px rgba(${hoverR}, ${hoverG}, ${hoverB}, 0.45) !important; }
+      .box-glow-gold { box-shadow: 0 0 25px rgba(${r}, ${g}, ${b}, 0.45) !important; }
+    `;
   }
 
   function updateViewModeButtons() {
@@ -516,6 +586,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (hexInput) hexInput.value = userSettings.customColor.toUpperCase();
       if (nativePicker) nativePicker.value = userSettings.customColor;
       if (preview) preview.style.backgroundColor = userSettings.customColor;
+    } else {
+      applyCustomColorVariables(null);
+      const hexInput = document.getElementById('custom-color-hex');
+      const nativePicker = document.getElementById('native-color-picker');
+      const preview = document.getElementById('custom-color-preview');
+      if (hexInput) hexInput.value = '#FFD700';
+      if (nativePicker) nativePicker.value = '#FFD700';
+      if (preview) preview.style.backgroundColor = '#FFD700';
     }
 
     // 4. Badges des thèmes
@@ -917,13 +995,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     mario: '#ef4444',
     gameboy: '#9bbc0f',
     custom: '#FFBB00',
-    default: '#f59e0b'
+    default: '#FFD700'
   };
 
   window.setAppTheme = function(themeKey) {
     userSettings.theme = themeKey;
-    if (THEME_PRESET_COLORS[themeKey]) {
+    if (themeKey === 'default') {
+      userSettings.customColor = null;
+      applyCustomColorVariables(null);
+    } else if (THEME_PRESET_COLORS[themeKey]) {
       userSettings.customColor = THEME_PRESET_COLORS[themeKey];
+      applyCustomColorVariables(userSettings.customColor);
     }
     applyUserSettings();
     saveUserSettings();
@@ -1108,7 +1190,23 @@ document.addEventListener('DOMContentLoaded', async () => {
         window.soundFx?.playClick();
         applyCustomColorVariables(userSettings.customColor);
         saveUserSettings();
-        showToast(`✓ Couleur personnalisée (${userSettings.customColor}) appliquée !`, 'success');
+        showToast(`✓ Couleur personnalisée (${userSettings.customColor || '#FFD700'}) appliquée !`, 'success');
+      });
+    }
+
+    const resetColorBtn = document.getElementById('reset-custom-color-btn');
+    if (resetColorBtn) {
+      resetColorBtn.addEventListener('click', () => {
+        window.soundFx?.playClick();
+        userSettings.customColor = null;
+        applyCustomColorVariables(null);
+        if (preview) preview.style.backgroundColor = '#FFD700';
+        if (hexInput) hexInput.value = '#FFD700';
+        if (nativePicker) nativePicker.value = '#FFD700';
+        picker.style.left = `${center}px`;
+        picker.style.top = `${center}px`;
+        saveUserSettings();
+        showToast('✓ Couleur réinitialisée au jaune doré officiel (#FFD700) !', 'info');
       });
     }
   }
@@ -1123,18 +1221,27 @@ document.addEventListener('DOMContentLoaded', async () => {
   settingsResetBtn?.addEventListener('click', () => {
     window.soundFx?.playClick();
     userSettings = {
+      targetModel: userSettings.targetModel || 'N0120',
       displayMode: 'gallery',
       showTooltips: true,
+      glassMode: true,
+      smoothCorners: true,
+      includeSettingsApp: true,
       theme: 'default',
-      customColor: '#f59e0b'
+      customColor: null
     };
-    document.documentElement.style.removeProperty('--theme-primary');
-    document.documentElement.style.removeProperty('--theme-border');
+    applyCustomColorVariables(null);
+    const hexInput = document.getElementById('custom-color-hex');
+    const nativePicker = document.getElementById('native-color-picker');
+    const preview = document.getElementById('custom-color-preview');
+    if (hexInput) hexInput.value = '#FFD700';
+    if (nativePicker) nativePicker.value = '#FFD700';
+    if (preview) preview.style.backgroundColor = '#FFD700';
     applyUserSettings();
     saveUserSettings();
     renderCatalog();
     renderCommunitySearch();
-    showToast('Paramètres réinitialisés aux valeurs d\'origine.', 'info');
+    showToast('Paramètres réinitialisés aux valeurs d\'origine (#FFD700).', 'info');
   });
 
   // Boutons du Dock d'Application Active
