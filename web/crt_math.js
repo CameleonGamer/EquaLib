@@ -333,14 +333,15 @@
           ? `rgba(0, 240, 255, ${p.currentOpacity.toFixed(2)})` 
           : `rgba(56, 189, 248, ${p.currentOpacity.toFixed(2)})`;
       } else {
+        // Solar Cyber & Midnight Navy (Solar Gold & Sunset Amber)
         ctx.fillStyle = p.colorType === 'accent' 
-          ? `rgba(168, 85, 247, ${p.currentOpacity.toFixed(2)})` 
-          : `rgba(56, 189, 248, ${p.currentOpacity.toFixed(2)})`;
+          ? `rgba(255, 145, 0, ${p.currentOpacity.toFixed(2)})` 
+          : `rgba(255, 215, 0, ${p.currentOpacity.toFixed(2)})`;
       }
 
       if (p.glow > 0.2) {
-        ctx.shadowColor = isHacker ? '#00f0ff' : '#38bdf8';
-        ctx.shadowBlur = 10 * p.glow;
+        ctx.shadowColor = isHacker ? '#00f0ff' : '#FFD700';
+        ctx.shadowBlur = 12 * p.glow;
       } else {
         ctx.shadowBlur = 0;
       }

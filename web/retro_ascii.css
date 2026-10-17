@@ -60,30 +60,37 @@
   font-display: swap;
 }
 
-/* ==================== SYSTÈME DE VARIABLES DEV TECH ==================== */
+/* ==================== SYSTÈME DE VARIABLES SOLAR CYBER & MIDNIGHT NAVY ==================== */
 :root {
   --font-main: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   --font-ascii: 'JetBrains Mono', 'Cascadia Code', 'Fira Code', 'Courier New', monospace;
   --font-arista: var(--font-main);
 
-  /* Palette Dark Dev Hardware (Inspirée GitHub Dark / VS Code & NumWorks) */
-  --theme-bg: #0d1117;
-  --theme-surface: #161b22;
-  --theme-surface-raised: #21262d;
-  --theme-border: #30363d;
-  --theme-border-strong: #000000;
-  --theme-primary: #FFBB00;
-  --theme-primary-hover: #E5A600;
-  --theme-accent: #3fb950;
-  --theme-text: #e6edf3;
-  --theme-text-muted: #8b949e;
-  --theme-card: #161b22;
+  /* Palette Solar Cyber & Midnight Navy */
+  --theme-bg: #050B14;               /* Abyssal Midnight Navy Void */
+  --theme-surface: #0D1B36;          /* Deep Oceanic Navy Glass */
+  --theme-surface-raised: #162E56;   /* Raised Navy Surface */
+  --theme-border: #1E3A68;           /* Oceanic Cobalt Border */
+  --theme-border-strong: #0A1628;    /* Deep Abyssal Border */
+  --theme-border-gold: #FFD700;      /* Solar Gold Accent Border */
+  --theme-primary: #FFD700;          /* Solar Gold (Primary CTA / Hero) */
+  --theme-primary-hover: #FF9100;    /* Sunset Amber Hover */
+  --theme-accent: #FF9100;           /* Warm Sunset Amber */
+  --theme-accent-blue: #38BDF8;      /* Electric Cyan / Ice Blue */
+  --theme-accent-cobalt: #2563EB;    /* Deep Cobalt Blue */
+  --theme-text: #F8FAFC;             /* Chiffon White Main Text */
+  --theme-text-muted: #94A3B8;       /* Slate / Navy Grey Text */
+  --theme-text-gold: #FDE68A;        /* Pale Radiant Gold Text */
+  --theme-card: #0D1B36;
 
-  /* Ombres décalées franches (Neo-brutalist hard shadows) */
-  --shadow-hard-sm: 2px 2px 0px #000000;
-  --shadow-hard-md: 3px 3px 0px #000000;
-  --shadow-hard-lg: 4px 4px 0px #000000;
-  --shadow-hard-xl: 6px 6px 0px #000000;
+  /* Ombres décalées franches & Solar Glows */
+  --shadow-hard-sm: 2px 2px 0px #02060D;
+  --shadow-hard-md: 3px 3px 0px #02060D;
+  --shadow-hard-lg: 4px 4px 0px #02060D;
+  --shadow-hard-xl: 6px 6px 0px #02060D;
+  --shadow-glow-gold: 0 0 25px rgba(255, 215, 0, 0.35);
+  --shadow-glow-amber: 0 0 25px rgba(255, 145, 0, 0.35);
+  --shadow-glow-blue: 0 0 25px rgba(56, 189, 248, 0.3);
 }
 
 html {
@@ -110,6 +117,39 @@ body {
   font-family: var(--font-arista) !important;
 }
 
+/* ==================== SOLAR PERSPECTIVE GRID & AMBIENT GLOW ==================== */
+.solar-perspective-grid {
+  position: fixed;
+  bottom: -60px;
+  left: -50%;
+  width: 200%;
+  height: 48vh;
+  background-image: 
+    linear-gradient(to right, rgba(30, 58, 104, 0.45) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(30, 58, 104, 0.45) 1px, transparent 1px);
+  background-size: 38px 38px;
+  transform: perspective(350px) rotateX(65deg);
+  transform-origin: bottom center;
+  pointer-events: none;
+  z-index: 0;
+  mask-image: linear-gradient(to top, rgba(0,0,0,1) 15%, rgba(0,0,0,0) 85%);
+  -webkit-mask-image: linear-gradient(to top, rgba(0,0,0,1) 15%, rgba(0,0,0,0) 85%);
+  opacity: 0.65;
+}
+
+.solar-ambient-orb {
+  position: fixed;
+  top: -160px;
+  right: 10%;
+  width: 520px;
+  height: 520px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 145, 0, 0.14) 0%, rgba(255, 215, 0, 0.06) 40%, rgba(5, 11, 20, 0) 70%);
+  filter: blur(48px);
+  pointer-events: none;
+  z-index: 0;
+}
+
 /* ==================== EFFETS CRT VINTAGE OPTIONNELS ==================== */
 .crt-scanlines {
   position: fixed;
@@ -120,8 +160,8 @@ body {
   pointer-events: none;
   z-index: 1;
   background: linear-gradient(
-    rgba(18, 16, 16, 0) 50%,
-    rgba(0, 0, 0, 0.35) 50%
+    rgba(5, 11, 20, 0) 50%,
+    rgba(2, 6, 13, 0.38) 50%
   );
   background-size: 100% 3px;
   opacity: 0.7;
@@ -135,7 +175,7 @@ body {
   height: 100vh;
   pointer-events: none;
   z-index: 1;
-  box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.8);
+  box-shadow: inset 0 0 120px rgba(2, 6, 13, 0.85);
 }
 
 body.crt-off .crt-scanlines,
@@ -143,7 +183,7 @@ body.crt-off .crt-vignette {
   display: none !important;
 }
 
-/* Fallback lisible pour glow-cyan / glow-purple sans effet néon baveux */
+/* Fallback lisible pour glow-cyan / glow-purple */
 .glow-cyan, .glow-purple {
   text-shadow: none !important;
 }
@@ -151,10 +191,72 @@ body.crt-off .crt-vignette {
   box-shadow: var(--shadow-hard-sm) !important;
 }
 
+/* ==================== BOUTONS CYBER KINÉTIQUES (SKEWED & GLOW) ==================== */
+.btn-cyber-gold {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-ascii);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: linear-gradient(135deg, #FFD700 0%, #FFB800 100%) !important;
+  color: #050B14 !important;
+  border: 2px solid #000000 !important;
+  box-shadow: 3px 3px 0px #02060D, 0 0 16px rgba(255, 215, 0, 0.35) !important;
+  transform: skewX(-6deg);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+  user-select: none;
+  cursor: pointer;
+}
+.btn-cyber-gold > * {
+  transform: skewX(6deg);
+}
+.btn-cyber-gold:hover {
+  background: linear-gradient(135deg, #FF9100 0%, #FF7A00 100%) !important;
+  transform: skewX(0deg) translateY(-1px) !important;
+  box-shadow: 4px 4px 0px #02060D, 0 0 24px rgba(255, 145, 0, 0.5) !important;
+}
+.btn-cyber-gold:active {
+  transform: skewX(0deg) translate(2px, 2px) !important;
+  box-shadow: 1px 1px 0px #02060D !important;
+}
+
+.btn-cyber-amber {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-ascii);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: linear-gradient(135deg, #FF9100 0%, #FF7A00 100%) !important;
+  color: #050B14 !important;
+  border: 2px solid #000000 !important;
+  box-shadow: 3px 3px 0px #02060D, 0 0 16px rgba(255, 145, 0, 0.35) !important;
+  transform: skewX(-6deg);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+  user-select: none;
+  cursor: pointer;
+}
+.btn-cyber-amber > * {
+  transform: skewX(6deg);
+}
+.btn-cyber-amber:hover {
+  background: linear-gradient(135deg, #FFB800 0%, #FFD700 100%) !important;
+  transform: skewX(0deg) translateY(-1px) !important;
+  box-shadow: 4px 4px 0px #02060D, 0 0 24px rgba(255, 215, 0, 0.5) !important;
+}
+.btn-cyber-amber:active {
+  transform: skewX(0deg) translate(2px, 2px) !important;
+  box-shadow: 1px 1px 0px #02060D !important;
+}
+
 /* ==================== CADRES, BOÎTES & BADGES DEV TECH ==================== */
 .ascii-box {
   background: var(--theme-surface);
   border: 1.5px solid var(--theme-border);
+  border-top: 2px solid var(--theme-primary);
   box-shadow: var(--shadow-hard-md);
   border-radius: 8px;
   position: relative;
@@ -163,7 +265,7 @@ body.crt-off .crt-vignette {
 
 .ascii-box:hover {
   border-color: var(--theme-primary);
-  box-shadow: var(--shadow-hard-lg);
+  box-shadow: var(--shadow-hard-lg), 0 0 16px rgba(255, 215, 0, 0.18);
 }
 
 .ascii-badge {
@@ -173,9 +275,14 @@ body.crt-off .crt-vignette {
   border-radius: 5px;
   border: 1.5px solid var(--theme-border);
   background: var(--theme-surface-raised);
-  color: var(--theme-text-muted);
-  font-weight: 600;
+  color: var(--theme-primary);
+  font-weight: 700;
   letter-spacing: 0.02em;
+}
+
+/* Bordure laser or supérieure */
+.border-laser-gold {
+  border-top: 2px solid var(--theme-primary) !important;
 }
 
 /* Scrollbar sobre et rectangulaire */
@@ -187,12 +294,12 @@ body.crt-off .crt-vignette {
   background: var(--theme-bg);
 }
 ::-webkit-scrollbar-thumb {
-  background: #21262d;
-  border: 1px solid #30363d;
+  background: #162E56;
+  border: 1px solid #1E3A68;
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #30363d;
+  background: #1E3A68;
 }
 
 /* ==================== TOUCHES & BOUTONS TACTILES NUMWORKS ==================== */
@@ -334,18 +441,19 @@ body.theme-gameboy {
 }
 
 body.theme-custom {
-  --theme-bg: #0f172a;
-  --theme-surface: #1e293b;
-  --theme-surface-raised: #334155;
-  --theme-border: #FFBB00;
-  --theme-border-strong: #E5A600;
-  --theme-primary: #FFBB00;
-  --theme-primary-hover: #E5A600;
-  --theme-accent: #fef3c7;
-  --theme-text: #f8fafc;
-  --theme-text-muted: #cbd5e1;
-  --theme-card: #1e293b;
-  background-color: #0f172a !important;
+  --theme-bg: #050B14;
+  --theme-surface: #0D1B36;
+  --theme-surface-raised: #162E56;
+  --theme-border: #FFD700;
+  --theme-border-strong: #FF9100;
+  --theme-primary: #FFD700;
+  --theme-primary-hover: #FF9100;
+  --theme-accent: #FF9100;
+  --theme-accent-blue: #38BDF8;
+  --theme-text: #F8FAFC;
+  --theme-text-muted: #94A3B8;
+  --theme-card: #0D1B36;
+  background-color: #050B14 !important;
 }
 
 body.has-custom-wallpaper::before {
@@ -402,6 +510,7 @@ body.hide-tooltips [data-shortcut-hint] {
   padding: 0.85rem;
   border-radius: 8px;
   border: 1.5px solid var(--theme-border);
+  border-top: 2px solid rgba(255, 215, 0, 0.6);
   background: var(--theme-surface);
   box-shadow: var(--shadow-hard-md);
   cursor: pointer;
@@ -411,19 +520,21 @@ body.hide-tooltips [data-shortcut-hint] {
 }
 
 .gallery-card:hover, .gallery-card.active-hover {
-  transform: translate(-1px, -1px);
+  transform: translate(-1px, -2px);
   border-color: var(--theme-primary);
-  box-shadow: var(--shadow-hard-lg);
+  border-top-color: var(--theme-primary);
+  box-shadow: var(--shadow-hard-lg), 0 0 18px rgba(255, 215, 0, 0.25);
 }
 
 .gallery-card:active {
   transform: translate(2px, 2px);
-  box-shadow: 1px 1px 0px #000000;
+  box-shadow: 1px 1px 0px #02060D;
 }
 
 .gallery-card.is-selected {
-  border-color: #3fb950;
-  box-shadow: 3px 3px 0px #238636;
+  border-color: #FFD700;
+  border-top-color: #FF9100;
+  box-shadow: 3px 3px 0px #02060D, 0 0 16px rgba(255, 215, 0, 0.35);
 }
 
 .gallery-icon-wrapper {
@@ -447,8 +558,8 @@ body.hide-tooltips [data-shortcut-hint] {
 #active-app-dock {
   transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.15s ease;
   background: var(--theme-surface);
-  border: 2px solid var(--theme-border) !important;
-  box-shadow: var(--shadow-hard-lg) !important;
+  border: 2px solid var(--theme-primary) !important;
+  box-shadow: var(--shadow-hard-lg), 0 0 25px rgba(255, 215, 0, 0.3) !important;
   border-radius: 10px;
 }
 
@@ -510,12 +621,12 @@ body.hide-tooltips [data-shortcut-hint] {
   transform: translateY(-1px);
 }
 
-/* ==================== GROS BANDEAU DÉFILANT ROUGE RUBY (BETA) ==================== */
+/* ==================== BANDEAU DÉFILANT SOLAR HORIZON (BETA) ==================== */
 .ruby-beta-banner {
-  background: linear-gradient(90deg, #850e29 0%, #b80d38 25%, #9b111e 50%, #b80d38 75%, #850e29 100%);
-  border-bottom: 2px solid #000000;
-  border-top: 1px solid rgba(255, 255, 255, 0.25);
-  box-shadow: 0 4px 14px rgba(155, 17, 30, 0.45);
+  background: linear-gradient(90deg, #050B14 0%, #0D1B36 20%, #162E56 50%, #0D1B36 80%, #050B14 100%);
+  border-bottom: 2px solid #FFD700;
+  border-top: 1px solid rgba(255, 215, 0, 0.3);
+  box-shadow: 0 4px 18px rgba(255, 215, 0, 0.25);
   overflow: hidden;
   position: relative;
   z-index: 40;
@@ -543,16 +654,16 @@ body.hide-tooltips [data-shortcut-hint] {
 }
 
 .ruby-beta-badge {
-  background-color: #000000;
-  color: #facc15;
-  border: 1.5px solid #facc15;
+  background-color: #050B14;
+  color: #FFD700;
+  border: 1.5px solid #FFD700;
   font-family: 'JetBrains Mono', monospace;
   font-weight: 900;
   font-size: 0.75rem;
   letter-spacing: 0.1em;
   padding: 0.2rem 0.65rem;
   border-radius: 4px;
-  box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.6);
+  box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.8), 0 0 8px rgba(255, 215, 0, 0.3);
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
@@ -563,8 +674,8 @@ body.hide-tooltips [data-shortcut-hint] {
   font-weight: 800;
   font-size: 0.85rem;
   letter-spacing: 0.08em;
-  color: #ffffff;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+  color: #F8FAFC;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
   text-transform: uppercase;
 }
 
@@ -573,14 +684,14 @@ body.hide-tooltips [data-shortcut-hint] {
   font-weight: 600;
   font-size: 0.75rem;
   letter-spacing: 0.05em;
-  color: #fecdd3;
+  color: #FF9100;
   text-transform: uppercase;
 }
 
 .ruby-beta-separator {
-  color: #fda4af;
+  color: #38BDF8;
   font-size: 0.75rem;
-  opacity: 0.75;
+  opacity: 0.85;
 }
 
 @keyframes ruby-marquee {
