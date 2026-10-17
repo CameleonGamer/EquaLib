@@ -45,22 +45,23 @@
     }
   </script>
 
-  <!-- Google Fonts : Outfit & JetBrains Mono -->
+  <!-- Google Fonts : Orbitron & Share Tech Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;800;900&family=Share+Tech+Mono&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-  <!-- Feuille de style Neo-Brutalist Dev avec police Outfit & JetBrains Mono -->
-  <link rel="stylesheet" href="retro_ascii.css?v=60">
+  <!-- Feuille de style Radical Outrun & Solar Synthwave -->
+  <link rel="stylesheet" href="retro_ascii.css?v=62">
 </head>
-<body class="min-h-screen text-[#F8FAFC] bg-[#050B14] flex flex-col justify-between selection:bg-[#FFD700] selection:text-black font-sans">
+<body class="min-h-screen text-[#F8FAFC] bg-[#030814] flex flex-col justify-between selection:bg-[#FFD700] selection:text-black font-sans">
 
   <!-- Effets CRT TV vintage : Lignes de balayage & vignette -->
   <div class="crt-scanlines"></div>
   <div class="crt-vignette"></div>
 
-  <!-- Perspective 3D Solar Grid & Halo d'ambiance -->
+  <!-- Perspective Outrun Grid, Solar Horizon & Halo d'ambiance -->
   <div class="solar-perspective-grid"></div>
+  <div class="solar-horizon-line"></div>
   <div class="solar-ambient-orb"></div>
 
   <!-- Fond interactif de symboles mathématiques et chiffres -->
@@ -99,45 +100,45 @@
   </aside>
 
   <!-- ==================== HEADER OFFICIEL DEV ==================== -->
-  <header class="relative z-20 border-b-2 border-[#1E3A68] bg-[#0D1B36]/90 backdrop-blur-md sticky top-0 shadow-[0_4px_20px_rgba(5,11,20,0.8)]">
+  <header class="relative z-20 border-b-2 border-[#1B3B6F] bg-[#09152B]/95 backdrop-blur-md sticky top-0 shadow-[0_4px_24px_rgba(3,8,20,0.9)]">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
       
       <!-- Logo et Titre avec icône π -->
       <div class="flex items-center gap-3 shrink-0">
         <a href="index.html" class="flex items-center gap-3 group">
-          <div class="relative w-9 h-9 rounded-lg border-2 border-[#FFD700]/50 shadow-[0_0_12px_rgba(255,215,0,0.3)] overflow-hidden shrink-0">
+          <div class="relative w-9 h-9 rounded-none border-2 border-[#FFD700] shadow-[0_0_12px_rgba(255,215,0,0.4)] overflow-hidden shrink-0">
             <img src="assets/logo.png?v=25" alt="EquaLib Pi Logo" class="w-full h-full object-cover">
           </div>
           <div>
             <div class="flex items-center gap-2">
-              <span class="font-extrabold text-base tracking-tight text-white whitespace-nowrap font-ascii">EQUALIB <span class="text-[#FFD700]">π</span></span>
-              <span class="ascii-badge text-[10px] px-1.5 py-0.5 border-[#FFD700]/40 text-[#FFD700] bg-[#FFD700]/10">Linker</span>
+              <span class="font-heading font-extrabold text-base tracking-wider text-white whitespace-nowrap uppercase">EQUALIB <span class="text-[#FFD700] text-glow-gold">π</span></span>
+              <span class="ascii-badge text-[10px] px-1.5 py-0.5 border-[#FFD700] text-[#FFD700] bg-[#FFD700]/10">Linker</span>
             </div>
-            <p class="text-[11px] font-ascii text-[#94A3B8] hidden sm:block whitespace-nowrap">NumWorks N0120 & N0110 • STM32</p>
+            <p class="text-[11px] font-mono text-[#8EA5C8] hidden sm:block whitespace-nowrap">&gt;_ NumWorks N0120 & N0110 • STM32</p>
           </div>
         </a>
       </div>
 
       <!-- Navigation entre Hub et Convertisseur -->
-      <nav class="hidden md:flex items-center gap-1 font-ascii text-xs p-1 bg-[#0A1628]/80 border border-[#1E3A68] rounded-xl shadow-[2px_2px_0px_#050B14] shrink-0">
-        <a href="index.html" class="px-3 py-1.5 rounded-lg text-[#94A3B8] hover:text-[#F8FAFC] hover:bg-[#162E56] transition-all flex items-center gap-1.5 whitespace-nowrap">
+      <nav class="hidden md:flex items-center gap-1 font-mono text-xs p-1 bg-[#030814] border-2 border-[#1B3B6F] rounded-none shadow-[3px_3px_0px_#01040A] shrink-0">
+        <a href="index.html" class="px-3 py-1.5 rounded-none text-[#8EA5C8] hover:text-[#F8FAFC] hover:bg-[#11264B] transition-all flex items-center gap-1.5 whitespace-nowrap uppercase tracking-wider font-bold">
           <span>🎯</span> Hub Apps
         </a>
-        <a href="converter.html" class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-[#FFD700] to-[#FF9100] text-black font-extrabold border border-[#FFD700] shadow-[0_0_10px_rgba(255,215,0,0.35)] flex items-center gap-1.5 whitespace-nowrap">
+        <a href="converter.html" class="px-3 py-1.5 rounded-none bg-gradient-to-r from-[#FFD700] to-[#FF9100] text-black font-extrabold border-2 border-black shadow-[2px_2px_0px_#01040A] flex items-center gap-1.5 whitespace-nowrap uppercase tracking-wider">
           <span>⚡</span> Convertisseur
         </a>
       </nav>
 
       <!-- Outils Son & CRT -->
       <div class="flex items-center gap-2 shrink-0">
-        <div class="flex items-center bg-[#0A1628]/80 border border-[#1E3A68] rounded-xl p-0.5 shadow-[2px_2px_0px_#050B14] shrink-0">
-          <button id="sound-toggle-btn" class="w-8 h-8 rounded-lg hover:bg-[#162E56] text-[#94A3B8] hover:text-[#FFD700] flex items-center justify-center transition-all cursor-pointer text-xs" title="Activer / Désactiver les sons 8-bit">
+        <div class="flex items-center bg-[#030814] border-2 border-[#1B3B6F] rounded-none p-0.5 shadow-[2px_2px_0px_#01040A] shrink-0">
+          <button id="sound-toggle-btn" class="w-8 h-8 rounded-none hover:bg-[#11264B] text-[#8EA5C8] hover:text-[#FFD700] flex items-center justify-center transition-all cursor-pointer text-xs" title="Activer / Désactiver les sons 8-bit">
             <span id="sound-icon">🔊</span>
           </button>
-          <button id="crt-toggle-btn" class="w-8 h-8 rounded-lg hover:bg-[#162E56] text-[#94A3B8] hover:text-[#FFD700] flex items-center justify-center transition-all cursor-pointer text-xs" title="Activer / Désactiver les scanlines CRT">
+          <button id="crt-toggle-btn" class="w-8 h-8 rounded-none hover:bg-[#11264B] text-[#8EA5C8] hover:text-[#FFD700] flex items-center justify-center transition-all cursor-pointer text-xs" title="Activer / Désactiver les scanlines CRT">
             <span id="crt-icon">📺</span>
           </button>
-          <a href="https://github.com/CameleonGamer/EquaLib" target="_blank" class="w-8 h-8 rounded-lg hover:bg-[#162E56] text-[#94A3B8] hover:text-[#FFD700] flex items-center justify-center transition-all text-xs" title="GitHub">
+          <a href="https://github.com/CameleonGamer/EquaLib" target="_blank" class="w-8 h-8 rounded-none hover:bg-[#11264B] text-[#8EA5C8] hover:text-[#FFD700] flex items-center justify-center transition-all text-xs" title="GitHub">
             <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
           </a>
         </div>
@@ -159,11 +160,11 @@
 | |\  |  \  /\  / ____ \| |____ _| |_| |\  | . \| |____| | \ \ 
 |_| \_|   \/  \/_/    \_\______|_____|_| \_|_|\_\______|_|  \_\
       </pre>
-      <h1 class="text-2xl sm:text-3xl font-extrabold text-white tracking-wide">
-        Convertisseur Officiel <span class="text-[#38BDF8]">.nwa</span> vers <span class="text-[#FFD700]">.bin</span>
+      <h1 class="text-2xl sm:text-3xl font-heading font-black text-white tracking-wider uppercase text-glow-gold">
+        Convertisseur Officiel <span class="text-[#00E5FF] text-glow-cyan">.nwa</span> vers <span class="text-[#FFD700] text-glow-gold">.bin</span>
       </h1>
-      <p class="text-xs sm:text-sm text-[#94A3B8] max-w-2xl mx-auto">
-        Transformez n'importe quel objet ELF relogeable NumWorks EADK (<code class="text-[#38BDF8] font-mono">.nwa</code>) en binaire exécutable plat (<code class="text-[#FFD700] font-mono">.bin</code>) prêt à tourner à <strong>60 FPS</strong> sur votre calculatrice !
+      <p class="text-xs sm:text-sm text-[#8EA5C8] max-w-2xl mx-auto font-mono">
+        &gt;_ Transformez n'importe quel objet ELF relogeable NumWorks EADK (<code class="text-[#00E5FF] font-mono">.nwa</code>) en binaire exécutable plat (<code class="text-[#FFD700] font-mono">.bin</code>) prêt à tourner à <strong>60 FPS</strong> sur votre calculatrice !
       </p>
     </div>
 
@@ -171,130 +172,130 @@
     <div class="ascii-box p-6 sm:p-8 space-y-6">
       
       <!-- Zone Drag & Drop -->
-      <div id="drop-zone" class="border-2 border-dashed border-[#1E3A68] hover:border-[#FFD700] bg-[#0A1628]/60 hover:bg-[#FFD700]/5 p-8 rounded-2xl text-center cursor-pointer transition-all group">
+      <div id="drop-zone" class="border-2 border-dashed border-[#1B3B6F] hover:border-[#FFD700] bg-[#030814] hover:bg-[#09152B] p-8 rounded-none text-center cursor-pointer transition-all shadow-[4px_4px_0px_#01040A] group">
         <input type="file" id="nwa-input" class="hidden" accept=".nwa" />
-        <div class="w-16 h-16 mx-auto rounded-2xl bg-[#0D1B36] group-hover:bg-[#162E56] group-hover:scale-110 flex items-center justify-center text-[#FFD700] text-3xl transition-all mb-3 border border-[#1E3A68] group-hover:border-[#FFD700]/50 shadow-[0_0_15px_rgba(255,215,0,0.15)]">
+        <div class="w-16 h-16 mx-auto rounded-none bg-[#09152B] group-hover:bg-[#11264B] group-hover:scale-105 flex items-center justify-center text-[#FFD700] text-3xl transition-all mb-3 border-2 border-[#1B3B6F] group-hover:border-[#FFD700] shadow-[2px_2px_0px_#01040A]">
           📥
         </div>
-        <p class="text-base font-bold text-white group-hover:text-[#FFD700] transition-colors">
-          Glissez-déposez votre fichier <span class="font-mono text-[#38BDF8] bg-[#0D1B36] px-2 py-0.5 rounded border border-[#1E3A68]">.nwa</span> ici
+        <p class="text-base font-heading font-bold text-white group-hover:text-[#FFD700] transition-colors uppercase tracking-wide">
+          Glissez-déposez votre fichier <span class="font-mono text-[#00E5FF] bg-[#09152B] px-2 py-0.5 rounded-none border border-[#1B3B6F]">.nwa</span> ici
         </p>
-        <p class="text-xs text-[#94A3B8] mt-1">Ou cliquez pour parcourir vos fichiers depuis votre ordinateur</p>
+        <p class="text-xs text-[#8EA5C8] font-mono mt-1">&gt;_ Ou cliquez pour parcourir vos fichiers depuis votre ordinateur</p>
       </div>
 
       <!-- Carte d'inspection des Métadonnées ELF (initialement masquée) -->
-      <div id="inspect-card" class="hidden bg-[#0A1628]/90 border border-[#1E3A68] rounded-2xl p-5 space-y-4">
-        <div class="flex items-center justify-between pb-3 border-b border-[#1E3A68]">
+      <div id="inspect-card" class="hidden bg-[#09152B] border-2 border-[#1B3B6F] border-t-4 border-t-[#FFD700] rounded-none p-6 space-y-4 shadow-[5px_5px_0px_#01040A]">
+        <div class="flex items-center justify-between pb-3 border-b-2 border-[#1B3B6F]">
           <div class="flex items-center gap-3">
             <span class="text-2xl">⚡</span>
             <div>
-              <h3 id="app-name-label" class="font-extrabold text-white text-base">Application NWA Détectée</h3>
-              <p id="app-size-label" class="text-xs font-ascii text-[#94A3B8]">Taille : 0 Ko</p>
+              <h3 id="app-name-label" class="font-heading font-extrabold text-white text-base uppercase tracking-wider text-glow-gold">Application NWA Détectée</h3>
+              <p id="app-size-label" class="text-xs font-mono text-[#8EA5C8]">&gt;_ Taille : 0 Ko</p>
             </div>
           </div>
-          <span class="ascii-badge text-emerald-400 border-emerald-500/30 bg-emerald-500/10">ELF ARM32 Valide</span>
+          <span class="ascii-badge text-emerald-400 border-emerald-500/40 bg-emerald-500/10">ELF ARM32 Valide</span>
         </div>
 
         <!-- Détails techniques ASCII -->
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-ascii">
-          <div class="bg-[#0D1B36] p-3 rounded-xl border border-[#1E3A68]">
-            <span class="text-[#94A3B8] block text-[10px]">Sections ELF</span>
-            <span id="sec-count-val" class="font-bold text-[#38BDF8] text-sm">--</span>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono">
+          <div class="bg-[#030814] p-3 rounded-none border-2 border-[#1B3B6F] shadow-[2px_2px_0px_#01040A]">
+            <span class="text-[#8EA5C8] block text-[10px] uppercase">Sections ELF</span>
+            <span id="sec-count-val" class="font-bold text-[#00E5FF] text-sm">--</span>
           </div>
-          <div class="bg-[#0D1B36] p-3 rounded-xl border border-[#1E3A68]">
-            <span class="text-[#94A3B8] block text-[10px]">Icône (.rodata)</span>
+          <div class="bg-[#030814] p-3 rounded-none border-2 border-[#1B3B6F] shadow-[2px_2px_0px_#01040A]">
+            <span class="text-[#8EA5C8] block text-[10px] uppercase">Icône (.rodata)</span>
             <span id="icon-size-val" class="font-bold text-[#c084fc] text-sm">--</span>
           </div>
-          <div class="bg-[#0D1B36] p-3 rounded-xl border border-[#1E3A68]">
-            <span class="text-[#94A3B8] block text-[10px]">Adresse Flash</span>
+          <div class="bg-[#030814] p-3 rounded-none border-2 border-[#1B3B6F] shadow-[2px_2px_0px_#01040A]">
+            <span class="text-[#8EA5C8] block text-[10px] uppercase">Adresse Flash</span>
             <span class="font-bold text-[#FFD700] text-sm font-mono">0x90180000</span>
           </div>
-          <div class="bg-[#0D1B36] p-3 rounded-xl border border-[#1E3A68]">
-            <span class="text-[#94A3B8] block text-[10px]">Adresse RAM</span>
+          <div class="bg-[#030814] p-3 rounded-none border-2 border-[#1B3B6F] shadow-[2px_2px_0px_#01040A]">
+            <span class="text-[#8EA5C8] block text-[10px] uppercase">Adresse RAM</span>
             <span class="font-bold text-emerald-400 text-sm font-mono">0x240118A4</span>
           </div>
         </div>
 
         <!-- Actions de conversion -->
         <div class="flex flex-col sm:flex-row gap-3 pt-2">
-          <button id="convert-btn" class="btn-cyber-gold flex-1 py-3.5 px-6 rounded-xl font-extrabold text-sm shadow-[0_0_20px_rgba(255,215,0,0.35)] flex items-center justify-center gap-2 cursor-pointer">
+          <button id="convert-btn" class="btn-cyber-gold flex-1 py-4 px-6 rounded-none font-heading font-black text-sm uppercase tracking-wider shadow-[4px_4px_0px_#01040A,0_0_20px_rgba(255,215,0,0.35)] border-2 border-black flex items-center justify-center gap-2 cursor-pointer">
             <span>⚙️</span> Lier &amp; Compiler en .bin
           </button>
         </div>
 
         <!-- Progression de la liaison -->
         <div id="link-progress-container" class="hidden space-y-2 pt-2">
-          <div class="flex justify-between text-xs font-ascii">
-            <span id="link-status-text" class="text-[#FFD700]">Liaison WebAssembly en cours...</span>
-            <span class="text-[#94A3B8] animate-pulse">GNU ld.wasm</span>
+          <div class="flex justify-between text-xs font-mono">
+            <span id="link-status-text" class="text-[#FFD700] font-heading uppercase tracking-wide">Liaison WebAssembly en cours...</span>
+            <span class="text-[#8EA5C8] animate-pulse">&gt;_ GNU ld.wasm</span>
           </div>
-          <div class="w-full h-2.5 bg-[#0D1B36] rounded-full overflow-hidden border border-[#1E3A68]">
-            <div id="link-bar" class="h-full bg-gradient-to-r from-[#FFD700] to-[#FF9100] rounded-full transition-all duration-300 w-1/3 animate-pulse"></div>
+          <div class="w-full h-2.5 bg-[#030814] rounded-none overflow-hidden border-2 border-[#1B3B6F]">
+            <div id="link-bar" class="h-full bg-gradient-to-r from-[#FFD700] to-[#FF9100] transition-all duration-300 w-1/3 animate-pulse"></div>
           </div>
         </div>
 
       </div>
 
       <!-- Résultat de conversion réussie (initialement masqué) -->
-      <div id="result-card" class="hidden bg-[#0A1628]/95 border border-[#FFD700]/40 rounded-2xl p-6 space-y-5 shadow-[0_0_25px_rgba(255,215,0,0.15)]">
+      <div id="result-card" class="hidden bg-[#09152B] border-2 border-[#FFD700] border-t-4 border-t-[#FF9100] rounded-none p-6 space-y-5 shadow-[6px_6px_0px_#01040A,0_0_28px_rgba(255,215,0,0.3)]">
         <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xl border border-emerald-500/30">
+          <div class="w-10 h-10 rounded-none bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xl border-2 border-emerald-500/40 shadow-[2px_2px_0px_#01040A]">
             ✓
           </div>
           <div>
-            <h4 class="font-extrabold text-white text-base">Application .bin prête pour NumWorks !</h4>
-            <p id="result-size-text" class="text-xs text-emerald-400 font-ascii">Signature EADK 0xDEC0BEBA valide • Prêt pour Flash</p>
+            <h4 class="font-heading font-extrabold text-white text-base uppercase tracking-wider text-glow-gold">Application .bin prête pour NumWorks !</h4>
+            <p id="result-size-text" class="text-xs text-emerald-400 font-mono">&gt;_ Signature EADK 0xDEC0BEBA valide • Prêt pour Flash</p>
           </div>
         </div>
 
         <!-- Options d'installation claires -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
           <!-- Option 1 : Flash USB Direct (Jeu Seul) -->
-          <div class="p-4 rounded-xl bg-[#0D1B36] border border-[#FFD700]/40 space-y-3 flex flex-col justify-between shadow-[2px_2px_0px_#050B14]">
+          <div class="p-4 rounded-none bg-[#030814] border-2 border-[#FFD700] space-y-3 flex flex-col justify-between shadow-[3px_3px_0px_#01040A]">
             <div class="space-y-1">
-              <span class="text-[10px] uppercase font-bold text-[#FFD700] font-ascii">Option 1 • Recommandé pour jouer seul</span>
-              <h5 class="text-xs font-bold text-white">Installer uniquement ce jeu sur la NumWorks</h5>
-              <p class="text-[11px] text-[#94A3B8] leading-normal">
+              <span class="text-[10px] uppercase font-bold text-[#FFD700] font-mono tracking-wider">&gt;_ Option 1 • Recommandé</span>
+              <h5 class="text-xs font-heading font-bold text-white uppercase tracking-wide">Installer ce jeu seul</h5>
+              <p class="text-[11px] text-[#8EA5C8] font-mono leading-relaxed">
                 Flashe ce jeu directement à la place de l'application externe officielle. Branche ta calculatrice en USB et clique ci-dessous :
               </p>
             </div>
-            <button id="flash-standalone-btn" class="btn-cyber-gold w-full py-3 px-3 rounded-xl font-extrabold text-xs transition-all flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(255,215,0,0.3)] cursor-pointer">
-              <span>⚡</span> Flasher ce jeu seul (USB Direct)
+            <button id="flash-standalone-btn" class="btn-cyber-gold w-full py-3.5 px-3 rounded-none font-heading font-extrabold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 border-2 border-black shadow-[3px_3px_0px_#01040A] cursor-pointer">
+              <span>⚡</span> Flasher ce jeu seul (USB)
             </button>
           </div>
 
           <!-- Option 2 : Ajouter au Pack Multi-Apps EquaLib -->
-          <div class="p-4 rounded-xl bg-[#0D1B36] border border-[#1E3A68] space-y-3 flex flex-col justify-between shadow-[2px_2px_0px_#050B14]">
+          <div class="p-4 rounded-none bg-[#030814] border-2 border-[#1B3B6F] hover:border-[#00E5FF] space-y-3 flex flex-col justify-between shadow-[3px_3px_0px_#01040A]">
             <div class="space-y-1">
-              <span class="text-[10px] uppercase font-bold text-[#38BDF8] font-ascii">Option 2 • Multi-Applications</span>
-              <h5 class="text-xs font-bold text-white">Intégrer dans le Launcher EquaLib</h5>
-              <p class="text-[11px] text-[#94A3B8] leading-normal">
+              <span class="text-[10px] uppercase font-bold text-[#00E5FF] font-mono tracking-wider">&gt;_ Option 2 • Multi-Applications</span>
+              <h5 class="text-xs font-heading font-bold text-white uppercase tracking-wide">Intégrer dans le Launcher</h5>
+              <p class="text-[11px] text-[#8EA5C8] font-mono leading-relaxed">
                 Ajoute ce jeu dans le menu EquaLib avec Mario Kart, Tetris, etc. Il sera relogé automatiquement à son adresse dans le pack.
               </p>
             </div>
-            <button id="send-to-pack-btn" class="w-full py-3 px-3 rounded-xl bg-gradient-to-r from-[#38BDF8] to-[#2563EB] hover:brightness-110 text-white font-extrabold text-xs transition-all flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(56,189,248,0.25)] active:scale-95 cursor-pointer">
-              <span>🎯</span> Ajouter à mon Pack EquaLib
+            <button id="send-to-pack-btn" class="btn-cyber-blue w-full py-3.5 px-3 rounded-none font-heading font-extrabold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 border-2 border-black shadow-[3px_3px_0px_#01040A] cursor-pointer">
+              <span>🎯</span> Ajouter au Pack EquaLib
             </button>
           </div>
         </div>
 
         <!-- Option 3 : Télécharger binaire -->
-        <div class="pt-2 border-t border-[#1E3A68] flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p class="text-[11px] text-[#94A3B8]">
+        <div class="pt-2 border-t-2 border-[#1B3B6F] flex flex-col sm:flex-row items-center justify-between gap-3">
+          <p class="text-[11px] text-[#8EA5C8] font-mono">
             ⚠️ <em>Ne glissez pas de fichier .bin sur my.numworks.com</em> (le site officiel NumWorks n'accepte que les .nwa). Utilisez le bouton Flash USB ci-dessus.
           </p>
-          <button id="download-bin-btn" class="py-2 px-3 rounded-lg bg-[#162E56] hover:bg-[#1E3A68] text-[#F8FAFC] font-medium text-xs border border-[#1E3A68] transition-all flex items-center gap-1.5 shrink-0 cursor-pointer">
-            <span>💾</span> Télécharger .bin (Fichier brut)
+          <button id="download-bin-btn" class="py-2.5 px-3 rounded-none bg-[#11264B] hover:bg-[#1B3B6F] text-[#F8FAFC] font-mono font-bold text-xs uppercase tracking-wide border-2 border-[#1B3B6F] hover:border-[#FFD700] transition-all flex items-center gap-1.5 shrink-0 cursor-pointer shadow-[2px_2px_0px_#01040A]">
+            <span>💾</span> Télécharger .bin (Brut)
           </button>
         </div>
 
         <!-- Barre de progression Flash WebUSB pour le jeu seul -->
-        <div id="standalone-flash-progress-container" class="hidden space-y-2 pt-2 border-t border-[#1E3A68]">
-          <div class="flex justify-between text-xs font-semibold text-[#FFD700]">
-            <span id="standalone-flash-status-text">Connexion à la NumWorks...</span>
+        <div id="standalone-flash-progress-container" class="hidden space-y-2 pt-2 border-t-2 border-[#1B3B6F]">
+          <div class="flex justify-between text-xs font-mono font-semibold text-[#FFD700]">
+            <span id="standalone-flash-status-text" class="font-heading uppercase tracking-wide">Connexion à la NumWorks...</span>
           </div>
-          <div class="w-full h-2.5 bg-[#0D1B36] rounded-full overflow-hidden border border-[#1E3A68]">
-            <div id="standalone-flash-bar" class="h-full bg-gradient-to-r from-[#FFD700] to-[#FF9100] rounded-full transition-all duration-200" style="width: 0%;"></div>
+          <div class="w-full h-2.5 bg-[#030814] rounded-none overflow-hidden border-2 border-[#1B3B6F]">
+            <div id="standalone-flash-bar" class="h-full bg-gradient-to-r from-[#FFD700] to-[#FF9100] transition-all duration-200" style="width: 0%;"></div>
           </div>
         </div>
       </div>
@@ -302,21 +303,21 @@
     </div>
 
     <!-- Section Terminal / CLI locale -->
-    <div class="ascii-box p-6 space-y-4">
-      <div class="flex items-center justify-between pb-2 border-b border-[#1E3A68]">
-        <h3 class="text-sm font-extrabold text-white flex items-center gap-2">
+    <div class="ascii-box p-6 space-y-4 rounded-none bg-[#09152B] border-2 border-[#1B3B6F] border-t-4 border-t-[#00E5FF] shadow-[5px_5px_0px_#01040A]">
+      <div class="flex items-center justify-between pb-2 border-b-2 border-[#1B3B6F]">
+        <h3 class="text-sm font-heading font-extrabold text-white flex items-center gap-2 uppercase tracking-wider text-glow-cyan">
           <span>💻</span> Méthode Ligne de Commande Locale (CLI)
         </h3>
-        <span class="ascii-badge">Option Développeur</span>
+        <span class="ascii-badge text-[#00E5FF] border-[#00E5FF]/40">Option Développeur</span>
       </div>
 
-      <p class="text-xs text-[#94A3B8]">
-        Si vous préférez convertir votre fichier localement dans votre terminal VSCode ou PowerShell, utilisez la commande suivante :
+      <p class="text-xs text-[#8EA5C8] font-mono">
+        &gt;_ Si vous préférez convertir votre fichier localement dans votre terminal VSCode ou PowerShell, utilisez la commande suivante :
       </p>
 
-      <div class="bg-[#050B14] p-4 rounded-xl border border-[#1E3A68] flex items-center justify-between font-ascii text-xs text-[#FFD700] overflow-x-auto">
-        <code id="cli-cmd-text">node tools/convert_nwa_to_bin.js mon_application.nwa</code>
-        <button id="copy-cmd-btn" class="ml-3 px-3 py-1 rounded-lg bg-[#162E56] hover:bg-[#1E3A68] text-[#F8FAFC] border border-[#1E3A68] text-xs shrink-0 transition-colors cursor-pointer">
+      <div class="bg-[#030814] p-4 rounded-none border-2 border-[#1B3B6F] flex items-center justify-between font-mono text-xs text-[#FFD700] overflow-x-auto shadow-[3px_3px_0px_#01040A]">
+        <code id="cli-cmd-text">&gt;_ node tools/convert_nwa_to_bin.js mon_application.nwa</code>
+        <button id="copy-cmd-btn" class="ml-3 px-3.5 py-1.5 rounded-none bg-[#11264B] hover:bg-[#1B3B6F] text-[#F8FAFC] border-2 border-[#1B3B6F] hover:border-[#FFD700] font-heading font-bold text-xs uppercase tracking-wider shrink-0 transition-colors cursor-pointer shadow-[2px_2px_0px_#01040A]">
           Copier
         </button>
       </div>
@@ -325,15 +326,15 @@
   </main>
 
   <!-- ==================== FOOTER ==================== -->
-  <footer class="relative z-20 border-t border-[#1E3A68] bg-[#050B14] py-6 text-center text-xs text-[#94A3B8]">
+  <footer class="relative z-20 border-t-2 border-[#1B3B6F] bg-[#030814] py-6 text-center text-xs text-[#8EA5C8] font-mono">
     <div class="max-w-7xl mx-auto px-4 flex flex-wrap items-center justify-between gap-3">
-      <div class="flex items-center gap-2 text-[#94A3B8]">
-        <span>EquaLib Studio</span>
+      <div class="flex items-center gap-2 text-[#8EA5C8]">
+        <span class="font-heading font-bold text-[#FFD700] uppercase tracking-wider">EquaLib Linker π</span>
         <span>•</span>
-        <span>CameleonGamer & Gemini (Google DeepMind)</span>
+        <span>CameleonGamer &amp; Gemini (Google DeepMind)</span>
       </div>
-      <div class="font-ascii text-slate-500">
-        [ Model: NumWorks N0120 & N0110 • STM32H725 @ 550MHz ]
+      <div class="font-mono text-[#00E5FF] font-bold">
+        &gt;_ [ Model: NumWorks N0120 &amp; N0110 • STM32H725 @ 550MHz ]
       </div>
     </div>
   </footer>

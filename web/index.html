@@ -44,13 +44,13 @@
     }
   </script>
 
-  <!-- Google Fonts : Outfit & JetBrains Mono -->
+  <!-- Google Fonts : Orbitron & Share Tech Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;800;900&family=Share+Tech+Mono&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-  <!-- Feuille de style Solar Cyber & Midnight Navy -->
-  <link rel="stylesheet" href="retro_ascii.css?v=61">
+  <!-- Feuille de style Radical Outrun & Solar Synthwave -->
+  <link rel="stylesheet" href="retro_ascii.css?v=62">
 
   <style>
     /* Écran NumWorks rétro */
@@ -60,14 +60,15 @@
     }
   </style>
 </head>
-<body class="min-h-full flex flex-col antialiased selection:bg-[#FFD700] selection:text-black relative bg-[#050B14] text-[#F8FAFC]">
+<body class="min-h-full flex flex-col antialiased selection:bg-[#FFD700] selection:text-black relative bg-[#030814] text-[#F8FAFC]">
 
   <!-- Effets CRT TV vintage : Lignes de balayage & vignette -->
   <div class="crt-scanlines"></div>
   <div class="crt-vignette"></div>
 
-  <!-- Perspective Grid & Solar Ambient Glow -->
+  <!-- Perspective Outrun Grid, Solar Horizon & Ambient Glow -->
   <div class="solar-perspective-grid"></div>
+  <div class="solar-horizon-line"></div>
   <div class="solar-ambient-orb"></div>
 
   <!-- Fond interactif de symboles mathématiques et chiffres -->
@@ -186,65 +187,66 @@
     </div>
   </header>
 
-  <!-- ==================== BANNIÈRE HERO SOLAR CYBER & MIDNIGHT NAVY ==================== -->
-  <section class="relative z-10 border-b-2 border-[#1E3A68] bg-[#0D1B36]/85 backdrop-blur py-8 shadow-[0_4px_16px_rgba(2,6,13,0.7)]">
+  <!-- ==================== BANNIÈRE HERO SOLAR SYNTHWAVE & MIDNIGHT NAVY ==================== -->
+  <section class="relative z-10 border-b-2 border-[#1B3B6F] bg-[#09152B]/90 backdrop-blur py-8 shadow-[0_4px_25px_rgba(1,4,10,0.85)]">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
         
         <!-- Texte de présentation -->
         <div class="lg:col-span-7 space-y-4">
-          <div class="inline-flex items-center gap-2 px-2.5 py-1 rounded border border-[#FFD700]/40 bg-[#050B14] text-[#FFD700] font-mono text-xs font-bold shadow-[2px_2px_0px_#02060D]">
-            <span>⚡</span> NUMWORKS N0120 & N0110 • EADK NATIVE HUB
+          <div class="inline-flex items-center gap-2 px-3 py-1.5 border-2 border-[#FFD700] bg-[#030814] text-[#FFD700] font-mono text-xs font-bold tracking-wider shadow-[3px_3px_0px_#01040A]">
+            <span class="animate-pulse">⚡</span>
+            <span>&gt;_ NUMWORKS N0120 &amp; N0110 // EADK NATIVE HUB v3.5</span>
           </div>
-          <h2 class="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#F8FAFC] tracking-tight leading-snug">
-            Toutes vos applications et jeux dans <span class="text-[#FFD700] underline decoration-[#FF9100]/50 underline-offset-4">un seul lanceur</span>.
+          <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black text-white font-orbitron tracking-wide leading-tight uppercase">
+            Toutes vos applications et jeux dans <span class="bg-gradient-to-r from-[#FFD700] via-[#FF9100] to-[#FF4500] bg-clip-text text-transparent drop-shadow-[0_0_20px_rgba(255,215,0,0.6)]">un seul lanceur</span>.
           </h2>
-          <p class="text-xs sm:text-sm text-[#94A3B8] leading-relaxed max-w-2xl">
-            Sur les calculatrices NumWorks (N0120 & N0110), le système Epsilon n'autorise qu'un seul emplacement pour application externe. 
-            <strong>EquaLib contourne cette limitation</strong> en fournissant un lanceur modulaire autonome tout-en-un avec jeux natifs 60 FPS, outils scientifiques et fiches de révision.
+          <p class="text-xs sm:text-sm text-[#8EA5C8] leading-relaxed max-w-2xl font-mono">
+            Sur les calculatrices NumWorks (N0120 &amp; N0110), le système Epsilon n'autorise qu'un seul emplacement pour application externe. 
+            <strong class="text-[#FFD700]">EquaLib contourne cette limitation</strong> en fournissant un lanceur modulaire autonome tout-en-un avec jeux natifs 60 FPS, outils scientifiques et fiches de révision.
           </p>
 
           <!-- Badges des points forts -->
-          <div class="pt-1 flex flex-wrap gap-2">
-            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded border border-[#1E3A68] bg-[#050B14] text-xs font-mono text-[#F8FAFC] shadow-[1px_1px_0px_#02060D]">
+          <div class="pt-1 flex flex-wrap gap-2 font-mono">
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 border-2 border-[#1B3B6F] hover:border-[#FFD700] bg-[#030814] text-xs font-bold text-[#F8FAFC] shadow-[2px_2px_0px_#01040A] uppercase tracking-wider transition-colors">
               🏎️ Mario Kart 3D
             </span>
-            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded border border-[#1E3A68] bg-[#050B14] text-xs font-mono text-[#F8FAFC] shadow-[1px_1px_0px_#02060D]">
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 border-2 border-[#1B3B6F] hover:border-[#FFD700] bg-[#030814] text-xs font-bold text-[#F8FAFC] shadow-[2px_2px_0px_#01040A] uppercase tracking-wider transition-colors">
               🧪 Tableau Périodique (118 élém.)
             </span>
-            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded border border-[#1E3A68] bg-[#050B14] text-xs font-mono text-[#F8FAFC] shadow-[1px_1px_0px_#02060D]">
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 border-2 border-[#1B3B6F] hover:border-[#FFD700] bg-[#030814] text-xs font-bold text-[#F8FAFC] shadow-[2px_2px_0px_#01040A] uppercase tracking-wider transition-colors">
               📚 Fiches Révision Maths/Sc.
             </span>
-            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded border border-[#1E3A68] bg-[#050B14] text-xs font-mono text-[#F8FAFC] shadow-[1px_1px_0px_#02060D]">
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 border-2 border-[#1B3B6F] hover:border-[#FFD700] bg-[#030814] text-xs font-bold text-[#F8FAFC] shadow-[2px_2px_0px_#01040A] uppercase tracking-wider transition-colors">
               🕹️ Jeux Natifs 60 FPS
             </span>
-            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded border border-[#FFD700]/40 bg-[#050B14] text-xs font-mono text-[#FFD700] shadow-[1px_1px_0px_#02060D]">
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 border-2 border-[#FFD700] bg-[#030814] text-xs font-bold text-[#FFD700] shadow-[2px_2px_0px_#01040A] uppercase tracking-wider">
               ⚡ Flash USB 1-Clic
             </span>
           </div>
 
           <!-- Parcours guidé en 3 étapes -->
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-2">
-            <div class="p-2.5 rounded bg-[#050B14] border border-[#1E3A68] border-t-2 border-t-[#FFD700] shadow-[2px_2px_0px_#02060D]">
-              <div class="flex items-center gap-1.5 font-mono font-bold text-[11px] text-[#FFD700]">
-                <span class="w-4 h-4 rounded-full bg-[#FFD700] text-black text-[9px] font-extrabold flex items-center justify-center">1</span>
+            <div class="p-3 bg-[#030814] border-2 border-[#1B3B6F] border-t-4 border-t-[#FFD700] shadow-[3px_3px_0px_#01040A] transition-all hover:border-[#FFD700]">
+              <div class="flex items-center gap-2 font-orbitron font-bold text-xs text-[#FFD700] uppercase tracking-wider">
+                <span class="w-5 h-5 bg-[#FFD700] text-black text-[10px] font-black flex items-center justify-center">1</span>
                 <span>Choisissez</span>
               </div>
-              <p class="text-[11px] font-mono text-[#94A3B8] mt-1">Sélectionnez vos jeux natifs, cours et outils dans le catalogue.</p>
+              <p class="text-[11px] font-mono text-[#8EA5C8] mt-1.5">Sélectionnez vos jeux natifs, cours et outils dans le catalogue.</p>
             </div>
-            <div class="p-2.5 rounded bg-[#050B14] border border-[#1E3A68] border-t-2 border-t-[#FF9100] shadow-[2px_2px_0px_#02060D]">
-              <div class="flex items-center gap-1.5 font-mono font-bold text-[11px] text-[#FF9100]">
-                <span class="w-4 h-4 rounded-full bg-[#FF9100] text-black text-[9px] font-extrabold flex items-center justify-center">2</span>
+            <div class="p-3 bg-[#030814] border-2 border-[#1B3B6F] border-t-4 border-t-[#FF9100] shadow-[3px_3px_0px_#01040A] transition-all hover:border-[#FF9100]">
+              <div class="flex items-center gap-2 font-orbitron font-bold text-xs text-[#FF9100] uppercase tracking-wider">
+                <span class="w-5 h-5 bg-[#FF9100] text-black text-[10px] font-black flex items-center justify-center">2</span>
                 <span>Personnalisez</span>
               </div>
-              <p class="text-[11px] font-mono text-[#94A3B8] mt-1">Choisissez votre thème couleur et mode d'affichage.</p>
+              <p class="text-[11px] font-mono text-[#8EA5C8] mt-1.5">Choisissez votre thème couleur et mode d'affichage.</p>
             </div>
-            <div class="p-2.5 rounded bg-[#050B14] border border-[#1E3A68] border-t-2 border-t-[#38BDF8] shadow-[2px_2px_0px_#02060D]">
-              <div class="flex items-center gap-1.5 font-mono font-bold text-[11px] text-[#38BDF8]">
-                <span class="w-4 h-4 rounded-full bg-[#38BDF8] text-black text-[9px] font-extrabold flex items-center justify-center">3</span>
+            <div class="p-3 bg-[#030814] border-2 border-[#1B3B6F] border-t-4 border-t-[#00E5FF] shadow-[3px_3px_0px_#01040A] transition-all hover:border-[#00E5FF]">
+              <div class="flex items-center gap-2 font-orbitron font-bold text-xs text-[#00E5FF] uppercase tracking-wider">
+                <span class="w-5 h-5 bg-[#00E5FF] text-black text-[10px] font-black flex items-center justify-center">3</span>
                 <span>Flashez</span>
               </div>
-              <p class="text-[11px] font-mono text-[#94A3B8] mt-1">Branchez votre NumWorks en USB et installez en 1 clic.</p>
+              <p class="text-[11px] font-mono text-[#8EA5C8] mt-1.5">Branchez votre NumWorks en USB et installez en 1 clic.</p>
             </div>
           </div>
         </div>
@@ -368,33 +370,33 @@
 
   <!-- ==================== BARRE DE CONTRÔLE RAPIDE : THÈMES EN 1-CLIC & VUE GALERIE ==================== -->
   <section class="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-4 mb-2">
-    <div class="bg-[#0D1B36] p-2.5 rounded-lg border-2 border-[#1E3A68] border-t-2 border-t-[#FFD700] shadow-[3px_3px_0px_#02060D] flex flex-col md:flex-row md:items-center justify-between gap-3">
+    <div class="bg-[#09152B] p-2.5 border-2 border-[#1B3B6F] border-t-4 border-t-[#FFD700] shadow-[4px_4px_0px_#01040A] flex flex-col md:flex-row md:items-center justify-between gap-3">
       <!-- 1. Presets de thèmes directs en 1-clic -->
       <div class="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0" id="quick-themes-container">
-        <span class="text-xs font-mono font-extrabold text-[#F8FAFC] flex items-center gap-1.5 shrink-0 px-1">
+        <span class="text-xs font-mono font-extrabold text-[#FFD700] flex items-center gap-1.5 shrink-0 px-1 tracking-wider uppercase">
           <span>🎨</span> Thèmes :
         </span>
-        <button class="quick-theme-pill px-2.5 py-1 rounded text-xs font-mono font-bold border border-[#FFD700] bg-[#050B14] text-[#FFD700] shadow-[1px_1px_0px_#02060D] cursor-pointer shrink-0" data-theme="default">⚡ NumWorks</button>
-        <button class="quick-theme-pill px-2.5 py-1 rounded text-xs font-mono font-bold border border-[#1E3A68] hover:border-pink-400 bg-[#050B14] text-pink-300 shadow-[1px_1px_0px_#02060D] cursor-pointer shrink-0" data-theme="sakura">🌸 Sakura</button>
-        <button class="quick-theme-pill px-2.5 py-1 rounded text-xs font-mono font-bold border border-[#1E3A68] hover:border-cyan-400 bg-[#050B14] text-cyan-300 shadow-[1px_1px_0px_#02060D] cursor-pointer shrink-0" data-theme="hacker">💻 Hacker</button>
-        <button class="quick-theme-pill px-2.5 py-1 rounded text-xs font-mono font-bold border border-[#1E3A68] hover:border-amber-400 bg-[#050B14] text-amber-300 shadow-[1px_1px_0px_#02060D] cursor-pointer shrink-0" data-theme="bee">🐝 Abeille</button>
-        <button class="quick-theme-pill px-2.5 py-1 rounded text-xs font-mono font-bold border border-[#1E3A68] hover:border-red-400 bg-[#050B14] text-red-300 shadow-[1px_1px_0px_#02060D] cursor-pointer shrink-0" data-theme="mario">🍄 Mario</button>
-        <button class="quick-theme-pill px-2.5 py-1 rounded text-xs font-mono font-bold border border-[#1E3A68] hover:border-lime-400 bg-[#050B14] text-lime-300 shadow-[1px_1px_0px_#02060D] cursor-pointer shrink-0" data-theme="gameboy">🕹️ GameBoy</button>
-        <button class="quick-theme-pill px-2.5 py-1 rounded text-xs font-mono font-bold border border-[#1E3A68] hover:border-[#FFD700] bg-[#050B14] text-[#FFD700] shadow-[1px_1px_0px_#02060D] cursor-pointer shrink-0" data-theme="custom" title="Thème Custom (Mon Fond)">🎨 Custom</button>
+        <button class="quick-theme-pill px-2.5 py-1 text-xs font-mono font-bold border-2 border-[#FFD700] bg-[#030814] text-[#FFD700] shadow-[2px_2px_0px_#01040A] cursor-pointer shrink-0 uppercase tracking-wider" data-theme="default">⚡ NumWorks</button>
+        <button class="quick-theme-pill px-2.5 py-1 text-xs font-mono font-bold border-2 border-[#1B3B6F] hover:border-pink-400 bg-[#030814] text-pink-300 shadow-[2px_2px_0px_#01040A] cursor-pointer shrink-0 uppercase tracking-wider" data-theme="sakura">🌸 Sakura</button>
+        <button class="quick-theme-pill px-2.5 py-1 text-xs font-mono font-bold border-2 border-[#1B3B6F] hover:border-cyan-400 bg-[#030814] text-cyan-300 shadow-[2px_2px_0px_#01040A] cursor-pointer shrink-0 uppercase tracking-wider" data-theme="hacker">💻 Hacker</button>
+        <button class="quick-theme-pill px-2.5 py-1 text-xs font-mono font-bold border-2 border-[#1B3B6F] hover:border-amber-400 bg-[#030814] text-amber-300 shadow-[2px_2px_0px_#01040A] cursor-pointer shrink-0 uppercase tracking-wider" data-theme="bee">🐝 Abeille</button>
+        <button class="quick-theme-pill px-2.5 py-1 text-xs font-mono font-bold border-2 border-[#1B3B6F] hover:border-red-400 bg-[#030814] text-red-300 shadow-[2px_2px_0px_#01040A] cursor-pointer shrink-0 uppercase tracking-wider" data-theme="mario">🍄 Mario</button>
+        <button class="quick-theme-pill px-2.5 py-1 text-xs font-mono font-bold border-2 border-[#1B3B6F] hover:border-lime-400 bg-[#030814] text-lime-300 shadow-[2px_2px_0px_#01040A] cursor-pointer shrink-0 uppercase tracking-wider" data-theme="gameboy">🕹️ GameBoy</button>
+        <button class="quick-theme-pill px-2.5 py-1 text-xs font-mono font-bold border-2 border-[#1B3B6F] hover:border-[#FFD700] bg-[#030814] text-[#FFD700] shadow-[2px_2px_0px_#01040A] cursor-pointer shrink-0 uppercase tracking-wider" data-theme="custom" title="Thème Custom (Mon Fond)">🎨 Custom</button>
       </div>
 
       <!-- 2. Mode Galerie carrée / Mode Liste & Bouton Paramètres -->
       <div class="flex items-center gap-2.5 shrink-0 justify-between md:justify-end">
-        <div class="flex items-center gap-1 bg-[#050B14] p-0.5 rounded border border-[#1E3A68] shadow-[1px_1px_0px_#02060D]">
-          <button id="quick-view-gallery-btn" class="px-2.5 py-1 rounded text-xs font-mono font-bold bg-[#FFD700] text-black border border-black flex items-center gap-1.5 cursor-pointer shadow-[1px_1px_0px_#02060D]" title="Mode Galerie (Tuiles carrées)">
+        <div class="flex items-center gap-1 bg-[#030814] p-0.5 border border-[#1B3B6F] shadow-[1px_1px_0px_#01040A]">
+          <button id="quick-view-gallery-btn" class="px-2.5 py-1 text-xs font-mono font-bold bg-[#FFD700] text-black border border-black flex items-center gap-1.5 cursor-pointer shadow-[1px_1px_0px_#01040A] uppercase tracking-wider" title="Mode Galerie (Tuiles carrées)">
             <span>⏹️</span> Galerie
           </button>
-          <button id="quick-view-list-btn" class="px-2.5 py-1 rounded text-xs font-mono font-semibold text-[#94A3B8] hover:text-[#F8FAFC] flex items-center gap-1.5 cursor-pointer" title="Mode Liste">
+          <button id="quick-view-list-btn" class="px-2.5 py-1 text-xs font-mono font-semibold text-[#8EA5C8] hover:text-[#F8FAFC] flex items-center gap-1.5 cursor-pointer uppercase tracking-wider" title="Mode Liste">
             <span>☰</span> Liste
           </button>
         </div>
 
-        <button id="quick-settings-btn" class="px-3 py-1.5 rounded bg-[#162E56] hover:bg-[#1E3A68] text-[#F8FAFC] border-2 border-black text-xs font-mono font-bold flex items-center gap-1.5 cursor-pointer shadow-[2px_2px_0px_#02060D] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none" title="Personnalisation avancée & Roue chromatique">
+        <button id="quick-settings-btn" class="px-3.5 py-1.5 bg-[#11264B] hover:bg-[#1B3B6F] text-[#F8FAFC] border-2 border-[#FFD700] text-xs font-mono font-bold flex items-center gap-1.5 cursor-pointer shadow-[3px_3px_0px_#01040A] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none uppercase tracking-wider" title="Personnalisation avancée & Roue chromatique">
           <span>⚙️</span> Options
         </button>
       </div>
@@ -411,22 +413,22 @@
       <div class="lg:col-span-7 space-y-5">
         
         <!-- Barre d'onglets Catalogue, Recherche Web, Studio Fond & Import -->
-        <div class="flex items-center gap-1.5 p-1 bg-[#0D1B36] border-2 border-[#1E3A68] border-t-2 border-t-[#FFD700] rounded-lg shadow-[3px_3px_0px_#02060D]">
-          <button id="tab-btn-catalog" class="flex-1 py-1.5 px-2.5 rounded text-xs font-mono font-bold transition-all bg-[#FFD700] text-black border border-black shadow-[1px_1px_0px_#02060D] flex items-center justify-center gap-1.5 cursor-pointer">
+        <div class="flex items-center gap-1.5 p-1 bg-[#09152B] border-2 border-[#1B3B6F] border-t-3 border-t-[#FFD700] shadow-[3px_3px_0px_#01040A]">
+          <button id="tab-btn-catalog" class="flex-1 py-1.5 px-2.5 text-xs font-mono font-bold transition-all bg-[#FFD700] text-black border border-black shadow-[1px_1px_0px_#01040A] flex items-center justify-center gap-1.5 cursor-pointer uppercase tracking-wider">
             <span>📦</span>
             <span>Apps</span>
           </button>
-          <button id="tab-btn-search" class="flex-1 py-1.5 px-2.5 rounded text-xs font-mono font-bold transition-all text-[#94A3B8] hover:text-[#F8FAFC] hover:bg-[#162E56] flex items-center justify-center gap-1.5 cursor-pointer">
+          <button id="tab-btn-search" class="flex-1 py-1.5 px-2.5 text-xs font-mono font-bold transition-all text-[#8EA5C8] hover:text-[#F8FAFC] hover:bg-[#11264B] flex items-center justify-center gap-1.5 cursor-pointer uppercase tracking-wider">
             <span>🌐</span>
             <span>Web (.nws)</span>
-            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+            <span class="w-1.5 h-1.5 bg-emerald-400"></span>
           </button>
-          <button id="tab-btn-wallpaper" class="flex-1 py-1.5 px-2.5 rounded text-xs font-mono font-bold transition-all text-[#94A3B8] hover:text-[#F8FAFC] hover:bg-[#162E56] flex items-center justify-center gap-1.5 cursor-pointer" title="Studio Thème & Fond d'écran 320x240">
+          <button id="tab-btn-wallpaper" class="flex-1 py-1.5 px-2.5 text-xs font-mono font-bold transition-all text-[#8EA5C8] hover:text-[#F8FAFC] hover:bg-[#11264B] flex items-center justify-center gap-1.5 cursor-pointer uppercase tracking-wider" title="Studio Thème & Fond d'écran 320x240">
             <span>🎨</span>
             <span>Studio Fond</span>
-            <span class="text-[9px] px-1 py-0.2 rounded bg-amber-400/20 text-[#FFD700] border border-amber-400/40">Nouveau</span>
+            <span class="text-[9px] px-1 py-0.2 bg-amber-400/20 text-[#FFD700] border border-amber-400/40">New</span>
           </button>
-          <button id="tab-btn-import" class="flex-1 py-1.5 px-2.5 rounded text-xs font-mono font-bold transition-all text-[#94A3B8] hover:text-[#F8FAFC] hover:bg-[#162E56] flex items-center justify-center gap-1.5 cursor-pointer">
+          <button id="tab-btn-import" class="flex-1 py-1.5 px-2.5 text-xs font-mono font-bold transition-all text-[#8EA5C8] hover:text-[#F8FAFC] hover:bg-[#11264B] flex items-center justify-center gap-1.5 cursor-pointer uppercase tracking-wider">
             <span>🔗</span>
             <span>Importer</span>
           </button>
@@ -435,16 +437,16 @@
         <!-- ================= ONGLET 1 : CATALOGUE PRINCIPAL ================= -->
         <div id="tab-view-catalog" class="space-y-4">
           <!-- Filtres par catégorie -->
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#0D1B36] p-3 rounded-lg border-2 border-[#1E3A68] border-t-2 border-t-[#FFD700] shadow-[3px_3px_0px_#02060D]">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#09152B] p-3 border-2 border-[#1B3B6F] border-t-3 border-t-[#FFD700] shadow-[3px_3px_0px_#01040A]">
             <div>
-              <h3 class="font-extrabold text-xs text-[#F8FAFC] flex items-center gap-2 font-mono uppercase tracking-wider">
+              <h3 class="font-extrabold text-xs text-[#F8FAFC] flex items-center gap-2 font-orbitron uppercase tracking-wider">
                 <span>⚡</span> Catalogue Applications
               </h3>
-              <p class="text-[11px] text-[#94A3B8] font-mono">Pré-optimisées pour STM32H725</p>
+              <p class="text-[11px] text-[#8EA5C8] font-mono">&gt;_ Optimisées pour STM32H725</p>
             </div>
 
-            <div class="flex items-center gap-1 overflow-x-auto pb-1 sm:pb-0" id="category-filters">
-              <button class="cat-pill active px-2.5 py-1 rounded text-xs font-mono font-bold bg-[#FFD700] text-black border border-black shadow-[1px_1px_0px_#02060D] transition-all cursor-pointer" data-category="ALL">
+            <div class="flex items-center gap-1 overflow-x-auto pb-1 sm:pb-0 font-mono" id="category-filters">
+              <button class="cat-pill active px-2.5 py-1 text-xs font-bold bg-[#FFD700] text-black border border-black shadow-[1px_1px_0px_#01040A] transition-all cursor-pointer uppercase tracking-wider" data-category="ALL">
                 Toutes
               </button>
               <button class="cat-pill px-2.5 py-1 rounded text-xs font-mono font-semibold bg-[#050B14] hover:bg-[#162E56] text-[#94A3B8] hover:text-[#F8FAFC] border border-[#1E3A68] transition-all cursor-pointer" data-category="Jeux / Arcade">
@@ -595,23 +597,23 @@
             </p>
 
             <div class="flex flex-col sm:flex-row gap-2">
-              <input type="url" id="import-url-input" placeholder="https://raw.githubusercontent.com/.../app.nws" class="flex-1 bg-[#050B14] border-2 border-[#1E3A68] focus:border-[#FFD700] text-xs font-mono text-[#F8FAFC] rounded-lg px-3 py-2 placeholder:text-[#94A3B8]">
-              <button id="import-url-btn" class="px-3.5 py-2 rounded bg-[#FFD700] hover:bg-[#FF9100] text-black font-extrabold text-xs transition-all border-2 border-black shadow-[2px_2px_0px_#02060D] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none shrink-0 flex items-center justify-center gap-1.5 cursor-pointer font-mono">
+              <input type="url" id="import-url-input" placeholder="https://raw.githubusercontent.com/.../app.nws" class="flex-1 bg-[#030814] border-2 border-[#1B3B6F] focus:border-[#FFD700] text-xs font-mono text-[#F8FAFC] rounded-none px-3 py-2 placeholder:text-[#8EA5C8]">
+              <button id="import-url-btn" class="px-3.5 py-2 rounded-none bg-[#FFD700] hover:bg-[#FF9100] text-black font-extrabold text-xs transition-all border-2 border-black shadow-[2px_2px_0px_#01040A] active:translate-x-[1px] active:translate-y-[1px] shrink-0 flex items-center justify-center gap-1.5 cursor-pointer font-mono uppercase">
                 <span>⬇️</span> Télécharger & Ajouter
               </button>
             </div>
           </div>
 
           <!-- Zone de Glisser-Déposer Personnalisée -->
-          <div id="drop-zone" class="border-2 border-dashed border-[#1E3A68] hover:border-[#FFD700] bg-[#0D1B36] hover:bg-[#162E56] p-6 rounded-lg text-center cursor-pointer transition-all shadow-[3px_3px_0px_#02060D] group">
+          <div id="drop-zone" class="border-2 border-dashed border-[#1B3B6F] hover:border-[#FFD700] bg-[#09152B] hover:bg-[#11264B] p-6 rounded-none text-center cursor-pointer transition-all shadow-[4px_4px_0px_#01040A] group">
             <input type="file" id="file-input" class="hidden" accept=".bin,.nwa,.nws,.py,.json,.txt" multiple>
-            <div class="w-10 h-10 mx-auto rounded border border-[#1E3A68] bg-[#050B14] flex items-center justify-center text-xl transition-all mb-2">
+            <div class="w-10 h-10 mx-auto rounded-none border-2 border-[#1B3B6F] bg-[#030814] flex items-center justify-center text-xl transition-all mb-2 shadow-[2px_2px_0px_#01040A]">
               📥
             </div>
             <p class="text-xs font-mono font-bold text-[#F8FAFC]">
-              Glissez-déposez vos fichiers <span class="text-emerald-400">.bin</span>, <span class="text-[#FFD700]">.nwa</span> ou <span class="text-[#38BDF8]">.nws</span>
+              Glissez-déposez vos fichiers <span class="text-emerald-400">.bin</span>, <span class="text-[#FFD700]">.nwa</span> ou <span class="text-[#00E5FF]">.nws</span>
             </p>
-            <p class="text-[11px] text-[#94A3B8] font-mono mt-0.5">Exécutables natifs ARM Cortex-M7 ou scripts Python</p>
+            <p class="text-[11px] text-[#8EA5C8] font-mono mt-0.5">&gt;_ Exécutables natifs ARM Cortex-M7 ou scripts Python</p>
           </div>
         </div>
 
@@ -626,64 +628,64 @@
       <div class="lg:col-span-5 space-y-5">
 
         <!-- Carte de configuration du Pack -->
-        <div class="bg-[#0D1B36] border-2 border-[#1E3A68] border-t-2 border-t-[#FFD700] rounded-lg p-5 shadow-[4px_4px_0px_#02060D] space-y-4">
+        <div class="bg-[#09152B] border-2 border-[#1B3B6F] border-t-4 border-t-[#FFD700] rounded-none p-5 shadow-[5px_5px_0px_#01040A] space-y-4">
           
-          <div class="flex items-center justify-between pb-3 border-b-2 border-[#1E3A68]">
+          <div class="flex items-center justify-between pb-3 border-b-2 border-[#1B3B6F]">
             <div>
-              <h3 class="font-extrabold text-sm text-[#F8FAFC] flex items-center gap-2 font-mono uppercase tracking-wider">
+              <h3 class="font-heading font-extrabold text-sm text-[#F8FAFC] flex items-center gap-2 uppercase tracking-wider text-glow-gold">
                 <span>🎯</span> Votre Pack EquaLib
               </h3>
-              <p class="text-[11px] text-[#94A3B8] font-mono">Applications chargées dans le Hub</p>
+              <p class="text-[11px] text-[#8EA5C8] font-mono">&gt;_ Applications chargées dans le Hub</p>
             </div>
             <div class="flex items-center gap-1.5">
-              <button id="btn-pack-defaults" class="text-[10px] text-[#FFD700] hover:text-black hover:bg-[#FFD700] font-mono font-bold px-2 py-1 rounded bg-[#050B14] border border-[#1E3A68] transition-all cursor-pointer shadow-[1px_1px_0px_#02060D]" title="Restaurer la sélection recommandée">↺ Défaut</button>
-              <button id="btn-pack-clear" class="text-[10px] text-red-400 hover:text-white hover:bg-red-600 font-mono font-bold px-2 py-1 rounded bg-[#050B14] border border-[#1E3A68] transition-all cursor-pointer shadow-[1px_1px_0px_#02060D]" title="Vider le pack">🗑️ Vider</button>
-              <span id="app-count-badge" class="px-2 py-0.5 rounded bg-[#050B14] border border-[#1E3A68] font-mono text-xs font-extrabold text-[#FFD700] shadow-[1px_1px_0px_#02060D]">
+              <button id="btn-pack-defaults" class="text-[10px] text-[#FFD700] hover:text-black hover:bg-[#FFD700] font-mono font-bold px-2 py-1 rounded-none bg-[#030814] border border-[#1B3B6F] transition-all cursor-pointer shadow-[1px_1px_0px_#01040A] uppercase" title="Restaurer la sélection recommandée">↺ Défaut</button>
+              <button id="btn-pack-clear" class="text-[10px] text-red-400 hover:text-white hover:bg-red-600 font-mono font-bold px-2 py-1 rounded-none bg-[#030814] border border-[#1B3B6F] transition-all cursor-pointer shadow-[1px_1px_0px_#01040A] uppercase" title="Vider le pack">🗑️ Vider</button>
+              <span id="app-count-badge" class="px-2 py-0.5 rounded-none bg-[#030814] border-2 border-[#FFD700] font-mono text-xs font-extrabold text-[#FFD700] shadow-[2px_2px_0px_#01040A]">
                 0 / 12
               </span>
             </div>
           </div>
 
           <!-- Packs Prédéfinis en 1 clic -->
-          <div class="space-y-1.5 p-2.5 rounded-lg bg-[#050B14] border border-[#1E3A68] shadow-[2px_2px_0px_#02060D]">
+          <div class="space-y-1.5 p-2.5 rounded-none bg-[#030814] border-2 border-[#1B3B6F] shadow-[3px_3px_0px_#01040A]">
             <div class="flex items-center justify-between text-[11px] font-mono font-bold text-[#F8FAFC]">
-              <span class="flex items-center gap-1.5"><span>⚡</span> Packs rapides :</span>
-              <span class="text-[10px] text-[#94A3B8]">1 clic</span>
+              <span class="flex items-center gap-1.5 font-heading text-[10px] uppercase tracking-wider text-[#FFD700]"><span>⚡</span> Packs rapides :</span>
+              <span class="text-[10px] text-[#8EA5C8] uppercase tracking-wider">&gt;_ 1 clic</span>
             </div>
             <div class="grid grid-cols-3 gap-1.5 pt-1">
-              <button id="preset-arcade-btn" class="py-1.5 px-2 rounded bg-[#0D1B36] hover:bg-[#162E56] border border-[#1E3A68] text-[10px] font-mono font-bold text-[#FFD700] transition-all flex items-center justify-center gap-1 cursor-pointer shadow-[1px_1px_0px_#02060D] active:translate-x-[1px] active:translate-y-[1px]" title="Pack Jeux : Mario Kart, Flappy Bird, 2048, Snake">
+              <button id="preset-arcade-btn" class="py-1.5 px-2 rounded-none bg-[#09152B] hover:bg-[#11264B] border-2 border-[#1B3B6F] hover:border-[#FFD700] text-[10px] font-mono font-bold text-[#FFD700] transition-all flex items-center justify-center gap-1 cursor-pointer shadow-[2px_2px_0px_#01040A] active:translate-x-[1px] active:translate-y-[1px] uppercase tracking-wide" title="Pack Jeux : Mario Kart, Flappy Bird, 2048, Snake">
                 <span>🎮</span> Arcade
               </button>
-              <button id="preset-bac-btn" class="py-1.5 px-2 rounded bg-[#0D1B36] hover:bg-[#162E56] border border-[#1E3A68] text-[10px] font-mono font-bold text-[#38BDF8] transition-all flex items-center justify-center gap-1 cursor-pointer shadow-[1px_1px_0px_#02060D] active:translate-x-[1px] active:translate-y-[1px]" title="Pack Études : Tableau Périodique, Fiches Cours, Solveur Maths">
+              <button id="preset-bac-btn" class="py-1.5 px-2 rounded-none bg-[#09152B] hover:bg-[#11264B] border-2 border-[#1B3B6F] hover:border-[#00E5FF] text-[10px] font-mono font-bold text-[#00E5FF] transition-all flex items-center justify-center gap-1 cursor-pointer shadow-[2px_2px_0px_#01040A] active:translate-x-[1px] active:translate-y-[1px] uppercase tracking-wide" title="Pack Études : Tableau Périodique, Fiches Cours, Solveur Maths">
                 <span>🎓</span> Bac & Sup
               </button>
-              <button id="preset-all-btn" class="py-1.5 px-2 rounded bg-[#0D1B36] hover:bg-[#162E56] border border-[#1E3A68] text-[10px] font-mono font-bold text-emerald-300 transition-all flex items-center justify-center gap-1 cursor-pointer shadow-[1px_1px_0px_#02060D] active:translate-x-[1px] active:translate-y-[1px]" title="Pack Complet : Toutes les applications recommandées">
+              <button id="preset-all-btn" class="py-1.5 px-2 rounded-none bg-[#09152B] hover:bg-[#11264B] border-2 border-[#1B3B6F] hover:border-emerald-400 text-[10px] font-mono font-bold text-emerald-300 transition-all flex items-center justify-center gap-1 cursor-pointer shadow-[2px_2px_0px_#01040A] active:translate-x-[1px] active:translate-y-[1px] uppercase tracking-wide" title="Pack Complet : Toutes les applications recommandées">
                 <span>⭐</span> Complet
               </button>
             </div>
           </div>
 
           <!-- Jauge de Stockage Flash QSPI -->
-          <div class="space-y-2 bg-[#050B14] p-3.5 rounded-lg border border-[#1E3A68] shadow-[2px_2px_0px_#02060D]">
+          <div class="space-y-2 bg-[#030814] p-3.5 rounded-none border-2 border-[#1B3B6F] shadow-[3px_3px_0px_#01040A]">
             <div class="flex items-center justify-between text-xs font-mono">
-              <span id="memory-flash-label" class="font-semibold text-[#F8FAFC]">Mémoire Flash QSPI (N0120)</span>
-              <span id="memory-percent" class="font-bold text-[#FFD700]">0%</span>
+              <span id="memory-flash-label" class="font-heading font-semibold text-[#F8FAFC] uppercase tracking-wider text-[11px]">Mémoire Flash QSPI (N0120)</span>
+              <span id="memory-percent" class="font-mono font-bold text-[#FFD700] text-glow-gold">0%</span>
             </div>
-            <div class="w-full h-2.5 bg-[#0D1B36] rounded overflow-hidden border border-[#1E3A68]">
-              <div id="memory-progress-bar" class="h-full bg-gradient-to-r from-[#FFD700] to-[#FF9100] transition-all duration-300" style="width: 0%;"></div>
+            <div class="w-full h-2.5 bg-[#09152B] rounded-none overflow-hidden border-2 border-[#1B3B6F]">
+              <div id="memory-progress-bar" class="h-full bg-gradient-to-r from-[#FFD700] via-[#FF9100] to-[#FF4500] transition-all duration-300" style="width: 0%;"></div>
             </div>
-            <div class="flex justify-between text-[11px] text-[#94A3B8] font-mono">
+            <div class="flex justify-between text-[11px] text-[#8EA5C8] font-mono">
               <span id="memory-text">0.00 Mo / 4.00 Mo</span>
-              <span id="slots-remaining-text" class="text-[#94A3B8]">12 slots libres</span>
+              <span id="slots-remaining-text" class="text-[#8EA5C8]">12 slots libres</span>
             </div>
           </div>
 
           <!-- Sauvegarde et Partage du Pack -->
           <div class="flex items-center justify-between px-1 text-[11px] font-mono">
-            <button id="btn-export-pack" class="text-[#94A3B8] hover:text-[#FFD700] transition-colors flex items-center gap-1 cursor-pointer font-medium" title="Exporter cette configuration de pack en fichier .json">
+            <button id="btn-export-pack" class="text-[#8EA5C8] hover:text-[#FFD700] transition-colors flex items-center gap-1 cursor-pointer font-bold uppercase tracking-wide" title="Exporter cette configuration de pack en fichier .json">
               <span>📤</span> Sauvegarder Pack
             </button>
-            <button id="btn-import-pack" class="text-[#94A3B8] hover:text-[#38BDF8] transition-colors flex items-center gap-1 cursor-pointer font-medium" title="Charger un pack depuis un fichier .json">
+            <button id="btn-import-pack" class="text-[#8EA5C8] hover:text-[#00E5FF] transition-colors flex items-center gap-1 cursor-pointer font-bold uppercase tracking-wide" title="Charger un pack depuis un fichier .json">
               <span>📥</span> Charger Pack
             </button>
             <input type="file" id="import-pack-file" class="hidden" accept=".json" />
@@ -691,9 +693,9 @@
 
           <!-- Liste des applications sélectionnées dans le pack -->
           <div class="space-y-2 min-h-[140px]">
-            <div id="empty-state" class="text-center py-8 text-[#94A3B8] space-y-1 font-mono">
-              <div class="text-2xl">📦</div>
-              <p class="text-xs">Votre pack est vide.<br>Ajoutez des applications depuis le catalogue à gauche.</p>
+            <div id="empty-state" class="text-center py-8 text-[#8EA5C8] space-y-1 font-mono">
+              <div class="text-2xl font-mono text-[#FFD700]">[ 📦 ]</div>
+              <p class="text-xs font-mono">&gt;_ Votre pack est vide.<br>Ajoutez des applications depuis le catalogue à gauche.</p>
             </div>
             <div id="selected-list" class="space-y-2 hidden max-h-[300px] overflow-y-auto pr-1">
               <!-- Injecté dynamiquement par app.js -->
@@ -703,9 +705,9 @@
           <!-- Barre de progression du téléversement USB -->
           <div id="progress-container" class="hidden space-y-2 pt-2">
             <div class="flex justify-between text-xs font-mono font-semibold text-[#F8FAFC]">
-              <span id="progress-text">Téléversement vers la N0120...</span>
+              <span id="progress-text" class="font-heading uppercase tracking-wide text-xs text-[#FFD700]">Téléversement vers la N0120...</span>
             </div>
-            <div class="w-full h-3 bg-[#050B14] rounded border border-[#1E3A68] overflow-hidden">
+            <div class="w-full h-3 bg-[#030814] rounded-none border-2 border-[#1B3B6F] overflow-hidden">
               <div id="flash-progress" class="h-full bg-gradient-to-r from-[#FFD700] to-[#FF9100] transition-all" style="width: 0%;"></div>
             </div>
           </div>
@@ -713,32 +715,32 @@
           <!-- Boutons d'Action Principaux -->
           <div class="space-y-2 pt-2">
             <!-- Sélecteur de Modèle de Calculatrice -->
-            <div class="flex items-center justify-between p-2 rounded-lg bg-[#050B14] border border-[#1E3A68] text-xs font-mono shadow-[2px_2px_0px_#02060D]">
-              <span class="text-[#F8FAFC] font-bold flex items-center gap-1.5">
+            <div class="flex items-center justify-between p-2 rounded-none bg-[#030814] border-2 border-[#1B3B6F] text-xs font-mono shadow-[3px_3px_0px_#01040A]">
+              <span class="text-[#F8FAFC] font-heading font-bold text-[11px] uppercase tracking-wider flex items-center gap-1.5">
                 <span>📟</span> Modèle cible :
               </span>
-              <div class="flex items-center gap-1 bg-[#0D1B36] border border-[#1E3A68] p-0.5 rounded shadow-[1px_1px_0px_#02060D]">
-                <button type="button" id="model-select-n0120" class="px-2.5 py-1 rounded text-xs font-mono font-bold transition-all bg-[#FFD700] text-black border border-black cursor-pointer shadow-[1px_1px_0px_#02060D]" title="NumWorks N0120 (Cortex-M7 @ 550MHz)">
+              <div class="flex items-center gap-1 bg-[#09152B] border-2 border-[#1B3B6F] p-0.5 rounded-none shadow-[1px_1px_0px_#01040A]">
+                <button type="button" id="model-select-n0120" class="px-2.5 py-1 rounded-none text-xs font-mono font-bold transition-all bg-[#FFD700] text-black border-2 border-black cursor-pointer shadow-[2px_2px_0px_#01040A]" title="NumWorks N0120 (Cortex-M7 @ 550MHz)">
                   N0120
                 </button>
-                <button type="button" id="model-select-n0110" class="px-2.5 py-1 rounded text-xs font-mono font-semibold transition-all text-[#94A3B8] hover:text-[#F8FAFC] cursor-pointer" title="NumWorks N0110 (Cortex-M7 @ 216MHz)">
+                <button type="button" id="model-select-n0110" class="px-2.5 py-1 rounded-none text-xs font-mono font-semibold transition-all text-[#8EA5C8] hover:text-[#F8FAFC] cursor-pointer" title="NumWorks N0110 (Cortex-M7 @ 216MHz)">
                   N0110
                 </button>
               </div>
             </div>
 
             <!-- Bouton Principal Recommandé : Flash USB Direct -->
-            <button id="flash-btn" class="w-full py-3.5 px-4 rounded-lg btn-cyber-gold text-xs font-mono uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer transition-all">
+            <button id="flash-btn" class="w-full py-4 px-4 rounded-none btn-cyber-gold text-xs font-heading font-extrabold uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer transition-all border-2 border-black shadow-[4px_4px_0px_#01040A,0_0_22px_rgba(255,215,0,0.4)]">
               <span>⚡</span>
               <span>Installer sur ma NumWorks (Flash USB Direct)</span>
             </button>
 
             <div class="grid grid-cols-2 gap-2">
-              <button id="download-btn" class="py-2 px-3 rounded-lg bg-[#162E56] hover:bg-[#1E3A68] text-[#F8FAFC] font-mono font-bold text-xs transition-all flex items-center justify-center gap-1.5 border border-[#1E3A68] shadow-[2px_2px_0px_#02060D] active:translate-x-[1px] active:translate-y-[1px] cursor-pointer">
+              <button id="download-btn" class="py-2.5 px-3 rounded-none bg-[#11264B] hover:bg-[#1B3B6F] text-[#F8FAFC] font-mono font-bold text-xs transition-all flex items-center justify-center gap-1.5 border-2 border-[#1B3B6F] hover:border-[#FFD700] shadow-[3px_3px_0px_#01040A] active:translate-x-[1px] active:translate-y-[1px] cursor-pointer uppercase tracking-wide">
                 <span>💾</span>
                 <span>Télécharger .nwa</span>
               </button>
-              <button id="download-nws-btn" class="py-2 px-3 rounded-lg bg-[#162E56] hover:bg-[#1E3A68] text-[#94A3B8] hover:text-[#F8FAFC] font-mono font-semibold text-xs transition-all flex items-center justify-center gap-1.5 border border-[#1E3A68] shadow-[2px_2px_0px_#02060D] active:translate-x-[1px] active:translate-y-[1px] cursor-pointer">
+              <button id="download-nws-btn" class="py-2.5 px-3 rounded-none bg-[#11264B] hover:bg-[#1B3B6F] text-[#8EA5C8] hover:text-[#F8FAFC] font-mono font-bold text-xs transition-all flex items-center justify-center gap-1.5 border-2 border-[#1B3B6F] hover:border-[#00E5FF] shadow-[3px_3px_0px_#01040A] active:translate-x-[1px] active:translate-y-[1px] cursor-pointer uppercase tracking-wide">
                 <span>📦</span> Exporter .nws
               </button>
             </div>
@@ -746,41 +748,39 @@
 
         </div>
 
-        </div>
-
         <!-- Guide d'installation pas-à-pas -->
-        <div class="p-4 rounded-lg bg-[#0D1B36] border-2 border-[#1E3A68] border-t-2 border-t-[#FFD700] shadow-[3px_3px_0px_#02060D] text-xs font-mono text-[#F8FAFC] space-y-3">
-          <div class="flex items-center gap-2 font-bold text-[#FFD700] text-xs font-mono uppercase tracking-wider">
+        <div class="p-5 rounded-none bg-[#09152B] border-2 border-[#1B3B6F] border-t-4 border-t-[#FFD700] shadow-[5px_5px_0px_#01040A] text-xs font-mono text-[#F8FAFC] space-y-3">
+          <div class="flex items-center gap-2 font-heading font-extrabold text-[#FFD700] text-xs uppercase tracking-wider text-glow-gold">
             <span>⚡</span> Guide Installation Pack EquaLib :
           </div>
-          <div class="space-y-2 text-[#94A3B8]">
-            <div class="p-2.5 rounded bg-[#050B14] border border-[#1E3A68] space-y-1">
-              <p class="font-bold text-[#F8FAFC] text-[11px] flex items-center gap-1.5">
+          <div class="space-y-2 text-[#8EA5C8]">
+            <div class="p-3 rounded-none bg-[#030814] border-2 border-[#1B3B6F] space-y-1 shadow-[2px_2px_0px_#01040A]">
+              <p class="font-heading font-bold text-[#F8FAFC] text-[11px] flex items-center gap-1.5 uppercase tracking-wide">
                 <span class="text-[#FFD700]">1. Flash USB Direct (Recommandé)</span>
               </p>
-              <p class="text-[11px]">
-                Branchez votre calculatrice en USB et cliquez sur <strong>« Installer sur ma NumWorks »</strong>. Votre pack personnalisé est relié et flashé en un clic.
+              <p class="text-[11px] leading-relaxed">
+                Branchez votre calculatrice en USB et cliquez sur <strong class="text-[#FFD700]">« Installer sur ma NumWorks »</strong>. Votre pack personnalisé est relié et flashé en un clic.
               </p>
             </div>
-            <div class="p-2.5 rounded bg-[#050B14] border border-[#1E3A68] space-y-1">
-              <p class="font-bold text-[#F8FAFC] text-[11px] flex items-center gap-1.5">
-                <span class="text-[#38BDF8]">2. Binaires .nwa externes</span>
+            <div class="p-3 rounded-none bg-[#030814] border-2 border-[#1B3B6F] space-y-1 shadow-[2px_2px_0px_#01040A]">
+              <p class="font-heading font-bold text-[#F8FAFC] text-[11px] flex items-center gap-1.5 uppercase tracking-wide">
+                <span class="text-[#00E5FF]">2. Binaires .nwa externes</span>
               </p>
-              <p class="text-[11px]">
-                Glissez directement vos fichiers <strong>.nwa</strong> dans la zone d'importation. Le linker gère automatiquement le relogement mémoire.
+              <p class="text-[11px] leading-relaxed">
+                Glissez directement vos fichiers <strong class="text-[#00E5FF]">.nwa</strong> dans la zone d'importation. Le linker gère automatiquement le relogement mémoire.
               </p>
             </div>
           </div>
         </div>
 
         <!-- Raccourcis Clavier sur la calculatrice -->
-        <div class="p-3.5 rounded-lg bg-[#0D1B36] border-2 border-[#1E3A68] shadow-[3px_3px_0px_#02060D] text-xs font-mono text-[#94A3B8] space-y-2">
-          <p class="font-bold text-[#F8FAFC]">🕹️ Commandes dans le lanceur NumWorks :</p>
-          <ul class="space-y-1 text-[11px]">
-            <li>• <strong class="text-[#F8FAFC]">Flèches ▲▼◀▶</strong> : Sélectionner une application</li>
+        <div class="p-4 rounded-none bg-[#09152B] border-2 border-[#1B3B6F] shadow-[4px_4px_0px_#01040A] text-xs font-mono text-[#8EA5C8] space-y-2">
+          <p class="font-heading font-bold text-[#F8FAFC] uppercase tracking-wide text-xs">🕹️ Commandes dans le lanceur NumWorks :</p>
+          <ul class="space-y-1.5 text-[11px]">
+            <li>• <strong class="text-[#FFD700]">Flèches ▲▼◀▶</strong> : Sélectionner une application</li>
             <li>• <strong class="text-[#F8FAFC]">OK / EXE</strong> : Lancer l'application</li>
-            <li>• <strong class="text-[#F8FAFC]">Back</strong> : Revenir au Hub</li>
-            <li>• <strong class="text-[#F8FAFC]">Home</strong> : Revenir immédiatement à Epsilon</li>
+            <li>• <strong class="text-[#8EA5C8]">Back</strong> : Revenir au Hub</li>
+            <li>• <strong class="text-[#FF9100]">Home</strong> : Revenir immédiatement à Epsilon</li>
           </ul>
         </div>
 
@@ -791,10 +791,10 @@
   </main>
 
   <!-- ==================== PIED DE PAGE ==================== -->
-  <footer class="relative z-10 border-t-2 border-[#1E3A68] bg-[#0A1628] py-6 text-center text-xs text-[#94A3B8] font-mono">
+  <footer class="relative z-10 border-t-2 border-[#1B3B6F] bg-[#030814] py-6 text-center text-xs text-[#8EA5C8] font-mono">
     <div class="max-w-7xl mx-auto px-4 space-y-2">
       <div class="flex flex-wrap items-center justify-center gap-2 font-medium">
-        <span>EquaLib Hub</span>
+        <span class="font-heading font-bold text-[#FFD700] uppercase tracking-wider">EquaLib Hub π</span>
         <span>•</span>
         <span>Créé par <strong class="text-[#F8FAFC]">CameleonGamer</strong></span>
         <span>•</span>
@@ -802,57 +802,57 @@
           <span>⚡</span> En collaboration avec <strong>Gemini</strong> (Google DeepMind)
         </span>
         <span>•</span>
-        <span id="footer-model-spec" class="text-[#38BDF8]">NumWorks N0120 (STM32H725 @ 550 MHz)</span>
+        <span id="footer-model-spec" class="text-[#00E5FF] font-mono font-bold">NumWorks N0120 (STM32H725 @ 550 MHz)</span>
       </div>
-      <p class="text-[#94A3B8] text-[11px]">NumWorks est une marque déposée de NumWorks SAS. EquaLib est un projet libre et communautaire.</p>
+      <p class="text-[#8EA5C8] text-[11px]">&gt;_ NumWorks est une marque déposée de NumWorks SAS. EquaLib est un projet libre et communautaire.</p>
     </div>
   </footer>
 
   <!-- ==================== MODAL 1 : DÉTAILS DE L'APPLICATION & COMMANDES ==================== -->
-  <div id="app-details-modal" class="fixed inset-0 z-50 bg-black/80 hidden items-center justify-center p-4">
-    <div class="bg-[#0D1B36] border-2 border-[#1E3A68] border-t-2 border-t-[#FFD700] rounded-lg max-w-lg w-full p-6 shadow-[6px_6px_0px_#02060D,0_0_30px_rgba(255,215,0,0.2)] space-y-4">
+  <div id="app-details-modal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-[#09152B] border-2 border-[#FFD700] border-t-4 border-t-[#FF9100] rounded-none max-w-lg w-full p-6 shadow-[8px_8px_0px_#01040A,0_0_35px_rgba(255,215,0,0.35)] space-y-4">
       
       <!-- En-tête du modal -->
-      <div class="flex items-start justify-between gap-4 pb-3 border-b-2 border-[#1E3A68]">
+      <div class="flex items-start justify-between gap-4 pb-3 border-b-2 border-[#1B3B6F]">
         <div class="flex items-center gap-3">
-          <div id="modal-app-icon" class="w-12 h-12 rounded border-2 border-black flex items-center justify-center font-bold text-2xl text-white shadow-[2px_2px_0px_#02060D] shrink-0 bg-[#FFD700]">
+          <div id="modal-app-icon" class="w-12 h-12 rounded-none border-2 border-black flex items-center justify-center font-bold text-2xl text-black shadow-[2px_2px_0px_#01040A] shrink-0 bg-[#FFD700]">
             📦
           </div>
           <div>
             <div class="flex items-center gap-2 flex-wrap">
-              <h3 id="modal-app-name" class="font-extrabold text-[#F8FAFC] text-base font-mono">Nom App</h3>
-              <span id="modal-app-cat" class="text-[10px] px-2 py-0.5 rounded bg-[#050B14] border border-[#1E3A68] text-[#FFD700] font-mono font-semibold">Catégorie</span>
+              <h3 id="modal-app-name" class="font-heading font-extrabold text-[#F8FAFC] text-base uppercase tracking-wider">Nom App</h3>
+              <span id="modal-app-cat" class="text-[10px] px-2 py-0.5 rounded-none bg-[#030814] border border-[#1B3B6F] text-[#FFD700] font-mono font-bold uppercase tracking-wider">Catégorie</span>
             </div>
-            <p id="modal-app-meta" class="text-xs text-[#94A3B8] font-mono mt-0.5">v1.0 • 45 Ko • Par Auteur</p>
+            <p id="modal-app-meta" class="text-xs text-[#8EA5C8] font-mono mt-0.5">&gt;_ v1.0 • 45 Ko • Par Auteur</p>
           </div>
         </div>
-        <button id="modal-close-btn" class="p-1.5 rounded bg-[#050B14] hover:bg-[#162E56] text-[#94A3B8] hover:text-white border border-[#1E3A68] transition-all cursor-pointer font-mono">✕</button>
+        <button id="modal-close-btn" class="p-1.5 rounded-none bg-[#030814] hover:bg-[#11264B] text-[#8EA5C8] hover:text-white border-2 border-[#1B3B6F] transition-all cursor-pointer font-mono font-bold">✕</button>
       </div>
 
       <!-- Description -->
       <div class="space-y-1">
-        <h4 class="text-xs font-bold font-mono uppercase tracking-wider text-[#94A3B8]">Description</h4>
-        <p id="modal-app-desc" class="text-xs text-[#F8FAFC] font-mono leading-relaxed bg-[#050B14] p-3 rounded border border-[#1E3A68]">
+        <h4 class="text-xs font-heading font-bold uppercase tracking-wider text-[#8EA5C8]">Description</h4>
+        <p id="modal-app-desc" class="text-xs text-[#F8FAFC] font-mono leading-relaxed bg-[#030814] p-3 rounded-none border-2 border-[#1B3B6F]">
           Description complète de l'application.
         </p>
       </div>
 
       <!-- Commandes et touches sur la NumWorks -->
       <div class="space-y-1">
-        <h4 class="text-xs font-bold font-mono uppercase tracking-wider text-[#FFD700] flex items-center gap-1.5">
+        <h4 class="text-xs font-heading font-bold uppercase tracking-wider text-[#FFD700] flex items-center gap-1.5 text-glow-gold">
           <span>🕹️</span> Touches sur NumWorks <span id="modal-controls-model">N0120</span>
         </h4>
-        <div id="modal-app-controls" class="space-y-1 text-xs text-[#F8FAFC] bg-[#050B14] p-3 rounded border border-[#1E3A68] font-mono">
+        <div id="modal-app-controls" class="space-y-1 text-xs text-[#F8FAFC] bg-[#030814] p-3 rounded-none border-2 border-[#1B3B6F] font-mono">
           <!-- Injecté dynamiquement -->
         </div>
       </div>
 
       <!-- Boutons d'action -->
       <div class="pt-2 flex gap-3">
-        <button id="modal-toggle-pack-btn" class="flex-1 py-2.5 px-4 rounded btn-cyber-gold text-xs font-mono flex items-center justify-center gap-2 cursor-pointer transition-all">
+        <button id="modal-toggle-pack-btn" class="flex-1 py-3 px-4 rounded-none btn-cyber-gold text-xs font-heading font-extrabold uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer transition-all border-2 border-black shadow-[3px_3px_0px_#01040A]">
           <span>+ Ajouter au Pack</span>
         </button>
-        <button id="modal-cancel-btn" class="py-2.5 px-4 rounded bg-[#162E56] hover:bg-[#1E3A68] text-[#F8FAFC] font-bold text-xs font-mono border border-[#1E3A68] shadow-[2px_2px_0px_#02060D] cursor-pointer transition-all">
+        <button id="modal-cancel-btn" class="py-3 px-4 rounded-none bg-[#11264B] hover:bg-[#1B3B6F] text-[#F8FAFC] font-mono font-bold text-xs uppercase tracking-wider border-2 border-[#1B3B6F] shadow-[3px_3px_0px_#01040A] cursor-pointer transition-all">
           Fermer
         </button>
       </div>
@@ -861,44 +861,44 @@
   </div>
 
   <!-- ==================== MODAL 2 : AIDE & DÉPANNAGE WEBUSB ==================== -->
-  <div id="webusb-help-modal" class="fixed inset-0 z-50 bg-black/80 hidden items-center justify-center p-4">
-    <div class="bg-[#0D1B36] border-2 border-[#1E3A68] border-t-2 border-t-[#38BDF8] rounded-lg max-w-lg w-full p-6 shadow-[6px_6px_0px_#02060D,0_0_30px_rgba(56,189,248,0.2)] space-y-4">
+  <div id="webusb-help-modal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-[#09152B] border-2 border-[#00E5FF] border-t-4 border-t-[#2563EB] rounded-none max-w-lg w-full p-6 shadow-[8px_8px_0px_#01040A,0_0_35px_rgba(0,229,255,0.35)] space-y-4">
       
-      <div class="flex items-center justify-between pb-3 border-b-2 border-[#1E3A68]">
+      <div class="flex items-center justify-between pb-3 border-b-2 border-[#1B3B6F]">
         <div class="flex items-center gap-2.5">
           <span class="text-xl">🔌</span>
           <div>
-            <h3 class="font-extrabold text-[#F8FAFC] text-sm font-mono uppercase tracking-wider">Assistant Connexion USB</h3>
-            <p id="help-modal-model" class="text-[11px] text-[#38BDF8] font-mono">NumWorks N0120 (STM32H725 @ 550 MHz)</p>
+            <h3 class="font-heading font-extrabold text-[#F8FAFC] text-sm uppercase tracking-wider text-glow-cyan">Assistant Connexion USB</h3>
+            <p id="help-modal-model" class="text-[11px] text-[#00E5FF] font-mono">&gt;_ NumWorks N0120 (STM32H725 @ 550 MHz)</p>
           </div>
         </div>
-        <button id="help-close-btn" class="p-1.5 rounded bg-[#050B14] hover:bg-[#162E56] text-[#94A3B8] hover:text-white border border-[#1E3A68] transition-all cursor-pointer font-mono">✕</button>
+        <button id="help-close-btn" class="p-1.5 rounded-none bg-[#030814] hover:bg-[#11264B] text-[#8EA5C8] hover:text-white border-2 border-[#1B3B6F] transition-all cursor-pointer font-mono font-bold">✕</button>
       </div>
 
       <div class="space-y-2 text-xs font-mono text-[#F8FAFC] leading-relaxed">
-        <div class="p-2.5 rounded bg-[#050B14] border border-[#1E3A68] space-y-1">
-          <p class="font-bold text-[#FFD700]">1. Navigateurs compatibles</p>
-          <p class="text-[#94A3B8]">Utilisez <strong>Google Chrome</strong>, <strong>Microsoft Edge</strong>, <strong>Brave</strong> ou <strong>Opera</strong> (WebUSB).</p>
+        <div class="p-3 rounded-none bg-[#030814] border-2 border-[#1B3B6F] space-y-1 shadow-[2px_2px_0px_#01040A]">
+          <p class="font-heading font-bold text-[#FFD700] uppercase tracking-wide text-[11px]">1. Navigateurs compatibles</p>
+          <p class="text-[#8EA5C8]">Utilisez <strong>Google Chrome</strong>, <strong>Microsoft Edge</strong>, <strong>Brave</strong> ou <strong>Opera</strong> (WebUSB).</p>
         </div>
 
-        <div class="p-2.5 rounded bg-[#050B14] border border-[#1E3A68] space-y-1">
-          <p class="font-bold text-[#FFD700]">2. Câble USB-C Données</p>
-          <p class="text-[#94A3B8]">Utilisez un câble USB-C data capable de transférer des fichiers, pas un simple câble de recharge.</p>
+        <div class="p-3 rounded-none bg-[#030814] border-2 border-[#1B3B6F] space-y-1 shadow-[2px_2px_0px_#01040A]">
+          <p class="font-heading font-bold text-[#FFD700] uppercase tracking-wide text-[11px]">2. Câble USB-C Données</p>
+          <p class="text-[#8EA5C8]">Utilisez un câble USB-C data capable de transférer des fichiers, pas un simple câble de recharge.</p>
         </div>
 
-        <div class="p-2.5 rounded bg-[#050B14] border border-[#1E3A68] space-y-1">
-          <p class="font-bold text-[#FFD700]">3. Autorisation WebUSB</p>
-          <p class="text-[#94A3B8]">Dans la fenêtre popup du navigateur, sélectionnez <strong>« NumWorks Calculator »</strong> puis validez.</p>
+        <div class="p-3 rounded-none bg-[#030814] border-2 border-[#1B3B6F] space-y-1 shadow-[2px_2px_0px_#01040A]">
+          <p class="font-heading font-bold text-[#FFD700] uppercase tracking-wide text-[11px]">3. Autorisation WebUSB</p>
+          <p class="text-[#8EA5C8]">Dans la fenêtre popup du navigateur, sélectionnez <strong>« NumWorks Calculator »</strong> puis validez.</p>
         </div>
 
-        <div class="p-2.5 rounded bg-[#050B14] border border-[#1E3A68] space-y-1">
-          <p class="font-bold text-[#FFD700]">4. En cas de blocage</p>
-          <p class="text-[#94A3B8]">Appuyez sur le bouton <strong>RESET</strong> au dos de la calculatrice pour redémarrer instantanément.</p>
+        <div class="p-3 rounded-none bg-[#030814] border-2 border-[#1B3B6F] space-y-1 shadow-[2px_2px_0px_#01040A]">
+          <p class="font-heading font-bold text-[#FFD700] uppercase tracking-wide text-[11px]">4. En cas de blocage</p>
+          <p class="text-[#8EA5C8]">Appuyez sur le bouton <strong>RESET</strong> au dos de la calculatrice pour redémarrer instantanément.</p>
         </div>
       </div>
 
       <div class="pt-1">
-        <button id="help-ok-btn" class="w-full py-2.5 rounded btn-cyber-gold text-xs font-mono cursor-pointer transition-all">
+        <button id="help-ok-btn" class="w-full py-3 rounded-none btn-cyber-blue text-xs font-heading font-extrabold uppercase tracking-wider cursor-pointer transition-all border-2 border-black shadow-[3px_3px_0px_#01040A]">
           Compris !
         </button>
       </div>
@@ -907,233 +907,233 @@
   </div>
 
   <!-- ==================== BANDEAU FLOTTANT EN BAS AU CENTRE : APP ACTIVE (GALLERY DOCK) ==================== -->
-  <div id="active-app-dock" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-40 max-w-xl w-[92%] sm:w-auto px-4 py-2.5 rounded-lg bg-[#0D1B36] border-2 border-[#FFD700] shadow-[4px_4px_0px_#02060D,0_0_25px_rgba(255,215,0,0.3)] hidden sm:flex items-center justify-between gap-4 dock-visible transition-all">
+  <div id="active-app-dock" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-40 max-w-xl w-[92%] sm:w-auto px-4 py-2.5 rounded-none bg-[#09152B] border-2 border-[#FFD700] shadow-[6px_6px_0px_#01040A,0_0_28px_rgba(255,215,0,0.4)] hidden sm:flex items-center justify-between gap-4 dock-visible transition-all">
     <div class="flex items-center gap-3 min-w-0">
-      <div id="dock-app-icon" class="w-10 h-10 rounded border-2 border-black bg-[#FFD700] text-black flex items-center justify-center font-bold text-xl shadow-[2px_2px_0px_#02060D] shrink-0">
+      <div id="dock-app-icon" class="w-10 h-10 rounded-none border-2 border-black bg-[#FFD700] text-black flex items-center justify-center font-bold text-xl shadow-[2px_2px_0px_#01040A] shrink-0">
         🏎️
       </div>
       <div class="min-w-0">
         <div class="flex items-center gap-2">
-          <h4 id="dock-app-name" class="font-extrabold text-[#F8FAFC] text-xs font-mono truncate">Super Mario Kart 3D</h4>
-          <span id="dock-app-badge" class="text-[10px] px-1.5 py-0.2 rounded bg-[#050B14] border border-[#1E3A68] text-[#FFD700] font-mono font-bold">.BIN</span>
-          <span id="dock-app-cat" class="text-[10px] px-1.5 py-0.2 rounded bg-[#050B14] text-[#94A3B8] font-mono font-semibold hidden sm:inline">Jeux</span>
+          <h4 id="dock-app-name" class="font-heading font-extrabold text-[#F8FAFC] text-xs uppercase tracking-wide truncate">Super Mario Kart 3D</h4>
+          <span id="dock-app-badge" class="text-[10px] px-1.5 py-0.2 rounded-none bg-[#030814] border border-[#1B3B6F] text-[#FFD700] font-mono font-bold">.BIN</span>
+          <span id="dock-app-cat" class="text-[10px] px-1.5 py-0.2 rounded-none bg-[#030814] text-[#8EA5C8] font-mono font-semibold hidden sm:inline uppercase">Jeux</span>
         </div>
-        <p id="dock-app-desc" class="text-[11px] text-[#94A3B8] font-mono truncate max-w-xs sm:max-w-md">Course Mode 7 3D complète pour NumWorks N0120</p>
+        <p id="dock-app-desc" class="text-[11px] text-[#8EA5C8] font-mono truncate max-w-xs sm:max-w-md">&gt;_ Course Mode 7 3D complète pour NumWorks N0120</p>
       </div>
     </div>
     <div class="flex items-center gap-2 shrink-0">
-      <button id="dock-test-btn" class="px-3 py-1.5 rounded bg-[#162E56] hover:bg-[#1E3A68] text-[#F8FAFC] text-xs font-mono font-bold border border-[#1E3A68] shadow-[2px_2px_0px_#02060D] flex items-center gap-1 cursor-pointer transition-all" title="Lancer dans le simulateur">
+      <button id="dock-test-btn" class="px-3 py-1.5 rounded-none bg-[#11264B] hover:bg-[#1B3B6F] text-[#F8FAFC] text-xs font-mono font-bold border-2 border-[#1B3B6F] hover:border-[#FFD700] shadow-[2px_2px_0px_#01040A] flex items-center gap-1 cursor-pointer transition-all uppercase tracking-wide" title="Lancer dans le simulateur">
         <span>▶</span> <span class="hidden sm:inline">Tester</span>
       </button>
-      <button id="dock-action-btn" class="px-3.5 py-1.5 rounded bg-[#FFD700] hover:bg-[#FF9100] text-black text-xs font-mono font-extrabold border-2 border-black shadow-[2px_2px_0px_#02060D] cursor-pointer transition-all">
+      <button id="dock-action-btn" class="px-3.5 py-1.5 rounded-none bg-[#FFD700] hover:bg-[#FF9100] text-black text-xs font-mono font-extrabold border-2 border-black shadow-[2px_2px_0px_#01040A] cursor-pointer transition-all uppercase tracking-wide">
         + Ajouter
       </button>
-      <button id="dock-close-btn" class="w-6 h-6 rounded bg-[#050B14] hover:bg-[#162E56] text-[#94A3B8] hover:text-white border border-[#1E3A68] text-xs font-mono flex items-center justify-center cursor-pointer ml-1" title="Masquer ce dock" aria-label="Fermer le dock">✕</button>
+      <button id="dock-close-btn" class="w-6 h-6 rounded-none bg-[#030814] hover:bg-[#11264B] text-[#8EA5C8] hover:text-white border-2 border-[#1B3B6F] text-xs font-mono flex items-center justify-center cursor-pointer ml-1 font-bold" title="Masquer ce dock" aria-label="Fermer le dock">✕</button>
     </div>
   </div>
 
   <!-- ==================== MODAL 3 : PARAMÈTRES & THÈMES DE L'APPLICATION ==================== -->
-  <div id="settings-modal" class="fixed inset-0 z-50 bg-black/80 hidden items-center justify-center p-4 overflow-y-auto">
-    <div class="bg-[#0D1B36] border-2 border-[#1E3A68] border-t-2 border-t-[#FFD700] rounded-lg max-w-xl w-full p-6 shadow-[6px_6px_0px_#02060D,0_0_30px_rgba(255,215,0,0.2)] space-y-5 my-8">
+  <div id="settings-modal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm hidden items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-[#09152B] border-2 border-[#FFD700] border-t-4 border-t-[#FF9100] rounded-none max-w-xl w-full p-6 shadow-[8px_8px_0px_#01040A,0_0_35px_rgba(255,215,0,0.35)] space-y-5 my-8">
       
       <!-- En-tête Paramètres -->
-      <div class="flex items-center justify-between pb-3 border-b-2 border-[#1E3A68]">
+      <div class="flex items-center justify-between pb-3 border-b-2 border-[#1B3B6F]">
         <div class="flex items-center gap-2.5">
           <span class="text-xl">⚙️</span>
           <div>
-            <h3 class="font-extrabold text-[#F8FAFC] text-sm font-mono uppercase tracking-wider">Paramètres d'Affichage & Thèmes</h3>
-            <p class="text-[11px] text-[#94A3B8] font-mono">Personnalisez votre lanceur EquaLib</p>
+            <h3 class="font-heading font-extrabold text-[#F8FAFC] text-sm uppercase tracking-wider text-glow-gold">Paramètres d'Affichage & Thèmes</h3>
+            <p class="text-[11px] text-[#8EA5C8] font-mono">&gt;_ Personnalisez votre lanceur EquaLib</p>
           </div>
         </div>
-        <button id="settings-close-btn" class="p-1.5 rounded bg-[#050B14] hover:bg-[#162E56] text-[#94A3B8] hover:text-white border border-[#1E3A68] transition-all cursor-pointer font-mono">✕</button>
+        <button id="settings-close-btn" class="p-1.5 rounded-none bg-[#030814] hover:bg-[#11264B] text-[#8EA5C8] hover:text-white border-2 border-[#1B3B6F] transition-all cursor-pointer font-mono font-bold">✕</button>
       </div>
 
       <!-- 1. Mode d'affichage des applications -->
       <div class="space-y-2">
-        <label class="text-xs font-bold font-mono uppercase tracking-wider text-[#94A3B8] flex items-center gap-1.5">
+        <label class="text-xs font-heading font-bold uppercase tracking-wider text-[#8EA5C8] flex items-center gap-1.5">
           <span>🖼️</span> Mode d'Affichage
         </label>
         <div class="grid grid-cols-2 gap-2.5">
-          <button id="setting-mode-gallery" class="p-3 rounded-lg border-2 transition-all flex items-center gap-3 text-left cursor-pointer bg-[#050B14] border-[#FFD700] shadow-[2px_2px_0px_#02060D]">
+          <button id="setting-mode-gallery" class="p-3 rounded-none border-2 transition-all flex items-center gap-3 text-left cursor-pointer bg-[#030814] border-[#FFD700] shadow-[3px_3px_0px_#01040A]">
             <span class="text-xl">⏹️</span>
             <div>
-              <p class="font-bold text-xs text-white font-mono">Mode Galerie (Défaut)</p>
-              <p class="text-[10px] text-[#94A3B8] font-mono">Grandes tuiles carrées</p>
+              <p class="font-heading font-bold text-xs text-[#FFD700] uppercase tracking-wide">Mode Galerie (Défaut)</p>
+              <p class="text-[10px] text-[#8EA5C8] font-mono">Grandes tuiles carrées</p>
             </div>
           </button>
-          <button id="setting-mode-list" class="p-3 rounded-lg border-2 transition-all flex items-center gap-3 text-left cursor-pointer bg-[#050B14] border-[#1E3A68] hover:border-[#FFD700] shadow-[2px_2px_0px_#02060D]">
+          <button id="setting-mode-list" class="p-3 rounded-none border-2 transition-all flex items-center gap-3 text-left cursor-pointer bg-[#030814] border-[#1B3B6F] hover:border-[#FFD700] shadow-[3px_3px_0px_#01040A]">
             <span class="text-xl">☰</span>
             <div>
-              <p class="font-bold text-xs text-white font-mono">Mode Liste</p>
-              <p class="text-[10px] text-[#94A3B8] font-mono">Cartes horizontales détaillées</p>
+              <p class="font-heading font-bold text-xs text-white uppercase tracking-wide">Mode Liste</p>
+              <p class="text-[10px] text-[#8EA5C8] font-mono">Cartes horizontales détaillées</p>
             </div>
           </button>
         </div>
       </div>
 
       <!-- 2. Désactivation des tooltips & raccourcis -->
-      <div class="p-3.5 rounded-lg bg-[#050B14] border border-[#1E3A68] flex items-center justify-between gap-4 font-mono shadow-[2px_2px_0px_#02060D]">
+      <div class="p-3.5 rounded-none bg-[#030814] border-2 border-[#1B3B6F] flex items-center justify-between gap-4 font-mono shadow-[3px_3px_0px_#01040A]">
         <div>
-          <h4 class="font-bold text-xs text-[#F8FAFC] flex items-center gap-1.5">
+          <h4 class="font-heading font-bold text-xs text-[#F8FAFC] flex items-center gap-1.5 uppercase tracking-wide">
             <span>⌨️</span> Affichage des Raccourcis & Légendes
           </h4>
-          <p class="text-[11px] text-[#94A3B8] mt-0.5">
+          <p class="text-[11px] text-[#8EA5C8] mt-0.5">
             Affiche les touches raccourcis (<kbd class="kbd-key">/</kbd>, légendes clavier).
           </p>
         </div>
         <label class="relative inline-flex items-center cursor-pointer shrink-0">
           <input type="checkbox" id="setting-tooltips-toggle" class="sr-only peer" checked>
-          <div class="w-10 h-5 bg-[#162E56] peer-focus:outline-none rounded border border-[#1E3A68] peer peer-checked:after:translate-x-full peer-checked:after:border-black after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:h-4 after:w-4 after:transition-all peer-checked:bg-[#FFD700]"></div>
+          <div class="w-10 h-5 bg-[#11264B] peer-focus:outline-none rounded-none border-2 border-[#1B3B6F] peer peer-checked:after:translate-x-full peer-checked:after:border-black after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-[#FFD700]"></div>
         </label>
       </div>
 
       <!-- 3. Effet Verre Dépoli (Apple Glass) -->
-      <div class="p-3.5 rounded-lg bg-[#050B14] border border-[#1E3A68] flex items-center justify-between gap-4 font-mono shadow-[2px_2px_0px_#02060D]">
+      <div class="p-3.5 rounded-none bg-[#030814] border-2 border-[#1B3B6F] flex items-center justify-between gap-4 font-mono shadow-[3px_3px_0px_#01040A]">
         <div>
-          <h4 class="font-bold text-xs text-[#F8FAFC] flex items-center gap-1.5">
+          <h4 class="font-heading font-bold text-xs text-[#F8FAFC] flex items-center gap-1.5 uppercase tracking-wide">
             <span>✨</span> Effet Verre Dépoli (Apple Glass)
           </h4>
-          <p class="text-[11px] text-[#94A3B8] mt-0.5">
+          <p class="text-[11px] text-[#8EA5C8] mt-0.5">
             Translucidité, reflet spéculaire fin et dégradé lumineux sur les cartes et le dock.
           </p>
         </div>
         <label class="relative inline-flex items-center cursor-pointer shrink-0">
           <input type="checkbox" id="setting-glass-mode-toggle" class="sr-only peer" checked>
-          <div class="w-10 h-5 bg-[#162E56] peer-focus:outline-none rounded border border-[#1E3A68] peer peer-checked:after:translate-x-full peer-checked:after:border-black after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:h-4 after:w-4 after:transition-all peer-checked:bg-[#FFD700]"></div>
+          <div class="w-10 h-5 bg-[#11264B] peer-focus:outline-none rounded-none border-2 border-[#1B3B6F] peer peer-checked:after:translate-x-full peer-checked:after:border-black after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-[#FFD700]"></div>
         </label>
       </div>
 
       <!-- 4. Coins Arrondis & Bords Lisses -->
-      <div class="p-3.5 rounded-lg bg-[#050B14] border border-[#1E3A68] flex items-center justify-between gap-4 font-mono shadow-[2px_2px_0px_#02060D]">
+      <div class="p-3.5 rounded-none bg-[#030814] border-2 border-[#1B3B6F] flex items-center justify-between gap-4 font-mono shadow-[3px_3px_0px_#01040A]">
         <div>
-          <h4 class="font-bold text-xs text-[#F8FAFC] flex items-center gap-1.5">
+          <h4 class="font-heading font-bold text-xs text-[#F8FAFC] flex items-center gap-1.5 uppercase tracking-wide">
             <span>🔘</span> Coins Arrondis & Bords Lisses
           </h4>
-          <p class="text-[11px] text-[#94A3B8] mt-0.5">
+          <p class="text-[11px] text-[#8EA5C8] mt-0.5">
             Adoucit les angles des tuiles, de la barre d'état et du dock (coins anti-crénelés).
           </p>
         </div>
         <label class="relative inline-flex items-center cursor-pointer shrink-0">
           <input type="checkbox" id="setting-smooth-corners-toggle" class="sr-only peer" checked>
-          <div class="w-10 h-5 bg-[#162E56] peer-focus:outline-none rounded border border-[#1E3A68] peer peer-checked:after:translate-x-full peer-checked:after:border-black after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:h-4 after:w-4 after:transition-all peer-checked:bg-[#FFD700]"></div>
+          <div class="w-10 h-5 bg-[#11264B] peer-focus:outline-none rounded-none border-2 border-[#1B3B6F] peer peer-checked:after:translate-x-full peer-checked:after:border-black after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-[#FFD700]"></div>
         </label>
       </div>
 
       <!-- 5. Inclure l'application Paramètres dans le Hub -->
-      <div class="p-3.5 rounded-lg bg-[#050B14] border border-[#1E3A68] flex items-center justify-between gap-4 font-mono shadow-[2px_2px_0px_#02060D]">
+      <div class="p-3.5 rounded-none bg-[#030814] border-2 border-[#1B3B6F] flex items-center justify-between gap-4 font-mono shadow-[3px_3px_0px_#01040A]">
         <div>
-          <h4 class="font-bold text-xs text-[#F8FAFC] flex items-center gap-1.5">
+          <h4 class="font-heading font-bold text-xs text-[#F8FAFC] flex items-center gap-1.5 uppercase tracking-wide">
             <span>⚙️</span> Tuile « Paramètres & Options » dans le Hub
           </h4>
-          <p class="text-[11px] text-[#94A3B8] mt-0.5">
+          <p class="text-[11px] text-[#8EA5C8] mt-0.5">
             Affiche l'application Paramètres directement parmi les tuiles du Hub sur la calculatrice.
           </p>
         </div>
         <label class="relative inline-flex items-center cursor-pointer shrink-0">
           <input type="checkbox" id="setting-settings-app-toggle" class="sr-only peer" checked>
-          <div class="w-10 h-5 bg-[#162E56] peer-focus:outline-none rounded border border-[#1E3A68] peer peer-checked:after:translate-x-full peer-checked:after:border-black after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:h-4 after:w-4 after:transition-all peer-checked:bg-[#FFD700]"></div>
+          <div class="w-10 h-5 bg-[#11264B] peer-focus:outline-none rounded-none border-2 border-[#1B3B6F] peer peer-checked:after:translate-x-full peer-checked:after:border-black after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-[#FFD700]"></div>
         </label>
       </div>
 
       <!-- 5. Thèmes Prédéfinis (Presets) -->
       <div class="space-y-2">
-        <label class="text-xs font-bold font-mono uppercase tracking-wider text-[#94A3B8] flex items-center gap-1.5">
+        <label class="text-xs font-heading font-bold uppercase tracking-wider text-[#8EA5C8] flex items-center gap-1.5">
           <span>🎨</span> Thèmes Prédéfinis (Presets)
         </label>
         <div class="grid grid-cols-2 sm:grid-cols-3 gap-2" id="theme-presets-container">
           <!-- Preset Sakura -->
-          <button data-theme="sakura" class="theme-preset-btn p-2 rounded-lg border-2 text-left transition-all cursor-pointer bg-[#050B14] border-[#1E3A68] hover:border-pink-400 flex flex-col justify-between h-20 shadow-[2px_2px_0px_#02060D] active:translate-x-[1px] active:translate-y-[1px]">
+          <button data-theme="sakura" class="theme-preset-btn p-2 rounded-none border-2 text-left transition-all cursor-pointer bg-[#030814] border-[#1B3B6F] hover:border-pink-400 flex flex-col justify-between h-20 shadow-[2px_2px_0px_#01040A] active:translate-x-[1px] active:translate-y-[1px]">
             <div class="flex items-center justify-between">
               <span class="text-base">🌸</span>
-              <span class="w-3.5 h-3.5 rounded bg-pink-400 border border-pink-300"></span>
+              <span class="w-3.5 h-3.5 rounded-none bg-pink-400 border border-pink-300"></span>
             </div>
             <div>
-              <p class="font-bold text-xs text-pink-300 font-mono">Sakura</p>
-              <p class="text-[9px] text-[#94A3B8] font-mono truncate">Fleurs roses & pétales</p>
+              <p class="font-heading font-bold text-xs text-pink-300 uppercase">Sakura</p>
+              <p class="text-[9px] text-[#8EA5C8] font-mono truncate">Fleurs roses & pétales</p>
             </div>
           </button>
 
           <!-- Preset Hacker -->
-          <button data-theme="hacker" class="theme-preset-btn p-2 rounded-lg border-2 text-left transition-all cursor-pointer bg-[#050B14] border-[#1E3A68] hover:border-cyan-400 flex flex-col justify-between h-20 shadow-[2px_2px_0px_#02060D] active:translate-x-[1px] active:translate-y-[1px]">
+          <button data-theme="hacker" class="theme-preset-btn p-2 rounded-none border-2 text-left transition-all cursor-pointer bg-[#030814] border-[#1B3B6F] hover:border-cyan-400 flex flex-col justify-between h-20 shadow-[2px_2px_0px_#01040A] active:translate-x-[1px] active:translate-y-[1px]">
             <div class="flex items-center justify-between">
               <span class="text-base">💻</span>
-              <span class="w-3.5 h-3.5 rounded bg-cyan-400 border border-cyan-300"></span>
+              <span class="w-3.5 h-3.5 rounded-none bg-cyan-400 border border-cyan-300"></span>
             </div>
             <div>
-              <p class="font-bold text-xs text-cyan-300 font-mono">Hacker</p>
-              <p class="text-[9px] text-[#94A3B8] font-mono truncate">Bleu foncé & circuits</p>
+              <p class="font-heading font-bold text-xs text-cyan-300 uppercase">Hacker</p>
+              <p class="text-[9px] text-[#8EA5C8] font-mono truncate">Bleu foncé & circuits</p>
             </div>
           </button>
 
           <!-- Preset Abeille -->
-          <button data-theme="bee" class="theme-preset-btn p-2 rounded-lg border-2 text-left transition-all cursor-pointer bg-[#050B14] border-[#1E3A68] hover:border-amber-400 flex flex-col justify-between h-20 shadow-[2px_2px_0px_#02060D] active:translate-x-[1px] active:translate-y-[1px]">
+          <button data-theme="bee" class="theme-preset-btn p-2 rounded-none border-2 text-left transition-all cursor-pointer bg-[#030814] border-[#1B3B6F] hover:border-amber-400 flex flex-col justify-between h-20 shadow-[2px_2px_0px_#01040A] active:translate-x-[1px] active:translate-y-[1px]">
             <div class="flex items-center justify-between">
               <span class="text-base">🐝</span>
-              <span class="w-3.5 h-3.5 rounded bg-amber-400 border border-amber-300"></span>
+              <span class="w-3.5 h-3.5 rounded-none bg-amber-400 border border-amber-300"></span>
             </div>
             <div>
-              <p class="font-bold text-xs text-amber-300 font-mono">Abeille</p>
-              <p class="text-[9px] text-[#94A3B8] font-mono truncate">Jaune miel & alvéoles</p>
+              <p class="font-heading font-bold text-xs text-amber-300 uppercase">Abeille</p>
+              <p class="text-[9px] text-[#8EA5C8] font-mono truncate">Jaune miel & alvéoles</p>
             </div>
           </button>
 
           <!-- Preset Mario -->
-          <button data-theme="mario" class="theme-preset-btn p-2 rounded-lg border-2 text-left transition-all cursor-pointer bg-[#050B14] border-[#1E3A68] hover:border-red-400 flex flex-col justify-between h-20 shadow-[2px_2px_0px_#02060D] active:translate-x-[1px] active:translate-y-[1px]">
+          <button data-theme="mario" class="theme-preset-btn p-2 rounded-none border-2 text-left transition-all cursor-pointer bg-[#030814] border-[#1B3B6F] hover:border-red-400 flex flex-col justify-between h-20 shadow-[2px_2px_0px_#01040A] active:translate-x-[1px] active:translate-y-[1px]">
             <div class="flex items-center justify-between">
               <span class="text-base">🍄</span>
-              <span class="w-3.5 h-3.5 rounded bg-red-500 border border-white"></span>
+              <span class="w-3.5 h-3.5 rounded-none bg-red-500 border border-white"></span>
             </div>
             <div>
-              <p class="font-bold text-xs text-red-400 font-mono">Mario</p>
-              <p class="text-[9px] text-[#94A3B8] font-mono truncate">Rouge, blanc & 'M'</p>
+              <p class="font-heading font-bold text-xs text-red-400 uppercase">Mario</p>
+              <p class="text-[9px] text-[#8EA5C8] font-mono truncate">Rouge, blanc & 'M'</p>
             </div>
           </button>
 
           <!-- Preset 8-Bit GameBoy -->
-          <button data-theme="gameboy" class="theme-preset-btn p-2 rounded-lg border-2 text-left transition-all cursor-pointer bg-[#050B14] border-[#1E3A68] hover:border-lime-400 flex flex-col justify-between h-20 shadow-[2px_2px_0px_#02060D] active:translate-x-[1px] active:translate-y-[1px]">
+          <button data-theme="gameboy" class="theme-preset-btn p-2 rounded-none border-2 text-left transition-all cursor-pointer bg-[#030814] border-[#1B3B6F] hover:border-lime-400 flex flex-col justify-between h-20 shadow-[2px_2px_0px_#01040A] active:translate-x-[1px] active:translate-y-[1px]">
             <div class="flex items-center justify-between">
               <span class="text-base">🎮</span>
-              <span class="w-3.5 h-3.5 rounded bg-[#8bac0f] border border-[#9bbc0f]"></span>
+              <span class="w-3.5 h-3.5 rounded-none bg-[#8bac0f] border border-[#9bbc0f]"></span>
             </div>
             <div>
-              <p class="font-bold text-xs text-lime-400 font-mono">GameBoy</p>
-              <p class="text-[9px] text-[#94A3B8] font-mono truncate">Gris & vert LCD</p>
+              <p class="font-heading font-bold text-xs text-lime-400 uppercase">GameBoy</p>
+              <p class="text-[9px] text-[#8EA5C8] font-mono truncate">Gris & vert LCD</p>
             </div>
           </button>
 
           <!-- Preset Défaut NumWorks -->
-          <button data-theme="default" class="theme-preset-btn p-2 rounded-lg border-2 text-left transition-all cursor-pointer bg-[#050B14] border-[#FFD700] flex flex-col justify-between h-20 shadow-[2px_2px_0px_#02060D] active:translate-x-[1px] active:translate-y-[1px]">
+          <button data-theme="default" class="theme-preset-btn p-2 rounded-none border-2 text-left transition-all cursor-pointer bg-[#030814] border-[#FFD700] flex flex-col justify-between h-20 shadow-[2px_2px_0px_#01040A] active:translate-x-[1px] active:translate-y-[1px]">
             <div class="flex items-center justify-between">
               <span class="text-base">⚡</span>
-              <span class="w-3.5 h-3.5 rounded bg-[#FFD700] border border-black"></span>
+              <span class="w-3.5 h-3.5 rounded-none bg-[#FFD700] border border-black"></span>
             </div>
             <div>
-              <p class="font-bold text-xs text-[#FFD700] font-mono">NumWorks π</p>
-              <p class="text-[9px] text-[#94A3B8] font-mono truncate">Or officiel & sombre</p>
+              <p class="font-heading font-bold text-xs text-[#FFD700] uppercase text-glow-gold">NumWorks π</p>
+              <p class="text-[9px] text-[#8EA5C8] font-mono truncate">Or officiel & sombre</p>
             </div>
           </button>
 
           <!-- Preset Custom (Mon Fond 320x240) -->
-          <button data-theme="custom" class="theme-preset-btn p-2 rounded-lg border-2 text-left transition-all cursor-pointer bg-[#050B14] border-[#1E3A68] hover:border-[#FFD700] flex flex-col justify-between h-20 shadow-[2px_2px_0px_#02060D] active:translate-x-[1px] active:translate-y-[1px]">
+          <button data-theme="custom" class="theme-preset-btn p-2 rounded-none border-2 text-left transition-all cursor-pointer bg-[#030814] border-[#1B3B6F] hover:border-[#FFD700] flex flex-col justify-between h-20 shadow-[2px_2px_0px_#01040A] active:translate-x-[1px] active:translate-y-[1px]">
             <div class="flex items-center justify-between">
               <span class="text-base">🎨</span>
-              <span class="w-3.5 h-3.5 rounded bg-[#FFD700] border border-white"></span>
+              <span class="w-3.5 h-3.5 rounded-none bg-[#FFD700] border border-white"></span>
             </div>
             <div>
-              <p class="font-bold text-xs text-[#FFD700] font-mono">Custom</p>
-              <p class="text-[9px] text-[#94A3B8] font-mono truncate">Mon fond 320x240</p>
+              <p class="font-heading font-bold text-xs text-[#FFD700] uppercase">Custom</p>
+              <p class="text-[9px] text-[#8EA5C8] font-mono truncate">Mon fond 320x240</p>
             </div>
           </button>
         </div>
       </div>
 
       <!-- 4. Personnalisation Manuelle : Roue Chromatique -->
-      <div class="p-3.5 rounded-lg bg-[#050B14] border border-[#1E3A68] space-y-3 font-mono shadow-[2px_2px_0px_#02060D]">
+      <div class="p-3.5 rounded-none bg-[#030814] border-2 border-[#1B3B6F] space-y-3 font-mono shadow-[3px_3px_0px_#01040A]">
         <div class="flex items-center justify-between">
-          <label class="text-xs font-bold uppercase tracking-wider text-[#94A3B8] flex items-center gap-1.5">
+          <label class="text-xs font-heading font-bold uppercase tracking-wider text-[#8EA5C8] flex items-center gap-1.5">
             <span>🎡</span> Roue Chromatique
           </label>
-          <span class="text-[10px] text-[#94A3B8]">Couleur Sur Mesure</span>
+          <span class="text-[10px] text-[#FFD700] uppercase font-bold">&gt;_ Couleur Sur Mesure</span>
         </div>
 
         <div class="flex flex-col sm:flex-row items-center justify-around gap-4 pt-1">
@@ -1146,17 +1146,17 @@
           <!-- Contrôles et valeur Hex -->
           <div class="space-y-2.5 text-center sm:text-left">
             <div class="flex items-center justify-center sm:justify-start gap-2.5">
-              <div id="custom-color-preview" class="w-10 h-10 rounded border-2 border-black shadow-[2px_2px_0px_#02060D]" style="background-color: #FFD700;"></div>
+              <div id="custom-color-preview" class="w-10 h-10 rounded-none border-2 border-black shadow-[2px_2px_0px_#01040A]" style="background-color: #FFD700;"></div>
               <div>
-                <p class="text-[10px] text-[#94A3B8]">Code Couleur</p>
-                <input type="text" id="custom-color-hex" value="#FFD700" maxlength="7" class="w-24 bg-[#0D1B36] border-2 border-[#1E3A68] text-xs font-mono font-bold text-white px-2 py-1 rounded uppercase">
+                <p class="text-[10px] text-[#8EA5C8] uppercase font-mono">Code Couleur</p>
+                <input type="text" id="custom-color-hex" value="#FFD700" maxlength="7" class="w-24 bg-[#09152B] border-2 border-[#1B3B6F] text-xs font-mono font-bold text-white px-2 py-1 rounded-none uppercase">
               </div>
             </div>
             <div>
-              <label for="native-color-picker" class="text-[10px] text-[#94A3B8] block mb-1">Pipette :</label>
-              <input type="color" id="native-color-picker" value="#FFD700" class="w-full h-8 bg-transparent cursor-pointer rounded border border-[#1E3A68]">
+              <label for="native-color-picker" class="text-[10px] text-[#8EA5C8] block mb-1 uppercase font-mono">Pipette :</label>
+              <input type="color" id="native-color-picker" value="#FFD700" class="w-full h-8 bg-transparent cursor-pointer rounded-none border-2 border-[#1B3B6F]">
             </div>
-            <button id="apply-custom-color-btn" class="w-full py-1.5 px-3 rounded bg-[#162E56] hover:bg-[#1E3A68] text-white font-bold text-xs border border-[#1E3A68] shadow-[2px_2px_0px_#02060D] cursor-pointer">
+            <button id="apply-custom-color-btn" class="w-full py-2 px-3 rounded-none bg-[#11264B] hover:bg-[#1B3B6F] text-white font-heading font-bold text-xs uppercase tracking-wide border-2 border-[#1B3B6F] hover:border-[#FFD700] shadow-[3px_3px_0px_#01040A] cursor-pointer">
               Appliquer couleur
             </button>
           </div>
@@ -1164,21 +1164,21 @@
       </div>
 
       <!-- 5. Création de Thème Personnalisé (Image & Fond) -->
-      <div class="p-3.5 rounded-lg bg-[#050B14] border border-[#1E3A68] space-y-2.5 font-mono shadow-[2px_2px_0px_#02060D]">
+      <div class="p-3.5 rounded-none bg-[#030814] border-2 border-[#1B3B6F] space-y-2.5 font-mono shadow-[3px_3px_0px_#01040A]">
         <div class="flex items-center justify-between">
-          <label class="text-xs font-bold uppercase tracking-wider text-[#94A3B8] flex items-center gap-1.5">
+          <label class="text-xs font-heading font-bold uppercase tracking-wider text-[#8EA5C8] flex items-center gap-1.5">
             <span>🖼️</span> Custom Wallpaper & Gabarit NumWorks
           </label>
-          <span class="text-[10px] text-emerald-400 font-bold">320x240 px (LCD N0120)</span>
+          <span class="text-[10px] text-emerald-400 font-bold uppercase">&gt;_ 320x240 px (LCD N0120)</span>
         </div>
-        <p class="text-[10px] text-[#94A3B8] leading-relaxed">
+        <p class="text-[10px] text-[#8EA5C8] leading-relaxed">
           Pour concevoir votre propre fond d'application (mario, fleurs, cyberpunk, geek), utilisez le gabarit officiel délimitant les 4 zones (Top Bar, Galerie 3x2, Dock Actif, Raccourcis) :
         </p>
         <div class="flex flex-wrap items-center gap-2 pt-1">
-          <a href="assets/theme_template_320x240.png" download="theme_template_320x240.png" class="flex-1 py-1.5 px-3 rounded bg-[#162E56] hover:bg-[#1E3A68] text-[#F8FAFC] text-center font-bold text-xs border border-[#1E3A68] shadow-[2px_2px_0px_#02060D] flex items-center justify-center gap-1.5 cursor-pointer">
+          <a href="assets/theme_template_320x240.png" download="theme_template_320x240.png" class="flex-1 py-2 px-3 rounded-none bg-[#11264B] hover:bg-[#1B3B6F] text-[#F8FAFC] text-center font-heading font-bold text-xs uppercase tracking-wide border-2 border-[#1B3B6F] hover:border-[#FFD700] shadow-[3px_3px_0px_#01040A] flex items-center justify-center gap-1.5 cursor-pointer">
             <span>📥 Télécharger Gabarit PNG (320x240)</span>
           </a>
-          <a href="assets/theme_template_320x240.svg" download="theme_template_320x240.svg" class="flex-1 py-1.5 px-3 rounded bg-[#162E56] hover:bg-[#1E3A68] text-[#F8FAFC] text-center font-bold text-xs border border-[#1E3A68] shadow-[2px_2px_0px_#02060D] flex items-center justify-center gap-1.5 cursor-pointer">
+          <a href="assets/theme_template_320x240.svg" download="theme_template_320x240.svg" class="flex-1 py-2 px-3 rounded-none bg-[#11264B] hover:bg-[#1B3B6F] text-[#F8FAFC] text-center font-heading font-bold text-xs uppercase tracking-wide border-2 border-[#1B3B6F] hover:border-[#00E5FF] shadow-[3px_3px_0px_#01040A] flex items-center justify-center gap-1.5 cursor-pointer">
             <span>📐 Télécharger Gabarit SVG</span>
           </a>
         </div>
@@ -1186,10 +1186,10 @@
 
       <!-- Boutons Enregistrer & Fermer -->
       <div class="pt-2 flex gap-3">
-        <button id="settings-save-btn" class="flex-1 py-2.5 px-4 rounded btn-cyber-gold text-xs font-mono cursor-pointer">
+        <button id="settings-save-btn" class="flex-1 py-3 px-4 rounded-none btn-cyber-gold text-xs font-heading font-extrabold uppercase tracking-wider cursor-pointer border-2 border-black shadow-[3px_3px_0px_#01040A]">
           ✓ Enregistrer
         </button>
-        <button id="settings-reset-btn" class="py-2.5 px-4 rounded bg-[#162E56] hover:bg-[#1E3A68] text-[#F8FAFC] font-bold text-xs font-mono border border-[#1E3A68] shadow-[2px_2px_0px_#02060D] cursor-pointer" title="Réinitialiser tous les paramètres">
+        <button id="settings-reset-btn" class="py-3 px-4 rounded-none bg-[#11264B] hover:bg-[#1B3B6F] text-[#F8FAFC] font-heading font-bold text-xs uppercase tracking-wider border-2 border-[#1B3B6F] shadow-[3px_3px_0px_#01040A] cursor-pointer" title="Réinitialiser tous les paramètres">
           Réinitialiser
         </button>
       </div>

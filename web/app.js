@@ -1641,40 +1641,40 @@ document.addEventListener('DOMContentLoaded', async () => {
         catalogList.appendChild(card);
       } else {
         const card = document.createElement('div');
-        card.className = `hover-lift p-3 rounded-xl border-2 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-[3px_3px_0px_#050B14] ${
+        card.className = `hover-lift p-3 rounded-none border-2 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-[4px_4px_0px_#01040A] ${
           isSelected 
-            ? 'bg-[#0D1B36] border-[#FFD700] ring-1 ring-[#FFD700]/50' 
-            : 'bg-[#0D1B36] border-[#1E3A68] hover:border-[#FFD700]'
+            ? 'bg-[#09152B] border-[#FFD700] ring-2 ring-[#FFD700]/50' 
+            : 'bg-[#09152B] border-[#1B3B6F] hover:border-[#FFD700]'
         }`;
 
         card.innerHTML = `
           <div class="flex items-center gap-3.5 min-w-0 cursor-pointer app-info-trigger flex-1" title="Cliquez pour afficher les commandes et détails">
-            <div class="w-10 h-10 rounded-lg border border-[#1E3A68] flex items-center justify-center font-bold text-lg text-white shadow-[2px_2px_0px_#050B14] shrink-0 overflow-hidden" style="background-color: ${app.color || '#FFD700'}">
+            <div class="w-10 h-10 rounded-none border-2 border-black flex items-center justify-center font-bold text-lg text-black shadow-[2px_2px_0px_#01040A] shrink-0 overflow-hidden" style="background-color: ${app.color || '#FFD700'}">
               ${getAppIconHtml(app, 'w-full h-full object-contain p-1')}
             </div>
             <div class="space-y-0.5 min-w-0 flex-1 font-mono">
               <div class="flex items-center gap-2 flex-wrap">
-                <h4 class="font-bold text-[#F8FAFC] text-xs hover:text-[#FFD700] transition-colors">${app.name}</h4>
-                <span class="text-[10px] px-1.5 py-0.2 rounded bg-[#050B14] border border-[#1E3A68] text-[#94A3B8] font-semibold">${app.category}</span>
+                <h4 class="font-heading font-bold text-[#F8FAFC] text-xs hover:text-[#FFD700] transition-colors uppercase tracking-wide">${app.name}</h4>
+                <span class="text-[10px] px-1.5 py-0.2 rounded-none bg-[#030814] border border-[#1B3B6F] text-[#8EA5C8] font-bold uppercase">${app.category}</span>
               </div>
-              <p class="text-xs text-[#94A3B8] line-clamp-1 leading-normal">${app.description}</p>
-              <div class="text-[11px] text-[#94A3B8] flex items-center gap-2">
+              <p class="text-xs text-[#8EA5C8] line-clamp-1 leading-normal">&gt;_ ${app.description}</p>
+              <div class="text-[11px] text-[#8EA5C8] flex items-center gap-2">
                 <span>${app.size_kb} Ko</span>
                 <span>•</span>
                 <span>v${app.version}</span>
                 <span>•</span>
-                <span class="text-[#FDE68A]">${app.author}</span>
+                <span class="text-[#FFD700]">${app.author}</span>
               </div>
             </div>
           </div>
           <div class="flex items-center gap-2 shrink-0">
-            <button class="info-btn p-1.5 rounded-lg bg-[#050B14] hover:bg-[#162E56] text-[#94A3B8] hover:text-[#FFD700] text-xs border border-[#1E3A68] transition-all cursor-pointer font-mono" title="Voir les contrôles et touches NumWorks">
+            <button class="info-btn p-1.5 rounded-none bg-[#030814] hover:bg-[#11264B] text-[#8EA5C8] hover:text-[#FFD700] text-xs border-2 border-[#1B3B6F] transition-all cursor-pointer font-mono font-bold shadow-[1px_1px_0px_#01040A]" title="Voir les contrôles et touches NumWorks">
               ℹ️
             </button>
-            <button class="add-btn px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all shrink-0 ${
+            <button class="add-btn px-3 py-1.5 rounded-none text-xs font-mono font-bold uppercase transition-all shrink-0 ${
               isSelected 
-                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 cursor-default' 
-                : 'btn-cyber-gold shadow-[0_0_10px_rgba(255,215,0,0.25)] cursor-pointer'
+                ? 'bg-emerald-500/20 text-emerald-400 border-2 border-emerald-500/40 cursor-default' 
+                : 'btn-cyber-gold shadow-[3px_3px_0px_#01040A] cursor-pointer'
             }">
               ${isSelected ? '✓ Inclus' : '+ Ajouter'}
             </button>
@@ -1761,8 +1761,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         card.innerHTML = `
           <div class="w-full flex items-center justify-between text-[10px] pointer-events-none">
-            <span class="px-1.5 py-0.2 rounded bg-[#050B14] text-[#FFD700] border border-[#1E3A68] font-mono font-bold text-[9px]">.${app.format || 'NWS'}</span>
-            <span class="px-1.5 py-0.2 rounded bg-[#050B14] text-[#94A3B8] font-mono text-[9px] truncate max-w-[85px]">${app.category}</span>
+            <span class="px-1.5 py-0.2 rounded-none bg-[#030814] text-[#FFD700] border border-[#1B3B6F] font-mono font-bold text-[9px]">.${app.format || 'NWS'}</span>
+            <span class="px-1.5 py-0.2 rounded-none bg-[#030814] text-[#8EA5C8] font-mono text-[9px] truncate max-w-[85px] uppercase font-bold">${app.category}</span>
           </div>
 
           <div class="gallery-icon-wrapper" style="background-color: ${app.color || '#3B82F6'}">
@@ -1770,18 +1770,18 @@ document.addEventListener('DOMContentLoaded', async () => {
           </div>
 
           <div class="w-full text-center space-y-0.5 px-1 pointer-events-none">
-            <h4 class="font-extrabold text-[#F8FAFC] text-xs font-mono truncate" title="${app.name}">${app.name}</h4>
-            <p class="text-[10px] text-[#94A3B8] truncate font-mono">${app.size_kb} Ko • ${app.author || 'Communauté'}</p>
+            <h4 class="font-heading font-extrabold text-[#F8FAFC] text-xs uppercase tracking-wide truncate" title="${app.name}">${app.name}</h4>
+            <p class="text-[10px] text-[#8EA5C8] truncate font-mono">&gt;_ ${app.size_kb} Ko • ${app.author || 'Communauté'}</p>
           </div>
 
-          <div class="w-full pt-1.5 border-t border-[#1E3A68] flex items-center justify-between gap-1">
-            <button class="gallery-info-btn p-1 rounded-lg bg-[#050B14] hover:bg-[#162E56] text-[#94A3B8] hover:text-[#FFD700] border border-[#1E3A68] text-[11px] transition-all cursor-pointer font-mono" title="Détails">
+          <div class="w-full pt-1.5 border-t-2 border-[#1B3B6F] flex items-center justify-between gap-1">
+            <button class="gallery-info-btn p-1 rounded-none bg-[#030814] hover:bg-[#11264B] text-[#8EA5C8] hover:text-[#FFD700] border-2 border-[#1B3B6F] text-[11px] transition-all cursor-pointer font-mono font-bold shadow-[1px_1px_0px_#01040A]" title="Détails">
               ℹ️
             </button>
-            <button class="gallery-dl-btn flex-1 py-1 px-2 rounded-lg text-[10px] font-mono font-bold transition-all cursor-pointer ${
+            <button class="gallery-dl-btn flex-1 py-1 px-2 rounded-none text-[10px] font-heading font-extrabold uppercase tracking-wide transition-all cursor-pointer ${
               isSelected 
-                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 cursor-default' 
-                : 'bg-gradient-to-r from-[#38BDF8] to-[#2563EB] hover:brightness-110 text-white border border-[#38BDF8] shadow-[0_0_8px_rgba(56,189,248,0.25)]'
+                ? 'bg-emerald-500/20 text-emerald-400 border-2 border-emerald-500/40 cursor-default' 
+                : 'btn-cyber-blue shadow-[2px_2px_0px_#01040A]'
             }">
               ${isSelected ? '✓ Inclus' : '+ Pack'}
             </button>
@@ -1823,41 +1823,41 @@ document.addEventListener('DOMContentLoaded', async () => {
         searchResultsList.appendChild(card);
       } else {
         const card = document.createElement('div');
-        card.className = `p-3 rounded-xl border-2 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-[3px_3px_0px_#050B14] ${
+        card.className = `p-3 rounded-none border-2 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-[4px_4px_0px_#01040A] ${
           isSelected 
-            ? 'bg-[#0D1B36] border-[#FFD700] ring-1 ring-[#FFD700]/50' 
-            : 'bg-[#0D1B36] border-[#1E3A68] hover:border-[#FFD700]'
+            ? 'bg-[#09152B] border-[#FFD700] ring-2 ring-[#FFD700]/50' 
+            : 'bg-[#09152B] border-[#1B3B6F] hover:border-[#FFD700]'
         }`;
 
         card.innerHTML = `
           <div class="flex items-center gap-3.5 flex-1 min-w-0 cursor-pointer app-info-trigger">
-            <div class="w-10 h-10 rounded-lg border border-[#1E3A68] flex items-center justify-center font-bold text-lg text-white shadow-[2px_2px_0px_#050B14] shrink-0 overflow-hidden" style="background-color: ${app.color || '#3B82F6'}">
+            <div class="w-10 h-10 rounded-none border-2 border-black flex items-center justify-center font-bold text-lg text-white shadow-[2px_2px_0px_#01040A] shrink-0 overflow-hidden" style="background-color: ${app.color || '#3B82F6'}">
               ${getAppIconHtml(app, 'w-full h-full object-contain p-1')}
             </div>
             <div class="space-y-0.5 flex-1 min-w-0 font-mono">
               <div class="flex items-center gap-2 flex-wrap">
-                <h4 class="font-bold text-[#F8FAFC] text-xs hover:text-[#FFD700] transition-colors">${app.name}</h4>
-                <span class="text-[10px] px-1.5 py-0.2 rounded bg-[#050B14] text-[#FFD700] border border-[#1E3A68] font-bold">
+                <h4 class="font-heading font-bold text-[#F8FAFC] text-xs hover:text-[#FFD700] transition-colors uppercase tracking-wide">${app.name}</h4>
+                <span class="text-[10px] px-1.5 py-0.2 rounded-none bg-[#030814] text-[#FFD700] border border-[#1B3B6F] font-bold">
                   .${app.format || 'NWS'}
                 </span>
-                <span class="text-[10px] px-1.5 py-0.2 rounded bg-[#050B14] border border-[#1E3A68] text-[#94A3B8]">
+                <span class="text-[10px] px-1.5 py-0.2 rounded-none bg-[#030814] border border-[#1B3B6F] text-[#8EA5C8] uppercase font-bold">
                   ${app.source || 'Communauté'}
                 </span>
               </div>
-              <p class="text-xs text-[#94A3B8] line-clamp-1 leading-normal">${app.description}</p>
-              <div class="text-[11px] text-[#94A3B8] flex items-center gap-2">
+              <p class="text-xs text-[#8EA5C8] line-clamp-1 leading-normal">&gt;_ ${app.description}</p>
+              <div class="text-[11px] text-[#8EA5C8] flex items-center gap-2">
                 <span>${app.size_kb} Ko</span>
                 <span>•</span>
                 <span>${app.category}</span>
                 <span>•</span>
-                <span class="text-[#FDE68A]">par ${app.author}</span>
+                <span class="text-[#00E5FF]">par ${app.author}</span>
               </div>
             </div>
           </div>
-          <button class="dl-app-btn px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all shrink-0 ${
+          <button class="dl-app-btn px-3 py-1.5 rounded-none text-xs font-heading font-bold uppercase tracking-wide transition-all shrink-0 ${
             isSelected 
-              ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 cursor-default' 
-              : 'bg-gradient-to-r from-[#38BDF8] to-[#2563EB] hover:brightness-110 text-white border border-[#38BDF8] shadow-[0_0_8px_rgba(56,189,248,0.25)] active:translate-x-[1px] active:translate-y-[1px] cursor-pointer'
+              ? 'bg-emerald-500/20 text-emerald-400 border-2 border-emerald-500/40 cursor-default' 
+              : 'btn-cyber-blue shadow-[3px_3px_0px_#01040A] cursor-pointer'
           }">
             ${isSelected ? '✓ Dans le Pack' : '⬇️ Ajouter au Pack'}
           </button>
@@ -2039,22 +2039,22 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       selectedApps.forEach((app, idx) => {
         const item = document.createElement('div');
-        item.className = 'p-2.5 bg-[#0D1B36] rounded-xl border border-[#1E3A68] hover:border-[#FFD700] flex items-center justify-between shadow-[2px_2px_0px_#050B14] transition-colors';
+        item.className = 'p-2.5 bg-[#09152B] rounded-none border-2 border-[#1B3B6F] hover:border-[#FFD700] flex items-center justify-between shadow-[3px_3px_0px_#01040A] transition-all';
         item.innerHTML = `
           <div class="flex items-center gap-2.5 min-w-0 cursor-pointer app-pack-info flex-1" title="Voir les détails et contrôles de cette application">
             <span class="font-mono text-xs text-[#FFD700] font-bold w-4">${idx + 1}.</span>
-            <div class="w-7 h-7 rounded-lg border border-[#1E3A68] flex items-center justify-center font-bold text-sm text-white shrink-0 overflow-hidden" style="background-color: ${app.color || '#162E56'}">
+            <div class="w-7 h-7 rounded-none border-2 border-black flex items-center justify-center font-bold text-sm text-black shrink-0 overflow-hidden shadow-[1px_1px_0px_#01040A]" style="background-color: ${app.color || '#FFD700'}">
               ${getAppIconHtml(app, 'w-full h-full object-contain p-0.5')}
             </div>
             <div class="min-w-0 flex-1">
-              <p class="text-xs font-semibold text-[#F8FAFC] truncate hover:text-[#FFD700] transition-colors">${app.name}</p>
-              <p class="text-[10px] font-mono text-[#94A3B8]">${app.size_kb} Ko • ${app.category}</p>
+              <p class="text-xs font-heading font-bold text-[#F8FAFC] truncate hover:text-[#FFD700] transition-colors uppercase tracking-wide">${app.name}</p>
+              <p class="text-[10px] font-mono text-[#8EA5C8]">&gt;_ ${app.size_kb} Ko • ${app.category}</p>
             </div>
           </div>
           <div class="flex items-center gap-1 shrink-0 ml-2 font-mono">
-            <button class="up-btn p-1 hover:bg-[#162E56] rounded-lg border border-[#1E3A68] text-[#94A3B8] hover:text-[#FFD700] text-[10px] transition-colors cursor-pointer" title="Monter" ${idx === 0 ? 'disabled style="opacity:0.2"' : ''}>▲</button>
-            <button class="down-btn p-1 hover:bg-[#162E56] rounded-lg border border-[#1E3A68] text-[#94A3B8] hover:text-[#FFD700] text-[10px] transition-colors cursor-pointer" title="Descendre" ${idx === selectedApps.length - 1 ? 'disabled style="opacity:0.2"' : ''}>▼</button>
-            <button class="del-btn p-1 hover:bg-red-950/60 rounded-lg border border-red-800/60 text-red-400 hover:text-red-300 ml-1 text-[10px] transition-colors cursor-pointer" title="Supprimer du pack">✕</button>
+            <button class="up-btn p-1 hover:bg-[#11264B] rounded-none border-2 border-[#1B3B6F] hover:border-[#FFD700] text-[#8EA5C8] hover:text-[#FFD700] text-[10px] transition-colors cursor-pointer shadow-[1px_1px_0px_#01040A]" title="Monter" ${idx === 0 ? 'disabled style="opacity:0.2"' : ''}>▲</button>
+            <button class="down-btn p-1 hover:bg-[#11264B] rounded-none border-2 border-[#1B3B6F] hover:border-[#FFD700] text-[#8EA5C8] hover:text-[#FFD700] text-[10px] transition-colors cursor-pointer shadow-[1px_1px_0px_#01040A]" title="Descendre" ${idx === selectedApps.length - 1 ? 'disabled style="opacity:0.2"' : ''}>▼</button>
+            <button class="del-btn p-1 hover:bg-red-950/60 rounded-none border-2 border-red-800/80 text-red-400 hover:text-red-300 ml-1 text-[10px] transition-colors cursor-pointer shadow-[1px_1px_0px_#01040A]" title="Supprimer du pack">✕</button>
           </div>
         `;
 
@@ -2456,22 +2456,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!container) return;
     const toast = document.createElement('div');
     
-    let borderCls = 'border-[#30363d] text-[#c9d1d9]';
+    let borderCls = 'border-[#1B3B6F] text-[#8EA5C8]';
     let icon = 'ℹ';
     if (type === 'success') {
-      borderCls = 'border-[#3fb950] text-[#3fb950]';
+      borderCls = 'border-emerald-400 text-emerald-400';
       icon = '✓';
     } else if (type === 'error') {
-      borderCls = 'border-[#f85149] text-[#f85149]';
+      borderCls = 'border-red-500 text-red-400';
       icon = '✕';
     } else if (type === 'warning') {
       borderCls = 'border-[#FFD700] text-[#FFD700]';
       icon = '⚠';
     }
 
-    toast.className = `bg-[#0D1B36] ${borderCls} border-2 px-3.5 py-2.5 rounded-xl shadow-[0_4px_20px_rgba(5,11,20,0.85)] text-xs font-mono font-semibold transition-all duration-150 transform translate-y-2 opacity-0 flex items-center gap-2.5 pointer-events-auto`;
+    toast.className = `bg-[#09152B] ${borderCls} border-2 px-4 py-3 rounded-none shadow-[5px_5px_0px_#01040A] text-xs font-mono font-bold uppercase tracking-wide transition-all duration-150 transform translate-y-2 opacity-0 flex items-center gap-2.5 pointer-events-auto`;
     toast.innerHTML = `
-      <span class="w-5 h-5 rounded-lg border border-current flex items-center justify-center font-bold text-xs shrink-0">${icon}</span>
+      <span class="w-5 h-5 rounded-none border-2 border-current flex items-center justify-center font-bold text-xs shrink-0">${icon}</span>
       <span class="text-[#F8FAFC]">${message}</span>
     `;
 

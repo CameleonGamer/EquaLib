@@ -1,45 +1,21 @@
 /**
- * EquaLib Neo-Brutalist & Developer Tech Stylesheet
- * Identité visuelle authentique Dev / Hardware NumWorks N0120
- * - Bordures franches 1.5px à 2px solides
- * - Ombres décalées nettes (hard offset shadows : 3px 3px 0px #000)
- * - Typographie JetBrains Mono & Outfit haute lisibilité
- * - Micro-interactions rapides et tactiles (<= 150ms)
- * - Zéro cliché AI/SaaS (pas de dégradés fluo, pas de glassmorphism flouté générique)
+ * EquaLib Radical Outrun & Solar Synthwave Stylesheet
+ * Identité visuelle authentique Outrun / Vaporwave Solaire
+ * - Typographie Orbitron (titres) & Share Tech Mono (UI / code)
+ * - Géométrie angulaire stricte (rounded-none 0px, borders 2px solides)
+ * - Bordures néon franches & Glow Solaire (Or #FFD700 & Ambre #FF9100)
+ * - Grille Outrun 3D animée en défilement infini
+ * - Ombres décalées percutantes (hard offset shadows : 3px 3px 0px #02060D)
  */
 
-/* Import Google Fonts pour Outfit et JetBrains Mono */
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap');
+/* Import Google Fonts pour Orbitron, Share Tech Mono et JetBrains Mono */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;800;900&family=Share+Tech+Mono&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap');
 
-/* Fallbacks locaux hors-ligne garantissant un affichage instantané sans connexion */
+/* Fallbacks locaux garantissant un affichage instantané sans connexion */
 @font-face {
   font-family: 'Outfit';
   src: url('fonts/outfit/Outfit-Regular.ttf') format('truetype');
   font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Outfit';
-  src: url('fonts/outfit/Outfit-SemiBold.ttf') format('truetype');
-  font-weight: 600;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Outfit';
-  src: url('fonts/outfit/Outfit-Bold.ttf') format('truetype');
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Outfit';
-  src: url('fonts/outfit/Outfit-ExtraBold.ttf') format('truetype');
-  font-weight: 800;
   font-style: normal;
   font-display: swap;
 }
@@ -52,45 +28,38 @@
   font-display: swap;
 }
 
-@font-face {
-  font-family: 'JetBrains Mono';
-  src: url('fonts/jetbrains_mono/JetBrainsMono-Bold.ttf') format('truetype');
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-}
-
-/* ==================== SYSTÈME DE VARIABLES SOLAR CYBER & MIDNIGHT NAVY ==================== */
+/* ==================== SYSTÈME DE VARIABLES SOLAR SYNTHWAVE & MIDNIGHT NAVY ==================== */
 :root {
-  --font-main: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  --font-ascii: 'JetBrains Mono', 'Cascadia Code', 'Fira Code', 'Courier New', monospace;
-  --font-arista: var(--font-main);
+  --font-main: 'Share Tech Mono', 'JetBrains Mono', monospace;
+  --font-heading: 'Orbitron', -apple-system, sans-serif;
+  --font-ascii: 'Share Tech Mono', 'JetBrains Mono', monospace;
+  --font-arista: 'Orbitron', sans-serif;
 
-  /* Palette Solar Cyber & Midnight Navy */
-  --theme-bg: #050B14;               /* Abyssal Midnight Navy Void */
-  --theme-surface: #0D1B36;          /* Deep Oceanic Navy Glass */
-  --theme-surface-raised: #162E56;   /* Raised Navy Surface */
-  --theme-border: #1E3A68;           /* Oceanic Cobalt Border */
-  --theme-border-strong: #0A1628;    /* Deep Abyssal Border */
-  --theme-border-gold: #FFD700;      /* Solar Gold Accent Border */
-  --theme-primary: #FFD700;          /* Solar Gold (Primary CTA / Hero) */
-  --theme-primary-hover: #FF9100;    /* Sunset Amber Hover */
-  --theme-accent: #FF9100;           /* Warm Sunset Amber */
-  --theme-accent-blue: #38BDF8;      /* Electric Cyan / Ice Blue */
-  --theme-accent-cobalt: #2563EB;    /* Deep Cobalt Blue */
-  --theme-text: #F8FAFC;             /* Chiffon White Main Text */
-  --theme-text-muted: #94A3B8;       /* Slate / Navy Grey Text */
-  --theme-text-gold: #FDE68A;        /* Pale Radiant Gold Text */
-  --theme-card: #0D1B36;
+  /* Palette Solar Synthwave & Midnight Navy */
+  --theme-bg: #030814;               /* Void Abyssal Noir/Bleu Nuit Profond */
+  --theme-surface: #09152B;          /* Midnight Navy Panel */
+  --theme-surface-raised: #11264B;   /* Raised Deep Marine */
+  --theme-border: #1B3B6F;           /* Bordure Marine Franche */
+  --theme-border-strong: #050E1D;    /* Bordure Sombre Profonde */
+  --theme-border-gold: #FFD700;      /* Bordure Laser Or Solaire */
+  --theme-primary: #FFD700;          /* Or Solaire Pur (Hero Color) */
+  --theme-primary-hover: #FF9100;    /* Ambre Solaire Hover */
+  --theme-accent: #FF9100;           /* Jaune Orangé / Ambre Vibrant */
+  --theme-accent-blue: #00E5FF;      /* Cyan Électrique */
+  --theme-accent-cobalt: #2563EB;    /* Bleu Cobalt */
+  --theme-text: #F8FAFC;             /* Blanc Chiffon Haute Lisibilité */
+  --theme-text-muted: #8EA5C8;       /* Gris Bleu Métallisé */
+  --theme-text-gold: #FDE68A;        /* Or Doux Brillant */
+  --theme-card: #09152B;
 
   /* Ombres décalées franches & Solar Glows */
-  --shadow-hard-sm: 2px 2px 0px #02060D;
-  --shadow-hard-md: 3px 3px 0px #02060D;
-  --shadow-hard-lg: 4px 4px 0px #02060D;
-  --shadow-hard-xl: 6px 6px 0px #02060D;
-  --shadow-glow-gold: 0 0 25px rgba(255, 215, 0, 0.35);
-  --shadow-glow-amber: 0 0 25px rgba(255, 145, 0, 0.35);
-  --shadow-glow-blue: 0 0 25px rgba(56, 189, 248, 0.3);
+  --shadow-hard-sm: 2px 2px 0px #01040A;
+  --shadow-hard-md: 3px 3px 0px #01040A;
+  --shadow-hard-lg: 5px 5px 0px #01040A;
+  --shadow-hard-xl: 7px 7px 0px #01040A;
+  --shadow-glow-gold: 0 0 25px rgba(255, 215, 0, 0.45);
+  --shadow-glow-amber: 0 0 25px rgba(255, 145, 0, 0.45);
+  --shadow-glow-blue: 0 0 25px rgba(0, 229, 255, 0.4);
 }
 
 html {
@@ -106,6 +75,14 @@ body {
   color: var(--theme-text);
   overflow-x: hidden;
   position: relative;
+  letter-spacing: 0.025em;
+}
+
+/* Titres en Orbitron majuscules */
+h1, h2, h3, h4, h5, h6, .font-heading, .font-orbitron {
+  font-family: var(--font-heading) !important;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
 }
 
 /* Polices utilitaires */
@@ -117,35 +94,58 @@ body {
   font-family: var(--font-arista) !important;
 }
 
-/* ==================== SOLAR PERSPECTIVE GRID & AMBIENT GLOW ==================== */
+/* ==================== OUTRUN HIGHWAY ANIMATED PERSPECTIVE GRID ==================== */
+@keyframes outrunGridScroll {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 0 44px;
+  }
+}
+
 .solar-perspective-grid {
   position: fixed;
   bottom: -60px;
   left: -50%;
   width: 200%;
-  height: 48vh;
+  height: 54vh;
   background-image: 
-    linear-gradient(to right, rgba(30, 58, 104, 0.45) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(30, 58, 104, 0.45) 1px, transparent 1px);
-  background-size: 38px 38px;
-  transform: perspective(350px) rotateX(65deg);
+    linear-gradient(to right, rgba(255, 215, 0, 0.4) 1.5px, transparent 1.5px),
+    linear-gradient(to bottom, rgba(255, 145, 0, 0.45) 1.5px, transparent 1.5px);
+  background-size: 44px 44px;
+  transform: perspective(280px) rotateX(68deg);
   transform-origin: bottom center;
   pointer-events: none;
   z-index: 0;
-  mask-image: linear-gradient(to top, rgba(0,0,0,1) 15%, rgba(0,0,0,0) 85%);
-  -webkit-mask-image: linear-gradient(to top, rgba(0,0,0,1) 15%, rgba(0,0,0,0) 85%);
-  opacity: 0.65;
+  mask-image: linear-gradient(to top, rgba(0,0,0,1) 20%, rgba(0,0,0,0) 88%);
+  -webkit-mask-image: linear-gradient(to top, rgba(0,0,0,1) 20%, rgba(0,0,0,0) 88%);
+  opacity: 0.85;
+  animation: outrunGridScroll 1.8s linear infinite;
+}
+
+.solar-horizon-line {
+  position: fixed;
+  bottom: 48vh;
+  left: 0;
+  width: 100vw;
+  height: 2px;
+  background: linear-gradient(90deg, transparent 0%, #FF9100 20%, #FFD700 50%, #FF9100 80%, transparent 100%);
+  box-shadow: 0 0 16px #FFD700, 0 0 32px #FF9100;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.85;
 }
 
 .solar-ambient-orb {
   position: fixed;
-  top: -160px;
-  right: 10%;
-  width: 520px;
-  height: 520px;
+  top: -140px;
+  right: 12%;
+  width: 580px;
+  height: 580px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 145, 0, 0.14) 0%, rgba(255, 215, 0, 0.06) 40%, rgba(5, 11, 20, 0) 70%);
-  filter: blur(48px);
+  background: radial-gradient(circle, rgba(255, 145, 0, 0.22) 0%, rgba(255, 215, 0, 0.12) 35%, rgba(3, 8, 20, 0) 70%);
+  filter: blur(44px);
   pointer-events: none;
   z-index: 0;
 }
@@ -252,37 +252,106 @@ body.crt-off .crt-vignette {
   box-shadow: 1px 1px 0px #02060D !important;
 }
 
+.btn-cyber-blue {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-ascii);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: linear-gradient(135deg, #00E5FF 0%, #2563EB 100%) !important;
+  color: #050B14 !important;
+  border: 2px solid #000000 !important;
+  box-shadow: 3px 3px 0px #02060D, 0 0 16px rgba(0, 229, 255, 0.35) !important;
+  transform: skewX(-6deg);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+  user-select: none;
+  cursor: pointer;
+}
+.btn-cyber-blue > * {
+  transform: skewX(6deg);
+}
+.btn-cyber-blue:hover {
+  background: linear-gradient(135deg, #38BDF8 0%, #00E5FF 100%) !important;
+  transform: skewX(0deg) translateY(-1px) !important;
+  box-shadow: 4px 4px 0px #02060D, 0 0 24px rgba(0, 229, 255, 0.5) !important;
+}
+.btn-cyber-blue:active {
+  transform: skewX(0deg) translate(2px, 2px) !important;
+  box-shadow: 1px 1px 0px #02060D !important;
+}
+
+/* ==================== EFFETS DE GLOW & NÉON TEXTUELS ==================== */
+.text-glow-gold {
+  text-shadow: 0 0 12px rgba(255, 215, 0, 0.7), 0 0 24px rgba(255, 145, 0, 0.45);
+}
+.text-glow-amber {
+  text-shadow: 0 0 12px rgba(255, 145, 0, 0.7), 0 0 24px rgba(255, 110, 0, 0.45);
+}
+.text-glow-cyan {
+  text-shadow: 0 0 12px rgba(0, 229, 255, 0.7), 0 0 24px rgba(37, 99, 235, 0.45);
+}
+.box-glow-gold {
+  box-shadow: 0 0 25px rgba(255, 215, 0, 0.45);
+}
+.box-glow-blue {
+  box-shadow: 0 0 25px rgba(0, 229, 255, 0.4);
+}
+
+/* ==================== GÉOMÉTRIE RADICALE OUTRUN & SYNTHWAVE ==================== */
+.rounded, .rounded-sm, .rounded-md, .rounded-lg, .rounded-xl, .rounded-2xl, .rounded-3xl {
+  border-radius: 0px !important;
+}
+
+button:not(.rounded-full):not(#color-wheel-picker),
+input:not([type="checkbox"]):not([type="radio"]):not(.rounded-full),
+select, textarea {
+  border-radius: 0px !important;
+}
+
+/* Modals Outrun Synthwave */
+#app-details-modal > div,
+#webusb-help-modal > div,
+#settings-modal > div {
+  border-radius: 0px !important;
+  border: 2px solid var(--theme-border-gold) !important;
+  border-top: 4px solid var(--theme-accent) !important;
+  box-shadow: 8px 8px 0px #01040A, 0 0 35px rgba(255, 215, 0, 0.35) !important;
+}
+
 /* ==================== CADRES, BOÎTES & BADGES DEV TECH ==================== */
 .ascii-box {
   background: var(--theme-surface);
-  border: 1.5px solid var(--theme-border);
-  border-top: 2px solid var(--theme-primary);
+  border: 2px solid var(--theme-border);
+  border-top: 3px solid var(--theme-primary);
   box-shadow: var(--shadow-hard-md);
-  border-radius: 8px;
+  border-radius: 0px !important;
   position: relative;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .ascii-box:hover {
   border-color: var(--theme-primary);
-  box-shadow: var(--shadow-hard-lg), 0 0 16px rgba(255, 215, 0, 0.18);
+  box-shadow: var(--shadow-hard-lg), 0 0 20px rgba(255, 215, 0, 0.25);
 }
 
 .ascii-badge {
   font-family: var(--font-ascii);
   font-size: 11px;
   padding: 2px 7px;
-  border-radius: 5px;
+  border-radius: 0px !important;
   border: 1.5px solid var(--theme-border);
   background: var(--theme-surface-raised);
   color: var(--theme-primary);
   font-weight: 700;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
 
 /* Bordure laser or supérieure */
 .border-laser-gold {
-  border-top: 2px solid var(--theme-primary) !important;
+  border-top: 3px solid var(--theme-primary) !important;
 }
 
 /* Scrollbar sobre et rectangulaire */
@@ -508,50 +577,51 @@ body.hide-tooltips [data-shortcut-hint] {
   align-items: center;
   justify-content: space-between;
   padding: 0.85rem;
-  border-radius: 8px;
-  border: 1.5px solid var(--theme-border);
-  border-top: 2px solid rgba(255, 215, 0, 0.6);
+  border-radius: 0px !important;
+  border: 2px solid var(--theme-border);
+  border-top: 3px solid rgba(255, 215, 0, 0.7);
   background: var(--theme-surface);
   box-shadow: var(--shadow-hard-md);
   cursor: pointer;
-  transition: transform 0.12s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.12s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.12s ease;
+  transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.15s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.15s ease;
   overflow: hidden;
   user-select: none;
 }
 
 .gallery-card:hover, .gallery-card.active-hover {
-  transform: translate(-1px, -2px);
-  border-color: var(--theme-primary);
-  border-top-color: var(--theme-primary);
-  box-shadow: var(--shadow-hard-lg), 0 0 18px rgba(255, 215, 0, 0.25);
+  transform: translateY(-3px) scale(1.02);
+  border-color: var(--theme-primary) !important;
+  border-top-color: var(--theme-primary) !important;
+  box-shadow: var(--shadow-hard-lg), 0 0 24px rgba(255, 215, 0, 0.45) !important;
 }
 
 .gallery-card:active {
   transform: translate(2px, 2px);
-  box-shadow: 1px 1px 0px #02060D;
+  box-shadow: 1px 1px 0px #01040A;
 }
 
 .gallery-card.is-selected {
-  border-color: #FFD700;
-  border-top-color: #FF9100;
-  box-shadow: 3px 3px 0px #02060D, 0 0 16px rgba(255, 215, 0, 0.35);
+  border-color: #FFD700 !important;
+  border-top: 3px solid #FF9100 !important;
+  box-shadow: 4px 4px 0px #01040A, 0 0 20px rgba(255, 215, 0, 0.4) !important;
 }
 
 .gallery-icon-wrapper {
   width: 3.25rem;
   height: 3.25rem;
-  border-radius: 6px;
-  border: 1.5px solid rgba(0, 0, 0, 0.4);
+  border-radius: 0px !important;
+  border: 2px solid #000000;
   box-shadow: 2px 2px 0px #000000;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 1.75rem;
-  transition: transform 0.12s ease;
+  transition: transform 0.15s ease, filter 0.15s ease;
 }
 
 .gallery-card:hover .gallery-icon-wrapper {
-  transform: scale(1.05);
+  transform: scale(1.08) rotate(-3deg);
+  filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.5));
 }
 
 /* ==================== BOTTOM CENTER DYNAMIC APP DOCK ==================== */
@@ -559,8 +629,8 @@ body.hide-tooltips [data-shortcut-hint] {
   transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.15s ease;
   background: var(--theme-surface);
   border: 2px solid var(--theme-primary) !important;
-  box-shadow: var(--shadow-hard-lg), 0 0 25px rgba(255, 215, 0, 0.3) !important;
-  border-radius: 10px;
+  box-shadow: var(--shadow-hard-lg), 0 0 30px rgba(255, 215, 0, 0.4) !important;
+  border-radius: 0px !important;
 }
 
 #active-app-dock.dock-hidden {
