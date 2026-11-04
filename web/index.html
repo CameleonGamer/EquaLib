@@ -148,6 +148,7 @@
         <button id="nav-settings-btn" class="px-3 py-1.5 rounded text-[#F8FAFC] hover:bg-[#162E56] border border-transparent hover:border-[#1E3A68] font-bold transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer">
           <span>⚙️</span> Options & Thèmes
         </button>
+        <button type="button" id="nav-guide-btn" class="px-2.5 py-1 rounded-none text-xs font-mono font-semibold transition-all text-[#8EA5C8] hover:text-[#FFD700] hover:bg-[#11264B] flex items-center gap-1.5 cursor-pointer" title="Lancer le guide interactif"><span>📖</span> <span>Guide D'utilisation</span></button>
       </nav>
 
       <!-- Statut USB et Outils -->
@@ -159,6 +160,9 @@
           </button>
           <button id="crt-toggle-btn" class="w-8 h-8 rounded hover:bg-[#162E56] text-[#94A3B8] hover:text-[#F8FAFC] flex items-center justify-center transition-all cursor-pointer text-xs" title="Activer / Désactiver les scanlines CRT" aria-label="Activer ou désactiver les scanlines CRT">
             <span id="crt-icon">📺</span>
+          </button>
+          <button type="button" id="nav-guide-mobile-btn" class="md:hidden w-8 h-8 rounded hover:bg-[#162E56] text-[#8EA5C8] hover:text-[#FFD700] flex items-center justify-center transition-all cursor-pointer text-xs" title="Guide D'utilisation" aria-label="Guide D'utilisation">
+            <span>📖</span>
           </button>
           <button id="help-modal-btn" class="w-8 h-8 rounded hover:bg-[#162E56] text-[#94A3B8] hover:text-[#F8FAFC] flex items-center justify-center transition-all cursor-pointer text-xs" title="Guide & Aide USB" aria-label="Guide et aide connexion USB">
             <span>❓</span>
@@ -716,7 +720,7 @@
           <!-- Boutons d'Action Principaux -->
           <div class="space-y-2 pt-2">
             <!-- Sélecteur de Modèle de Calculatrice -->
-            <div class="flex items-center justify-between p-2 rounded-none bg-[#030814] border-2 border-[#1B3B6F] text-xs font-mono shadow-[3px_3px_0px_#01040A]">
+            <div class="flex items-center justify-between p-2 rounded-none bg-[#030814] border-2 border-[#1B3B6F] text-xs font-mono shadow-[3px_3px_0px_#01040A]" id="model-selector-group">
               <span class="text-[#F8FAFC] font-heading font-bold text-[11px] uppercase tracking-wider flex items-center gap-1.5">
                 <span>📟</span> Modèle cible :
               </span>
@@ -1218,6 +1222,7 @@
   <script src="webusb.js?v=60"></script>
   <script src="crt_math.js?v=60"></script>
   <script src="wallpaper_studio.js?v=60"></script>
+  <script src="walkthrough_guide.js?v=60"></script>
   <script src="app.js?v=60"></script>
 </body>
 </html>
