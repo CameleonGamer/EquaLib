@@ -987,21 +987,19 @@ body.hide-tooltips [data-shortcut-hint] {
    EQUALIB INTERACTIVE WALKTHROUGH GUIDE (OUTRUN / SYNTHWAVE)
    ========================================================================== */
 
-/* Voile d'arrière-plan semi-transparent */
+/* Voile d'arrière-plan sans flou global pour garantir une netteté cristalline sur le site */
 .walkthrough-overlay,
 .equa-walkthrough-overlay {
   position: fixed;
   inset: 0;
   z-index: 100;
-  background-color: rgba(3, 8, 20, 0.5);
-  backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);
+  background-color: transparent;
   pointer-events: auto;
   opacity: 1;
   transition: opacity 0.25s ease-in-out;
 }
 
-/* Boîte Spotlight (Découpe lumineuse néon avec ombre découpée) */
+/* Boîte Spotlight (Découpe lumineuse néon avec ombre découpée Midnight Navy sombre #030814) */
 .walkthrough-spotlight,
 .equa-walkthrough-spotlight,
 .walkthrough-spotlight-box {
@@ -1011,9 +1009,8 @@ body.hide-tooltips [data-shortcut-hint] {
   border: 2px solid #FFD700;
   border-top: 3px solid #FF9100;
   box-shadow: 
-    0 0 0 9999px rgba(3, 8, 20, 0.82),
-    0 0 25px rgba(255, 215, 0, 0.65),
-    inset 0 0 16px rgba(255, 145, 0, 0.25);
+    0 0 0 9999px rgba(3, 8, 20, 0.85),
+    0 0 25px rgba(255, 215, 0, 0.65);
   pointer-events: none;
   animation: walkthroughGlowPulse 2.4s ease-in-out infinite;
   transition: top 0.35s cubic-bezier(0.16, 1, 0.3, 1),
@@ -1026,15 +1023,13 @@ body.hide-tooltips [data-shortcut-hint] {
 @keyframes walkthroughGlowPulse {
   0%, 100% {
     box-shadow: 
-      0 0 0 9999px rgba(3, 8, 20, 0.82),
-      0 0 25px rgba(255, 215, 0, 0.65),
-      inset 0 0 16px rgba(255, 145, 0, 0.25);
+      0 0 0 9999px rgba(3, 8, 20, 0.85),
+      0 0 25px rgba(255, 215, 0, 0.65);
   }
   50% {
     box-shadow: 
-      0 0 0 9999px rgba(3, 8, 20, 0.86),
-      0 0 35px rgba(255, 145, 0, 0.8),
-      inset 0 0 22px rgba(255, 215, 0, 0.4);
+      0 0 0 9999px rgba(3, 8, 20, 0.88),
+      0 0 35px rgba(255, 145, 0, 0.8);
   }
 }
 

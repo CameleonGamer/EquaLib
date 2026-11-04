@@ -380,10 +380,10 @@
 
     if (spotlight) {
       spotlight.style.display = 'block';
-      spotlight.style.top = Math.max(0, rect.top - padding) + 'px';
-      spotlight.style.left = Math.max(0, rect.left - padding) + 'px';
-      spotlight.style.width = Math.max(10, rect.width + padding * 2) + 'px';
-      spotlight.style.height = Math.max(10, rect.height + padding * 2) + 'px';
+      spotlight.style.top = Math.max(0, Math.round(rect.top - padding)) + 'px';
+      spotlight.style.left = Math.max(0, Math.round(rect.left - padding)) + 'px';
+      spotlight.style.width = Math.max(10, Math.round(rect.width + padding * 2)) + 'px';
+      spotlight.style.height = Math.max(10, Math.round(rect.height + padding * 2)) + 'px';
     }
 
     if (popover) {
