@@ -136,9 +136,24 @@
     overlay.setAttribute('aria-modal', 'true');
     overlay.setAttribute('aria-label', "Guide interactif d'utilisation");
 
+    // Zéro filtre / voile transparent garanti même avec cache navigateur
+    overlay.style.backgroundColor = 'transparent';
+    overlay.style.background = 'transparent';
+    overlay.style.backdropFilter = 'none';
+    overlay.style.webkitBackdropFilter = 'none';
+    overlay.style.filter = 'none';
+
     var spotlight = document.createElement('div');
     spotlight.id = 'equa-walkthrough-spotlight';
     spotlight.className = 'walkthrough-spotlight equa-walkthrough-spotlight walkthrough-spotlight-box';
+
+    spotlight.innerHTML = [
+      '<span class="wt-corner wt-corner-tl"></span>',
+      '<span class="wt-corner wt-corner-tr"></span>',
+      '<span class="wt-corner wt-corner-bl"></span>',
+      '<span class="wt-corner wt-corner-br"></span>',
+      '<div class="wt-mocap-reticle"><span class="wt-mocap-ping"></span><span class="wt-mocap-text">● MOCAP LOCK</span></div>'
+    ].join('');
 
     var popover = document.createElement('div');
     popover.id = 'equa-walkthrough-tooltip';
