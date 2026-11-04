@@ -240,25 +240,73 @@ class NumWorksSimulator {
           this.returnToMenu();
         }
       } else if (this.currentView === 'PONG') {
+        if (this.pongIsGameOver?.()) {
+          if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); this.pongRestart?.(); return; }
+          else if (e.key === 'Escape' || e.key === 'Backspace') { e.preventDefault(); this.returnToMenu(); return; }
+        }
         if (e.key === 'ArrowUp' || keyL === 'z' || keyL === 'w' || e.key === '8') { e.preventDefault(); this.pongMove(-1); }
         else if (e.key === 'ArrowDown' || keyL === 's' || e.key === '2') { e.preventDefault(); this.pongMove(1); }
         else if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); this.pongRestart?.(); }
         else if (e.key === 'Escape' || e.key === 'Backspace') { e.preventDefault(); this.returnToMenu(); }
       } else if (this.currentView === 'DINO') {
+        if (this.dinoIsGameOver?.()) {
+          if (e.key === ' ' || e.key === 'ArrowUp' || e.key === 'Enter' || e.key === '8' || keyL === 'z' || keyL === 'w') {
+            e.preventDefault();
+            this.dinoJump?.();
+            return;
+          } else if (e.key === 'Escape' || e.key === 'Backspace') {
+            e.preventDefault();
+            this.returnToMenu();
+            return;
+          }
+        }
         if (e.key === ' ' || e.key === 'ArrowUp' || e.key === 'Enter' || e.key === '8' || keyL === 'z' || keyL === 'w') { e.preventDefault(); this.dinoJump?.(); }
         else if (e.key === 'ArrowDown' || e.key === '2' || keyL === 's') { e.preventDefault(); this.dinoDuck?.(true); }
         else if (e.key === 'Escape' || e.key === 'Backspace') { e.preventDefault(); this.returnToMenu(); }
       } else if (this.currentView === 'SPACE_INVADERS') {
+        if (this.invadersIsGameOver?.()) {
+          if (e.key === ' ' || e.key === 'Enter' || e.key === 'ArrowUp' || keyL === 'z' || keyL === 'w') {
+            e.preventDefault();
+            this.invadersRestart?.();
+            return;
+          } else if (e.key === 'Escape' || e.key === 'Backspace') {
+            e.preventDefault();
+            this.returnToMenu();
+            return;
+          }
+        }
         if (e.key === 'ArrowLeft' || e.key === '4' || keyL === 'q' || keyL === 'a') { e.preventDefault(); this.invadersMove?.(-1); }
         else if (e.key === 'ArrowRight' || e.key === '6' || keyL === 'd') { e.preventDefault(); this.invadersMove?.(1); }
         else if (e.key === ' ' || e.key === 'Enter' || e.key === 'ArrowUp' || keyL === 'z' || keyL === 'w') { e.preventDefault(); this.invadersShoot?.(); }
         else if (e.key === 'Escape' || e.key === 'Backspace') { e.preventDefault(); this.returnToMenu(); }
       } else if (this.currentView === 'BREAKOUT') {
+        if (this.breakoutIsGameOver?.()) {
+          if (e.key === ' ' || e.key === 'Enter' || e.key === 'ArrowUp' || keyL === 'z' || keyL === 'w') {
+            e.preventDefault();
+            this.breakoutRestart?.();
+            return;
+          } else if (e.key === 'Escape' || e.key === 'Backspace') {
+            e.preventDefault();
+            this.returnToMenu();
+            return;
+          }
+        }
         if (e.key === 'ArrowLeft' || e.key === '4' || keyL === 'q' || keyL === 'a') { e.preventDefault(); this.breakoutMove?.(-1); }
         else if (e.key === 'ArrowRight' || e.key === '6' || keyL === 'd') { e.preventDefault(); this.breakoutMove?.(1); }
         else if (e.key === ' ' || e.key === 'Enter' || e.key === 'ArrowUp' || keyL === 'z' || keyL === 'w') { e.preventDefault(); this.breakoutLaunch?.(); }
         else if (e.key === 'Escape' || e.key === 'Backspace') { e.preventDefault(); this.returnToMenu(); }
       } else if (this.currentView === 'PUISSANCE4') {
+        if (this.p4IsGameOver?.()) {
+          if (e.key === ' ' || e.key === 'Enter' || e.key === 'ArrowDown' || keyL === 's' || ['1', '2', '3', '4', '5', '6', '7'].includes(e.key)) {
+            e.preventDefault();
+            this.p4Restart?.();
+            return;
+          } else if (e.key === 'Escape' || e.key === 'Backspace') {
+            e.preventDefault();
+            this.returnToMenu();
+            return;
+          }
+        }
         if (['1', '2', '3', '4', '5', '6', '7'].includes(e.key)) {
           e.preventDefault();
           this.p4DropCol?.(parseInt(e.key, 10) - 1);
@@ -267,6 +315,17 @@ class NumWorksSimulator {
         else if (e.key === ' ' || e.key === 'Enter' || e.key === 'ArrowDown' || keyL === 's') { e.preventDefault(); this.p4Drop?.(); }
         else if (e.key === 'Escape' || e.key === 'Backspace') { e.preventDefault(); this.returnToMenu(); }
       } else if (this.currentView === 'MORPION') {
+        if (this.morpionIsGameOver?.()) {
+          if (e.key === ' ' || e.key === 'Enter' || ['1', '2', '3', '4', '5', '6', '7', '8', '9'].includes(e.key)) {
+            e.preventDefault();
+            this.morpionRestart?.();
+            return;
+          } else if (e.key === 'Escape' || e.key === 'Backspace') {
+            e.preventDefault();
+            this.returnToMenu();
+            return;
+          }
+        }
         if (['1', '2', '3', '4', '5', '6', '7', '8', '9'].includes(e.key)) {
           e.preventDefault();
           const n = parseInt(e.key, 10) - 1;
@@ -425,24 +484,36 @@ class NumWorksSimulator {
     } else if (this.currentView === 'SPACE_INVADERS') {
       if (action === 'LEFT') this.invadersMove?.(-1);
       else if (action === 'RIGHT') this.invadersMove?.(1);
-      else if (action === 'OK' || action === 'UP') this.invadersShoot?.();
+      else if (action === 'OK' || action === 'UP') {
+        if (this.invadersIsGameOver?.()) this.invadersRestart?.();
+        else this.invadersShoot?.();
+      }
       else if (action === 'BACK') this.returnToMenu();
     } else if (this.currentView === 'BREAKOUT') {
       if (action === 'LEFT') this.breakoutMove?.(-1);
       else if (action === 'RIGHT') this.breakoutMove?.(1);
-      else if (action === 'OK' || action === 'UP') this.breakoutLaunch?.();
+      else if (action === 'OK' || action === 'UP') {
+        if (this.breakoutIsGameOver?.()) this.breakoutRestart?.();
+        else this.breakoutLaunch?.();
+      }
       else if (action === 'BACK') this.returnToMenu();
     } else if (this.currentView === 'PUISSANCE4') {
       if (action === 'LEFT') this.p4Move?.(-1);
       else if (action === 'RIGHT') this.p4Move?.(1);
-      else if (action === 'OK' || action === 'DOWN') this.p4Drop?.();
+      else if (action === 'OK' || action === 'DOWN') {
+        if (this.p4IsGameOver?.()) this.p4Restart?.();
+        else this.p4Drop?.();
+      }
       else if (action === 'BACK') this.returnToMenu();
     } else if (this.currentView === 'MORPION') {
       if (action === 'LEFT') this.morpionMove?.(0, -1);
       else if (action === 'RIGHT') this.morpionMove?.(0, 1);
       else if (action === 'UP') this.morpionMove?.(-1, 0);
       else if (action === 'DOWN') this.morpionMove?.(1, 0);
-      else if (action === 'OK') this.morpionPlace?.();
+      else if (action === 'OK') {
+        if (this.morpionIsGameOver?.()) this.morpionRestart?.();
+        else this.morpionPlace?.();
+      }
       else if (action === 'BACK') this.returnToMenu();
     } else if (this.currentView === 'COURSES') {
       if (action === 'RIGHT') this.nextCoursePage(1);
@@ -1431,16 +1502,29 @@ class NumWorksSimulator {
     this.content.innerHTML = `
       <div class="w-full h-full flex flex-col justify-between bg-[#070913] p-1 rounded relative select-none">
         <canvas id="pong-cvs" width="300" height="175" class="w-full h-full block rounded cursor-ns-resize"></canvas>
-        <div id="pong-overlay" class="hidden absolute inset-0 bg-black/85 flex flex-col items-center justify-center text-white text-center rounded z-10">
-          <div id="pong-msg" class="font-black text-sm text-cyan-400 mb-1 drop-shadow">VICTOIRE !</div>
-          <div class="text-[9px] text-slate-300 mb-2">Premier à 7 points gagne le match !</div>
-          <button id="pong-restart-btn" class="px-4 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white text-[10px] font-bold rounded shadow transition cursor-pointer">
-            Rejouer (OK / Espace)
+        <div id="pong-overlay" class="hidden absolute inset-0 bg-black/60 backdrop-blur-[1px] flex flex-col items-center justify-center text-white text-center rounded z-10 p-2">
+          <div id="pong-card" class="bg-slate-900/95 border border-cyan-500/70 rounded-xl p-2.5 shadow-2xl max-w-[220px] w-full flex flex-col items-center pointer-events-auto">
+            <div id="pong-msg" class="font-black text-sm text-cyan-400 mb-0.5 drop-shadow">VICTOIRE !</div>
+            <div id="pong-submsg" class="text-[9px] text-slate-300 mb-2">Premier à 7 points gagne le match !</div>
+            <div class="flex items-center gap-1.5 w-full justify-center">
+              <button id="pong-restart-btn" class="flex-1 py-1 px-2 bg-cyan-600 hover:bg-cyan-500 text-white text-[9px] font-bold rounded shadow transition cursor-pointer">
+                🔄 Rejouer (OK)
+              </button>
+              <button id="pong-overlay-hub-btn" class="py-1 px-2 bg-slate-700 hover:bg-slate-600 text-slate-200 text-[9px] font-bold rounded shadow transition cursor-pointer">
+                🏠 Hub (Échap)
+              </button>
+            </div>
+            <button id="pong-toggle-board-btn" class="mt-1.5 text-[8px] text-cyan-300 hover:text-white underline cursor-pointer">
+              👁️ Voir le terrain / Masquer le menu
+            </button>
+          </div>
+          <button id="pong-min-pill" class="hidden absolute top-1.5 right-1.5 px-2 py-0.5 bg-slate-900/90 border border-cyan-500/70 text-[8px] text-cyan-300 rounded font-bold cursor-pointer shadow">
+            📋 Menu fin
           </button>
         </div>
         <div class="flex items-center justify-between px-1 text-[8px] text-slate-400">
-          <span>Souris / ▲▼: Raquette</span>
-          <div class="flex items-center gap-1">
+          <span id="pong-status">Souris / ▲▼: Raquette</span>
+          <div class="flex items-center gap-1" id="pong-action-btns">
             <button id="pong-up-btn" class="px-2 py-0.5 bg-slate-800 hover:bg-slate-700 text-white rounded font-bold cursor-pointer">▲</button>
             <button id="pong-down-btn" class="px-2 py-0.5 bg-slate-800 hover:bg-slate-700 text-white rounded font-bold cursor-pointer">▼</button>
           </div>
@@ -1452,7 +1536,14 @@ class NumWorksSimulator {
     const canvas = document.getElementById('pong-cvs');
     const ctx = canvas.getContext('2d');
     const overlay = document.getElementById('pong-overlay');
+    const cardEl = document.getElementById('pong-card');
+    const minPill = document.getElementById('pong-min-pill');
+    const toggleBoardBtn = document.getElementById('pong-toggle-board-btn');
+    const overlayHubBtn = document.getElementById('pong-overlay-hub-btn');
     const msgEl = document.getElementById('pong-msg');
+    const submsgEl = document.getElementById('pong-submsg');
+    const statusEl = document.getElementById('pong-status');
+    const actionBtns = document.getElementById('pong-action-btns');
     const restartBtn = document.getElementById('pong-restart-btn');
     const upBtn = document.getElementById('pong-up-btn');
     const downBtn = document.getElementById('pong-down-btn');
@@ -1471,7 +1562,22 @@ class NumWorksSimulator {
     let gameOver = false;
     let trail = [];
 
+    this.pongIsGameOver = () => gameOver;
+
+    const triggerGameOver = (title, cls, subtext) => {
+      gameOver = true;
+      msgEl.textContent = title;
+      msgEl.className = cls;
+      if (submsgEl) submsgEl.textContent = subtext || 'Match terminé !';
+      actionBtns?.classList.add('hidden');
+      if (statusEl) statusEl.textContent = 'Partie terminée';
+      overlay.classList.remove('hidden');
+      cardEl?.classList.remove('hidden');
+      minPill?.classList.add('hidden');
+    };
+
     this.pongMove = (dir) => {
+      if (gameOver) return;
       p1Y = Math.max(6, Math.min(canvas.height - paddleH - 6, p1Y + dir * 14));
     };
 
@@ -1485,13 +1591,44 @@ class NumWorksSimulator {
       if (Math.abs(bvy) < 1.2) bvy = (bvy >= 0 ? 1.4 : -1.4);
       trail = [];
       gameOver = false;
+      actionBtns?.classList.remove('hidden');
+      if (statusEl) statusEl.textContent = 'Souris / ▲▼: Raquette';
       overlay.classList.add('hidden');
+      cardEl?.classList.remove('hidden');
+      minPill?.classList.add('hidden');
     };
 
     if (restartBtn) restartBtn.addEventListener('click', () => this.pongRestart());
     if (upBtn) upBtn.addEventListener('click', () => this.pongMove(-1));
     if (downBtn) downBtn.addEventListener('click', () => this.pongMove(1));
     if (backBtn) backBtn.addEventListener('click', () => this.returnToMenu());
+    if (overlayHubBtn) overlayHubBtn.addEventListener('click', () => this.returnToMenu());
+    if (toggleBoardBtn) {
+      toggleBoardBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        cardEl?.classList.add('hidden');
+        minPill?.classList.remove('hidden');
+      });
+    }
+    if (minPill) {
+      minPill.addEventListener('click', (e) => {
+        e.stopPropagation();
+        cardEl?.classList.remove('hidden');
+        minPill?.classList.add('hidden');
+      });
+    }
+    if (overlay) {
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) {
+          if (cardEl?.classList.contains('hidden')) {
+            cardEl?.classList.remove('hidden');
+            minPill?.classList.add('hidden');
+          } else {
+            this.pongRestart();
+          }
+        }
+      });
+    }
 
     const updateMousePaddle = (clientY) => {
       const rect = canvas.getBoundingClientRect();
@@ -1569,10 +1706,7 @@ class NumWorksSimulator {
           if (Math.abs(bvy) < 1.2) bvy = 1.4;
           trail = [];
           if (sc >= 7) {
-            gameOver = true;
-            msgEl.textContent = 'DÉFAITE ! (CPU GAGNE)';
-            msgEl.className = 'font-black text-sm text-red-400 mb-1 drop-shadow';
-            overlay.classList.remove('hidden');
+            triggerGameOver('DÉFAITE ! (CPU GAGNE)', 'font-black text-sm text-red-400 mb-0.5 drop-shadow', 'Le CPU a atteint 7 points en premier.');
           }
         } else if (bx > canvas.width + 10) {
           s1++;
@@ -1584,10 +1718,7 @@ class NumWorksSimulator {
           if (Math.abs(bvy) < 1.2) bvy = -1.4;
           trail = [];
           if (s1 >= 7) {
-            gameOver = true;
-            msgEl.textContent = 'VICTOIRE ÉCLATANTE !';
-            msgEl.className = 'font-black text-sm text-cyan-400 mb-1 drop-shadow';
-            overlay.classList.remove('hidden');
+            triggerGameOver('VICTOIRE ÉCLATANTE !', 'font-black text-sm text-cyan-400 mb-0.5 drop-shadow', 'Vous avez remporté le match 7 points !');
           }
         }
       }
@@ -1638,16 +1769,29 @@ class NumWorksSimulator {
     this.content.innerHTML = `
       <div class="w-full h-full flex flex-col justify-between bg-[#f7f7f7] p-1 rounded relative select-none" id="dino-wrap">
         <canvas id="dino-cvs" width="300" height="175" class="w-full h-full block rounded cursor-pointer"></canvas>
-        <div id="dino-overlay" class="hidden absolute inset-0 bg-black/70 flex flex-col items-center justify-center text-white text-center rounded z-10">
-          <div class="font-black text-sm text-amber-400 mb-1 drop-shadow">G A M E   O V E R</div>
-          <div id="dino-final-score" class="text-[9px] text-slate-200 mb-2">Score : 0</div>
-          <button id="dino-restart-btn" class="px-4 py-1.5 bg-slate-700 hover:bg-slate-600 text-white text-[10px] font-bold rounded shadow transition cursor-pointer">
-            Rejouer (OK / Espace)
+        <div id="dino-overlay" class="hidden absolute inset-0 bg-black/60 backdrop-blur-[1px] flex flex-col items-center justify-center text-white text-center rounded z-10 p-2">
+          <div id="dino-card" class="bg-slate-900/95 border border-amber-500/70 rounded-xl p-2.5 shadow-2xl max-w-[220px] w-full flex flex-col items-center pointer-events-auto">
+            <div class="font-black text-sm text-amber-400 mb-0.5 drop-shadow">G A M E   O V E R</div>
+            <div id="dino-final-score" class="text-[9px] text-slate-200 mb-2">Score : 0</div>
+            <div class="flex items-center gap-1.5 w-full justify-center">
+              <button id="dino-restart-btn" class="flex-1 py-1 px-2 bg-slate-700 hover:bg-slate-600 text-white text-[9px] font-bold rounded shadow transition cursor-pointer">
+                🔄 Rejouer (OK)
+              </button>
+              <button id="dino-overlay-hub-btn" class="py-1 px-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-[9px] font-bold rounded shadow transition cursor-pointer">
+                🏠 Hub (Échap)
+              </button>
+            </div>
+            <button id="dino-toggle-board-btn" class="mt-1.5 text-[8px] text-amber-300 hover:text-white underline cursor-pointer">
+              👁️ Voir le parcours / Masquer le menu
+            </button>
+          </div>
+          <button id="dino-min-pill" class="hidden absolute top-1.5 right-1.5 px-2 py-0.5 bg-slate-900/90 border border-amber-500/70 text-[8px] text-amber-300 rounded font-bold cursor-pointer shadow">
+            📋 Menu fin
           </button>
         </div>
         <div class="flex items-center justify-between px-1 text-[8px] text-slate-500">
-          <span>Clic / Espace : Sauter • S : Baisser</span>
-          <div class="flex items-center gap-1">
+          <span id="dino-status">Clic / Espace : Sauter • S : Baisser</span>
+          <div class="flex items-center gap-1" id="dino-action-btns">
             <button id="dino-jump-btn" class="px-2.5 py-0.5 bg-slate-300 hover:bg-slate-400 text-slate-900 rounded font-bold cursor-pointer">⬆️ Sauter</button>
             <button id="dino-duck-btn" class="px-2.5 py-0.5 bg-slate-300 hover:bg-slate-400 text-slate-900 rounded font-bold cursor-pointer">⬇️ Baisser</button>
           </div>
@@ -1659,11 +1803,17 @@ class NumWorksSimulator {
     const canvas = document.getElementById('dino-cvs');
     const ctx = canvas.getContext('2d');
     const overlay = document.getElementById('dino-overlay');
+    const cardEl = document.getElementById('dino-card');
+    const minPill = document.getElementById('dino-min-pill');
+    const toggleBoardBtn = document.getElementById('dino-toggle-board-btn');
+    const overlayHubBtn = document.getElementById('dino-overlay-hub-btn');
     const finalScoreEl = document.getElementById('dino-final-score');
     const restartBtn = document.getElementById('dino-restart-btn');
     const jumpBtn = document.getElementById('dino-jump-btn');
     const duckBtn = document.getElementById('dino-duck-btn');
     const backBtn = document.getElementById('dino-back-btn');
+    const actionBtns = document.getElementById('dino-action-btns');
+    const statusEl = document.getElementById('dino-status');
 
     const groundY = 145;
     let dinoY = groundY - 26;
@@ -1676,9 +1826,21 @@ class NumWorksSimulator {
     let tick = 0;
     let gameOver = false;
 
+    this.dinoIsGameOver = () => gameOver;
+
     let obstacles = [
       { x: 380, type: 0 }
     ];
+
+    const triggerGameOver = () => {
+      gameOver = true;
+      if (finalScoreEl) finalScoreEl.textContent = `Score final : ${score} (Record : ${hiScore})`;
+      actionBtns?.classList.add('hidden');
+      if (statusEl) statusEl.textContent = 'Partie terminée';
+      overlay.classList.remove('hidden');
+      cardEl?.classList.remove('hidden');
+      minPill?.classList.add('hidden');
+    };
 
     this.dinoJump = () => {
       if (gameOver) { this.dinoRestart(); return; }
@@ -1703,7 +1865,11 @@ class NumWorksSimulator {
       tick = 0;
       obstacles = [{ x: 380, type: 0 }];
       gameOver = false;
+      actionBtns?.classList.remove('hidden');
+      if (statusEl) statusEl.textContent = 'Clic / Espace : Sauter • S : Baisser';
       overlay.classList.add('hidden');
+      cardEl?.classList.remove('hidden');
+      minPill?.classList.add('hidden');
     };
 
     if (restartBtn) restartBtn.addEventListener('click', () => this.dinoRestart());
@@ -1715,6 +1881,33 @@ class NumWorksSimulator {
       duckBtn.addEventListener('touchend', () => this.dinoDuck(false));
     }
     if (backBtn) backBtn.addEventListener('click', () => this.returnToMenu());
+    if (overlayHubBtn) overlayHubBtn.addEventListener('click', () => this.returnToMenu());
+    if (toggleBoardBtn) {
+      toggleBoardBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        cardEl?.classList.add('hidden');
+        minPill?.classList.remove('hidden');
+      });
+    }
+    if (minPill) {
+      minPill.addEventListener('click', (e) => {
+        e.stopPropagation();
+        cardEl?.classList.remove('hidden');
+        minPill?.classList.add('hidden');
+      });
+    }
+    if (overlay) {
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) {
+          if (cardEl?.classList.contains('hidden')) {
+            cardEl?.classList.remove('hidden');
+            minPill?.classList.add('hidden');
+          } else {
+            this.dinoRestart();
+          }
+        }
+      });
+    }
     canvas.addEventListener('click', () => this.dinoJump());
 
     const loop = () => {
@@ -1752,10 +1945,8 @@ class NumWorksSimulator {
           const oY = (o.type === 0 ? groundY - 24 : groundY - 36);
 
           if (dX < o.x + oW && dX + dW > o.x && dY < oY + oH && dY + dH > oY) {
-            gameOver = true;
             window.soundFx?.playHit?.();
-            if (finalScoreEl) finalScoreEl.textContent = `Score final : ${score} (Record : ${hiScore})`;
-            overlay.classList.remove('hidden');
+            triggerGameOver();
           }
         });
 
@@ -1865,16 +2056,29 @@ class NumWorksSimulator {
     this.content.innerHTML = `
       <div class="w-full h-full flex flex-col justify-between bg-[#04060d] p-1 rounded relative select-none">
         <canvas id="invaders-cvs" width="300" height="175" class="w-full h-full block rounded cursor-crosshair"></canvas>
-        <div id="invaders-overlay" class="hidden absolute inset-0 bg-black/85 flex flex-col items-center justify-center text-white text-center rounded z-10">
-          <div id="invaders-msg" class="font-black text-sm text-emerald-400 mb-1 drop-shadow">VICTOIRE !</div>
-          <div id="invaders-score-final" class="text-[9px] text-slate-300 mb-2">Score : 0</div>
-          <button id="invaders-restart-btn" class="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold rounded shadow transition cursor-pointer">
-            Rejouer (OK / Espace)
+        <div id="invaders-overlay" class="hidden absolute inset-0 bg-black/60 backdrop-blur-[1px] flex flex-col items-center justify-center text-white text-center rounded z-10 p-2">
+          <div id="invaders-card" class="bg-slate-900/95 border border-emerald-500/70 rounded-xl p-2.5 shadow-2xl max-w-[220px] w-full flex flex-col items-center pointer-events-auto">
+            <div id="invaders-msg" class="font-black text-sm text-emerald-400 mb-0.5 drop-shadow">VICTOIRE !</div>
+            <div id="invaders-score-final" class="text-[9px] text-slate-300 mb-2">Score : 0</div>
+            <div class="flex items-center gap-1.5 w-full justify-center">
+              <button id="invaders-restart-btn" class="flex-1 py-1 px-2 bg-emerald-600 hover:bg-emerald-500 text-white text-[9px] font-bold rounded shadow transition cursor-pointer">
+                🔄 Rejouer (OK)
+              </button>
+              <button id="invaders-overlay-hub-btn" class="py-1 px-2 bg-slate-700 hover:bg-slate-600 text-slate-200 text-[9px] font-bold rounded shadow transition cursor-pointer">
+                🏠 Hub (Échap)
+              </button>
+            </div>
+            <button id="invaders-toggle-board-btn" class="mt-1.5 text-[8px] text-emerald-300 hover:text-white underline cursor-pointer">
+              👁️ Voir la zone / Masquer le menu
+            </button>
+          </div>
+          <button id="invaders-min-pill" class="hidden absolute top-1.5 right-1.5 px-2 py-0.5 bg-slate-900/90 border border-emerald-500/70 text-[8px] text-emerald-300 rounded font-bold cursor-pointer shadow">
+            📋 Menu fin
           </button>
         </div>
         <div class="flex items-center justify-between px-1 text-[8px] text-slate-400">
-          <span>Souris / ◄►: Canon • Clic / OK: Tirer</span>
-          <div class="flex items-center gap-1">
+          <span id="invaders-status">Souris / ◄►: Canon • Clic / OK: Tirer</span>
+          <div class="flex items-center gap-1" id="invaders-action-btns">
             <button id="invaders-left-btn" class="px-2 py-0.5 bg-slate-800 hover:bg-slate-700 text-white rounded font-bold cursor-pointer">◀</button>
             <button id="invaders-fire-btn" class="px-2.5 py-0.5 bg-emerald-700 hover:bg-emerald-600 text-white rounded font-bold cursor-pointer">🔴 Tir</button>
             <button id="invaders-right-btn" class="px-2 py-0.5 bg-slate-800 hover:bg-slate-700 text-white rounded font-bold cursor-pointer">▶</button>
@@ -1887,6 +2091,10 @@ class NumWorksSimulator {
     const canvas = document.getElementById('invaders-cvs');
     const ctx = canvas.getContext('2d');
     const overlay = document.getElementById('invaders-overlay');
+    const cardEl = document.getElementById('invaders-card');
+    const minPill = document.getElementById('invaders-min-pill');
+    const toggleBoardBtn = document.getElementById('invaders-toggle-board-btn');
+    const overlayHubBtn = document.getElementById('invaders-overlay-hub-btn');
     const msgEl = document.getElementById('invaders-msg');
     const finalScoreEl = document.getElementById('invaders-score-final');
     const restartBtn = document.getElementById('invaders-restart-btn');
@@ -1894,6 +2102,8 @@ class NumWorksSimulator {
     const rightBtn = document.getElementById('invaders-right-btn');
     const fireBtn = document.getElementById('invaders-fire-btn');
     const backBtn = document.getElementById('invaders-back-btn');
+    const actionBtns = document.getElementById('invaders-action-btns');
+    const statusEl = document.getElementById('invaders-status');
 
     let canX = 140;
     const canW = 20;
@@ -1906,6 +2116,8 @@ class NumWorksSimulator {
     let score = 0;
     let gameOver = false;
     let tick = 0;
+
+    this.invadersIsGameOver = () => gameOver;
 
     let bunkers = [
       { x: 45, y: 130, hp: 4 },
@@ -1924,7 +2136,20 @@ class NumWorksSimulator {
     };
     initAliens();
 
+    const triggerGameOver = (title, cls) => {
+      gameOver = true;
+      msgEl.textContent = title;
+      msgEl.className = cls;
+      if (finalScoreEl) finalScoreEl.textContent = `Score final : ${score}`;
+      actionBtns?.classList.add('hidden');
+      if (statusEl) statusEl.textContent = 'Partie terminée';
+      overlay.classList.remove('hidden');
+      cardEl?.classList.remove('hidden');
+      minPill?.classList.add('hidden');
+    };
+
     this.invadersMove = (dir) => {
+      if (gameOver) return;
       canX = Math.max(10, Math.min(canvas.width - canW - 10, canX + dir * 14));
     };
 
@@ -1953,7 +2178,11 @@ class NumWorksSimulator {
         { x: 225, y: 130, hp: 4 }
       ];
       initAliens();
+      actionBtns?.classList.remove('hidden');
+      if (statusEl) statusEl.textContent = 'Souris / ◄►: Canon • Clic / OK: Tirer';
       overlay.classList.add('hidden');
+      cardEl?.classList.remove('hidden');
+      minPill?.classList.add('hidden');
     };
 
     if (restartBtn) restartBtn.addEventListener('click', () => this.invadersRestart());
@@ -1961,6 +2190,33 @@ class NumWorksSimulator {
     if (rightBtn) rightBtn.addEventListener('click', () => this.invadersMove(1));
     if (fireBtn) fireBtn.addEventListener('click', () => this.invadersShoot());
     if (backBtn) backBtn.addEventListener('click', () => this.returnToMenu());
+    if (overlayHubBtn) overlayHubBtn.addEventListener('click', () => this.returnToMenu());
+    if (toggleBoardBtn) {
+      toggleBoardBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        cardEl?.classList.add('hidden');
+        minPill?.classList.remove('hidden');
+      });
+    }
+    if (minPill) {
+      minPill.addEventListener('click', (e) => {
+        e.stopPropagation();
+        cardEl?.classList.remove('hidden');
+        minPill?.classList.add('hidden');
+      });
+    }
+    if (overlay) {
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) {
+          if (cardEl?.classList.contains('hidden')) {
+            cardEl?.classList.remove('hidden');
+            minPill?.classList.add('hidden');
+          } else {
+            this.invadersRestart();
+          }
+        }
+      });
+    }
 
     canvas.addEventListener('mousemove', (e) => {
       if (gameOver) return;
@@ -2043,12 +2299,8 @@ class NumWorksSimulator {
           });
 
           if (b && b.x >= canX && b.x <= canX + canW && b.y >= 152 && b.y <= 164) {
-            gameOver = true;
             window.soundFx?.playHit?.();
-            msgEl.textContent = 'VAISSEAU DÉTRUIT !';
-            msgEl.className = 'font-black text-sm text-red-400 mb-1 drop-shadow';
-            if (finalScoreEl) finalScoreEl.textContent = `Score final : ${score}`;
-            overlay.classList.remove('hidden');
+            triggerGameOver('VAISSEAU DÉTRUIT !', 'font-black text-sm text-red-400 mb-0.5 drop-shadow');
           }
 
           if (b && b.y > canvas.height) {
@@ -2057,17 +2309,9 @@ class NumWorksSimulator {
         });
 
         if (aliveCount === 0) {
-          gameOver = true;
-          msgEl.textContent = 'TERRE SAUVÉE ! VICTOIRE !';
-          msgEl.className = 'font-black text-sm text-emerald-400 mb-1 drop-shadow';
-          if (finalScoreEl) finalScoreEl.textContent = `Score final : ${score}`;
-          overlay.classList.remove('hidden');
+          triggerGameOver('TERRE SAUVÉE ! VICTOIRE !', 'font-black text-sm text-emerald-400 mb-0.5 drop-shadow');
         } else if (aliens.some(a => a.alive && (alienY + a.r * 18 >= 134))) {
-          gameOver = true;
-          msgEl.textContent = 'INVASION RÉUSSIE ! GAME OVER';
-          msgEl.className = 'font-black text-sm text-red-400 mb-1 drop-shadow';
-          if (finalScoreEl) finalScoreEl.textContent = `Score final : ${score}`;
-          overlay.classList.remove('hidden');
+          triggerGameOver('INVASION RÉUSSIE ! GAME OVER', 'font-black text-sm text-red-400 mb-0.5 drop-shadow');
         }
       }
 
@@ -2150,16 +2394,29 @@ class NumWorksSimulator {
     this.content.innerHTML = `
       <div class="w-full h-full flex flex-col justify-between bg-[#080914] p-1 rounded relative select-none">
         <canvas id="breakout-cvs" width="300" height="175" class="w-full h-full block rounded cursor-pointer"></canvas>
-        <div id="breakout-overlay" class="hidden absolute inset-0 bg-black/85 flex flex-col items-center justify-center text-white text-center rounded z-10">
-          <div id="breakout-msg" class="font-black text-sm text-amber-400 mb-1 drop-shadow">VICTOIRE !</div>
-          <div id="breakout-score-final" class="text-[9px] text-slate-300 mb-2">Score : 0</div>
-          <button id="breakout-restart-btn" class="px-4 py-1.5 bg-amber-600 hover:bg-amber-500 text-white text-[10px] font-bold rounded shadow transition cursor-pointer">
-            Rejouer (OK / Espace)
+        <div id="breakout-overlay" class="hidden absolute inset-0 bg-black/60 backdrop-blur-[1px] flex flex-col items-center justify-center text-white text-center rounded z-10 p-2">
+          <div id="breakout-card" class="bg-slate-900/95 border border-amber-500/70 rounded-xl p-2.5 shadow-2xl max-w-[220px] w-full flex flex-col items-center pointer-events-auto">
+            <div id="breakout-msg" class="font-black text-sm text-amber-400 mb-0.5 drop-shadow">VICTOIRE !</div>
+            <div id="breakout-score-final" class="text-[9px] text-slate-300 mb-2">Score : 0</div>
+            <div class="flex items-center gap-1.5 w-full justify-center">
+              <button id="breakout-restart-btn" class="flex-1 py-1 px-2 bg-amber-600 hover:bg-amber-500 text-white text-[9px] font-bold rounded shadow transition cursor-pointer">
+                🔄 Rejouer (OK)
+              </button>
+              <button id="breakout-overlay-hub-btn" class="py-1 px-2 bg-slate-700 hover:bg-slate-600 text-slate-200 text-[9px] font-bold rounded shadow transition cursor-pointer">
+                🏠 Hub (Échap)
+              </button>
+            </div>
+            <button id="breakout-toggle-board-btn" class="mt-1.5 text-[8px] text-amber-300 hover:text-white underline cursor-pointer">
+              👁️ Voir le jeu / Masquer le menu
+            </button>
+          </div>
+          <button id="breakout-min-pill" class="hidden absolute top-1.5 right-1.5 px-2 py-0.5 bg-slate-900/90 border border-amber-500/70 text-[8px] text-amber-300 rounded font-bold cursor-pointer shadow">
+            📋 Menu fin
           </button>
         </div>
         <div class="flex items-center justify-between px-1 text-[8px] text-slate-400">
-          <span>Souris / ◄►: Raquette • Clic / OK: Lancer</span>
-          <div class="flex items-center gap-1">
+          <span id="breakout-status">Souris / ◄►: Raquette • Clic / OK: Lancer</span>
+          <div class="flex items-center gap-1" id="breakout-action-btns">
             <button id="breakout-left-btn" class="px-2 py-0.5 bg-slate-800 hover:bg-slate-700 text-white rounded font-bold cursor-pointer">◀</button>
             <button id="breakout-launch-btn" class="px-2.5 py-0.5 bg-amber-700 hover:bg-amber-600 text-white rounded font-bold cursor-pointer">🚀 Lancer</button>
             <button id="breakout-right-btn" class="px-2 py-0.5 bg-slate-800 hover:bg-slate-700 text-white rounded font-bold cursor-pointer">▶</button>
@@ -2172,6 +2429,10 @@ class NumWorksSimulator {
     const canvas = document.getElementById('breakout-cvs');
     const ctx = canvas.getContext('2d');
     const overlay = document.getElementById('breakout-overlay');
+    const cardEl = document.getElementById('breakout-card');
+    const minPill = document.getElementById('breakout-min-pill');
+    const toggleBoardBtn = document.getElementById('breakout-toggle-board-btn');
+    const overlayHubBtn = document.getElementById('breakout-overlay-hub-btn');
     const msgEl = document.getElementById('breakout-msg');
     const finalScoreEl = document.getElementById('breakout-score-final');
     const restartBtn = document.getElementById('breakout-restart-btn');
@@ -2179,6 +2440,8 @@ class NumWorksSimulator {
     const leftBtn = document.getElementById('breakout-left-btn');
     const rightBtn = document.getElementById('breakout-right-btn');
     const backBtn = document.getElementById('breakout-back-btn');
+    const actionBtns = document.getElementById('breakout-action-btns');
+    const statusEl = document.getElementById('breakout-status');
 
     let padX = 125;
     const padW = 46;
@@ -2193,6 +2456,8 @@ class NumWorksSimulator {
     let gameOver = false;
     let autoLaunchTimer = 0;
 
+    this.breakoutIsGameOver = () => gameOver;
+
     let bricks = [];
     const initBricks = () => {
       bricks = [];
@@ -2205,7 +2470,20 @@ class NumWorksSimulator {
     };
     initBricks();
 
+    const triggerGameOver = (title, cls) => {
+      gameOver = true;
+      msgEl.textContent = title;
+      msgEl.className = cls;
+      if (finalScoreEl) finalScoreEl.textContent = `Score final : ${score}`;
+      actionBtns?.classList.add('hidden');
+      if (statusEl) statusEl.textContent = 'Partie terminée';
+      overlay.classList.remove('hidden');
+      cardEl?.classList.remove('hidden');
+      minPill?.classList.add('hidden');
+    };
+
     this.breakoutMove = (dir) => {
+      if (gameOver) return;
       padX = Math.max(8, Math.min(canvas.width - padW - 8, padX + dir * 16));
       if (attached) bx = padX + padW / 2;
       autoLaunchTimer++;
@@ -2234,7 +2512,11 @@ class NumWorksSimulator {
       gameOver = false;
       autoLaunchTimer = 0;
       initBricks();
+      actionBtns?.classList.remove('hidden');
+      if (statusEl) statusEl.textContent = 'Souris / ◄►: Raquette • Clic / OK: Lancer';
       overlay.classList.add('hidden');
+      cardEl?.classList.remove('hidden');
+      minPill?.classList.add('hidden');
     };
 
     if (restartBtn) restartBtn.addEventListener('click', () => this.breakoutRestart());
@@ -2242,6 +2524,33 @@ class NumWorksSimulator {
     if (leftBtn) leftBtn.addEventListener('click', () => this.breakoutMove(-1));
     if (rightBtn) rightBtn.addEventListener('click', () => this.breakoutMove(1));
     if (backBtn) backBtn.addEventListener('click', () => this.returnToMenu());
+    if (overlayHubBtn) overlayHubBtn.addEventListener('click', () => this.returnToMenu());
+    if (toggleBoardBtn) {
+      toggleBoardBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        cardEl?.classList.add('hidden');
+        minPill?.classList.remove('hidden');
+      });
+    }
+    if (minPill) {
+      minPill.addEventListener('click', (e) => {
+        e.stopPropagation();
+        cardEl?.classList.remove('hidden');
+        minPill?.classList.add('hidden');
+      });
+    }
+    if (overlay) {
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) {
+          if (cardEl?.classList.contains('hidden')) {
+            cardEl?.classList.remove('hidden');
+            minPill?.classList.add('hidden');
+          } else {
+            this.breakoutRestart();
+          }
+        }
+      });
+    }
 
     canvas.addEventListener('click', () => {
       if (attached) this.breakoutLaunch();
@@ -2318,20 +2627,12 @@ class NumWorksSimulator {
             bx = padX + padW / 2;
             by = 150;
             if (lives <= 0) {
-              gameOver = true;
-              msgEl.textContent = 'GAME OVER !';
-              msgEl.className = 'font-black text-sm text-red-400 mb-1 drop-shadow';
-              if (finalScoreEl) finalScoreEl.textContent = `Score final : ${score}`;
-              overlay.classList.remove('hidden');
+              triggerGameOver('GAME OVER !', 'font-black text-sm text-red-400 mb-0.5 drop-shadow');
             }
           }
 
           if (bricks.every(b => !b.alive)) {
-            gameOver = true;
-            msgEl.textContent = 'TABLEAU VIDÉ ! VICTOIRE !';
-            msgEl.className = 'font-black text-sm text-amber-400 mb-1 drop-shadow';
-            if (finalScoreEl) finalScoreEl.textContent = `Score final : ${score}`;
-            overlay.classList.remove('hidden');
+            triggerGameOver('TABLEAU VIDÉ ! VICTOIRE !', 'font-black text-sm text-amber-400 mb-0.5 drop-shadow');
           }
         }
       }
@@ -2388,11 +2689,24 @@ class NumWorksSimulator {
     this.content.innerHTML = `
       <div class="w-full h-full flex flex-col justify-between bg-[#0b132b] p-1 rounded relative select-none">
         <canvas id="p4-cvs" width="300" height="165" class="w-full h-full block rounded cursor-pointer"></canvas>
-        <div id="p4-overlay" class="hidden absolute inset-0 bg-black/85 flex flex-col items-center justify-center text-white text-center rounded z-10">
-          <div id="p4-msg" class="font-black text-sm text-yellow-400 mb-1 drop-shadow">VICTOIRE !</div>
-          <div class="text-[9px] text-slate-300 mb-2">Alignement de 4 jetons réussi !</div>
-          <button id="p4-restart-btn" class="px-4 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-bold rounded shadow transition cursor-pointer">
-            Rejouer (OK / Espace)
+        <div id="p4-overlay" class="hidden absolute inset-0 bg-black/60 backdrop-blur-[1px] flex flex-col items-center justify-center text-white text-center rounded z-10 p-2">
+          <div id="p4-card" class="bg-slate-900/95 border border-blue-500/70 rounded-xl p-2.5 shadow-2xl max-w-[220px] w-full flex flex-col items-center pointer-events-auto">
+            <div id="p4-msg" class="font-black text-sm text-yellow-400 mb-0.5 drop-shadow">VICTOIRE !</div>
+            <div id="p4-submsg" class="text-[9px] text-slate-300 mb-2">Alignement de 4 jetons réussi !</div>
+            <div class="flex items-center gap-1.5 w-full justify-center">
+              <button id="p4-restart-btn" class="flex-1 py-1 px-2 bg-blue-600 hover:bg-blue-500 text-white text-[9px] font-bold rounded shadow transition cursor-pointer">
+                🔄 Rejouer (OK)
+              </button>
+              <button id="p4-overlay-hub-btn" class="py-1 px-2 bg-slate-700 hover:bg-slate-600 text-slate-200 text-[9px] font-bold rounded shadow transition cursor-pointer">
+                🏠 Hub (Échap)
+              </button>
+            </div>
+            <button id="p4-toggle-board-btn" class="mt-1.5 text-[8px] text-blue-300 hover:text-white underline cursor-pointer">
+              👁️ Voir la grille / Masquer le menu
+            </button>
+          </div>
+          <button id="p4-min-pill" class="hidden absolute top-1.5 right-1.5 px-2 py-0.5 bg-slate-900/90 border border-blue-500/70 text-[8px] text-yellow-300 rounded font-bold cursor-pointer shadow">
+            📋 Menu fin
           </button>
         </div>
         <div class="flex items-center justify-between px-1 text-[8px] text-slate-300 pt-0.5">
@@ -2414,8 +2728,14 @@ class NumWorksSimulator {
     const canvas = document.getElementById('p4-cvs');
     const ctx = canvas.getContext('2d');
     const overlay = document.getElementById('p4-overlay');
+    const cardEl = document.getElementById('p4-card');
+    const minPill = document.getElementById('p4-min-pill');
+    const toggleBoardBtn = document.getElementById('p4-toggle-board-btn');
+    const overlayHubBtn = document.getElementById('p4-overlay-hub-btn');
     const msgEl = document.getElementById('p4-msg');
+    const submsgEl = document.getElementById('p4-submsg');
     const statusEl = document.getElementById('p4-turn-status');
+    const colsBar = document.getElementById('p4-cols-bar');
     const restartBtn = document.getElementById('p4-restart-btn');
     const backBtn = document.getElementById('p4-back-btn');
     const colBtns = (this.content && this.content.querySelectorAll) ? this.content.querySelectorAll('.p4-col-btn') : (typeof document !== 'undefined' && document.querySelectorAll ? document.querySelectorAll('.p4-col-btn') : []);
@@ -2433,6 +2753,8 @@ class NumWorksSimulator {
     let gameOver = false;
     let droppingPiece = null;
     let winLine = null;
+
+    this.p4IsGameOver = () => gameOver;
 
     const checkWin = (p) => {
       for (let r = 0; r < 6; r++) {
@@ -2480,13 +2802,15 @@ class NumWorksSimulator {
     };
 
     this.p4DropCol = (c) => {
-      if (gameOver || curPlayer !== 1 || droppingPiece) return;
+      if (gameOver) { this.p4Restart(); return; }
+      if (curPlayer !== 1 || droppingPiece) return;
       selCol = c;
       this.p4Drop();
     };
 
     this.p4Drop = () => {
-      if (gameOver || curPlayer !== 1 || droppingPiece) return;
+      if (gameOver) { this.p4Restart(); return; }
+      if (curPlayer !== 1 || droppingPiece) return;
       const targetR = getLowest(selCol);
       if (targetR !== -1) {
         window.soundFx?.playClick?.();
@@ -2498,6 +2822,21 @@ class NumWorksSimulator {
           player: 1
         };
       }
+    };
+
+    const triggerGameOver = (title, cls, subtext) => {
+      gameOver = true;
+      msgEl.textContent = title;
+      msgEl.className = cls;
+      if (submsgEl) submsgEl.textContent = subtext || 'Partie terminée !';
+      colsBar?.classList.add('hidden');
+      if (statusEl) {
+        statusEl.textContent = 'Partie terminée';
+        statusEl.className = 'font-bold text-slate-300';
+      }
+      overlay.classList.remove('hidden');
+      cardEl?.classList.remove('hidden');
+      minPill?.classList.add('hidden');
     };
 
     const runAiTurn = () => {
@@ -2569,15 +2908,45 @@ class NumWorksSimulator {
       gameOver = false;
       droppingPiece = null;
       winLine = null;
+      colsBar?.classList.remove('hidden');
       if (statusEl) {
         statusEl.textContent = 'À votre tour (Jaune)';
         statusEl.className = 'font-bold text-yellow-400';
       }
       overlay.classList.add('hidden');
+      cardEl?.classList.remove('hidden');
+      minPill?.classList.add('hidden');
     };
 
     if (restartBtn) restartBtn.addEventListener('click', () => this.p4Restart());
     if (backBtn) backBtn.addEventListener('click', () => this.returnToMenu());
+    if (overlayHubBtn) overlayHubBtn.addEventListener('click', () => this.returnToMenu());
+    if (toggleBoardBtn) {
+      toggleBoardBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        cardEl?.classList.add('hidden');
+        minPill?.classList.remove('hidden');
+      });
+    }
+    if (minPill) {
+      minPill.addEventListener('click', (e) => {
+        e.stopPropagation();
+        cardEl?.classList.remove('hidden');
+        minPill?.classList.add('hidden');
+      });
+    }
+    if (overlay) {
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) {
+          if (cardEl?.classList.contains('hidden')) {
+            cardEl?.classList.remove('hidden');
+            minPill?.classList.add('hidden');
+          } else {
+            this.p4Restart();
+          }
+        }
+      });
+    }
 
     colBtns.forEach(btn => {
       btn.addEventListener('click', () => {
@@ -2625,24 +2994,17 @@ class NumWorksSimulator {
 
           const win = checkWin(p);
           if (win) {
-            gameOver = true;
             winLine = win;
             window.soundFx?.playScore?.();
             if (p === 1) {
-              msgEl.textContent = 'VOUS AVEZ GAGNÉ ! 🏆';
-              msgEl.className = 'font-black text-sm text-yellow-400 mb-1 drop-shadow';
+              triggerGameOver('VOUS AVEZ GAGNÉ ! 🏆', 'font-black text-sm text-yellow-400 mb-0.5 drop-shadow', 'Alignement de 4 jetons réussi !');
             } else {
-              msgEl.textContent = "L'IA A GAGNÉ !";
-              msgEl.className = 'font-black text-sm text-red-400 mb-1 drop-shadow';
+              triggerGameOver("L'IA A GAGNÉ !", 'font-black text-sm text-red-400 mb-0.5 drop-shadow', '4 jetons alignés par l\'IA.');
             }
-            overlay.classList.remove('hidden');
           } else {
             const isFull = board[0].every(val => val !== 0);
             if (isFull) {
-              gameOver = true;
-              msgEl.textContent = 'MATCH NUL !';
-              msgEl.className = 'font-black text-sm text-slate-300 mb-1 drop-shadow';
-              overlay.classList.remove('hidden');
+              triggerGameOver('MATCH NUL !', 'font-black text-sm text-slate-300 mb-0.5 drop-shadow', 'Toutes les colonnes sont pleines.');
             } else if (p === 1) {
               curPlayer = 2;
               runAiTurn();
@@ -2750,11 +3112,24 @@ class NumWorksSimulator {
     this.content.innerHTML = `
       <div class="w-full h-full flex flex-col justify-between bg-[#0b1021] p-1 rounded relative select-none">
         <canvas id="morp-cvs" width="300" height="165" class="w-full h-full block rounded cursor-pointer"></canvas>
-        <div id="morp-overlay" class="hidden absolute inset-0 bg-black/85 flex flex-col items-center justify-center text-white text-center rounded z-10">
-          <div id="morp-msg" class="font-black text-sm text-pink-400 mb-1 drop-shadow">VICTOIRE !</div>
-          <div id="morp-submsg" class="text-[9px] text-slate-300 mb-2">Alignement de 3 symboles réussi !</div>
-          <button id="morp-restart-btn" class="px-4 py-1.5 bg-pink-600 hover:bg-pink-500 text-white text-[10px] font-bold rounded shadow transition cursor-pointer">
-            Rejouer (OK / Espace)
+        <div id="morp-overlay" class="hidden absolute inset-0 bg-black/60 backdrop-blur-[1px] flex flex-col items-center justify-center text-white text-center rounded z-10 p-2">
+          <div id="morp-card" class="bg-slate-900/95 border border-pink-500/70 rounded-xl p-2.5 shadow-2xl max-w-[220px] w-full flex flex-col items-center pointer-events-auto">
+            <div id="morp-msg" class="font-black text-sm text-pink-400 mb-0.5 drop-shadow">VICTOIRE !</div>
+            <div id="morp-submsg" class="text-[9px] text-slate-300 mb-2">Alignement de 3 symboles réussi !</div>
+            <div class="flex items-center gap-1.5 w-full justify-center">
+              <button id="morp-restart-btn" class="flex-1 py-1 px-2 bg-pink-600 hover:bg-pink-500 text-white text-[9px] font-bold rounded shadow transition cursor-pointer">
+                🔄 Rejouer (OK)
+              </button>
+              <button id="morp-overlay-hub-btn" class="py-1 px-2 bg-slate-700 hover:bg-slate-600 text-slate-200 text-[9px] font-bold rounded shadow transition cursor-pointer">
+                🏠 Hub (Échap)
+              </button>
+            </div>
+            <button id="morp-toggle-board-btn" class="mt-1.5 text-[8px] text-pink-300 hover:text-white underline cursor-pointer">
+              👁️ Voir la grille / Masquer le menu
+            </button>
+          </div>
+          <button id="morp-min-pill" class="hidden absolute top-1.5 right-1.5 px-2 py-0.5 bg-slate-900/90 border border-pink-500/70 text-[8px] text-pink-300 rounded font-bold cursor-pointer shadow">
+            📋 Menu fin
           </button>
         </div>
         <div class="flex items-center justify-between px-1 text-[8px] text-slate-300 pt-0.5">
@@ -2771,7 +3146,12 @@ class NumWorksSimulator {
     const canvas = document.getElementById('morp-cvs');
     const ctx = canvas.getContext('2d');
     const overlay = document.getElementById('morp-overlay');
+    const cardEl = document.getElementById('morp-card');
+    const minPill = document.getElementById('morp-min-pill');
+    const toggleBoardBtn = document.getElementById('morp-toggle-board-btn');
+    const overlayHubBtn = document.getElementById('morp-overlay-hub-btn');
     const msgEl = document.getElementById('morp-msg');
+    const submsgEl = document.getElementById('morp-submsg');
     const statusEl = document.getElementById('morp-turn-status');
     const restartBtn = document.getElementById('morp-restart-btn');
     const backBtn = document.getElementById('morp-back-btn');
@@ -2789,6 +3169,8 @@ class NumWorksSimulator {
     let vsAi = true;
     let gameOver = false;
     let winCells = null;
+
+    this.morpionIsGameOver = () => gameOver;
 
     const checkWin = () => {
       // Lignes
@@ -2877,6 +3259,21 @@ class NumWorksSimulator {
       return move;
     };
 
+    const triggerGameOver = (title, cls, subtext) => {
+      gameOver = true;
+      msgEl.textContent = title;
+      msgEl.className = cls;
+      if (submsgEl) submsgEl.textContent = subtext || 'Partie terminée !';
+      modeBtn?.classList.add('hidden');
+      if (statusEl) {
+        statusEl.textContent = 'Partie terminée';
+        statusEl.className = 'font-bold text-slate-300';
+      }
+      overlay.classList.remove('hidden');
+      cardEl?.classList.remove('hidden');
+      minPill?.classList.add('hidden');
+    };
+
     const runAi = () => {
       if (gameOver) return;
       if (statusEl) {
@@ -2895,17 +3292,11 @@ class NumWorksSimulator {
 
           const win = checkWin();
           if (win) {
-            gameOver = true;
             winCells = win.line;
-            msgEl.textContent = "L'IA A GAGNÉ !";
-            msgEl.className = 'font-black text-sm text-pink-400 mb-1 drop-shadow';
-            overlay.classList.remove('hidden');
             window.soundFx?.playHit?.();
+            triggerGameOver("L'IA A GAGNÉ !", 'font-black text-sm text-pink-400 mb-0.5 drop-shadow', "Alignement de 3 symboles par l'IA.");
           } else if (isFull()) {
-            gameOver = true;
-            msgEl.textContent = 'MATCH NUL !';
-            msgEl.className = 'font-black text-sm text-slate-300 mb-1 drop-shadow';
-            overlay.classList.remove('hidden');
+            triggerGameOver('MATCH NUL !', 'font-black text-sm text-slate-300 mb-0.5 drop-shadow', 'Grille complète, aucun gagnant.');
           } else {
             curPlayer = 1;
             if (statusEl) {
@@ -2925,14 +3316,16 @@ class NumWorksSimulator {
     };
 
     this.morpionPlayCell = (r, c) => {
-      if (gameOver || (vsAi && curPlayer === 2)) return;
+      if (gameOver) { this.morpionRestart(); return; }
+      if (vsAi && curPlayer === 2) return;
       selR = r;
       selC = c;
       this.morpionPlace();
     };
 
     this.morpionPlace = () => {
-      if (gameOver || (vsAi && curPlayer === 2)) return;
+      if (gameOver) { this.morpionRestart(); return; }
+      if (vsAi && curPlayer === 2) return;
       if (grid[selR][selC] !== 0) return;
 
       grid[selR][selC] = curPlayer;
@@ -2940,26 +3333,19 @@ class NumWorksSimulator {
 
       const win = checkWin();
       if (win) {
-        gameOver = true;
         winCells = win.line;
         if (win.winner === 1) {
-          msgEl.textContent = 'VICTOIRE JOUEUR 1 (X) ! 🏆';
-          msgEl.className = 'font-black text-sm text-cyan-400 mb-1 drop-shadow';
           recordWins++;
           safeStorageSet('equalib_record_morpion_wins', recordWins.toString());
           if (winsBadge) winsBadge.textContent = `Victoires: ${recordWins}`;
           window.soundFx?.playScore?.();
+          triggerGameOver('VICTOIRE JOUEUR 1 (X) ! 🏆', 'font-black text-sm text-cyan-400 mb-0.5 drop-shadow', 'Alignement de 3 symboles réussi !');
         } else {
-          msgEl.textContent = vsAi ? "L'IA A GAGNÉ !" : 'VICTOIRE JOUEUR 2 (O) ! 🏆';
-          msgEl.className = 'font-black text-sm text-pink-400 mb-1 drop-shadow';
           window.soundFx?.playHit?.();
+          triggerGameOver(vsAi ? "L'IA A GAGNÉ !" : 'VICTOIRE JOUEUR 2 (O) ! 🏆', 'font-black text-sm text-pink-400 mb-0.5 drop-shadow', 'Alignement de 3 symboles réussi !');
         }
-        overlay.classList.remove('hidden');
       } else if (isFull()) {
-        gameOver = true;
-        msgEl.textContent = 'MATCH NUL !';
-        msgEl.className = 'font-black text-sm text-slate-300 mb-1 drop-shadow';
-        overlay.classList.remove('hidden');
+        triggerGameOver('MATCH NUL !', 'font-black text-sm text-slate-300 mb-0.5 drop-shadow', 'Grille complète, aucun gagnant.');
       } else {
         if (vsAi) {
           curPlayer = 2;
@@ -2985,15 +3371,45 @@ class NumWorksSimulator {
       curPlayer = 1;
       gameOver = false;
       winCells = null;
+      modeBtn?.classList.remove('hidden');
       if (statusEl) {
         statusEl.textContent = vsAi ? 'À votre tour (X)' : 'Tour: Joueur 1 (X)';
         statusEl.className = 'font-bold text-cyan-400';
       }
       overlay.classList.add('hidden');
+      cardEl?.classList.remove('hidden');
+      minPill?.classList.add('hidden');
     };
 
     if (restartBtn) restartBtn.addEventListener('click', () => this.morpionRestart());
     if (backBtn) backBtn.addEventListener('click', () => this.returnToMenu());
+    if (overlayHubBtn) overlayHubBtn.addEventListener('click', () => this.returnToMenu());
+    if (toggleBoardBtn) {
+      toggleBoardBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        cardEl?.classList.add('hidden');
+        minPill?.classList.remove('hidden');
+      });
+    }
+    if (minPill) {
+      minPill.addEventListener('click', (e) => {
+        e.stopPropagation();
+        cardEl?.classList.remove('hidden');
+        minPill?.classList.add('hidden');
+      });
+    }
+    if (overlay) {
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) {
+          if (cardEl?.classList.contains('hidden')) {
+            cardEl?.classList.remove('hidden');
+            minPill?.classList.add('hidden');
+          } else {
+            this.morpionRestart();
+          }
+        }
+      });
+    }
     if (modeBtn) {
       modeBtn.addEventListener('click', () => {
         vsAi = !vsAi;
