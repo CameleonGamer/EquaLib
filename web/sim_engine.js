@@ -99,6 +99,7 @@ class NumWorksSimulator {
     this.showTooltips = (savedSettings && savedSettings.showTooltips !== undefined) ? savedSettings.showTooltips : ((window.userSettings && window.userSettings.showTooltips !== undefined) ? window.userSettings.showTooltips : true);
     this.glassMode = (savedSettings && savedSettings.glassMode !== undefined) ? savedSettings.glassMode : ((window.userSettings && window.userSettings.glassMode !== undefined) ? window.userSettings.glassMode : true);
     this.smoothCorners = (savedSettings && savedSettings.smoothCorners !== undefined) ? savedSettings.smoothCorners : ((window.userSettings && window.userSettings.smoothCorners !== undefined) ? window.userSettings.smoothCorners : true);
+    this.animateWallpaper = (savedSettings && savedSettings.animateWallpaper !== undefined) ? savedSettings.animateWallpaper : ((window.userSettings && window.userSettings.animateWallpaper !== undefined) ? window.userSettings.animateWallpaper : (safeStorageGet('equalib_animate_wallpaper') !== 'false'));
     this.settingsSubIndex = 0;
 
     this.gameLoopId = null;
@@ -112,16 +113,19 @@ class NumWorksSimulator {
         theme: this.theme,
         showTooltips: this.showTooltips,
         glassMode: this.glassMode,
-        smoothCorners: this.smoothCorners
+        smoothCorners: this.smoothCorners,
+        animateWallpaper: this.animateWallpaper
       };
       safeStorageSet('equalib_user_settings', JSON.stringify(cfg));
       safeStorageSet('equalib_theme', this.theme);
+      safeStorageSet('equalib_animate_wallpaper', this.animateWallpaper ? 'true' : 'false');
       if (window.userSettings) {
         window.userSettings.displayMode = this.displayMode;
         window.userSettings.theme = this.theme;
         window.userSettings.showTooltips = this.showTooltips;
         window.userSettings.glassMode = this.glassMode;
         window.userSettings.smoothCorners = this.smoothCorners;
+        window.userSettings.animateWallpaper = this.animateWallpaper;
       }
     } catch (_) {}
   }
@@ -429,6 +433,13 @@ class NumWorksSimulator {
     else if (this.currentView === 'SETTINGS') this.startSettingsScreen();
   }
 
+  setSimulatorAnimateWallpaper(animate) {
+    this.animateWallpaper = !!animate;
+    this.saveCurrentSettings();
+    if (this.currentView === 'MENU') this.renderMenu();
+    else if (this.currentView === 'SETTINGS') this.startSettingsScreen();
+  }
+
   handleInput(action) {
     if (this.currentView === 'MENU') {
       if (this.displayMode === 'gallery') {
@@ -637,6 +648,7 @@ class NumWorksSimulator {
     const r3 = getRowStyle(3);
     const r4 = getRowStyle(4);
     const r5 = getRowStyle(5);
+    const r6 = getRowStyle(6);
 
     let html = `
       <div class="space-y-1 p-1 text-[9px]" style="background-color: ${pal.bg}; color: ${pal.text};">
@@ -669,12 +681,21 @@ class NumWorksSimulator {
 
         <div class="sim-settings-row sim-setting-item p-1 ${r3.radius} border cursor-pointer ${r3.isSel ? 'ring-1' : ''}" data-row="3"
           style="background-color: ${r3.bg}; border-color: ${r3.border}; ${r3.backdrop}">
-          <div class="font-bold">Thème Visuel :</div>
-          <div class="font-extrabold text-[8.5px] mt-0.5" style="color: ${pal.border}">◀ ${themeLabels[this.theme] || this.theme} ▶</div>
+          <div class="flex justify-between font-bold">
+            <span>Animation Fond (GIF) :</span>
+            <span style="color: ${pal.border}">◀ ${this.animateWallpaper !== false ? 'ACTIVÉE' : 'DÉSACTIVÉE'} ▶</span>
+          </div>
+          <div class="text-[7.5px] text-slate-400">Animation fluide ou première image fixe</div>
         </div>
 
         <div class="sim-settings-row sim-setting-item p-1 ${r4.radius} border cursor-pointer ${r4.isSel ? 'ring-1' : ''}" data-row="4"
           style="background-color: ${r4.bg}; border-color: ${r4.border}; ${r4.backdrop}">
+          <div class="font-bold">Thème Visuel :</div>
+          <div class="font-extrabold text-[8.5px] mt-0.5" style="color: ${pal.border}">◀ ${themeLabels[this.theme] || this.theme} ▶</div>
+        </div>
+
+        <div class="sim-settings-row sim-setting-item p-1 ${r5.radius} border cursor-pointer ${r5.isSel ? 'ring-1' : ''}" data-row="5"
+          style="background-color: ${r5.bg}; border-color: ${r5.border}; ${r5.backdrop}">
           <div class="flex justify-between font-bold">
             <span>Raccourcis / Tooltips :</span>
             <span style="color: ${pal.border}">◀ ${this.showTooltips ? 'ACTIVÉS' : 'MASQUÉS'} ▶</span>
@@ -682,8 +703,8 @@ class NumWorksSimulator {
           <div class="text-[7.5px] text-slate-400">Légendes et touches d'aide au bas de l'écran</div>
         </div>
 
-        <div class="sim-settings-row sim-setting-item p-1 ${r5.radius} border text-center font-bold cursor-pointer ${r5.isSel ? 'ring-1' : ''}" id="sim-settings-back" data-row="5"
-          style="background-color: ${r5.bg}; border-color: ${r5.border}; color: ${pal.border}; ${r5.backdrop}">
+        <div class="sim-settings-row sim-setting-item p-1 ${r6.radius} border text-center font-bold cursor-pointer ${r6.isSel ? 'ring-1' : ''}" id="sim-settings-back" data-row="6"
+          style="background-color: ${r6.bg}; border-color: ${r6.border}; color: ${pal.border}; ${r6.backdrop}">
           [ OK / Back : Valider & Revenir ]
         </div>
       </div>
@@ -697,7 +718,7 @@ class NumWorksSimulator {
       el.addEventListener('click', () => {
         const row = parseInt(el.getAttribute('data-row'), 10);
         if (this.settingsSubIndex === row) {
-          if (row === 5) {
+          if (row === 6) {
             this.returnToMenu();
           } else {
             this.settingsChange(1);
@@ -712,7 +733,7 @@ class NumWorksSimulator {
 
   settingsMove(dir) {
     window.soundFx?.playClick();
-    this.settingsSubIndex = (this.settingsSubIndex + dir + 6) % 6;
+    this.settingsSubIndex = (this.settingsSubIndex + dir + 7) % 7;
     this.startSettingsScreen();
   }
 
@@ -744,6 +765,19 @@ class NumWorksSimulator {
         window.applyUserSettings();
       }
     } else if (this.settingsSubIndex === 3) {
+      this.animateWallpaper = !this.animateWallpaper;
+      if (window.userSettings) {
+        window.userSettings.animateWallpaper = this.animateWallpaper;
+      }
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('equalib_animate_wallpaper', this.animateWallpaper ? 'true' : 'false');
+      }
+      const animateToggle = document.getElementById('setting-animate-wallpaper-toggle');
+      if (animateToggle) animateToggle.checked = this.animateWallpaper;
+      if (window.wallpaperStudio) {
+        window.wallpaperStudio.setAnimateWallpaper?.(this.animateWallpaper);
+      }
+    } else if (this.settingsSubIndex === 4) {
       const themesList = ['default', 'sakura', 'hacker', 'bee', 'mario', 'gameboy', 'custom'];
       let curIdx = themesList.indexOf(this.theme);
       if (curIdx === -1) curIdx = 0;
@@ -754,7 +788,7 @@ class NumWorksSimulator {
       } else if (typeof window.setThemeBg === 'function') {
         window.setThemeBg(this.theme);
       }
-    } else if (this.settingsSubIndex === 4) {
+    } else if (this.settingsSubIndex === 5) {
       this.showTooltips = !this.showTooltips;
       if (window.userSettings) {
         window.userSettings.showTooltips = this.showTooltips;
@@ -764,7 +798,7 @@ class NumWorksSimulator {
       }
       const settingToggle = document.getElementById('setting-tooltips-toggle');
       if (settingToggle) settingToggle.checked = this.showTooltips;
-    } else if (this.settingsSubIndex === 5) {
+    } else if (this.settingsSubIndex === 6) {
       this.returnToMenu();
       return;
     }
@@ -817,6 +851,11 @@ class NumWorksSimulator {
     }
 
     let customWp = (typeof window !== 'undefined' && window.customWallpaperDataUrl) || safeStorageGet('equalib_custom_wallpaper_dataurl');
+    let customGif = (typeof window !== 'undefined' && window.customWallpaperGifUrl) || safeStorageGet('equalib_custom_wallpaper_gifurl');
+    const animateWallpaper = (typeof window !== 'undefined' && window.userSettings?.animateWallpaper !== undefined)
+      ? window.userSettings.animateWallpaper
+      : (safeStorageGet('equalib_animate_wallpaper') !== 'false');
+
     if (!customWp && typeof window !== 'undefined' && window.wallpaperStudio && window.wallpaperStudio.canvas) {
       try {
         customWp = window.wallpaperStudio.canvas.toDataURL('image/png');
@@ -824,8 +863,10 @@ class NumWorksSimulator {
       } catch (_) {}
     }
 
-    if (this.theme === 'custom' && customWp) {
-      this.screen.style.backgroundImage = `url("${customWp}")`;
+    const activeWp = (animateWallpaper && customGif) ? customGif : customWp;
+
+    if (this.theme === 'custom' && activeWp) {
+      this.screen.style.backgroundImage = `url("${activeWp}")`;
       this.screen.style.backgroundSize = '100% 100%';
       this.screen.style.backgroundRepeat = 'no-repeat';
       this.screen.style.backgroundPosition = 'center';

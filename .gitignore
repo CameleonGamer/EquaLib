@@ -17,4 +17,5 @@ tools/inspect_*.js
 tools/test_link*
 tools/test_bundle*
 tools/test_fixed_linker.js
+.agents/
 

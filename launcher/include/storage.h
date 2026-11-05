@@ -28,6 +28,7 @@ typedef struct {
     int32_t record_minesweeper_wins;
     int32_t glass_mode;
     int32_t smooth_corners;
+    int32_t animated_bg;
     uint32_t last_manifest_flags;
     uint32_t reserved;
 } eq_storage_t;

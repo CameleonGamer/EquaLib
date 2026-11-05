@@ -137,6 +137,7 @@ static int g_view_mode = VIEW_MODE_GALLERY; /* Mode Galerie d'images carrées pa
 static bool g_show_tooltips = true;  /* Affichage des raccourcis en bas d'écran */
 static bool g_glass_mode = true;     /* Mode Glassmorphism (effet verre dépoli Apple) */
 static bool g_smooth_corners = true; /* Bords lisses et coins arrondis */
+static bool g_animated_bg = true;    /* Animation du fond d'écran (GIF / frames) */
 
 static void save_persistent_settings(void) {
     eq_storage_t* s = eq_storage_get();
@@ -145,6 +146,7 @@ static void save_persistent_settings(void) {
     s->tooltips = g_show_tooltips ? 1 : 0;
     s->glass_mode = g_glass_mode ? 1 : 0;
     s->smooth_corners = g_smooth_corners ? 1 : 0;
+    s->animated_bg = g_animated_bg ? 1 : 0;
     eq_storage_commit();
 }
 
@@ -735,11 +737,11 @@ static void draw_theme_decorations(const theme_t* theme) {
     }
 }
 
-/* Rendu d'une rangée du menu Paramètres (6 rangées au total) */
+/* Rendu d'une rangée du menu Paramètres (7 rangées au total) */
 static void draw_settings_row(int i, bool is_s, const theme_t* th) {
-    int y = 28 + i * 30;
+    int y = 25 + i * 27;
     int row_w = 288;
-    int row_h = 26;
+    int row_h = 24;
 
     const eadk_color_t* wp_ptr = get_wallpaper_flash_ptr();
     eadk_color_t base_bg = is_s ? th->card_sel : th->card_bg;
@@ -749,7 +751,7 @@ static void draw_settings_row(int i, bool is_s, const theme_t* th) {
 
     eadk_color_t text_bg = base_bg;
     if (g_glass_mode) {
-        text_bg = rgb565_blend_50_50(base_bg, get_bg_pixel(100, y + 13, th, wp_ptr));
+        text_bg = rgb565_blend_50_50(base_bg, get_bg_pixel(100, y + 12, th, wp_ptr));
     }
     eadk_color_t text_col = get_contrast_text_color(text_bg);
 
@@ -760,32 +762,37 @@ static void draw_settings_row(int i, bool is_s, const theme_t* th) {
     }
 
     if (i == 0) {
-        eadk_point_t p1 = {26, (uint16_t)(y + 8)};
+        eadk_point_t p1 = {26, (uint16_t)(y + 7)};
         eadk_display_draw_string("Mode d'Affichage :", p1, false, text_col, text_bg);
-        eadk_point_t p2 = {180, (uint16_t)(y + 8)};
+        eadk_point_t p2 = {180, (uint16_t)(y + 7)};
         eadk_display_draw_string(g_view_mode == VIEW_MODE_GALLERY ? "< GALERIE >" : "< LISTE >", p2, false, th->accent, text_bg);
     } else if (i == 1) {
-        eadk_point_t p1 = {26, (uint16_t)(y + 8)};
+        eadk_point_t p1 = {26, (uint16_t)(y + 7)};
         eadk_display_draw_string("Effet Verre (Apple Glass) :", p1, false, text_col, text_bg);
-        eadk_point_t p2 = {220, (uint16_t)(y + 8)};
+        eadk_point_t p2 = {220, (uint16_t)(y + 7)};
         eadk_display_draw_string(g_glass_mode ? "< OUI >" : "< NON >", p2, false, th->accent, text_bg);
     } else if (i == 2) {
-        eadk_point_t p1 = {26, (uint16_t)(y + 8)};
+        eadk_point_t p1 = {26, (uint16_t)(y + 7)};
         eadk_display_draw_string("Coins Arrondis / Lisses :", p1, false, text_col, text_bg);
-        eadk_point_t p2 = {220, (uint16_t)(y + 8)};
+        eadk_point_t p2 = {220, (uint16_t)(y + 7)};
         eadk_display_draw_string(g_smooth_corners ? "< OUI >" : "< NON >", p2, false, th->accent, text_bg);
     } else if (i == 3) {
-        eadk_point_t p1 = {26, (uint16_t)(y + 4)};
-        eadk_display_draw_string("Theme Visuel :", p1, false, text_col, text_bg);
-        eadk_point_t p2 = {26, (uint16_t)(y + 14)};
-        eadk_display_draw_string(th->name, p2, false, th->accent, text_bg);
+        eadk_point_t p1 = {26, (uint16_t)(y + 7)};
+        eadk_display_draw_string("Animation Fond (GIF) :", p1, false, text_col, text_bg);
+        eadk_point_t p2 = {220, (uint16_t)(y + 7)};
+        eadk_display_draw_string(g_animated_bg ? "< OUI >" : "< NON >", p2, false, th->accent, text_bg);
     } else if (i == 4) {
-        eadk_point_t p1 = {26, (uint16_t)(y + 8)};
-        eadk_display_draw_string("Raccourcis / Tooltips :", p1, false, text_col, text_bg);
-        eadk_point_t p2 = {200, (uint16_t)(y + 8)};
-        eadk_display_draw_string(g_show_tooltips ? "< OUI >" : "< NON >", p2, false, th->accent, text_bg);
+        eadk_point_t p1 = {26, (uint16_t)(y + 7)};
+        eadk_display_draw_string("Theme Visuel :", p1, false, text_col, text_bg);
+        eadk_point_t p2 = {148, (uint16_t)(y + 7)};
+        eadk_display_draw_string(th->name, p2, false, th->accent, text_bg);
     } else if (i == 5) {
-        eadk_point_t p1 = {26, (uint16_t)(y + 8)};
+        eadk_point_t p1 = {26, (uint16_t)(y + 7)};
+        eadk_display_draw_string("Raccourcis / Tooltips :", p1, false, text_col, text_bg);
+        eadk_point_t p2 = {200, (uint16_t)(y + 7)};
+        eadk_display_draw_string(g_show_tooltips ? "< OUI >" : "< NON >", p2, false, th->accent, text_bg);
+    } else if (i == 6) {
+        eadk_point_t p1 = {26, (uint16_t)(y + 7)};
         eadk_display_draw_string("[ OK / Back ] : Valider & Revenir", p1, false, th->accent, text_bg);
     }
 }
@@ -808,7 +815,7 @@ static void run_settings_screen(void) {
 
         if (eadk_keyboard_key_down(pressed, eadk_key_back) || 
             eadk_keyboard_key_down(kbd, eadk_key_home) ||
-            (eadk_keyboard_key_down(pressed, eadk_key_ok) && sel_item == 5)) {
+            (eadk_keyboard_key_down(pressed, eadk_key_ok) && sel_item == 6)) {
             break;
         }
 
@@ -822,7 +829,7 @@ static void run_settings_screen(void) {
                 draw_settings_row(sel_item, true, th);
             }
         } else if (eadk_keyboard_key_down(pressed, eadk_key_down)) {
-            if (sel_item < 5) {
+            if (sel_item < 6) {
                 sel_item++;
                 draw_settings_row(old_sel, false, th);
                 draw_settings_row(sel_item, true, th);
@@ -841,10 +848,14 @@ static void run_settings_screen(void) {
                 full_redraw = true;
                 save_persistent_settings();
             } else if (sel_item == 3) {
+                g_animated_bg = !g_animated_bg;
+                draw_settings_row(3, true, th);
+                save_persistent_settings();
+            } else if (sel_item == 4) {
                 g_current_theme = (g_current_theme + 6) % 7;
                 full_redraw = true;
                 save_persistent_settings();
-            } else if (sel_item == 4) {
+            } else if (sel_item == 5) {
                 g_show_tooltips = !g_show_tooltips;
                 full_redraw = true;
                 save_persistent_settings();
@@ -863,10 +874,14 @@ static void run_settings_screen(void) {
                 full_redraw = true;
                 save_persistent_settings();
             } else if (sel_item == 3) {
+                g_animated_bg = !g_animated_bg;
+                draw_settings_row(3, true, th);
+                save_persistent_settings();
+            } else if (sel_item == 4) {
                 g_current_theme = (g_current_theme + 1) % 7;
                 full_redraw = true;
                 save_persistent_settings();
-            } else if (sel_item == 4) {
+            } else if (sel_item == 5) {
                 g_show_tooltips = !g_show_tooltips;
                 full_redraw = true;
                 save_persistent_settings();
@@ -885,13 +900,19 @@ static void run_settings_screen(void) {
                 full_redraw = true;
                 save_persistent_settings();
             } else if (sel_item == 3) {
+                g_animated_bg = !g_animated_bg;
+                draw_settings_row(3, true, th);
+                save_persistent_settings();
+            } else if (sel_item == 4) {
                 g_current_theme = (g_current_theme + 1) % 7;
                 full_redraw = true;
                 save_persistent_settings();
-            } else if (sel_item == 4) {
+            } else if (sel_item == 5) {
                 g_show_tooltips = !g_show_tooltips;
                 full_redraw = true;
                 save_persistent_settings();
+            } else if (sel_item == 6) {
+                break;
             }
         }
 
@@ -932,8 +953,8 @@ static void run_settings_screen(void) {
             eadk_point_t p_t = {8, 5};
             eadk_display_draw_string("Parametres & Themes EquaLib", p_t, false, bar_text_col, bar_text_bg);
 
-            /* Cadre paramètres (6 rangées) */
-            for (int i = 0; i < 6; i++) {
+            /* Cadre paramètres (7 rangées) */
+            for (int i = 0; i < 7; i++) {
                 draw_settings_row(i, i == sel_item, th);
             }
 
@@ -988,6 +1009,7 @@ int main(int argc, char* argv[]) {
     g_show_tooltips = (st->tooltips != 0);
     g_glass_mode = (st->glass_mode != 0);
     g_smooth_corners = (st->smooth_corners != 0);
+    g_animated_bg = (st->animated_bg != 0);
 
     while (eadk_keyboard_scan() != 0) {
         eadk_timing_msleep(20);

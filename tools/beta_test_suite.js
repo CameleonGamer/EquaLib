@@ -741,6 +741,44 @@ describe('7. Compilation et Validité Syntaxique des Jeux Python (.NWS)', () => 
     assert.strictEqual(sim.smoothCorners, false);
   });
 
+  it('Définition C et persistance de MANIFEST_FLAG_ANIMATED_BG (0x80) et animated_bg', () => {
+    const manifestH = fs.readFileSync('launcher/include/equalib_manifest.h', 'utf8');
+    assert(/#define\s+MANIFEST_FLAG_ANIMATED_BG\s+0x80/.test(manifestH), 'MANIFEST_FLAG_ANIMATED_BG 0x80 manquant');
+    const storageH = fs.readFileSync('launcher/include/storage.h', 'utf8');
+    assert(storageH.includes('animated_bg'), 'Champ animated_bg manquant dans eq_storage_t');
+  });
+
+  it('Présence et intégrité des 3 fonds GIF animés fournis par l\'utilisateur', () => {
+    const gifs = ['assets/gifs/sakura.gif', 'assets/gifs/hacker.gif', 'assets/gifs/abeilles.gif'];
+    gifs.forEach(g => {
+      const p = path.resolve('web', g);
+      assert(fs.existsSync(p), `Le GIF ${g} doit exister dans web/`);
+      const stat = fs.statSync(p);
+      assert(stat.size > 100000, `Le GIF ${g} doit être complet et valide (> 100 Ko)`);
+    });
+  });
+
+  await itAsync('Encodage bit-exact de MANIFEST_FLAG_ANIMATED_BG (0x80) dans le bundler', async () => {
+    const bundler = new EquaLibBundler({ targetModel: 'N0120' });
+    const mockBin = fs.readFileSync('web/equalib_n0120.bin');
+    const offset = bundler.findManifestOffset(mockBin);
+
+    let patched = await bundler.patchManifest(mockBin, [], { animateWallpaper: true });
+    assert.strictEqual(patched[offset + 12] & 0x80, 0x80, 'Bit 7 (0x80) doit être actif quand animateWallpaper=true');
+
+    patched = await bundler.patchManifest(mockBin, [], { animateWallpaper: false });
+    assert.strictEqual(patched[offset + 12] & 0x80, 0, 'Bit 7 (0x80) doit être inactif quand animateWallpaper=false');
+  });
+
+  it('Contrôle de l\'animation du fond d\'écran dans le simulateur virtuel', () => {
+    const sim = new window.NumWorksSimulator('sim-screen');
+    assert.strictEqual(typeof sim.setSimulatorAnimateWallpaper, 'function');
+    sim.setSimulatorAnimateWallpaper(true);
+    assert.strictEqual(sim.animateWallpaper, true);
+    sim.setSimulatorAnimateWallpaper(false);
+    assert.strictEqual(sim.animateWallpaper, false);
+  });
+
   // -------------------------------------------------------------
   // SUITE 10: Détection Matérielle WebUSB & Persistance N0110 vs N0120
   // -------------------------------------------------------------

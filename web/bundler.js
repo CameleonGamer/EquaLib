@@ -129,6 +129,9 @@ class EquaLibBundler {
     const isSmooth = (options.smoothCorners !== undefined ? options.smoothCorners : (this.options?.smoothCorners !== undefined ? this.options.smoothCorners : ((typeof window !== 'undefined' && window.userSettings?.smoothCorners !== undefined) ? window.userSettings.smoothCorners : true)));
     if (isSmooth) flags |= 0x40;
 
+    const isAnimateBg = (options.animateWallpaper !== undefined ? options.animateWallpaper : (this.options?.animateWallpaper !== undefined ? this.options.animateWallpaper : ((typeof window !== 'undefined' && window.userSettings?.animateWallpaper !== undefined) ? window.userSettings.animateWallpaper : true)));
+    if (isAnimateBg) flags |= 0x80;
+
     u8[offset + 12] = flags & 0xFF;
     u8[offset + 13] = (flags >> 8) & 0xFF;
     u8[offset + 14] = (flags >> 16) & 0xFF;
@@ -408,7 +411,7 @@ class EquaLibBundler {
     const isBin = (format === 'bin');
     const modelOption = (options.targetModel || this.options?.targetModel || (typeof window !== 'undefined' && window.userSettings?.targetModel) || 'N0110').toUpperCase();
     const isN0120 = modelOption.includes('120') || options.flashAddress === 0x90180000;
-    const isN0115 = options.flashAddress === 0x90600000 || modelOption === 'N0115' || (modelOption.includes('115') && !modelOption.includes('110'));
+    const isN0115 = modelOption.includes('115') || options.flashAddress === 0x90600000;
     const modelSuffix = isN0120 ? 'n0120' : (isN0115 ? 'n0115' : 'n0110');
     const targetFile = isBin ? `equalib_${modelSuffix}.bin` : `equalib_${modelSuffix}.nwa`;
     const fallbackFile = isBin ? 'equalib_n0110.bin' : 'equalib_n0110.nwa';

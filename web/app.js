@@ -328,6 +328,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const settingGlassModeToggle = document.getElementById('setting-glass-mode-toggle');
   const settingSmoothCornersToggle = document.getElementById('setting-smooth-corners-toggle');
   const settingSettingsAppToggle = document.getElementById('setting-settings-app-toggle');
+  const settingAnimateWallpaperToggle = document.getElementById('setting-animate-wallpaper-toggle');
 
   const viewModeGalleryBtn = document.getElementById('view-mode-gallery-btn');
   const viewModeListBtn = document.getElementById('view-mode-list-btn');
@@ -348,6 +349,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     glassMode: true,
     smoothCorners: true,
     includeSettingsApp: true,
+    animateWallpaper: (localStorage.getItem('equalib_animate_wallpaper') !== 'false'),
     theme: localStorage.getItem('equalib_theme') || 'default',
     customColor: null
   };
@@ -757,10 +759,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     });
 
-    // 5. Glassmorphism et Bords Lisses
+    // 5. Glassmorphism, Bords Lisses et Animation Fond GIF
     if (settingGlassModeToggle) settingGlassModeToggle.checked = (userSettings.glassMode !== false);
     if (settingSmoothCornersToggle) settingSmoothCornersToggle.checked = (userSettings.smoothCorners !== false);
     if (settingSettingsAppToggle) settingSettingsAppToggle.checked = (userSettings.includeSettingsApp !== false);
+    if (settingAnimateWallpaperToggle) settingAnimateWallpaperToggle.checked = (userSettings.animateWallpaper !== false);
 
     const simScreen = document.getElementById('sim-screen');
     if (simScreen) {
@@ -776,6 +779,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (typeof simulator.setSimulatorTooltips === 'function') simulator.setSimulatorTooltips(userSettings.showTooltips);
       if (typeof simulator.setSimulatorGlassMode === 'function') simulator.setSimulatorGlassMode(userSettings.glassMode !== false);
       if (typeof simulator.setSimulatorSmoothCorners === 'function') simulator.setSimulatorSmoothCorners(userSettings.smoothCorners !== false);
+      if (typeof simulator.setSimulatorAnimateWallpaper === 'function') simulator.setSimulatorAnimateWallpaper(userSettings.animateWallpaper !== false);
     }
 
     if (window.wallpaperStudio?.syncSettingsFromGlobal) {
@@ -1124,6 +1128,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     showToast(userSettings.includeSettingsApp ? 'Tuile « Paramètres & Options » affichée dans le Hub' : 'Tuile « Paramètres & Options » masquée du Hub', 'info');
   });
 
+  settingAnimateWallpaperToggle?.addEventListener('change', (e) => {
+    window.soundFx?.playClick();
+    userSettings.animateWallpaper = e.target.checked;
+    saveUserSettings();
+    localStorage.setItem('equalib_animate_wallpaper', userSettings.animateWallpaper ? 'true' : 'false');
+    if (window.wallpaperStudio?.setAnimateWallpaper) {
+      window.wallpaperStudio.setAnimateWallpaper(userSettings.animateWallpaper);
+    }
+    applyUserSettings();
+    if (simulator?.render) {
+      simulator.render();
+    }
+    showToast(userSettings.animateWallpaper ? 'Animation du fond d\'écran (GIF) activée' : 'Animation du fond d\'écran désactivée (fond figé)', 'info');
+  });
+
   window.openSettingsModal = openSettingsModal;
   window.closeSettingsModal = closeSettingsModal;
 
@@ -1367,6 +1386,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       glassMode: true,
       smoothCorners: true,
       includeSettingsApp: true,
+      animateWallpaper: true,
       theme: 'default',
       customColor: null
     };
@@ -2614,6 +2634,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         glassMode: userSettings.glassMode !== false,
         smoothCorners: userSettings.smoothCorners !== false,
         includeSettingsApp: userSettings.includeSettingsApp !== false,
+        animateWallpaper: userSettings.animateWallpaper !== false,
         customWallpaper: wpBytes
       });
       const url = URL.createObjectURL(bundle.blob);
@@ -2736,6 +2757,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         glassMode: userSettings.glassMode !== false,
         smoothCorners: userSettings.smoothCorners !== false,
         includeSettingsApp: userSettings.includeSettingsApp !== false,
+        animateWallpaper: userSettings.animateWallpaper !== false,
         customWallpaper: wpBytes
       });
 

@@ -140,6 +140,9 @@ class EquaLibBundler {
     const isSmooth = (options.smoothCorners !== undefined ? options.smoothCorners : (this.options?.smoothCorners !== undefined ? this.options.smoothCorners : ((typeof window !== 'undefined' && window.userSettings?.smoothCorners !== undefined) ? window.userSettings.smoothCorners : true)));
     if (isSmooth) flags |= 0x40;
 
+    const isAnimateBg = (options.animateWallpaper !== undefined ? options.animateWallpaper : (this.options?.animateWallpaper !== undefined ? this.options.animateWallpaper : ((typeof window !== 'undefined' && window.userSettings?.animateWallpaper !== undefined) ? window.userSettings.animateWallpaper : true)));
+    if (isAnimateBg) flags |= 0x80;
+
     u8[offset + 12] = flags & 0xFF;
     u8[offset + 13] = (flags >> 8) & 0xFF;
     u8[offset + 14] = (flags >> 16) & 0xFF;

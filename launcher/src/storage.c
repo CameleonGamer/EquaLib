@@ -56,6 +56,7 @@ eq_storage_t* eq_storage_get(void) {
         s->record_minesweeper_wins = 0;
         s->glass_mode = (g_equalib_manifest.flags & MANIFEST_FLAG_GLASS_MODE) ? 1 : 0;
         s->smooth_corners = (g_equalib_manifest.flags & MANIFEST_FLAG_SMOOTH_CORNERS) ? 1 : 0;
+        s->animated_bg = (g_equalib_manifest.flags & MANIFEST_FLAG_ANIMATED_BG) ? 1 : 0;
         s->last_manifest_flags = g_equalib_manifest.flags;
         s->reserved = 0;
         s->checksum = eq_storage_calc_checksum(s);
@@ -64,6 +65,7 @@ eq_storage_t* eq_storage_get(void) {
         if (s->last_manifest_flags != g_equalib_manifest.flags) {
             s->glass_mode = (g_equalib_manifest.flags & MANIFEST_FLAG_GLASS_MODE) ? 1 : 0;
             s->smooth_corners = (g_equalib_manifest.flags & MANIFEST_FLAG_SMOOTH_CORNERS) ? 1 : 0;
+            s->animated_bg = (g_equalib_manifest.flags & MANIFEST_FLAG_ANIMATED_BG) ? 1 : 0;
             s->view_mode = (g_equalib_manifest.flags & MANIFEST_FLAG_VIEW_MODE_LIST) ? 1 : 0;
             uint32_t m_theme = g_equalib_manifest.flags & MANIFEST_FLAG_THEME_MASK;
             if (m_theme < 7) {

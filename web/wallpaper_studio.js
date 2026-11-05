@@ -63,6 +63,8 @@
       this.smoothCorners = true;
       this.includeSettingsApp = true;
       this.displayMode = 'gallery';
+      this.animateWallpaper = true;
+      this.currentGifUrl = null;
 
       // État de dessin et curseur
       this.isDrawing = false;
@@ -166,7 +168,7 @@
             </div>
 
             <!-- Toggles rapides intégrés au Studio -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 text-xs">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5 text-xs">
               <!-- 1. Effet Verre Apple Glass -->
               <label class="flex items-center justify-between p-2.5 rounded bg-[#0d1117] border border-[#30363d] hover:border-[#FFBB00] transition-colors cursor-pointer shadow-[1px_1px_0px_#000]">
                 <div class="space-y-0.5">
@@ -189,7 +191,18 @@
                 <input type="checkbox" id="ws-smooth-toggle" class="accent-[#FFBB00] w-4 h-4 cursor-pointer" checked>
               </label>
 
-              <!-- 3. Tuile Paramètres dans le Hub -->
+              <!-- 3. Animation Fond (GIF) -->
+              <label class="flex items-center justify-between p-2.5 rounded bg-[#0d1117] border border-[#30363d] hover:border-[#FFBB00] transition-colors cursor-pointer shadow-[1px_1px_0px_#000]">
+                <div class="space-y-0.5">
+                  <div class="font-bold text-[#e6edf3] flex items-center gap-1.5">
+                    <span>⚡</span> Fond Animé (GIF)
+                  </div>
+                  <div class="text-[10px] text-[#8b949e]">Activer / figer animation</div>
+                </div>
+                <input type="checkbox" id="ws-animate-toggle" class="accent-[#FFBB00] w-4 h-4 cursor-pointer" checked>
+              </label>
+
+              <!-- 4. Tuile Paramètres dans le Hub -->
               <label class="flex items-center justify-between p-2.5 rounded bg-[#0d1117] border border-[#30363d] hover:border-[#FFBB00] transition-colors cursor-pointer shadow-[1px_1px_0px_#000]">
                 <div class="space-y-0.5">
                   <div class="font-bold text-[#e6edf3] flex items-center gap-1.5">
@@ -200,11 +213,11 @@
                 <input type="checkbox" id="ws-settings-app-toggle" class="accent-[#FFBB00] w-4 h-4 cursor-pointer" checked>
               </label>
 
-              <!-- 4. Mode d'Affichage Galerie / Liste -->
+              <!-- 5. Mode d'Affichage Galerie / Liste -->
               <div class="flex items-center justify-between p-2.5 rounded bg-[#0d1117] border border-[#30363d] shadow-[1px_1px_0px_#000]">
                 <div class="space-y-0.5">
                   <div class="font-bold text-[#e6edf3] flex items-center gap-1.5">
-                    <span>📱</span> Mode d'Affichage
+                    <span>📱</span> Mode Affichage
                   </div>
                   <div class="text-[10px] text-[#8b949e]" id="ws-display-mode-label">Galerie</div>
                 </div>
@@ -216,11 +229,11 @@
             </div>
           </div>
 
-          <!-- Section Import d'Image Rapide -->
+          <!-- Section Import d'Image Rapide & Fonds Animés GIF -->
           <div class="bg-[#161b22] border-2 border-[#30363d] rounded-lg p-3 shadow-[3px_3px_0px_#000] space-y-3">
             <div class="flex flex-wrap items-center justify-between gap-2 border-b border-[#30363d] pb-2">
               <span class="text-xs font-bold text-[#c9d1d9] flex items-center gap-2">
-                <span>🖼️</span> Import d'Image Personnalisée (PNG, JPG, WEBP)
+                <span>🖼️</span> Import d'Image ou GIF Animé (PNG, JPG, WEBP, GIF)
               </span>
               <div class="flex items-center gap-3 text-xs text-[#8b949e]">
                 <label class="flex items-center gap-1.5 cursor-pointer">
@@ -239,11 +252,29 @@
             </div>
 
             <div class="flex flex-wrap items-center gap-3">
-              <input type="file" id="ws-file-input" accept="image/png,image/jpeg,image/webp" class="hidden">
+              <input type="file" id="ws-file-input" accept="image/png,image/jpeg,image/webp,image/gif" class="hidden">
               <button id="ws-browse-file-btn" class="px-3 py-1.5 rounded bg-[#21262d] hover:bg-[#30363d] text-white text-xs font-bold border border-[#30363d] flex items-center gap-2 cursor-pointer shadow-[1px_1px_0px_#000]">
-                <span>📂 Choisir une image...</span>
+                <span>📂 Choisir une image ou un GIF...</span>
               </button>
               <span id="ws-file-status" class="text-xs text-[#8b949e]">Aucun fichier sélectionné (Glissez-déposez ou choisissez un fichier)</span>
+            </div>
+
+            <!-- Fonds Animés GIF d'exemple -->
+            <div class="pt-2 border-t border-[#30363d] flex flex-wrap items-center justify-between gap-2">
+              <span class="text-xs font-bold text-[#e6edf3] flex items-center gap-1.5">
+                <span>🎬</span> Exemples de Fonds Animés (GIF) :
+              </span>
+              <div class="flex flex-wrap items-center gap-2">
+                <button type="button" class="ws-gif-preset-btn px-2.5 py-1 rounded bg-[#21262d] hover:bg-[#30363d] text-pink-300 font-bold text-xs border border-pink-400/30 hover:border-pink-400 transition-all cursor-pointer flex items-center gap-1 shadow-[1px_1px_0px_#000]" data-gif="assets/gifs/sakura.gif" data-name="Sakura Animé">
+                  <span>🌸</span> Sakura Animé
+                </button>
+                <button type="button" class="ws-gif-preset-btn px-2.5 py-1 rounded bg-[#21262d] hover:bg-[#30363d] text-cyan-300 font-bold text-xs border border-cyan-400/30 hover:border-cyan-400 transition-all cursor-pointer flex items-center gap-1 shadow-[1px_1px_0px_#000]" data-gif="assets/gifs/hacker.gif" data-name="Hacker Animé">
+                  <span>💻</span> Hacker Animé
+                </button>
+                <button type="button" class="ws-gif-preset-btn px-2.5 py-1 rounded bg-[#21262d] hover:bg-[#30363d] text-amber-300 font-bold text-xs border border-amber-400/30 hover:border-amber-400 transition-all cursor-pointer flex items-center gap-1 shadow-[1px_1px_0px_#000]" data-gif="assets/gifs/abeilles.gif" data-name="Abeilles Animé">
+                  <span>🐝</span> Abeilles Animé
+                </button>
+              </div>
             </div>
           </div>
 
@@ -411,10 +442,12 @@
               <!-- Zone de travail avec Canvas centré et Scrollable -->
               <div class="ws-canvas-wrapper overflow-auto max-h-[520px] p-4 bg-[#0d1117] border-2 border-black rounded-lg flex items-center justify-center relative shadow-[inset_2px_2px_4px_#000]">
                 <div class="relative inline-block border-2 border-[#30363d] shadow-[0_0_15px_rgba(0,0,0,0.8)] cursor-crosshair" id="ws-viewport">
+                  <!-- Image de prévisualisation live du GIF animé -->
+                  <img id="ws-gif-img" src="" class="absolute inset-0 pointer-events-none block image-pixelated w-[320px] h-[240px] object-cover hidden z-0" alt="Aperçu GIF Animé">
                   <!-- Canvas de dessin principal (320x240 natif) -->
-                  <canvas id="ws-main-canvas" width="320" height="240" class="block image-pixelated bg-[#1e293b]"></canvas>
+                  <canvas id="ws-main-canvas" width="320" height="240" class="block image-pixelated bg-[#1e293b] relative z-0"></canvas>
                   <!-- Canvas d'overlay de l'UI du Hub (Top Bar, Cartes Galerie, Dock, Curseur Pinceau) -->
-                  <canvas id="ws-overlay-canvas" width="320" height="240" class="absolute inset-0 pointer-events-none block image-pixelated"></canvas>
+                  <canvas id="ws-overlay-canvas" width="320" height="240" class="absolute inset-0 pointer-events-none block image-pixelated z-10"></canvas>
                 </div>
               </div>
 
@@ -715,6 +748,25 @@
         });
       }
 
+      const animateToggle = container.querySelector('#ws-animate-toggle');
+      if (animateToggle) {
+        animateToggle.addEventListener('change', (e) => {
+          this.setAnimateWallpaper(e.target.checked);
+          window.soundFx?.playClick?.();
+        });
+      }
+
+      // Presets de Fonds GIF Animés
+      const gifPresetBtns = container.querySelectorAll('.ws-gif-preset-btn');
+      gifPresetBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const gifUrl = btn.getAttribute('data-gif');
+          const name = btn.getAttribute('data-name');
+          this.loadGifUrl(gifUrl, name);
+          window.soundFx?.playSuccess?.();
+        });
+      });
+
       const modeGalleryBtn = container.querySelector('#ws-mode-gallery-btn');
       const modeListBtn = container.querySelector('#ws-mode-list-btn');
 
@@ -775,6 +827,7 @@
       }
 
       this.updateCursorLabel();
+      this.updateGifPreview();
       this.renderOverlay();
     }
 
@@ -792,6 +845,7 @@
         });
       }
       this.updateCursorLabel();
+      this.updateGifPreview();
       this.renderOverlay();
     }
 
@@ -825,12 +879,14 @@
         this.smoothCorners = (window.userSettings.smoothCorners !== false);
         this.includeSettingsApp = (window.userSettings.includeSettingsApp !== false);
         this.displayMode = window.userSettings.displayMode || 'gallery';
+        this.animateWallpaper = (window.userSettings.animateWallpaper !== false);
       }
 
       if (typeof document !== 'undefined') {
         const glassToggle = document.getElementById('ws-glass-toggle');
         const smoothToggle = document.getElementById('ws-smooth-toggle');
         const settingsAppToggle = document.getElementById('ws-settings-app-toggle');
+        const animateToggle = document.getElementById('ws-animate-toggle');
         const modeLabel = document.getElementById('ws-display-mode-label');
         const modeGalleryBtn = document.getElementById('ws-mode-gallery-btn');
         const modeListBtn = document.getElementById('ws-mode-list-btn');
@@ -838,6 +894,7 @@
         if (glassToggle) glassToggle.checked = this.glassMode;
         if (smoothToggle) smoothToggle.checked = this.smoothCorners;
         if (settingsAppToggle) settingsAppToggle.checked = this.includeSettingsApp;
+        if (animateToggle) animateToggle.checked = this.animateWallpaper;
 
         if (modeLabel) {
           modeLabel.textContent = (this.displayMode === 'gallery') ? 'Galerie (Tuiles)' : 'Liste (Compact)';
@@ -854,6 +911,7 @@
         }
       }
 
+      this.updateGifPreview();
       this.renderOverlay();
     }
 
@@ -952,6 +1010,11 @@
         this.overlayCanvas.style.width = `${w}px`;
         this.overlayCanvas.style.height = `${h}px`;
       }
+      const gifImg = document.getElementById('ws-gif-img');
+      if (gifImg) {
+        gifImg.style.width = `${w}px`;
+        gifImg.style.height = `${h}px`;
+      }
     }
 
     getCanvasCoords(e) {
@@ -979,6 +1042,13 @@
         this.pickColorAt(coords.x, coords.y);
         this.isDrawing = false;
         return;
+      }
+
+      if (this.currentGifUrl) {
+        this.currentGifUrl = null;
+        window.customWallpaperGifUrl = null;
+        if (typeof localStorage !== 'undefined') localStorage.removeItem('equalib_custom_wallpaper_gifurl');
+        this.updateGifPreview();
       }
 
       if (this.currentTool === 'fill') {
@@ -1206,6 +1276,7 @@
       const imgData = this.ctx.createImageData(SCREEN_WIDTH, SCREEN_HEIGHT);
       imgData.data.set(this.pixelData);
       this.ctx.putImageData(imgData, 0, 0);
+      this.updateGifPreview();
     }
 
     renderOverlay() {
@@ -1474,15 +1545,110 @@
     }
 
     loadImageFile(file, fitMode = 'cover', applyDither = true) {
+      const isGif = file.type === 'image/gif' || file.name.toLowerCase().endsWith('.gif');
       const reader = new FileReader();
       reader.onload = (e) => {
+        const dataUrl = e.target.result;
+        if (isGif) {
+          this.currentGifUrl = dataUrl;
+          window.customWallpaperGifUrl = dataUrl;
+          if (typeof localStorage !== 'undefined') {
+            try {
+              localStorage.setItem('equalib_custom_wallpaper_gifurl', dataUrl);
+            } catch (err) {
+              console.warn('[Wallpaper Studio] DataURL trop grand pour localStorage, conservé en mémoire vive');
+            }
+          }
+        }
         const img = new Image();
         img.onload = () => {
           this.processLoadedImage(img, fitMode, applyDither);
+          if (isGif) {
+            this.updateGifPreview();
+            const statusEl = document.getElementById('ws-active-theme-status');
+            if (statusEl) {
+              statusEl.textContent = '✓ Fond d\'écran GIF animé chargé (Frame 0 RGB565 : 153.6 Ko)';
+              statusEl.className = 'text-pink-400 font-bold';
+            }
+          }
         };
-        img.src = e.target.result;
+        img.src = dataUrl;
       };
       reader.readAsDataURL(file);
+    }
+
+    async loadGifUrl(url, name = 'Fond GIF Animé') {
+      try {
+        const fileStatus = document.getElementById('ws-file-status');
+        if (fileStatus) fileStatus.textContent = `Chargement de ${name}...`;
+
+        this.currentGifUrl = url;
+        window.customWallpaperGifUrl = url;
+        if (typeof localStorage !== 'undefined') {
+          localStorage.setItem('equalib_custom_wallpaper_gifurl', url);
+        }
+
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => {
+          this.processLoadedImage(img, 'cover', this.useDithering);
+          this.updateGifPreview();
+          if (fileStatus) fileStatus.textContent = `✓ ${name} appliqué avec succès !`;
+          const statusEl = document.getElementById('ws-active-theme-status');
+          if (statusEl) {
+            statusEl.textContent = `✓ ${name} actif (Frame 0 RGB565 généré 153.6 Ko)`;
+            statusEl.className = 'text-pink-400 font-bold';
+          }
+        };
+        img.onerror = (e) => {
+          console.warn('[Wallpaper Studio] Erreur chargement image GIF :', e);
+          if (fileStatus) fileStatus.textContent = `Erreur chargement ${name}`;
+        };
+        img.src = url;
+      } catch (err) {
+        console.warn('[Wallpaper Studio] loadGifUrl exception :', err);
+      }
+    }
+
+    setAnimateWallpaper(enabled) {
+      this.animateWallpaper = !!enabled;
+      if (typeof window !== 'undefined') {
+        if (window.userSettings) window.userSettings.animateWallpaper = this.animateWallpaper;
+        window.saveUserSettings?.();
+      }
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('equalib_animate_wallpaper', this.animateWallpaper ? 'true' : 'false');
+      }
+      const studioToggle = document.getElementById('ws-animate-toggle');
+      if (studioToggle) studioToggle.checked = this.animateWallpaper;
+      const modalToggle = document.getElementById('setting-animate-wallpaper-toggle');
+      if (modalToggle) modalToggle.checked = this.animateWallpaper;
+
+      this.updateGifPreview();
+
+      if (typeof window !== 'undefined' && window.simulator) {
+        window.simulator.render?.();
+      }
+      this.renderOverlay();
+    }
+
+    updateGifPreview() {
+      if (typeof document === 'undefined') return;
+      const gifImg = document.getElementById('ws-gif-img');
+      const mainCanvas = document.getElementById('ws-main-canvas');
+      const isAnimated = (this.animateWallpaper !== false);
+      const gifUrl = this.currentGifUrl || (typeof window !== 'undefined' && window.customWallpaperGifUrl) || (typeof localStorage !== 'undefined' && localStorage.getItem('equalib_custom_wallpaper_gifurl'));
+
+      if (gifImg && mainCanvas) {
+        if (isAnimated && gifUrl) {
+          if (gifImg.src !== gifUrl) gifImg.src = gifUrl;
+          gifImg.classList.remove('hidden');
+          mainCanvas.style.opacity = '0';
+        } else {
+          gifImg.classList.add('hidden');
+          mainCanvas.style.opacity = '1';
+        }
+      }
     }
 
     processLoadedImage(img, fitMode = 'cover', applyDither = true) {
@@ -1664,9 +1830,11 @@
         }
 
         // Si le simulateur ou le site utilise le thème custom, rafraîchir en direct
-        if (dataUrl && typeof document !== 'undefined') {
+        const isAnimated = (this.animateWallpaper !== false);
+        const activeUrl = (isAnimated && this.currentGifUrl) ? this.currentGifUrl : dataUrl;
+        if (activeUrl && typeof document !== 'undefined') {
           if (document.body.classList.contains('has-custom-wallpaper') || (window.userSettings && window.userSettings.theme === 'custom')) {
-            document.documentElement.style.setProperty('--custom-wallpaper-url', `url("${dataUrl}")`);
+            document.documentElement.style.setProperty('--custom-wallpaper-url', `url("${activeUrl}")`);
             document.body.classList.add('has-custom-wallpaper');
           }
         }
@@ -1771,6 +1939,13 @@
       try {
         if (typeof localStorage === 'undefined') return;
 
+        // 0. Récupération de l'éventuelle URL ou DataURL du GIF animé
+        const storedGif = localStorage.getItem('equalib_custom_wallpaper_gifurl');
+        if (storedGif) {
+          window.customWallpaperGifUrl = storedGif;
+          this.currentGifUrl = storedGif;
+        }
+
         // 1. Réhydratation instantanée bit-exacte depuis les octets RGB565
         const storedB64 = localStorage.getItem('equalib_custom_wallpaper_rgb565');
         if (storedB64) {
@@ -1793,6 +1968,7 @@
 
             this.renderCanvas();
             this.pushHistoryState();
+            this.updateGifPreview();
 
             const dataUrl = this.canvas ? this.canvas.toDataURL('image/png') : null;
             if (dataUrl) {
@@ -1803,7 +1979,9 @@
             if (typeof document !== 'undefined') {
               const statusEl = document.getElementById('ws-active-theme-status');
               if (statusEl) {
-                statusEl.textContent = '✓ Fond d\'écran personnalisé chargé (153.6 Ko)';
+                statusEl.textContent = this.currentGifUrl 
+                  ? '✓ Fond d\'écran animé GIF actif (Frame 0 RGB565 : 153.6 Ko)' 
+                  : '✓ Fond d\'écran personnalisé chargé (153.6 Ko)';
                 statusEl.className = 'text-amber-400 font-bold';
               }
             }
@@ -1826,9 +2004,12 @@
             this.pixelData.set(imgData.data);
             this.renderCanvas();
             this.pushHistoryState();
+            this.updateGifPreview();
             this.autoSyncWallpaper();
           };
           img.src = storedUrl;
+        } else {
+          this.updateGifPreview();
         }
       } catch (err) {
         console.warn('[Wallpaper Studio] Récupération stored wallpaper échouée :', err);
