@@ -2534,7 +2534,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
       window.soundFx?.playSuccess();
-      showToast(`✓ Fichier equalib_${modelSuffix}.nwa téléchargé avec vos ${selectedApps.length} applications !`, 'success');
+      showToast(`✓ Fichier equalib_${modelSuffix}.nwa téléchargé ! Note : pour installer directement sans passer par my.numworks.com, utilisez le bouton jaune Flash USB Direct.`, 'info');
     } catch (err) {
       console.error("Erreur téléchargement .nwa :", err);
       window.soundFx?.playHit();
@@ -2560,7 +2560,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
       window.soundFx?.playSuccess();
-      showToast('Sauvegarde equalib_backup.nws téléchargée !', 'success');
+      showToast('Sauvegarde equalib_backup.nws téléchargée ! (Fichier de configuration du pack, à ne pas charger dans Python)', 'info');
     } catch (err) {
       window.soundFx?.playHit();
       showToast('Erreur lors de la création du fichier .nws', 'error');
@@ -2639,7 +2639,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       connectionText.textContent = 'Installé ✓';
       connectBtn.innerHTML = '<span>🔌</span> <span class="hidden sm:inline">Connecter</span>';
       window.soundFx?.playSuccess();
-      showToast(`🎉 Installation réussie ! Votre NumWorks démarre avec vos ${selectedApps.length} applications.`, 'success');
+      showToast(`🎉 Installation réussie ! Touche [Home] de votre NumWorks : ouvrez l'application « EquaLib » (ne cherchez pas dans Python) !`, 'success');
     } catch (err) {
       console.error('[Flash] Erreur :', err);
       window.soundFx?.playHit();

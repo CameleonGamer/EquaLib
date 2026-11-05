@@ -110,7 +110,7 @@
         badge: 'Étape 5 / 5',
         isWarning: true,
         warningText: '⚠️ Branchez votre calculatrice NumWorks à votre PC via un câble USB (câble de données USB-C).',
-        text: 'Branchez votre calculatrice NumWorks à votre PC via un câble USB (câble de données USB-C).\n\nUne fois la calculatrice connectée et allumée sur son écran d\'accueil, cliquez sur « Installer sur ma NumWorks (Flash USB Direct) » pour transférer le pack complet en mémoire Flash en un instant via WebUSB en toute sécurité.',
+        text: 'Branchez votre calculatrice NumWorks à votre PC via un câble USB (câble de données USB-C).\n\nUne fois la calculatrice connectée et allumée sur son écran d\'accueil, cliquez sur « Installer sur ma NumWorks (Flash USB Direct) » pour transférer le pack complet en mémoire Flash en un instant via WebUSB en toute sécurité.\n\n📍 Après installation : Appuyez sur la touche [Home] de votre calculatrice. Ouvrez l\'icône « EquaLib » sur l\'écran d\'accueil (ne cherchez pas dans l\'application Python !).',
         beforeStep: function () {}
       }
     ];

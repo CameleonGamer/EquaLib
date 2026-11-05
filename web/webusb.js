@@ -660,7 +660,7 @@ class NumWorksWebUSB {
     this.isConnected = false;
     this.device = null;
 
-    onProgress({ phase: 'done', percent: 100, message: '✓ EquaLib a été installé avec succès !' });
+    onProgress({ phase: 'done', percent: 100, message: '✓ EquaLib installé ! Lancez l\'icône « EquaLib » sur l\'écran Home (pas dans Python).' });
 
     console.log('[WebUSB] Flashage terminé avec succès !');
     return true;

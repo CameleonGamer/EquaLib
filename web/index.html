@@ -740,12 +740,25 @@
               <span>Installer sur ma NumWorks (Flash USB Direct)</span>
             </button>
 
+            <!-- Alerte explicative : Emplacement sur la calculatrice -->
+            <div class="p-2.5 bg-[#030814] border-2 border-[#1B3B6F] border-l-4 border-l-[#FFD700] text-[11px] font-mono text-[#8EA5C8] space-y-1">
+              <p class="text-[#FFD700] font-bold flex items-center gap-1.5 uppercase tracking-wide">
+                <span>📍</span> <span>Où trouver vos jeux après l'installation ?</span>
+              </p>
+              <p class="text-[#F8FAFC] leading-relaxed">
+                Appuyez sur la touche <strong class="text-[#FFD700]">[Home]</strong> de votre calculatrice : une nouvelle application nommée <strong class="text-[#00E5FF]">« EquaLib »</strong> apparaît sur l'écran d'accueil principal (à côté de Calculs, Fonctions...).
+              </p>
+              <p class="text-[10px] text-amber-300">
+                ⚠️ Ne cherchez <strong>PAS</strong> dans l'application « Python » : EquaLib est un système natif autonome indépendant !
+              </p>
+            </div>
+
             <div class="grid grid-cols-2 gap-2">
-              <button id="download-btn" class="py-2.5 px-3 rounded-none bg-[#11264B] hover:bg-[#1B3B6F] text-[#F8FAFC] font-mono font-bold text-xs transition-all flex items-center justify-center gap-1.5 border-2 border-[#1B3B6F] hover:border-[#FFD700] shadow-[3px_3px_0px_#01040A] active:translate-x-[1px] active:translate-y-[1px] cursor-pointer uppercase tracking-wide">
+              <button id="download-btn" class="py-2.5 px-3 rounded-none bg-[#11264B] hover:bg-[#1B3B6F] text-[#F8FAFC] font-mono font-bold text-xs transition-all flex items-center justify-center gap-1.5 border-2 border-[#1B3B6F] hover:border-[#FFD700] shadow-[3px_3px_0px_#01040A] active:translate-x-[1px] active:translate-y-[1px] cursor-pointer uppercase tracking-wide" title="Fichier binaire externe (pour installation manuelle avancée)">
                 <span>💾</span>
                 <span>Télécharger .nwa</span>
               </button>
-              <button id="download-nws-btn" class="py-2.5 px-3 rounded-none bg-[#11264B] hover:bg-[#1B3B6F] text-[#8EA5C8] hover:text-[#F8FAFC] font-mono font-bold text-xs transition-all flex items-center justify-center gap-1.5 border-2 border-[#1B3B6F] hover:border-[#00E5FF] shadow-[3px_3px_0px_#01040A] active:translate-x-[1px] active:translate-y-[1px] cursor-pointer uppercase tracking-wide">
+              <button id="download-nws-btn" class="py-2.5 px-3 rounded-none bg-[#11264B] hover:bg-[#1B3B6F] text-[#8EA5C8] hover:text-[#F8FAFC] font-mono font-bold text-xs transition-all flex items-center justify-center gap-1.5 border-2 border-[#1B3B6F] hover:border-[#00E5FF] shadow-[3px_3px_0px_#01040A] active:translate-x-[1px] active:translate-y-[1px] cursor-pointer uppercase tracking-wide" title="Sauvegarde de configuration du pack">
                 <span>📦</span> Exporter .nws
               </button>
             </div>
@@ -1219,10 +1232,10 @@
   <script src="sim_engine.js?v=66"></script>
   <script src="nwa_linker.js?v=60"></script>
   <script src="bundler.js?v=60"></script>
-  <script src="webusb.js?v=67"></script>
+  <script src="webusb.js?v=68"></script>
   <script src="crt_math.js?v=60"></script>
   <script src="wallpaper_studio.js?v=60"></script>
-  <script src="walkthrough_guide.js?v=65"></script>
-  <script src="app.js?v=67"></script>
+  <script src="walkthrough_guide.js?v=68"></script>
+  <script src="app.js?v=68"></script>
 </body>
 </html>
