@@ -968,6 +968,342 @@ describe('7. Compilation et Validité Syntaxique des Jeux Python (.NWS)', () => 
       const targetFlashAddr = (finalModel === 'N0110') ? DEFAULT_FLASH_ADDR_N0110 : DEFAULT_FLASH_ADDR_N0120;
       assert.strictEqual(targetFlashAddr, 0x90200000, 'L adresse de flashage DOIT rester 0x90200000');
     });
+
+    await itAsync('Désambiguïsation stricte N0110 vs N0115 : la chaîne combinée N0110 / N0115 ne doit pas écraser le slot vers 0x90600000', async () => {
+      const usb = new NumWorksWebUSB();
+      usb.setTargetModel('NumWorks N0110 / N0115');
+      assert.strictEqual(usb.model, 'NumWorks N0110', 'Modèle combiné doit résoudre vers N0110 par défaut');
+      assert.strictEqual(usb.flashAddress, 0x90200000, 'Flash slot par défaut doit rester 0x90200000');
+      assert.strictEqual(usb.ramAddress, 0x20000000, 'RAM base par défaut doit rester 0x20000000');
+
+      const EquaLibBundler = require(path.resolve('web/bundler.js'));
+      const bundler = new EquaLibBundler();
+      const res = await bundler.buildBundle([], 'bin', { targetModel: 'NumWorks N0110 / N0115' });
+      assert(res.arrayBuffer.byteLength > 64, 'Binaire N0110 généré');
+    });
+  });
+
+  // -------------------------------------------------------------
+  // SUITE 11: Chargement DOMContentLoaded de web/app.js & Catalogue
+  // -------------------------------------------------------------
+  await describe('11. Chargement DOMContentLoaded de web/app.js & Catalogue', async () => {
+    await itAsync('Exécution DOMContentLoaded sans exception et rendu complet des 15 applications du catalogue', async () => {
+      class MockClassList {
+        constructor(el) {
+          this.el = el;
+          this.classes = new Set();
+        }
+        add(...cls) {
+          cls.forEach(c => c && c.split(/\s+/).forEach(x => x && this.classes.add(x)));
+          this.el._className = Array.from(this.classes).join(' ');
+        }
+        remove(...cls) {
+          cls.forEach(c => c && c.split(/\s+/).forEach(x => this.classes.delete(x)));
+          this.el._className = Array.from(this.classes).join(' ');
+        }
+        contains(c) {
+          return this.classes.has(c);
+        }
+        toggle(c, force) {
+          if (force === true) this.add(c);
+          else if (force === false) this.remove(c);
+          else if (this.contains(c)) this.remove(c);
+          else this.add(c);
+        }
+      }
+
+      class MockElement {
+        constructor(tagName = 'div', id = '') {
+          this.tagName = tagName.toUpperCase();
+          this.id = id;
+          this._className = '';
+          this.classList = new MockClassList(this);
+          this.style = {
+            setProperty: (k, v) => { this.style[k] = v; },
+            removeProperty: (k) => { delete this.style[k]; }
+          };
+          this.attributes = {};
+          this.children = [];
+          this.parentNode = null;
+          this.listeners = {};
+          this._innerHTML = '';
+          this._textContent = '';
+          this.disabled = false;
+          this.value = '';
+          this.dataset = {};
+          this.width = 180;
+          this.height = 180;
+        }
+
+        get className() { return this._className; }
+        set className(val) {
+          this._className = val || '';
+          this.classList.classes.clear();
+          if (val) val.trim().split(/\s+/).forEach(c => c && this.classList.classes.add(c));
+        }
+
+        get textContent() { return this._textContent; }
+        set textContent(val) {
+          this._textContent = String(val);
+          this._innerHTML = String(val);
+          this.children = [];
+        }
+
+        get innerHTML() { return this._innerHTML; }
+        set innerHTML(val) {
+          this._innerHTML = String(val);
+          this.children = [];
+        }
+
+        setAttribute(k, v) { this.attributes[k] = String(v); if (k === 'id') this.id = String(v); }
+        getAttribute(k) { return this.attributes[k] !== undefined ? this.attributes[k] : null; }
+        hasAttribute(k) { return this.attributes[k] !== undefined; }
+        removeAttribute(k) { delete this.attributes[k]; }
+
+        appendChild(child) {
+          if (child.parentNode) child.parentNode.removeChild(child);
+          child.parentNode = this;
+          this.children.push(child);
+          return child;
+        }
+
+        removeChild(child) {
+          const idx = this.children.indexOf(child);
+          if (idx !== -1) {
+            this.children.splice(idx, 1);
+            child.parentNode = null;
+          }
+          return child;
+        }
+
+        remove() {
+          if (this.parentNode) this.parentNode.removeChild(this);
+        }
+
+        addEventListener(ev, fn) {
+          if (!this.listeners[ev]) this.listeners[ev] = [];
+          this.listeners[ev].push(fn);
+        }
+
+        removeEventListener(ev, fn) {
+          if (!this.listeners[ev]) return;
+          this.listeners[ev] = this.listeners[ev].filter(f => f !== fn);
+        }
+
+        click() {
+          if (this.listeners['click']) {
+            this.listeners['click'].forEach(f => f({ stopPropagation: () => {}, preventDefault: () => {}, target: this }));
+          }
+        }
+
+        getContext(type) {
+          return {
+            clearRect: () => {},
+            beginPath: () => {},
+            moveTo: () => {},
+            arc: () => {},
+            closePath: () => {},
+            fill: () => {},
+            stroke: () => {},
+            fillRect: () => {},
+            strokeRect: () => {},
+            fillText: () => {},
+            createRadialGradient: () => ({ addColorStop: () => {} })
+          };
+        }
+
+        querySelector(sel) {
+          return new MockElement('div');
+        }
+
+        querySelectorAll(sel) {
+          return [];
+        }
+      }
+
+      const elementsById = new Map();
+      function getOrCreateElement(id, tag = 'div') {
+        if (elementsById.has(id)) return elementsById.get(id);
+        const el = new MockElement(tag, id);
+        elementsById.set(id, el);
+        return el;
+      }
+
+      const eventListeners = {};
+      const mockDocument = {
+        getElementById: (id) => getOrCreateElement(id),
+        querySelector: (sel) => {
+          if (sel.startsWith('#')) return getOrCreateElement(sel.slice(1));
+          return new MockElement('div');
+        },
+        querySelectorAll: (sel) => [],
+        createElement: (tag) => new MockElement(tag),
+        addEventListener: (ev, fn) => {
+          if (!eventListeners[ev]) eventListeners[ev] = [];
+          eventListeners[ev].push(fn);
+        },
+        removeEventListener: (ev, fn) => {
+          if (!eventListeners[ev]) return;
+          eventListeners[ev] = eventListeners[ev].filter(f => f !== fn);
+        },
+        documentElement: new MockElement('html'),
+        body: new MockElement('body'),
+        head: new MockElement('head')
+      };
+
+      const originalDocument = global.document;
+      const originalWindow = global.window;
+      const originalFetch = global.fetch;
+
+      global.document = mockDocument;
+      global.window = {
+        document: mockDocument,
+        addEventListener: () => {},
+        removeEventListener: () => {},
+        localStorage: {
+          getItem: () => null,
+          setItem: () => {},
+          removeItem: () => {}
+        },
+        sessionStorage: {
+          getItem: () => null,
+          setItem: () => {},
+          removeItem: () => {}
+        },
+        fetch: async (url) => {
+          const filename = url.split('?')[0];
+          const filepath = path.resolve('web', filename);
+          if (fs.existsSync(filepath)) {
+            const data = fs.readFileSync(filepath, 'utf8');
+            return {
+              ok: true,
+              json: async () => JSON.parse(data),
+              arrayBuffer: async () => fs.readFileSync(filepath).buffer
+            };
+          }
+          return { ok: false, status: 404 };
+        },
+        requestAnimationFrame: (cb) => { setImmediate(cb); return 1; },
+        cancelAnimationFrame: () => {},
+        soundFx: {
+          playClick: () => {},
+          playSuccess: () => {},
+          playHit: () => {},
+          playFlap: () => {},
+          playScore: () => {},
+          playOver: () => {}
+        },
+        URL: {
+          createObjectURL: () => 'blob:mock',
+          revokeObjectURL: () => {}
+        },
+        confirm: () => true
+      };
+      global.confirm = () => true;
+      global.localStorage = global.window.localStorage;
+      global.sessionStorage = global.window.sessionStorage;
+      global.requestAnimationFrame = global.window.requestAnimationFrame;
+      global.cancelAnimationFrame = global.window.cancelAnimationFrame;
+      global.fetch = global.window.fetch;
+      global.URL = global.window.URL;
+
+      const { NumWorksWebUSB } = require(path.resolve('web/webusb.js'));
+      const EquaLibBundler = require(path.resolve('web/bundler.js'));
+      global.NumWorksWebUSB = NumWorksWebUSB;
+      global.EquaLibBundler = EquaLibBundler;
+
+      try {
+        delete require.cache[require.resolve('../web/app.js')];
+        require('../web/app.js');
+
+        const domHandlers = eventListeners['DOMContentLoaded'] || [];
+        assert(domHandlers.length > 0, 'Au moins un gestionnaire DOMContentLoaded doit être enregistré par app.js');
+
+        for (const handler of domHandlers) {
+          await handler();
+        }
+
+        const catalogList = getOrCreateElement('catalog-list');
+        assert.strictEqual(catalogList.children.length, 15, `Le catalogue #catalog-list doit contenir 15 applications après DOMContentLoaded (reçu : ${catalogList.children.length})`);
+
+        // Test setTargetModel pour N0115, N0120, N0110
+        assert(typeof global.window.setTargetModel === 'function', 'setTargetModel doit être accessible');
+        
+        // 1. Modèle N0115
+        global.window.setTargetModel('N0115', false);
+        assert.strictEqual(global.window.userSettings.targetModel, 'N0115');
+        const modelText = getOrCreateElement('model-text');
+        assert(modelText.textContent.includes('Slot 0x90600000'), 'Le slot N0115 doit être 0x90600000');
+        assert(modelText.textContent.includes('NumWorks N0115'), 'Le nom affiché doit être NumWorks N0115');
+        const downloadBtn = getOrCreateElement('download-btn');
+        assert(downloadBtn.innerHTML.includes('(N0115)'), 'Le bouton download doit afficher (N0115)');
+        const btnN110 = getOrCreateElement('model-select-n0110');
+        const btnN120 = getOrCreateElement('model-select-n0120');
+        assert(btnN110.className.includes('bg-[#FFD700]'), 'Bouton N0110/N0115 doit avoir le style actif bg-[#FFD700]');
+        assert(btnN120.className.includes('text-[#8EA5C8]'), 'Bouton N0120 doit avoir le style inactif');
+
+        // 2. Modèle N0120
+        global.window.setTargetModel('N0120', false);
+        assert.strictEqual(global.window.userSettings.targetModel, 'N0120');
+        assert(modelText.textContent.includes('Slot 0x90180000'), 'Le slot N0120 doit être 0x90180000');
+        assert(btnN120.className.includes('bg-[#FFD700]'), 'Bouton N0120 doit avoir le style actif bg-[#FFD700]');
+
+        // 3. Modèle combiné 'NumWorks N0110 / N0115' ne doit pas basculer vers N0115
+        global.window.setTargetModel('NumWorks N0110 / N0115', false);
+        assert.strictEqual(global.window.userSettings.targetModel, 'N0110');
+        assert(modelText.textContent.includes('Slot 0x90200000'), 'Slot N0110 par défaut doit être 0x90200000');
+        assert(downloadBtn.innerHTML.includes('(N0110/N0115)'), 'Libellé download N0110');
+
+        // 4. Test downloadBtn event listener pour N0115 et N0110
+        const downloadedFiles = [];
+        const origAppendChild = mockDocument.body.appendChild.bind(mockDocument.body);
+        mockDocument.body.appendChild = (child) => {
+          if (child && child.download) downloadedFiles.push(child.download);
+          return origAppendChild(child);
+        };
+
+        global.window.setTargetModel('N0115', false);
+        const dlHandler = downloadBtn.listeners['click']?.[0];
+        assert(dlHandler, 'downloadBtn doit avoir un gestionnaire de clic');
+        await dlHandler();
+        assert(downloadedFiles.includes('equalib_n0115.nwa'), 'Doit télécharger equalib_n0115.nwa pour le modèle N0115');
+
+        global.window.setTargetModel('N0110', false);
+        await dlHandler();
+        assert(downloadedFiles.includes('equalib_n0110.nwa'), 'Doit télécharger equalib_n0110.nwa pour le modèle N0110');
+
+        // 5. Test flashBtn détection N0115 sans écrasement vers N0110
+        const flashBtn = getOrCreateElement('flash-btn');
+        const flashHandler = flashBtn.listeners['click']?.[0];
+        assert(flashHandler, 'flashBtn doit avoir un gestionnaire de clic');
+
+        let flashedSlot = null;
+        global.window.usb.flashBinary = async (buf, onProg, targetFlashAddr) => {
+          flashedSlot = targetFlashAddr;
+        };
+        global.window.usb.connect = async function() {
+          this.isConnected = true;
+          this.model = 'NumWorks N0115';
+          this.mode = 'Epsilon OS';
+          this.flashAddress = 0x90600000;
+          return {
+            success: true,
+            model: this.model,
+            mode: this.mode,
+            flashAddress: this.flashAddress
+          };
+        };
+        global.window.usb.isConnected = false;
+        global.window.userSettings.manualModel = 'N0110';
+        await flashHandler();
+        assert.strictEqual(flashedSlot, 0x90600000, 'Flash direct d une N0115 doit cibler le slot 0x90600000 sans être écrasé vers N0110');
+      } finally {
+        global.document = originalDocument;
+        global.window = originalWindow;
+        global.fetch = originalFetch;
+        delete global.confirm;
+      }
+    });
   });
 
   console.log(`\n========================================`);

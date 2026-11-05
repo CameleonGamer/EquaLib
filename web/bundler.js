@@ -408,7 +408,7 @@ class EquaLibBundler {
     const isBin = (format === 'bin');
     const modelOption = (options.targetModel || this.options?.targetModel || (typeof window !== 'undefined' && window.userSettings?.targetModel) || 'N0110').toUpperCase();
     const isN0120 = modelOption.includes('120') || options.flashAddress === 0x90180000;
-    const isN0115 = modelOption.includes('115') || options.flashAddress === 0x90600000;
+    const isN0115 = options.flashAddress === 0x90600000 || modelOption === 'N0115' || (modelOption.includes('115') && !modelOption.includes('110'));
     const modelSuffix = isN0120 ? 'n0120' : (isN0115 ? 'n0115' : 'n0110');
     const targetFile = isBin ? `equalib_${modelSuffix}.bin` : `equalib_${modelSuffix}.nwa`;
     const fallbackFile = isBin ? 'equalib_n0110.bin' : 'equalib_n0110.nwa';

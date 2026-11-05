@@ -201,6 +201,9 @@ const APP_DETAILS_MAP = {
 document.addEventListener('DOMContentLoaded', async () => {
   // Constantes
   const MAX_FLASH_BYTES = 4.0 * 1024 * 1024; // 4.0 Mo alloués aux applications externes
+  const DEFAULT_FLASH_ADDR_N0120 = 0x90180000;
+  const DEFAULT_FLASH_ADDR_N0115 = 0x90600000;
+  const DEFAULT_FLASH_ADDR_N0110 = 0x90200000;
 
   // État de l'application
   let catalogApps = [];
@@ -212,6 +215,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   
   const usb = new NumWorksWebUSB();
   const bundler = new EquaLibBundler();
+  window.usb = usb;
+  window.bundler = bundler;
 
   // Éléments du DOM - Catalogue & Pack
   const catalogList = document.getElementById('catalog-list');
@@ -365,9 +370,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     return model === 'N0110' || model === 'N0115' || model.includes('110') || model.includes('115');
   }
 
+  function isN0115Model(model, flashAddress) {
+    if (flashAddress === 0x90600000) return true;
+    if (!model) return false;
+    const m = String(model).toUpperCase();
+    return m === 'N0115' || (m.includes('115') && !m.includes('110'));
+  }
+
   function setTargetModel(model, save = true) {
-    const isN120 = model && (model.includes('120') || model === 'N0120');
-    const isN115 = model && (model.includes('115') || model === 'N0115');
+    const isN120 = Boolean(model && (model.includes('120') || model === 'N0120'));
+    const isN115 = Boolean(model && isN0115Model(model));
+    const isN110 = !isN120;
     if (isN120) {
       userSettings.targetModel = 'N0120';
     } else if (isN115) {
@@ -382,36 +395,43 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     if (modelSelectN0120 && modelSelectN0110) {
+      const activeClass = 'px-2.5 py-1 rounded-none text-xs font-mono font-bold transition-all bg-[#FFD700] text-black border-2 border-black cursor-pointer shadow-[2px_2px_0px_#01040A]';
+      const inactiveClass = 'px-2.5 py-1 rounded-none text-xs font-mono font-semibold transition-all text-[#8EA5C8] hover:text-[#F8FAFC] cursor-pointer';
       if (!isN120) {
-        modelSelectN0110.className = 'px-2.5 py-1 rounded text-xs font-mono font-bold transition-all bg-[#FFBB00] text-black border border-black cursor-pointer shadow-[1px_1px_0px_#000]';
-        modelSelectN0120.className = 'px-2.5 py-1 rounded text-xs font-mono font-semibold transition-all text-[#8b949e] hover:text-[#e6edf3] cursor-pointer';
+        modelSelectN0110.className = activeClass;
+        modelSelectN0120.className = inactiveClass;
       } else {
-        modelSelectN0120.className = 'px-2.5 py-1 rounded text-xs font-mono font-bold transition-all bg-[#FFBB00] text-black border border-black cursor-pointer shadow-[1px_1px_0px_#000]';
-        modelSelectN0110.className = 'px-2.5 py-1 rounded text-xs font-mono font-semibold transition-all text-[#8b949e] hover:text-[#e6edf3] cursor-pointer';
+        modelSelectN0120.className = activeClass;
+        modelSelectN0110.className = inactiveClass;
       }
     }
 
     if (modelText) {
       const modeSuffix = (usb && usb.isConnected) ? ` (${usb.mode})` : '';
+      const defaultSlot = isN120 ? ' - Slot 0x90180000' : (isN115 ? ' - Slot 0x90600000' : ' - Slot 0x90200000');
       const slotAddr = (usb && usb.isConnected && usb.flashAddress) 
         ? ` - Slot 0x${usb.flashAddress.toString(16)}` 
-        : (isN110 ? ' - Slot 0x90200000' : ' - Slot 0x90180000');
+        : defaultSlot;
       const displayedName = (usb && usb.isConnected)
         ? usb.model
-        : (isN110 ? 'NumWorks N0110 / N0115' : 'NumWorks N0120');
+        : (isN120 ? 'NumWorks N0120' : (isN115 ? 'NumWorks N0115' : 'NumWorks N0110 / N0115'));
       modelText.textContent = `${displayedName}${modeSuffix}${slotAddr}`;
     }
 
     if (downloadBtn) {
-      downloadBtn.innerHTML = `<span>💾</span> <span>Télécharger .nwa (${isN110 ? 'N0110/N0115' : 'N0120'})</span>`;
+      const dlLabel = isN120 ? 'N0120' : (isN115 ? 'N0115' : 'N0110/N0115');
+      downloadBtn.innerHTML = `<span>💾</span> <span>Télécharger .nwa (${dlLabel})</span>`;
     }
 
     const memLabel = document.getElementById('memory-flash-label');
     if (memLabel) {
-      memLabel.textContent = `Mémoire Flash QSPI (${isN110 ? 'N0110 / N0115' : 'N0120'})`;
+      const memSuffix = isN120 ? 'N0120' : (isN115 ? 'N0115' : 'N0110 / N0115');
+      memLabel.textContent = `Mémoire Flash QSPI (${memSuffix})`;
     }
 
-    const specText = isN110 ? 'NumWorks N0110 & N0115 (STM32F730 @ 216 MHz)' : 'NumWorks N0120 (STM32H725 @ 550 MHz)';
+    const specText = isN120 
+      ? 'NumWorks N0120 (STM32H725 @ 550 MHz)' 
+      : (isN115 ? 'NumWorks N0115 (STM32F730 @ 216 MHz)' : 'NumWorks N0110 & N0115 (STM32F730 @ 216 MHz)');
     const footerSpec = document.getElementById('footer-model-spec');
     if (footerSpec) footerSpec.textContent = specText;
 
@@ -419,8 +439,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (helpModel) helpModel.textContent = specText;
 
     const modalControls = document.getElementById('modal-controls-model');
-    if (modalControls) modalControls.textContent = isN110 ? 'N0110 / N0115' : 'N0120';
+    if (modalControls) modalControls.textContent = isN120 ? 'N0120' : (isN115 ? 'N0115' : 'N0110 / N0115');
   }
+  window.setTargetModel = setTargetModel;
 
   modelSelectN0120?.addEventListener('click', () => {
     window.soundFx?.playClick();
@@ -1911,7 +1932,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
 
         const btn = card.querySelector('.add-btn');
-        btn.addEventListener('click', (e) => {
+        btn?.addEventListener('click', (e) => {
           e.stopPropagation();
           if (isSelected) {
             const idx = selectedApps.findIndex(s => s.id === app.id);
@@ -2020,7 +2041,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const btn = card.querySelector('.gallery-dl-btn');
         if (!isSelected) {
-          btn.addEventListener('click', async (e) => {
+          btn?.addEventListener('click', async (e) => {
             e.stopPropagation();
             btn.innerHTML = `<span class="inline-block animate-spin mr-1">⏳</span>...`;
             btn.disabled = true;
@@ -2089,7 +2110,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const btn = card.querySelector('.dl-app-btn');
         if (!isSelected) {
-          btn.addEventListener('click', async () => {
+          btn?.addEventListener('click', async () => {
             btn.innerHTML = `<span class="inline-block animate-spin mr-1">⏳</span> Téléchargement...`;
             btn.disabled = true;
 
@@ -2499,13 +2520,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         connectBtn.innerHTML = '<span>✕</span> <span class="hidden sm:inline">Déconnecter</span>';
         
         let detectedModel = 'N0110';
-        if (res.model.includes('120') || res.flashAddress === 0x90180000) {
-          detectedModel = 'N0120';
-        } else if (res.model.includes('115') || res.flashAddress === 0x90600000) {
+        if (res.model && (res.model.includes('120') || res.flashAddress === 0x90180000)) {
+          detectedModel = (userSettings.manualModel && isN110orN115(userSettings.manualModel)) ? userSettings.manualModel : 'N0120';
+        } else if (res.model && isN0115Model(res.model, res.flashAddress)) {
           detectedModel = 'N0115';
+        } else {
+          detectedModel = (userSettings.manualModel && isN0115Model(userSettings.manualModel)) ? 'N0115' : 'N0110';
         }
-        if (userSettings.manualModel) {
-          detectedModel = userSettings.manualModel.includes('120') ? 'N0120' : (userSettings.manualModel.includes('115') ? 'N0115' : 'N0110');
+        if (detectedModel === 'N0115') {
+          userSettings.manualModel = 'N0115';
         }
         setTargetModel(detectedModel, false);
         showToast(`NumWorks connectée (${res.model} - ${res.mode}) !`, 'success');
@@ -2531,13 +2554,17 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     try {
       const activeModel = (userSettings.manualModel || userSettings.targetModel || 'N0110').toUpperCase();
-      const isN110 = isN110orN115(activeModel);
-      const modelSuffix = isN110 ? 'n0110' : 'n0120';
-      showToast(`Génération du pack natif ${isN110 ? 'N0110 / N0115' : 'N0120'} avec vos ${selectedApps.length} applications...`, 'info');
+      const isN120 = activeModel.includes('120') || activeModel === 'N0120';
+      const isN115 = isN0115Model(activeModel);
+      const targetModel = isN120 ? 'N0120' : (isN115 ? 'N0115' : 'N0110');
+      const modelSuffix = isN120 ? 'n0120' : (isN115 ? 'n0115' : 'n0110');
+      const displayLabel = isN120 ? 'N0120' : (isN115 ? 'N0115' : 'N0110 / N0115');
+
+      showToast(`Génération du pack natif ${displayLabel} avec vos ${selectedApps.length} applications...`, 'info');
       const wpBytes = window.customWallpaperRGB565 || (window.wallpaperStudio?.generateRGB565Bytes?.());
       const effectiveTheme = (wpBytes && (userSettings.theme === 'custom' || userSettings.theme === 'default')) ? 'custom' : userSettings.theme;
       const bundle = await bundler.buildBundle(selectedApps, 'nwa', { 
-        targetModel: isN110 ? 'N0110' : 'N0120',
+        targetModel: targetModel,
         theme: effectiveTheme, 
         displayMode: userSettings.displayMode,
         glassMode: userSettings.glassMode !== false,
@@ -2603,8 +2630,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         connectBtn.innerHTML = '<span>✕</span> <span class="hidden sm:inline">Déconnecter</span>';
         
         // Si l'utilisateur a choisi N0110/N0115, préserver IMPÉRATIVEMENT son choix
-        const isDetectedN110 = isN110orN115(res.model);
-        const detectedModel = isUserChoiceN110 ? (userSettings.manualModel || 'N0110') : (isDetectedN110 ? 'N0110' : 'N0120');
+        let detectedModel = 'N0110';
+        if (res.model && (res.model.includes('120') || res.flashAddress === 0x90180000)) {
+          detectedModel = isUserChoiceN110 ? (userSettings.manualModel || 'N0110') : 'N0120';
+        } else if (res.model && isN0115Model(res.model, res.flashAddress)) {
+          detectedModel = 'N0115';
+        } else {
+          detectedModel = (userSettings.manualModel && isN0115Model(userSettings.manualModel)) ? 'N0115' : 'N0110';
+        }
+        if (detectedModel === 'N0115') {
+          userSettings.manualModel = 'N0115';
+        }
         setTargetModel(detectedModel, true);
         window.soundFx?.playClick();
         showToast(`NumWorks détectée (${res.model} - ${res.mode}) !`, 'success');
@@ -2626,14 +2662,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (usb && usb.isConnected) {
         if (usb.model.includes('120') || usb.flashAddress === 0x90180000) {
           targetModel = 'N0120';
-        } else if (usb.model.includes('115') || usb.flashAddress === 0x90600000) {
+        } else if (isN0115Model(usb.model, usb.flashAddress)) {
           targetModel = 'N0115';
         } else {
           targetModel = 'N0110';
         }
       } else {
         const pref = (userSettings.manualModel || userSettings.targetModel || 'N0110');
-        targetModel = pref.includes('120') ? 'N0120' : (pref.includes('115') ? 'N0115' : 'N0110');
+        targetModel = pref.includes('120') ? 'N0120' : (isN0115Model(pref) ? 'N0115' : 'N0110');
         if (usb && typeof usb.setTargetModel === 'function') {
           usb.setTargetModel(targetModel);
         }

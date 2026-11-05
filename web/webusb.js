@@ -181,7 +181,7 @@ class NumWorksWebUSB {
    */
   setTargetModel(model) {
     const isN120 = model && (model.includes('120') || model === 'N0120');
-    const isN115 = model && (model.includes('115') || model === 'N0115');
+    const isN115 = model && (model === 'N0115' || (model.includes('115') && !model.includes('110')));
     if (isN120) {
       this.model = 'NumWorks N0120';
       this.flashAddress = DEFAULT_FLASH_ADDR_N0120;
@@ -339,7 +339,7 @@ class NumWorksWebUSB {
       } else if (isPrefN120 && !isExplicitN0110) {
         modelName = 'NumWorks N0120';
       } else if (isPrefN110) {
-        modelName = (preferredModel && preferredModel.includes('115')) ? 'NumWorks N0115' : 'NumWorks N0110 / N0115';
+        modelName = (preferredModel && (preferredModel === 'N0115' || (preferredModel.includes('115') && !preferredModel.includes('110')))) ? 'NumWorks N0115' : 'NumWorks N0110 / N0115';
       }
 
       let modeName = 'Epsilon OS';
@@ -650,7 +650,7 @@ class NumWorksWebUSB {
       let modelBin = 'equalib_n0110.bin';
       if (this.flashAddress === 0x90180000 || this.model.includes('120')) {
         modelBin = 'equalib_n0120.bin';
-      } else if (this.flashAddress === 0x90600000 || this.model.includes('115')) {
+      } else if (this.flashAddress === 0x90600000 || this.model === 'N0115' || (this.model.includes('115') && !this.model.includes('110'))) {
         modelBin = 'equalib_n0115.bin';
       }
       const binResp = await fetch(`${modelBin}?v=${Date.now()}`);
@@ -663,7 +663,7 @@ class NumWorksWebUSB {
     let defaultForModel = DEFAULT_FLASH_ADDR_N0110;
     if (this.model.includes('120')) {
       defaultForModel = DEFAULT_FLASH_ADDR_N0120;
-    } else if (this.model.includes('115') || this.flashAddress === 0x90600000) {
+    } else if (this.flashAddress === 0x90600000 || this.model === 'N0115' || (this.model.includes('115') && !this.model.includes('110'))) {
       defaultForModel = DEFAULT_FLASH_ADDR_N0115;
     }
     const flashAddress = (targetFlashAddr && targetFlashAddr !== 0x90000000) 
