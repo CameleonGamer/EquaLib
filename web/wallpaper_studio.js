@@ -1569,10 +1569,22 @@
         }
       }
       let frames = [];
+      let prevFrameRgb = null;
+      let transparentColorIndex = -1;
+
       while (p < buf.length && frames.length < maxFrames) {
         let b = buf[p];
         if (b === 0x3B) break;
         if (b === 0x21) {
+          let extCode = buf[p + 1];
+          if (extCode === 0xF9) {
+            let blockSize = buf[p + 2];
+            if (blockSize >= 4) {
+              let packed = buf[p + 3];
+              let hasTransparent = packed & 0x01;
+              transparentColorIndex = hasTransparent ? buf[p + 6] : -1;
+            }
+          }
           p += 2;
           while (p < buf.length && buf[p] !== 0) p += 1 + buf[p];
           p++;
@@ -1641,23 +1653,27 @@
             }
           }
           if (w > 0 && h > 0) {
-            let rgb565 = new Uint8Array(320 * 240 * 2);
-            let oIdx = 0;
+            // Accumuler les deltas transparents par-dessus la frame précédente pour éliminer tout trou noir
+            let rgb565 = prevFrameRgb ? new Uint8Array(prevFrameRgb) : new Uint8Array(320 * 240 * 2);
             for (let y = 0; y < 240; y++) {
               let srcY = Math.min(h - 1, Math.floor(y * h / 240));
               let rowOffset = srcY * w;
               for (let x = 0; x < 320; x++) {
                 let srcX = Math.min(w - 1, Math.floor(x * w / 320));
                 let colIdx = pix[rowOffset + srcX];
-                let c = (pal && pal[colIdx]) ? pal[colIdx] : [0, 0, 0];
-                let r = c[0] >> 3;
-                let g = c[1] >> 2;
-                let b = c[2] >> 3;
-                let val = (r << 11) | (g << 5) | b;
-                rgb565[oIdx++] = val & 0xFF;
-                rgb565[oIdx++] = (val >> 8) & 0xFF;
+                if (colIdx !== transparentColorIndex) {
+                  let c = (pal && pal[colIdx]) ? pal[colIdx] : [0, 0, 0];
+                  let r = c[0] >> 3;
+                  let g = c[1] >> 2;
+                  let b = c[2] >> 3;
+                  let val = (r << 11) | (g << 5) | b;
+                  let oIdx = (y * 320 + x) * 2;
+                  rgb565[oIdx] = val & 0xFF;
+                  rgb565[oIdx + 1] = (val >> 8) & 0xFF;
+                }
               }
             }
+            prevFrameRgb = rgb565;
             frames.push(rgb565);
           }
         } else {

@@ -270,16 +270,82 @@ static inline eadk_color_t get_contrast_text_color(eadk_color_t bg_color) {
     return (brightness > 115) ? 0x0000 : 0xFFFF;
 }
 
-/* ==================== MOTEUR D'ANIMATION EN TEMPS RÉEL DU FOND D'ÉCRAN ==================== */
+/* ==================== MOTEUR DE DESSIN SANS SCINTILLEMENT DES COULOIRS ==================== */
+
+static void draw_bg_rect(int rx, int ry, int rw, int rh, const theme_t* th, const eadk_color_t* wp_ptr) {
+    if (rw <= 0 || rh <= 0 || rx < 0 || ry < 0 || rx + rw > EADK_SCREEN_WIDTH || ry + rh > EADK_SCREEN_HEIGHT) return;
+    if (!wp_ptr) {
+        eadk_rect_t r = {(uint16_t)rx, (uint16_t)ry, (uint16_t)rw, (uint16_t)rh};
+        eadk_display_push_rect_uniform(r, th->screen_bg);
+        return;
+    }
+    int max_rows = (int)(sizeof(s_wallpaper_ram_band) / sizeof(eadk_color_t)) / rw;
+    if (max_rows <= 0) max_rows = 1;
+
+    int cur_y = ry;
+    int rem_h = rh;
+    while (rem_h > 0) {
+        int chunk_h = (rem_h > max_rows) ? max_rows : rem_h;
+        int buf_idx = 0;
+        for (int r = 0; r < chunk_h; r++) {
+            int py = cur_y + r;
+            const eadk_color_t* src = wp_ptr + (py * EADK_SCREEN_WIDTH + rx);
+            for (int c = 0; c < rw; c++) {
+                s_wallpaper_ram_band[buf_idx++] = src[c];
+            }
+        }
+        eadk_rect_t rect = {(uint16_t)rx, (uint16_t)cur_y, (uint16_t)rw, (uint16_t)chunk_h};
+        eadk_display_push_rect(rect, s_wallpaper_ram_band);
+        cur_y += chunk_h;
+        rem_h -= chunk_h;
+    }
+}
+
+static void draw_background_corridors(const theme_t* th) {
+    const eadk_color_t* wp_ptr = get_wallpaper_flash_ptr();
+    if (!wp_ptr && th->screen_bg == 0) return;
+
+    if (g_view_mode == VIEW_MODE_GALLERY) {
+        /* 1. Étagère au-dessus des cartes (y=22..27) */
+        draw_bg_rect(0, 22, 320, 6, th, wp_ptr);
+        /* 2. Gouttière gauche (x=0..15, y=28..187) */
+        draw_bg_rect(0, 28, 16, 160, th, wp_ptr);
+        /* 3. Allée verticale entre colonne 0 et 1 (x=104..115, y=28..187) */
+        draw_bg_rect(104, 28, 12, 160, th, wp_ptr);
+        /* 4. Allée verticale entre colonne 1 et 2 (x=204..215, y=28..187) */
+        draw_bg_rect(204, 28, 12, 160, th, wp_ptr);
+        /* 5. Gouttière droite (x=304..319, y=28..187) */
+        draw_bg_rect(304, 28, 16, 160, th, wp_ptr);
+        /* 6. Étagère horizontale entre rangée 0 et 1 (x=16..303, y=98..105) */
+        draw_bg_rect(16, 98, 288, 8, th, wp_ptr);
+        /* 7. Espace au-dessus du dock (x=16..303, y=176..187) */
+        draw_bg_rect(16, 176, 288, 12, th, wp_ptr);
+        /* 8. Espace sous le dock */
+        int bot_h = g_show_tooltips ? 12 : 28;
+        draw_bg_rect(0, 212, 320, bot_h, th, wp_ptr);
+    } else {
+        /* Mode liste */
+        draw_bg_rect(0, 22, 320, 6, th, wp_ptr);
+        draw_bg_rect(0, 28, 8, 155, th, wp_ptr);
+        draw_bg_rect(312, 28, 8, 155, th, wp_ptr);
+        draw_bg_rect(0, 183, 320, 5, th, wp_ptr);
+        int bot_h = g_show_tooltips ? 12 : 28;
+        draw_bg_rect(0, 212, 320, bot_h, th, wp_ptr);
+    }
+}
+
+/* ==================== PARTICULES FLUIDES POUR THÈMES INTÉGRÉS ==================== */
 
 typedef struct {
     int16_t x;
     int16_t y;
-    int8_t vx;
+    int16_t old_x;
+    int16_t old_y;
     int8_t vy;
     uint8_t size;
     uint16_t color;
-    uint8_t phase;
+    uint8_t corridor_idx;
+    bool is_drawn;
 } bg_particle_t;
 
 #define NUM_BG_PARTICLES 12
@@ -287,141 +353,102 @@ static bg_particle_t s_particles[NUM_BG_PARTICLES];
 static bool s_particles_inited = false;
 static int s_particles_theme = -1;
 
-/* Vérifie si un rectangle (x, y, w, h) se trouve dans les couloirs du fond d'écran sans toucher les cartes */
-static inline bool is_in_bg_corridor(int x, int y, int sz) {
-    int x2 = x + sz;
-    int y2 = y + sz;
-    if (x < 0 || x2 > EADK_SCREEN_WIDTH || y < 22 || y2 > EADK_SCREEN_HEIGHT) return false;
-    
-    /* Gouttières latérales gauche et droite */
-    if (x2 <= 16 || x >= 304) return true;
-    
-    if (g_view_mode == VIEW_MODE_GALLERY) {
-        /* Étagère au-dessus des cartes */
-        if (y >= 22 && y2 <= 28) return true;
-        /* Allée verticale entre colonne 0 et 1 */
-        if (x >= 104 && x2 <= 116 && y >= 22 && y2 <= 188) return true;
-        /* Allée verticale entre colonne 1 et 2 */
-        if (x >= 204 && x2 <= 216 && y >= 22 && y2 <= 188) return true;
-        /* Étagère horizontale entre rangée 0 et rangée 1 */
-        if (y >= 98 && y2 <= 106) return true;
-        /* Espace horizontal au-dessus du dock */
-        if (y >= 176 && y2 <= 188) return true;
-        /* Espace sous le dock */
-        if (y >= 222) return true;
-    } else {
-        if (y >= 22 && y2 <= 28) return true;
-        if (y >= 180) return true;
+static void clear_all_bg_particles(const theme_t* th) {
+    for (int i = 0; i < NUM_BG_PARTICLES; i++) {
+        bg_particle_t* p = &s_particles[i];
+        if (p->is_drawn) {
+            eadk_rect_t r = {(uint16_t)p->old_x, (uint16_t)p->old_y, (uint16_t)p->size, (uint16_t)p->size};
+            eadk_display_push_rect_uniform(r, th->screen_bg);
+            p->is_drawn = false;
+        }
     }
-    return false;
 }
 
-/* Réinitialise les particules selon le thème actif */
 static void init_bg_particles(const theme_t* th) {
     (void)th;
-    static const int16_t spawn_x[NUM_BG_PARTICLES] = { 6, 110, 210, 310, 8, 108, 208, 312, 4, 112, 212, 308 };
-    static const int16_t spawn_y[NUM_BG_PARTICLES] = { 24, 40, 60, 80, 100, 120, 140, 160, 180, 200, 220, 230 };
-    
+    /* 4 couloirs verticaux : gouttière G (6), inter-col 1 (109), inter-col 2 (209), gouttière D (310) */
+    static const int16_t corridor_x[4] = { 6, 109, 209, 310 };
+
     for (int i = 0; i < NUM_BG_PARTICLES; i++) {
-        s_particles[i].x = spawn_x[i];
-        s_particles[i].y = spawn_y[i];
-        s_particles[i].size = 2;
-        s_particles[i].phase = (uint8_t)(i * 3);
-        
+        uint8_t c_idx = (uint8_t)(i % 4);
+        s_particles[i].corridor_idx = c_idx;
+        s_particles[i].x = corridor_x[c_idx];
+        s_particles[i].old_x = corridor_x[c_idx];
+        s_particles[i].is_drawn = false;
+
+        /* Espacement étagé sur la hauteur */
+        int y_step = (i / 4) * 50 + 26 + (c_idx * 7);
+        s_particles[i].y = (int16_t)y_step;
+        s_particles[i].old_y = (int16_t)y_step;
+
         if (g_current_theme == 1) {
             /* Sakura : pétales rose vif et pastel */
-            s_particles[i].vx = 1;
             s_particles[i].vy = 1;
             s_particles[i].size = (i % 2 == 0) ? 3 : 2;
             s_particles[i].color = (i % 3 == 0) ? 0xFBAE : ((i % 3 == 1) ? 0xFDF7 : 0xFFFF);
         } else if (g_current_theme == 2) {
             /* Hacker : code matrix cyan et vert électrique */
-            s_particles[i].vx = 0;
             s_particles[i].vy = 2;
             s_particles[i].size = 2;
             s_particles[i].color = (i % 4 == 0) ? 0xFFFF : ((i % 2 == 0) ? 0x3DFE : 0x07FF);
         } else if (g_current_theme == 3) {
-            /* Abeille : petites abeilles jaune d'or et noir */
-            s_particles[i].vx = (i % 2 == 0) ? 1 : -1;
+            /* Abeille : petites abeilles jaune d'or */
             s_particles[i].vy = 1;
             s_particles[i].size = 3;
             s_particles[i].color = (i % 2 == 0) ? 0xFDE0 : 0xFE60;
         } else if (g_current_theme == 4) {
             /* Mario : étoiles d'or */
-            s_particles[i].vx = 0;
             s_particles[i].vy = -1;
             s_particles[i].size = 2;
             s_particles[i].color = (i % 2 == 0) ? 0xFFE0 : 0xFFFF;
         } else if (g_current_theme == 5) {
             /* GameBoy : pixels rétro vert DMG */
-            s_particles[i].vx = 0;
             s_particles[i].vy = 1;
             s_particles[i].size = 2;
             s_particles[i].color = (i % 2 == 0) ? 0x9E03 : 0xE7EE;
         } else {
-            /* Custom : étincelles scintillantes ambrées et blanches */
-            s_particles[i].vx = (i % 2 == 0) ? 1 : 0;
             s_particles[i].vy = 1;
             s_particles[i].size = 2;
-            s_particles[i].color = (i % 3 == 0) ? 0xFFFF : ((i % 3 == 1) ? 0xFE60 : 0x5DFE);
+            s_particles[i].color = 0xFFFF;
         }
     }
     s_particles_inited = true;
     s_particles_theme = g_current_theme;
 }
 
-/* Mise à jour et tracé ultra-léger sans scintillement des particules animées */
 static void update_and_render_bg_particles(const theme_t* th) {
+    if (g_current_theme == 0 || g_current_theme == 6) {
+        return; // Pas de particules artificielles sur thème par défaut ou wallpaper/GIF custom
+    }
     if (!s_particles_inited || s_particles_theme != g_current_theme) {
         init_bg_particles(th);
     }
-    
-    const eadk_color_t* wp_ptr = get_wallpaper_flash_ptr();
-    
+
     for (int i = 0; i < NUM_BG_PARTICLES; i++) {
         bg_particle_t* p = &s_particles[i];
-        
-        /* 1. Effacement de l'ancienne position en restaurant les pixels exacts du fond */
-        if (is_in_bg_corridor(p->x, p->y, p->size)) {
-            for (int py = p->y; py < p->y + p->size; py++) {
-                for (int px = p->x; px < p->x + p->size; px++) {
-                    eadk_rect_t r_old = {(uint16_t)px, (uint16_t)py, 1, 1};
-                    eadk_color_t bg_col = get_bg_pixel(px, py, th, wp_ptr);
-                    eadk_display_push_rect_uniform(r_old, bg_col);
-                }
-            }
+
+        /* 1. Effacement inconditionnel de l'ancien pixel tracé */
+        if (p->is_drawn) {
+            eadk_rect_t r_old = {(uint16_t)p->old_x, (uint16_t)p->old_y, (uint16_t)p->size, (uint16_t)p->size};
+            eadk_display_push_rect_uniform(r_old, th->screen_bg);
+            p->is_drawn = false;
         }
-        
-        /* 2. Déplacement physique */
-        p->phase++;
-        int next_x = p->x + p->vx;
-        int next_y = p->y + p->vy;
-        
-        /* Onde sinusoïdale douce pour Sakura et Abeilles */
-        if (g_current_theme == 1 && (p->phase % 4 == 0)) {
-            next_x += (p->phase % 8 < 4) ? 1 : -1;
-        } else if (g_current_theme == 3 && (p->phase % 3 == 0)) {
-            next_y += (p->phase % 6 < 3) ? 1 : -1;
+
+        /* 2. Déplacement vertical dans le couloir */
+        p->y += p->vy;
+        int max_y = (p->corridor_idx == 0 || p->corridor_idx == 3) ? 210 : 182;
+        if (p->y > max_y) {
+            p->y = 24;
+        } else if (p->y < 24) {
+            p->y = (int16_t)max_y;
         }
-        
-        /* Recyclage / Wrap-around en haut de l'écran */
-        if (next_y > 236) {
-            next_y = 23;
-            next_x = (next_x * 7 + 13) % (EADK_SCREEN_WIDTH - 10) + 2;
-        } else if (next_y < 23) {
-            next_y = 236;
-        }
-        if (next_x < 2) next_x = 316;
-        else if (next_x > 316) next_x = 2;
-        
-        p->x = (int16_t)next_x;
-        p->y = (int16_t)next_y;
-        
-        /* 3. Tracé de la particule uniquement si elle se trouve dans un couloir libre */
-        if (is_in_bg_corridor(p->x, p->y, p->size)) {
-            eadk_rect_t r_new = {(uint16_t)p->x, (uint16_t)p->y, (uint16_t)p->size, (uint16_t)p->size};
-            eadk_display_push_rect_uniform(r_new, p->color);
-        }
+
+        /* 3. Tracé à la nouvelle position */
+        eadk_rect_t r_new = {(uint16_t)p->x, (uint16_t)p->y, (uint16_t)p->size, (uint16_t)p->size};
+        eadk_display_push_rect_uniform(r_new, p->color);
+        p->old_x = p->x;
+        p->old_y = p->y;
+        p->is_drawn = true;
     }
 }
 
@@ -1343,6 +1370,7 @@ int main(int argc, char* argv[]) {
         /* Rendu graphique propre */
         if (full_redraw) {
             full_redraw = false;
+            clear_all_bg_particles(cur_th);
 
             /* Fond général de l'écran LCD : Fond personnalisé RGB565 si actif, sinon couleur unie */
             draw_screen_background(cur_th);
@@ -1481,14 +1509,40 @@ int main(int argc, char* argv[]) {
             s_anim_tick++;
             uint32_t num_frames = g_equalib_manifest.wallpaper_size / 153600;
             if (g_current_theme == 6 && num_frames > 1) {
-                if (s_anim_tick >= 15) { // ~300 ms (15 * 20 ms)
+                /* Lecture fluide des frames GIF toutes les ~400 ms (20 * 20 ms) sans redessiner les cartes */
+                if (s_anim_tick >= 20) {
                     s_anim_tick = 0;
                     s_anim_frame_idx = (s_anim_frame_idx + 1) % num_frames;
-                    full_redraw = true;
+                    draw_background_corridors(cur_th);
+                    if (g_glass_mode) {
+                        if (g_view_mode == VIEW_MODE_GALLERY) {
+                            int page = selected / 6;
+                            int page_start = page * 6;
+                            for (int slot = 0; slot < 6; slot++) {
+                                int app_idx = page_start + slot;
+                                if (app_idx < (int)total_apps) {
+                                    int col = slot % 3;
+                                    int row = slot / 3;
+                                    draw_gallery_card(app_idx, col, row, app_idx == selected, cur_th);
+                                }
+                            }
+                        } else {
+                            int visible_count = 4;
+                            if (visible_count > (int)total_apps - scroll_offset) {
+                                visible_count = (int)total_apps - scroll_offset;
+                            }
+                            for (int v = 0; v < visible_count; v++) {
+                                int i = scroll_offset + v;
+                                draw_list_card(i, v, i == selected, cur_th);
+                            }
+                        }
+                        draw_bottom_active_dock(selected, cur_th);
+                    }
                 }
-            }
-            if ((s_anim_tick % 2) == 0) { // ~40 ms (25 FPS)
-                update_and_render_bg_particles(cur_th);
+            } else if (g_current_theme >= 1 && g_current_theme <= 5) {
+                if ((s_anim_tick % 2) == 0) { // ~40 ms (25 FPS)
+                    update_and_render_bg_particles(cur_th);
+                }
             }
         }
 
