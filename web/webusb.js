@@ -598,9 +598,9 @@ class NumWorksWebUSB {
    * Quitte le mode DFU et déclenche l'exécution du code Flash
    */
   async leave(resetAddress = null) {
-    const isN0110 = this.isN110Model();
-    const defaultForModel = isN0110 ? DEFAULT_FLASH_ADDR_N0110 : DEFAULT_FLASH_ADDR_N0120;
-    const targetReset = (resetAddress && resetAddress !== 0x90000000) ? resetAddress : (this.flashAddress || defaultForModel);
+    // 0x08000000 (134217728) est l'adresse officielle de réinitialisation matérielle STM32 (conforme nwlink)
+    // Redémarre proprement le kernel Epsilon depuis la mémoire Flash interne
+    const targetReset = resetAddress || 0x08000000;
     console.log(`[WebUSB] Sortie DFU vers 0x${targetReset.toString(16)}...`);
     try {
       await this.setAddress(targetReset);
@@ -745,7 +745,7 @@ class NumWorksWebUSB {
     // Phase 3 : Sortie DFU et redémarrage de la calculatrice (Progression 97% à 100%)
     onProgress({ phase: 'reboot', percent: 98, message: 'Redémarrage de votre NumWorks...' });
     try {
-      await this.leave(flashAddress);
+      await this.leave();
     } catch (e) {
       console.log("[WebUSB] Déconnexion nominale au redémarrage.");
     }
@@ -771,14 +771,22 @@ class NumWorksWebUSB {
 if (typeof window !== 'undefined') {
   window.NumWorksWebUSB = NumWorksWebUSB;
   window.DEFAULT_FLASH_ADDR_N0110 = DEFAULT_FLASH_ADDR_N0110;
+  window.DEFAULT_FLASH_ADDR_N0115 = DEFAULT_FLASH_ADDR_N0115;
   window.DEFAULT_FLASH_ADDR_N0120 = DEFAULT_FLASH_ADDR_N0120;
+  window.DEFAULT_RAM_ADDR_N0110 = DEFAULT_RAM_ADDR_N0110;
+  window.DEFAULT_RAM_ADDR_N0115 = DEFAULT_RAM_ADDR_N0115;
+  window.DEFAULT_RAM_ADDR_N0120 = DEFAULT_RAM_ADDR_N0120;
 }
 
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     NumWorksWebUSB,
     DEFAULT_FLASH_ADDR_N0110,
+    DEFAULT_FLASH_ADDR_N0115,
     DEFAULT_FLASH_ADDR_N0120,
+    DEFAULT_RAM_ADDR_N0110,
+    DEFAULT_RAM_ADDR_N0115,
+    DEFAULT_RAM_ADDR_N0120,
     NUMWORKS_PIDS
   };
 }
