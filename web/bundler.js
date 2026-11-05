@@ -407,11 +407,12 @@ class EquaLibBundler {
   async buildBundle(apps = [], format = 'bin', options = {}) {
     const isBin = (format === 'bin');
     const modelOption = (options.targetModel || this.options?.targetModel || (typeof window !== 'undefined' && window.userSettings?.targetModel) || 'N0110').toUpperCase();
-    const isN0110 = modelOption.includes('110') || modelOption.includes('115');
-    const modelSuffix = isN0110 ? 'n0110' : 'n0120';
+    const isN0120 = modelOption.includes('120') || options.flashAddress === 0x90180000;
+    const isN0115 = modelOption.includes('115') || options.flashAddress === 0x90600000;
+    const modelSuffix = isN0120 ? 'n0120' : (isN0115 ? 'n0115' : 'n0110');
     const targetFile = isBin ? `equalib_${modelSuffix}.bin` : `equalib_${modelSuffix}.nwa`;
     const fallbackFile = isBin ? 'equalib_n0110.bin' : 'equalib_n0110.nwa';
-    console.log(`[EquaLib] Génération du pack personnalisé (${apps.length} apps, format: ${format}, modèle: ${isN0110 ? 'N0110/N0115' : 'N0120'})...`);
+    console.log(`[EquaLib] Génération du pack personnalisé (${apps.length} apps, format: ${format}, modèle: ${modelSuffix.toUpperCase()})...`);
 
     let rawData = null;
 

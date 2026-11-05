@@ -366,16 +366,23 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   function setTargetModel(model, save = true) {
-    const isN110 = isN110orN115(model);
-    userSettings.targetModel = isN110 ? 'N0110' : 'N0120';
+    const isN120 = model && (model.includes('120') || model === 'N0120');
+    const isN115 = model && (model.includes('115') || model === 'N0115');
+    if (isN120) {
+      userSettings.targetModel = 'N0120';
+    } else if (isN115) {
+      userSettings.targetModel = 'N0115';
+    } else {
+      userSettings.targetModel = 'N0110';
+    }
     if (save) saveUserSettings();
 
-    if (usb && typeof usb.setTargetModel === 'function') {
+    if (usb && typeof usb.setTargetModel === 'function' && !usb.isConnected) {
       usb.setTargetModel(userSettings.targetModel);
     }
 
     if (modelSelectN0120 && modelSelectN0110) {
-      if (isN110) {
+      if (!isN120) {
         modelSelectN0110.className = 'px-2.5 py-1 rounded text-xs font-mono font-bold transition-all bg-[#FFBB00] text-black border border-black cursor-pointer shadow-[1px_1px_0px_#000]';
         modelSelectN0120.className = 'px-2.5 py-1 rounded text-xs font-mono font-semibold transition-all text-[#8b949e] hover:text-[#e6edf3] cursor-pointer';
       } else {
@@ -2491,12 +2498,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         modelText.textContent = `${res.model} (${res.mode})${slotText}`;
         connectBtn.innerHTML = '<span>✕</span> <span class="hidden sm:inline">Déconnecter</span>';
         
-        const isDetectedN110 = isN110orN115(res.model);
-        let detectedModel = isDetectedN110 ? 'N0110' : 'N0120';
-        if (userSettings.manualModel) {
-          detectedModel = isN110orN115(userSettings.manualModel) ? 'N0110' : 'N0120';
+        let detectedModel = 'N0110';
+        if (res.model.includes('120') || res.flashAddress === 0x90180000) {
+          detectedModel = 'N0120';
+        } else if (res.model.includes('115') || res.flashAddress === 0x90600000) {
+          detectedModel = 'N0115';
         }
-        setTargetModel(detectedModel, true);
+        if (userSettings.manualModel) {
+          detectedModel = userSettings.manualModel.includes('120') ? 'N0120' : (userSettings.manualModel.includes('115') ? 'N0115' : 'N0110');
+        }
+        setTargetModel(detectedModel, false);
         showToast(`NumWorks connectée (${res.model} - ${res.mode}) !`, 'success');
       } catch (err) {
         showToast(err.message || 'Échec de connexion USB', 'error');
@@ -2610,19 +2621,36 @@ document.addEventListener('DOMContentLoaded', async () => {
       flashProgress.style.width = '0%';
       progressText.textContent = `Génération du pack personnalisé (${selectedApps.length} application${selectedApps.length > 1 ? 's' : ''})...`;
 
-      // 1. Détermination STRICTE du modèle cible : si userSettings est N0110/N0115 ou usb est N0110/N0115 -> N0110 !
-      const isTargetN110 = (isUserChoiceN110 || isN110orN115(userSettings.targetModel) || (usb.isConnected && isN110orN115(usb.model)));
-      const targetModel = isTargetN110 ? 'N0110' : 'N0120';
-
-      // Synchroniser usb avec le modèle cible
-      if (usb && typeof usb.setTargetModel === 'function') {
-        usb.setTargetModel(targetModel);
+      // 1. Détermination STRICTE du modèle cible :
+      let targetModel = 'N0110';
+      if (usb && usb.isConnected) {
+        if (usb.model.includes('120') || usb.flashAddress === 0x90180000) {
+          targetModel = 'N0120';
+        } else if (usb.model.includes('115') || usb.flashAddress === 0x90600000) {
+          targetModel = 'N0115';
+        } else {
+          targetModel = 'N0110';
+        }
+      } else {
+        const pref = (userSettings.manualModel || userSettings.targetModel || 'N0110');
+        targetModel = pref.includes('120') ? 'N0120' : (pref.includes('115') ? 'N0115' : 'N0110');
+        if (usb && typeof usb.setTargetModel === 'function') {
+          usb.setTargetModel(targetModel);
+        }
       }
+
+      const defaultForModel = (targetModel === 'N0120') 
+        ? DEFAULT_FLASH_ADDR_N0120 
+        : ((targetModel === 'N0115') ? DEFAULT_FLASH_ADDR_N0115 : DEFAULT_FLASH_ADDR_N0110);
+      const targetFlashAddr = (usb && usb.flashAddress && usb.flashAddress !== 0x90000000) 
+        ? usb.flashAddress 
+        : defaultForModel;
 
       const wpBytes = window.customWallpaperRGB565 || (window.wallpaperStudio?.generateRGB565Bytes?.());
       const effectiveTheme = (wpBytes && (userSettings.theme === 'custom' || userSettings.theme === 'default')) ? 'custom' : userSettings.theme;
       const bundle = await bundler.buildBundle(selectedApps, 'bin', { 
         targetModel: targetModel,
+        flashAddress: targetFlashAddr,
         theme: effectiveTheme, 
         displayMode: userSettings.displayMode,
         glassMode: userSettings.glassMode !== false,
@@ -2633,11 +2661,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       progressText.textContent = 'Préparation du flash USB...';
 
-      // 2. Flashage USB DFU réel vers le slot approprié (0x90200000 sur N0110, 0x90180000 sur N0120)
-      const defaultForModel = isTargetN110 ? DEFAULT_FLASH_ADDR_N0110 : DEFAULT_FLASH_ADDR_N0120;
-      const targetFlashAddr = (usb.flashAddress && usb.flashAddress !== 0x90000000) 
-        ? usb.flashAddress 
-        : defaultForModel;
+      // 2. Flashage USB DFU réel vers le slot approprié (0x90600000 sur N0115, 0x90200000 sur N0110, 0x90180000 sur N0120)
 
       await usb.flashBinary(bundle.arrayBuffer, (progress) => {
         const percent = (typeof progress === 'number') ? progress : progress.percent;

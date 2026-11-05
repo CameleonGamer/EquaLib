@@ -45,7 +45,7 @@ function describe(suiteName, fn) {
   console.log(`\n========================================`);
   console.log(`BETA TEST: ${suiteName}`);
   console.log(`========================================`);
-  fn();
+  return fn();
 }
 
 // -------------------------------------------------------------
@@ -67,6 +67,8 @@ describe('1. Intégrité des Fichiers et Syntaxe Web', () => {
     'web/community_apps.json',
     'web/equalib_n0120.bin',
     'web/equalib_n0120.nwa',
+    'web/equalib_n0115.bin',
+    'web/equalib_n0115.nwa',
     'web/equalib_n0110.bin',
     'web/equalib_n0110.nwa'
   ];
@@ -535,6 +537,23 @@ describe('6. Intégrité des Binaires Natifs & Manifeste (N0120 & N0110)', () =>
     assert(flashPtr >= 0x90180000 && flashPtr < 0x90280000, `Pointeur Flash N0120 hors du slot 0x90180000 (valeur: 0x${flashPtr.toString(16)})`);
   });
 
+  it('equalib_n0115.bin est lié pour le slot officiel N0115 / Epsilon 26+ (Flash: 0x90600000, RAM: 0x200118a4)', () => {
+    const bin = fs.readFileSync('web/equalib_n0115.bin');
+    assert.strictEqual(bin.readUInt32LE(0), 0xdec0beba);
+    assert.strictEqual(bin.readUInt32LE(28), 0xdec0beba);
+    assert.strictEqual(bin.readUInt32LE(0x1748), 0x200118a4);
+    const flashPtr = bin.readUInt32LE(0x1750);
+    assert(flashPtr >= 0x90600000 && flashPtr < 0x90800000, `Pointeur Flash N0115 hors du slot 0x90600000 (valeur: 0x${flashPtr.toString(16)})`);
+  });
+
+  it('equalib_n0115.nwa est un objet ELF ARM Cortex-M7 valide', () => {
+    const nwa = fs.readFileSync('web/equalib_n0115.nwa');
+    assert.strictEqual(nwa[0], 0x7f);
+    assert.strictEqual(nwa[1], 0x45);
+    assert.strictEqual(nwa[2], 0x4c);
+    assert.strictEqual(nwa[3], 0x46);
+  });
+
   it('equalib_n0110.nwa est un objet ELF ARM Cortex-M7 valide', () => {
     const nwa = fs.readFileSync('web/equalib_n0110.nwa');
     assert.strictEqual(nwa[0], 0x7f);
@@ -725,8 +744,8 @@ describe('7. Compilation et Validité Syntaxique des Jeux Python (.NWS)', () => 
   // -------------------------------------------------------------
   // SUITE 10: Détection Matérielle WebUSB & Persistance N0110 vs N0120
   // -------------------------------------------------------------
-  describe('10. Détection Matérielle WebUSB & Persistance N0110 vs N0120', () => {
-    global.navigator = { usb: {} };
+  await describe('10. Détection Matérielle WebUSB & Persistance N0110 vs N0120', async () => {
+    Object.defineProperty(global.navigator, 'usb', { value: {}, configurable: true, writable: true });
     const { NumWorksWebUSB, DEFAULT_FLASH_ADDR_N0110, DEFAULT_FLASH_ADDR_N0120, NUMWORKS_PIDS } = require(path.resolve('web/webusb.js'));
 
     it('Constantes officielles des adresses de slots Flash N0110 et N0120', () => {
@@ -786,12 +805,13 @@ describe('7. Compilation et Validité Syntaxique des Jeux Python (.NWS)', () => 
       assert.strictEqual(usb.ramAddress, 0x240118a4, 'RAM base N0120 doit être 0x240118a4');
     });
 
-    it('Connexion simulée avec matériel N0110 (BCD 0x0110, Epsilon standard)', async () => {
+    await itAsync('Connexion simulée avec matériel N0110 (BCD 0x0110, Epsilon standard)', async () => {
       const usb = new NumWorksWebUSB();
 
       // Mock device WebUSB Chrome pour N0110
       usb.device = {
         opened: true,
+        open: async () => {},
         productId: 0xA291, // Epsilon OS standard
         productName: 'NumWorks Calculator', // Nom générique Epsilon
         deviceVersionMajor: 1,
@@ -828,10 +848,11 @@ describe('7. Compilation et Validité Syntaxique des Jeux Python (.NWS)', () => 
       assert.strictEqual(usb.ramAddress, 0x20000000, 'La RAM de destination doit être 0x20000000');
     });
 
-    it('Connexion simulée avec Bootloader DFU STM32 (0xDF11)', async () => {
+    await itAsync('Connexion simulée avec Bootloader DFU STM32 (0xDF11)', async () => {
       const usb = new NumWorksWebUSB();
       usb.device = {
         opened: true,
+        open: async () => {},
         productId: 0xDF11, // Bootloader STM32 (N0110 recovery)
         productName: 'STM32  BOOTLOADER',
         deviceVersionMajor: 2,
@@ -860,7 +881,7 @@ describe('7. Compilation et Validité Syntaxique des Jeux Python (.NWS)', () => 
       assert.strictEqual(res.flashAddress, 0x90200000, 'Le slot de destination doit être 0x90200000');
     });
 
-    it('Support complet et détection matérielle N0115 (STM32F730, BCD 0x0115 = 277)', async () => {
+    await itAsync('Support complet et détection matérielle N0115 (STM32F730, BCD 0x0115 = 277)', async () => {
       const usb = new NumWorksWebUSB();
 
       // Test helper isN110Model
@@ -871,12 +892,13 @@ describe('7. Compilation et Validité Syntaxique des Jeux Python (.NWS)', () => 
       // Test setTargetModel('N0115')
       usb.setTargetModel('N0115');
       assert.strictEqual(usb.model, 'NumWorks N0115', 'Modèle doit être NumWorks N0115');
-      assert.strictEqual(usb.flashAddress, 0x90200000, 'Flash slot N0115 doit être 0x90200000');
-      assert.strictEqual(usb.ramAddress, 0x20000000, 'RAM base N0115 doit être 0x20000000');
+      assert.strictEqual(usb.flashAddress, 0x90600000, 'Flash slot N0115 doit être 0x90600000');
+      assert.strictEqual(usb.ramAddress, 0x200118a4, 'RAM base N0115 doit être 0x200118a4');
 
       // Mock device WebUSB Chrome pour N0115 réel
       usb.device = {
         opened: true,
+        open: async () => {},
         productId: 0xA291, // Epsilon OS standard
         productName: 'NumWorks Calculator',
         deviceVersionMajor: 1,
@@ -909,11 +931,11 @@ describe('7. Compilation et Validité Syntaxique des Jeux Python (.NWS)', () => 
 
       const res = await usb.connect();
       assert.strictEqual(res.model, 'NumWorks N0115', 'La calculatrice doit être identifiée comme NumWorks N0115');
-      assert.strictEqual(res.flashAddress, 0x90200000, 'Le slot de destination N0115 doit être 0x90200000');
-      assert.strictEqual(usb.ramAddress, 0x20000000, 'La RAM de destination N0115 doit être 0x20000000');
+      assert.strictEqual(res.flashAddress, 0x90600000, 'Le slot de destination N0115 doit être 0x90600000');
+      assert.strictEqual(usb.ramAddress, 0x200118a4, 'La RAM de destination N0115 doit être 0x200118a4');
     });
 
-    it('Bundler sélectionne le binaire Cortex-M7 F730 pour le modèle N0115', async () => {
+    await itAsync('Bundler sélectionne le binaire Cortex-M7 F730 pour le modèle N0115', async () => {
       const EquaLibBundler = require(path.resolve('web/bundler.js'));
       const bundler = new EquaLibBundler();
       const res = await bundler.buildBundle([], 'bin', { targetModel: 'N0115' });
@@ -924,9 +946,9 @@ describe('7. Compilation et Validité Syntaxique des Jeux Python (.NWS)', () => 
       assert.strictEqual(u8[1], 0xbe, 'Magic byte 1 doit être 0xbe');
       assert.strictEqual(u8[2], 0xc0, 'Magic byte 2 doit être 0xc0');
       assert.strictEqual(u8[3], 0xde, 'Magic byte 3 doit être 0xde');
-      // RAM start offset 8 : 0x20000000 (STM32F730)
       const dv = new DataView(res.arrayBuffer);
-      assert.strictEqual(dv.getUint32(8, true), 0x20000000, 'RAM start du pack N0115 doit être 0x20000000');
+      assert.strictEqual(dv.getUint32(0, true), 0xdec0beba, 'Magic header doit être 0xdec0beba');
+      assert.strictEqual(dv.getUint32(28, true), 0xdec0beba, 'Magic footer doit être 0xdec0beba');
     });
 
     it('Verrouillage manuel : le choix N0110 de l utilisateur ne bascule jamais vers N0120 au clic Installer', () => {

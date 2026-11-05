@@ -51,7 +51,11 @@ const ST_DFU_COMMANDS = {
 const FLASH_SECTOR_SIZE = 65536;       // 64 Ko par secteur Flash externe QSPI
 const DFU_TRANSFER_SIZE = 2048;        // 2048 octets par bloc USB DFU
 const DEFAULT_FLASH_ADDR_N0120 = 0x90180000; // Adresse officielle des applications externes Epsilon N0120
-const DEFAULT_FLASH_ADDR_N0110 = 0x90200000; // Adresse officielle des applications externes Epsilon N0110
+const DEFAULT_FLASH_ADDR_N0115 = 0x90600000; // Adresse officielle des applications externes Epsilon N0115 / Epsilon 26+
+const DEFAULT_FLASH_ADDR_N0110 = 0x90200000; // Adresse officielle des applications externes Epsilon N0110 (Epsilon < 26)
+const DEFAULT_RAM_ADDR_N0120   = 0x240118a4; // RAM de base pour applications externes N0120
+const DEFAULT_RAM_ADDR_N0115   = 0x200118a4; // RAM de base pour applications externes N0115 / Epsilon 26+
+const DEFAULT_RAM_ADDR_N0110   = 0x20000000; // RAM de base pour applications externes N0110 (Epsilon < 26)
 const DEFAULT_FLASH_ADDR = DEFAULT_FLASH_ADDR_N0120; // Rétrocompatibilité
 
 class NumWorksWebUSB {
@@ -61,7 +65,7 @@ class NumWorksWebUSB {
     this.model = 'NumWorks N0110 / N0115';
     this.mode = 'Inconnu';
     this.flashAddress = DEFAULT_FLASH_ADDR_N0110;
-    this.ramAddress = 0x20000000;
+    this.ramAddress = DEFAULT_RAM_ADDR_N0110;
     this.interfaceNumber = 0;
     this.alternateSetting = 0;
     this._addrBuf = new ArrayBuffer(5);
@@ -93,25 +97,42 @@ class NumWorksWebUSB {
       const isN0110 = this.isN110Model();
       const ramStart = isN0110 ? 0x20000000 : 0x24000000;
 
-      // Lecture 16 octets SlotInfo en RAM (conforme nwlink, Alternate 0 natif)
+      // Lecture 16 octets SlotInfo en RAM (Alternate 1 SRAM sur STM32F730 ou Alternate 0 standard)
       let slotBuf = null;
+      let usedAlt1 = false;
+
+      // 1. Tenter bascule Alternate 1 si disponible (indispensable sur STM32F730 Epsilon OS)
+      if (this.device && this.device.selectAlternateInterface) {
+        try {
+          await this.device.selectAlternateInterface(this.interfaceNumber, 1);
+          await this.abortToIdle();
+          usedAlt1 = true;
+        } catch (_) {}
+      }
+
       try {
         await this.setAddress(ramStart);
+        await this.abortToIdle();
         slotBuf = await this.controlTransferIn(DFU_REQUESTS.UPLOAD, 2, 16);
-      } catch (directRamErr) {
-        // Fallback Alternate 1 uniquement si supporté par le contrôleur
-        if (this.device && this.device.selectAlternateInterface) {
+      } catch (readErr) {
+        // Si la lecture sur Alt 1 a échoué ou n'était pas supportée, essayer sur l'interface par défaut
+        if (usedAlt1 && this.device && this.device.selectAlternateInterface) {
           try {
-            await this.device.selectAlternateInterface(this.interfaceNumber, 1);
+            await this.device.selectAlternateInterface(this.interfaceNumber, 0);
             await this.abortToIdle();
+            usedAlt1 = false;
             await this.setAddress(ramStart);
+            await this.abortToIdle();
             slotBuf = await this.controlTransferIn(DFU_REQUESTS.UPLOAD, 2, 16);
-          } finally {
-            try {
-              await this.device.selectAlternateInterface(this.interfaceNumber, 0);
-              await this.abortToIdle();
-            } catch (_) {}
-          }
+          } catch (_) {}
+        }
+      } finally {
+        // Toujours revenir sur Alternate 0 (Flash QSPI)
+        if (usedAlt1 && this.device && this.device.selectAlternateInterface) {
+          try {
+            await this.device.selectAlternateInterface(this.interfaceNumber, 0);
+            await this.abortToIdle();
+          } catch (_) {}
         }
       }
 
@@ -121,8 +142,9 @@ class NumWorksWebUSB {
         if (isBadBeef) {
           const dv = new DataView(slotBuf.buffer, slotBuf.byteOffset);
           const userlandHeaderAddr = dv.getUint32(8, true);
-          if (userlandHeaderAddr >= 0x90000000 && userlandHeaderAddr < 0x90400000) {
+          if (userlandHeaderAddr >= 0x90000000 && userlandHeaderAddr < 0x90800000) {
             await this.setAddress(userlandHeaderAddr);
+            await this.abortToIdle();
             const userlandBuf = await this.controlTransferIn(DFU_REQUESTS.UPLOAD, 2, 48);
             if (userlandBuf && userlandBuf.byteLength >= 28) {
               const uH = new Uint8Array(userlandBuf.buffer, userlandBuf.byteOffset, userlandBuf.byteLength);
@@ -130,11 +152,18 @@ class NumWorksWebUSB {
               if (isFeedCode) {
                 const udv = new DataView(userlandBuf.buffer, userlandBuf.byteOffset);
                 const extFlashStart = udv.getUint32(20, true);
+                const extRamStart = udv.getUint32(28, true);
                 if (extFlashStart >= 0x90000000 && extFlashStart < 0x90800000) {
                   this.flashAddress = extFlashStart;
-                  console.log(`[WebUSB] Slot d'applications externes matériel confirmé : 0x${this.flashAddress.toString(16)}`);
-                  return this.flashAddress;
                 }
+                if (extRamStart >= 0x20000000 && extRamStart < 0x30000000) {
+                  this.ramAddress = extRamStart;
+                }
+                if (this.flashAddress === 0x90600000 && this.isN110Model()) {
+                  this.model = 'NumWorks N0115';
+                }
+                console.log(`[WebUSB] Slot d'applications externes matériel confirmé : 0x${this.flashAddress.toString(16)} (RAM: 0x${this.ramAddress.toString(16)}, Modèle: ${this.model})`);
+                return this.flashAddress;
               }
             }
           }
@@ -151,18 +180,21 @@ class NumWorksWebUSB {
    * @param {string} model 'N0110', 'N0115' ou 'N0120'
    */
   setTargetModel(model) {
-    const isN110 = this.isN110Model(model);
-    if (!isN110) {
+    const isN120 = model && (model.includes('120') || model === 'N0120');
+    const isN115 = model && (model.includes('115') || model === 'N0115');
+    if (isN120) {
       this.model = 'NumWorks N0120';
-    } else if (model && model.includes('115') && !model.includes('110')) {
+      this.flashAddress = DEFAULT_FLASH_ADDR_N0120;
+      this.ramAddress = DEFAULT_RAM_ADDR_N0120;
+    } else if (isN115) {
       this.model = 'NumWorks N0115';
-    } else if (model && model.includes('110') && !model.includes('115')) {
-      this.model = 'NumWorks N0110';
+      this.flashAddress = DEFAULT_FLASH_ADDR_N0115;
+      this.ramAddress = DEFAULT_RAM_ADDR_N0115;
     } else {
-      this.model = 'NumWorks N0110 / N0115';
+      this.model = 'NumWorks N0110';
+      this.flashAddress = DEFAULT_FLASH_ADDR_N0110;
+      this.ramAddress = DEFAULT_RAM_ADDR_N0110;
     }
-    this.flashAddress = isN110 ? DEFAULT_FLASH_ADDR_N0110 : DEFAULT_FLASH_ADDR_N0120;
-    this.ramAddress = isN110 ? 0x20000000 : 0x240118a4;
     console.log(`[WebUSB] Modèle synchronisé : ${this.model} (Flash: 0x${this.flashAddress.toString(16)}, RAM: 0x${this.ramAddress.toString(16)})`);
   }
 
@@ -228,8 +260,10 @@ class NumWorksWebUSB {
         }
       }
 
-      if (this.device.configuration === null || this.device.configuration.configurationValue !== configValue) {
-        await this.device.selectConfiguration(configValue);
+      if (!this.device.configuration || this.device.configuration.configurationValue !== configValue) {
+        if (typeof this.device.selectConfiguration === 'function') {
+          await this.device.selectConfiguration(configValue);
+        }
       }
 
       try {
@@ -317,9 +351,16 @@ class NumWorksWebUSB {
 
       this.model = modelName;
       this.mode = modeName;
-      const isN0110 = this.isN110Model();
-      this.flashAddress = isN0110 ? DEFAULT_FLASH_ADDR_N0110 : DEFAULT_FLASH_ADDR_N0120;
-      this.ramAddress = isN0110 ? 0x20000000 : 0x240118a4;
+      if (isExplicitN0120) {
+        this.flashAddress = DEFAULT_FLASH_ADDR_N0120;
+        this.ramAddress = DEFAULT_RAM_ADDR_N0120;
+      } else if (isExplicitN0115) {
+        this.flashAddress = DEFAULT_FLASH_ADDR_N0115;
+        this.ramAddress = DEFAULT_RAM_ADDR_N0115;
+      } else {
+        this.flashAddress = DEFAULT_FLASH_ADDR_N0110;
+        this.ramAddress = DEFAULT_RAM_ADDR_N0110;
+      }
 
       console.log(`[WebUSB] Connecté à ${this.model} (${this.mode}, BCD=0x${effectiveBcd.toString(16)}) sur interface ${this.interfaceNumber}`);
 
@@ -606,16 +647,25 @@ class NumWorksWebUSB {
         });
         return await this.flashBinary(converted, onProgress, targetFlashAddr);
       }
-      const modelBin = this.isN110Model() ? 'equalib_n0110.bin' : 'equalib_n0120.bin';
+      let modelBin = 'equalib_n0110.bin';
+      if (this.flashAddress === 0x90180000 || this.model.includes('120')) {
+        modelBin = 'equalib_n0120.bin';
+      } else if (this.flashAddress === 0x90600000 || this.model.includes('115')) {
+        modelBin = 'equalib_n0115.bin';
+      }
       const binResp = await fetch(`${modelBin}?v=${Date.now()}`);
       if (binResp.ok) {
         return await this.flashBinary(await binResp.arrayBuffer(), onProgress, targetFlashAddr);
       }
     }
 
-    // Utilisation de l'adresse de slot appropriée (N0110/N0115: 0x90200000, N0120: 0x90180000)
-    const isN0110 = this.isN110Model();
-    const defaultForModel = isN0110 ? DEFAULT_FLASH_ADDR_N0110 : DEFAULT_FLASH_ADDR_N0120;
+    // Utilisation de l'adresse de slot appropriée (N0115: 0x90600000, N0110: 0x90200000, N0120: 0x90180000)
+    let defaultForModel = DEFAULT_FLASH_ADDR_N0110;
+    if (this.model.includes('120')) {
+      defaultForModel = DEFAULT_FLASH_ADDR_N0120;
+    } else if (this.model.includes('115') || this.flashAddress === 0x90600000) {
+      defaultForModel = DEFAULT_FLASH_ADDR_N0115;
+    }
     const flashAddress = (targetFlashAddr && targetFlashAddr !== 0x90000000) 
       ? targetFlashAddr 
       : (this.flashAddress || defaultForModel);
