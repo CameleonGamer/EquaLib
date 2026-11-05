@@ -666,6 +666,44 @@ describe('7. Compilation et Validité Syntaxique des Jeux Python (.NWS)', () => 
     assert.strictEqual(patched[wpOffset + 153599], mockWallpaper[153599]);
   });
 
+  await itAsync('Décodage multi-frames des GIF réels vers 3 frames RGB565', async () => {
+    const wsCode = fs.readFileSync('web/wallpaper_studio.js', 'utf8');
+    const vm = require('vm');
+    const ctx = { window: {}, document: {}, console: console, FileReader: class {}, Image: class {} };
+    vm.createContext(ctx);
+    vm.runInContext(wsCode, ctx);
+
+    const studio = ctx.window.wallpaperStudio || new ctx.window.WallpaperStudio();
+    assert(typeof studio.decodeGifFrames === 'function', 'decodeGifFrames doit être une méthode de WallpaperStudio');
+
+    const hackerBuf = new Uint8Array(fs.readFileSync('web/assets/gifs/hacker.gif'));
+    const frames = studio.decodeGifFrames(hackerBuf, 3);
+    assert.strictEqual(frames.length, 3, 'Doit décoder 3 frames complètes pour hacker.gif');
+    assert.strictEqual(frames[0].length, 153600, 'Chaque frame doit faire exactement 153600 octets (320x240 RGB565)');
+    assert.strictEqual(frames[1].length, 153600, 'Frame 1 doit faire 153600 octets');
+    assert.strictEqual(frames[2].length, 153600, 'Frame 2 doit faire 153600 octets');
+  });
+
+  await itAsync('Bundler patche correctement le manifeste avec un wallpaper multi-frames animé (3 frames = 460800 octets) sur N0115', async () => {
+    const bundler = new EquaLibBundler();
+    let mockBin = fs.readFileSync('web/equalib_n0115.bin');
+    const mockMultiFrames = new Uint8Array(153600 * 3);
+    mockMultiFrames[0] = 0xAA;
+    mockMultiFrames[153600] = 0xBB;
+    mockMultiFrames[307200] = 0xCC;
+
+    const patched = await bundler.patchManifest(mockBin, [], {
+      targetModel: 'N0115',
+      theme: 'custom',
+      customWallpaper: mockMultiFrames
+    });
+
+    const offset = bundler.findManifestOffset(patched);
+    assert(offset !== -1, 'Manifeste non trouvé');
+    const wpSize = patched[offset + 20] | (patched[offset + 21] << 8) | (patched[offset + 22] << 16) | (patched[offset + 23] << 24);
+    assert.strictEqual(wpSize, 460800, 'wallpaper_size doit être exactement 460800 octets (3 frames)');
+  });
+
   console.log(`\n========================================`);
   console.log(`BETA TEST: 9. Mode Apple Glass & Bords Lisses (Manifeste & Simulateur)`);
   console.log(`========================================`);

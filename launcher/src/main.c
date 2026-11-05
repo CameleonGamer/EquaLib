@@ -195,23 +195,39 @@ static inline uintptr_t get_app_flash_base(void) {
     return EQUALIB_FLASH_BASE_N0115;
 }
 
-/* Rendu sécurisé du fond d'écran ou fond uni avec vérification MPU et protection anti-HardFault */
-static void __attribute__((noinline)) draw_screen_background(const theme_t* cur_th) {
+static uint32_t s_anim_frame_idx = 0;
+static uint32_t s_anim_tick = 0;
+
+static inline const eadk_color_t* get_wallpaper_flash_ptr(void) {
     if (g_current_theme == 6 &&
         g_equalib_manifest.wallpaper_size >= 153600 &&
         g_equalib_manifest.wallpaper_offset >= 0x10000 &&
         g_equalib_manifest.wallpaper_offset <= 0x400000) {
+        uint32_t num_frames = g_equalib_manifest.wallpaper_size / 153600;
+        uint32_t f_idx = 0;
+        if (num_frames > 1 && g_animated_bg) {
+            f_idx = s_anim_frame_idx % num_frames;
+        }
+        uint32_t frame_offset = g_equalib_manifest.wallpaper_offset + (f_idx * 153600);
+        return (const eadk_color_t*)(get_app_flash_base() + frame_offset);
+    }
+    return NULL;
+}
 
+/* Rendu sécurisé du fond d'écran ou fond uni avec vérification MPU et protection anti-HardFault */
+static void __attribute__((noinline)) draw_screen_background(const theme_t* cur_th) {
+    const eadk_color_t* wp_ptr = get_wallpaper_flash_ptr();
+    if (wp_ptr) {
         const uintptr_t flash_base = get_app_flash_base();
         bool size_valid = true;
         if (*(const uint32_t*)flash_base == 0xDEC0BEBA) {
             uint32_t total_app_size = *(const uint32_t*)(flash_base + 24);
-            if (g_equalib_manifest.wallpaper_offset + 153600 > total_app_size) {
+            uintptr_t wp_addr = (uintptr_t)wp_ptr;
+            if (wp_addr + 153600 > flash_base + total_app_size) {
                 size_valid = false;
             }
         }
         if (size_valid) {
-            const eadk_color_t* wp_ptr = (const eadk_color_t*)(flash_base + g_equalib_manifest.wallpaper_offset);
             for (uint16_t y = 0; y < EADK_SCREEN_HEIGHT; y += WALLPAPER_BAND_HEIGHT) {
                 eadk_rect_t band_r = {0, y, EADK_SCREEN_WIDTH, WALLPAPER_BAND_HEIGHT};
                 const eadk_color_t* src = wp_ptr + ((uint32_t)y * EADK_SCREEN_WIDTH);
@@ -224,6 +240,13 @@ static void __attribute__((noinline)) draw_screen_background(const theme_t* cur_
         }
     }
     eadk_display_push_rect_uniform(eadk_screen_rect, cur_th->screen_bg);
+}
+
+static inline eadk_color_t get_bg_pixel(int px, int py, const theme_t* th, const eadk_color_t* wp_ptr) {
+    if (wp_ptr && px >= 0 && px < EADK_SCREEN_WIDTH && py >= 0 && py < EADK_SCREEN_HEIGHT) {
+        return wp_ptr[(uint32_t)py * EADK_SCREEN_WIDTH + px];
+    }
+    return th->screen_bg;
 }
 
 /* ==================== RENDU GLASSMORPHISM & BORDS LISSES ==================== */
@@ -247,21 +270,159 @@ static inline eadk_color_t get_contrast_text_color(eadk_color_t bg_color) {
     return (brightness > 115) ? 0x0000 : 0xFFFF;
 }
 
-static inline const eadk_color_t* get_wallpaper_flash_ptr(void) {
-    if (g_current_theme == 6 &&
-        g_equalib_manifest.wallpaper_size >= 153600 &&
-        g_equalib_manifest.wallpaper_offset >= 0x10000 &&
-        g_equalib_manifest.wallpaper_offset <= 0x400000) {
-        return (const eadk_color_t*)(get_app_flash_base() + g_equalib_manifest.wallpaper_offset);
+/* ==================== MOTEUR D'ANIMATION EN TEMPS RÉEL DU FOND D'ÉCRAN ==================== */
+
+typedef struct {
+    int16_t x;
+    int16_t y;
+    int8_t vx;
+    int8_t vy;
+    uint8_t size;
+    uint16_t color;
+    uint8_t phase;
+} bg_particle_t;
+
+#define NUM_BG_PARTICLES 12
+static bg_particle_t s_particles[NUM_BG_PARTICLES];
+static bool s_particles_inited = false;
+static int s_particles_theme = -1;
+
+/* Vérifie si un rectangle (x, y, w, h) se trouve dans les couloirs du fond d'écran sans toucher les cartes */
+static inline bool is_in_bg_corridor(int x, int y, int sz) {
+    int x2 = x + sz;
+    int y2 = y + sz;
+    if (x < 0 || x2 > EADK_SCREEN_WIDTH || y < 22 || y2 > EADK_SCREEN_HEIGHT) return false;
+    
+    /* Gouttières latérales gauche et droite */
+    if (x2 <= 16 || x >= 304) return true;
+    
+    if (g_view_mode == VIEW_MODE_GALLERY) {
+        /* Étagère au-dessus des cartes */
+        if (y >= 22 && y2 <= 28) return true;
+        /* Allée verticale entre colonne 0 et 1 */
+        if (x >= 104 && x2 <= 116 && y >= 22 && y2 <= 188) return true;
+        /* Allée verticale entre colonne 1 et 2 */
+        if (x >= 204 && x2 <= 216 && y >= 22 && y2 <= 188) return true;
+        /* Étagère horizontale entre rangée 0 et rangée 1 */
+        if (y >= 98 && y2 <= 106) return true;
+        /* Espace horizontal au-dessus du dock */
+        if (y >= 176 && y2 <= 188) return true;
+        /* Espace sous le dock */
+        if (y >= 222) return true;
+    } else {
+        if (y >= 22 && y2 <= 28) return true;
+        if (y >= 180) return true;
     }
-    return NULL;
+    return false;
 }
 
-static inline eadk_color_t get_bg_pixel(int px, int py, const theme_t* th, const eadk_color_t* wp_ptr) {
-    if (wp_ptr && px >= 0 && px < EADK_SCREEN_WIDTH && py >= 0 && py < EADK_SCREEN_HEIGHT) {
-        return wp_ptr[(uint32_t)py * EADK_SCREEN_WIDTH + px];
+/* Réinitialise les particules selon le thème actif */
+static void init_bg_particles(const theme_t* th) {
+    (void)th;
+    static const int16_t spawn_x[NUM_BG_PARTICLES] = { 6, 110, 210, 310, 8, 108, 208, 312, 4, 112, 212, 308 };
+    static const int16_t spawn_y[NUM_BG_PARTICLES] = { 24, 40, 60, 80, 100, 120, 140, 160, 180, 200, 220, 230 };
+    
+    for (int i = 0; i < NUM_BG_PARTICLES; i++) {
+        s_particles[i].x = spawn_x[i];
+        s_particles[i].y = spawn_y[i];
+        s_particles[i].size = 2;
+        s_particles[i].phase = (uint8_t)(i * 3);
+        
+        if (g_current_theme == 1) {
+            /* Sakura : pétales rose vif et pastel */
+            s_particles[i].vx = 1;
+            s_particles[i].vy = 1;
+            s_particles[i].size = (i % 2 == 0) ? 3 : 2;
+            s_particles[i].color = (i % 3 == 0) ? 0xFBAE : ((i % 3 == 1) ? 0xFDF7 : 0xFFFF);
+        } else if (g_current_theme == 2) {
+            /* Hacker : code matrix cyan et vert électrique */
+            s_particles[i].vx = 0;
+            s_particles[i].vy = 2;
+            s_particles[i].size = 2;
+            s_particles[i].color = (i % 4 == 0) ? 0xFFFF : ((i % 2 == 0) ? 0x3DFE : 0x07FF);
+        } else if (g_current_theme == 3) {
+            /* Abeille : petites abeilles jaune d'or et noir */
+            s_particles[i].vx = (i % 2 == 0) ? 1 : -1;
+            s_particles[i].vy = 1;
+            s_particles[i].size = 3;
+            s_particles[i].color = (i % 2 == 0) ? 0xFDE0 : 0xFE60;
+        } else if (g_current_theme == 4) {
+            /* Mario : étoiles d'or */
+            s_particles[i].vx = 0;
+            s_particles[i].vy = -1;
+            s_particles[i].size = 2;
+            s_particles[i].color = (i % 2 == 0) ? 0xFFE0 : 0xFFFF;
+        } else if (g_current_theme == 5) {
+            /* GameBoy : pixels rétro vert DMG */
+            s_particles[i].vx = 0;
+            s_particles[i].vy = 1;
+            s_particles[i].size = 2;
+            s_particles[i].color = (i % 2 == 0) ? 0x9E03 : 0xE7EE;
+        } else {
+            /* Custom : étincelles scintillantes ambrées et blanches */
+            s_particles[i].vx = (i % 2 == 0) ? 1 : 0;
+            s_particles[i].vy = 1;
+            s_particles[i].size = 2;
+            s_particles[i].color = (i % 3 == 0) ? 0xFFFF : ((i % 3 == 1) ? 0xFE60 : 0x5DFE);
+        }
     }
-    return th->screen_bg;
+    s_particles_inited = true;
+    s_particles_theme = g_current_theme;
+}
+
+/* Mise à jour et tracé ultra-léger sans scintillement des particules animées */
+static void update_and_render_bg_particles(const theme_t* th) {
+    if (!s_particles_inited || s_particles_theme != g_current_theme) {
+        init_bg_particles(th);
+    }
+    
+    const eadk_color_t* wp_ptr = get_wallpaper_flash_ptr();
+    
+    for (int i = 0; i < NUM_BG_PARTICLES; i++) {
+        bg_particle_t* p = &s_particles[i];
+        
+        /* 1. Effacement de l'ancienne position en restaurant les pixels exacts du fond */
+        if (is_in_bg_corridor(p->x, p->y, p->size)) {
+            for (int py = p->y; py < p->y + p->size; py++) {
+                for (int px = p->x; px < p->x + p->size; px++) {
+                    eadk_rect_t r_old = {(uint16_t)px, (uint16_t)py, 1, 1};
+                    eadk_color_t bg_col = get_bg_pixel(px, py, th, wp_ptr);
+                    eadk_display_push_rect_uniform(r_old, bg_col);
+                }
+            }
+        }
+        
+        /* 2. Déplacement physique */
+        p->phase++;
+        int next_x = p->x + p->vx;
+        int next_y = p->y + p->vy;
+        
+        /* Onde sinusoïdale douce pour Sakura et Abeilles */
+        if (g_current_theme == 1 && (p->phase % 4 == 0)) {
+            next_x += (p->phase % 8 < 4) ? 1 : -1;
+        } else if (g_current_theme == 3 && (p->phase % 3 == 0)) {
+            next_y += (p->phase % 6 < 3) ? 1 : -1;
+        }
+        
+        /* Recyclage / Wrap-around en haut de l'écran */
+        if (next_y > 236) {
+            next_y = 23;
+            next_x = (next_x * 7 + 13) % (EADK_SCREEN_WIDTH - 10) + 2;
+        } else if (next_y < 23) {
+            next_y = 236;
+        }
+        if (next_x < 2) next_x = 316;
+        else if (next_x > 316) next_x = 2;
+        
+        p->x = (int16_t)next_x;
+        p->y = (int16_t)next_y;
+        
+        /* 3. Tracé de la particule uniquement si elle se trouve dans un couloir libre */
+        if (is_in_bg_corridor(p->x, p->y, p->size)) {
+            eadk_rect_t r_new = {(uint16_t)p->x, (uint16_t)p->y, (uint16_t)p->size, (uint16_t)p->size};
+            eadk_display_push_rect_uniform(r_new, p->color);
+        }
+    }
 }
 
 static eadk_color_t s_styled_line_buf[EADK_SCREEN_WIDTH];
@@ -1312,6 +1473,22 @@ int main(int argc, char* argv[]) {
                         old_scroll_offset = scroll_offset;
                     }
                 }
+            }
+        }
+
+        /* Animation du fond d'écran si activée */
+        if (g_animated_bg) {
+            s_anim_tick++;
+            uint32_t num_frames = g_equalib_manifest.wallpaper_size / 153600;
+            if (g_current_theme == 6 && num_frames > 1) {
+                if (s_anim_tick >= 15) { // ~300 ms (15 * 20 ms)
+                    s_anim_tick = 0;
+                    s_anim_frame_idx = (s_anim_frame_idx + 1) % num_frames;
+                    full_redraw = true;
+                }
+            }
+            if ((s_anim_tick % 2) == 0) { // ~40 ms (25 FPS)
+                update_and_render_bg_particles(cur_th);
             }
         }
 

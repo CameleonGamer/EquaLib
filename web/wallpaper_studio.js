@@ -1553,6 +1553,120 @@
       }
     }
 
+    /**
+     * Décodeur natif pur JavaScript des images GIF animées (GIF87a / GIF89a avec LZW)
+     * Extrait jusqu'à maxFrames images complètes redimensionnées en RGB565 (320x240)
+     */
+    decodeGifFrames(buf, maxFrames = 3) {
+      if (!buf || buf.length < 13) return [];
+      let gct = [];
+      let p = 13;
+      if (buf[10] & 0x80) {
+        let size = 1 << ((buf[10] & 0x07) + 1);
+        for (let i = 0; i < size && p + 2 < buf.length; i++) {
+          gct.push([buf[p], buf[p + 1], buf[p + 2]]);
+          p += 3;
+        }
+      }
+      let frames = [];
+      while (p < buf.length && frames.length < maxFrames) {
+        let b = buf[p];
+        if (b === 0x3B) break;
+        if (b === 0x21) {
+          p += 2;
+          while (p < buf.length && buf[p] !== 0) p += 1 + buf[p];
+          p++;
+        } else if (b === 0x2C) {
+          if (p + 10 >= buf.length) break;
+          let left = buf[p + 1] | (buf[p + 2] << 8);
+          let top = buf[p + 3] | (buf[p + 4] << 8);
+          let w = buf[p + 5] | (buf[p + 6] << 8);
+          let h = buf[p + 7] | (buf[p + 8] << 8);
+          let packed = buf[p + 9];
+          p += 10;
+          let pal = gct;
+          if (packed & 0x80) {
+            let lctSize = 1 << ((packed & 0x07) + 1);
+            pal = [];
+            for (let i = 0; i < lctSize && p + 2 < buf.length; i++) {
+              pal.push([buf[p], buf[p + 1], buf[p + 2]]);
+              p += 3;
+            }
+          }
+          if (p >= buf.length) break;
+          let minCode = buf[p++];
+          let clearCode = 1 << minCode;
+          let endCode = clearCode + 1;
+          let codeSize = minCode + 1;
+          let codeMask = (1 << codeSize) - 1;
+          let dict = [];
+          function initD() {
+            dict = [];
+            for (let i = 0; i < clearCode; i++) dict[i] = [i];
+            dict[clearCode] = [];
+            dict[endCode] = null;
+          }
+          initD();
+          let pix = new Uint8Array(w * h);
+          let pIdx = 0, bitBuf = 0, bitCount = 0, prevCode = -1;
+          while (p < buf.length) {
+            let blen = buf[p++];
+            if (blen === 0) break;
+            for (let i = 0; i < blen; i++) {
+              bitBuf |= (buf[p++] << bitCount);
+              bitCount += 8;
+              while (bitCount >= codeSize) {
+                let code = bitBuf & codeMask;
+                bitBuf >>= codeSize;
+                bitCount -= codeSize;
+                if (code === clearCode) {
+                  codeSize = minCode + 1;
+                  codeMask = (1 << codeSize) - 1;
+                  initD();
+                  prevCode = -1;
+                  continue;
+                }
+                if (code === endCode) break;
+                let entry = (code < dict.length && dict[code]) ? dict[code] : (prevCode !== -1 && dict[prevCode] ? dict[prevCode].concat(dict[prevCode][0]) : []);
+                for (let k = 0; k < entry.length && pIdx < pix.length; k++) pix[pIdx++] = entry[k];
+                if (prevCode !== -1 && dict[prevCode] && dict.length < 4096) {
+                  dict.push(dict[prevCode].concat(entry.length > 0 ? entry[0] : 0));
+                  if (dict.length > codeMask && codeSize < 12) {
+                    codeSize++;
+                    codeMask = (1 << codeSize) - 1;
+                  }
+                }
+                prevCode = code;
+              }
+            }
+          }
+          if (w > 0 && h > 0) {
+            let rgb565 = new Uint8Array(320 * 240 * 2);
+            let oIdx = 0;
+            for (let y = 0; y < 240; y++) {
+              let srcY = Math.min(h - 1, Math.floor(y * h / 240));
+              let rowOffset = srcY * w;
+              for (let x = 0; x < 320; x++) {
+                let srcX = Math.min(w - 1, Math.floor(x * w / 320));
+                let colIdx = pix[rowOffset + srcX];
+                let c = (pal && pal[colIdx]) ? pal[colIdx] : [0, 0, 0];
+                let r = c[0] >> 3;
+                let g = c[1] >> 2;
+                let b = c[2] >> 3;
+                let val = (r << 11) | (g << 5) | b;
+                rgb565[oIdx++] = val & 0xFF;
+                rgb565[oIdx++] = (val >> 8) & 0xFF;
+              }
+            }
+            frames.push(rgb565);
+          }
+        } else {
+          p++;
+        }
+      }
+      return frames;
+    }
+
     loadImageFile(file, fitMode = 'cover', applyDither = true) {
       const isGif = file.type === 'image/gif' || file.name.toLowerCase().endsWith('.gif');
       const reader = new FileReader();
@@ -1568,17 +1682,33 @@
               console.warn('[Wallpaper Studio] DataURL trop grand pour localStorage, conservé en mémoire vive');
             }
           }
+
+          // Décodage multi-frames pour animation réelle sur calculatrice
+          try {
+            const abReader = new FileReader();
+            abReader.onload = (abe) => {
+              const rawBuf = new Uint8Array(abe.target.result);
+              const frames = this.decodeGifFrames(rawBuf, 3);
+              if (frames && frames.length > 1) {
+                this.gifMultiFrames = frames;
+                this.autoSyncWallpaper();
+                const statusEl = document.getElementById('ws-active-theme-status');
+                if (statusEl) {
+                  statusEl.textContent = `✓ GIF animé multi-frames chargé (${frames.length} images RGB565 prêtes pour la calculatrice) !`;
+                  statusEl.className = 'text-pink-400 font-bold';
+                }
+              }
+            };
+            abReader.readAsArrayBuffer(file);
+          } catch (_) {}
+        } else {
+          this.gifMultiFrames = null;
         }
         const img = new Image();
         img.onload = () => {
           this.processLoadedImage(img, fitMode, applyDither);
           if (isGif) {
             this.updateGifPreview();
-            const statusEl = document.getElementById('ws-active-theme-status');
-            if (statusEl) {
-              statusEl.textContent = '✓ Fond d\'écran GIF animé chargé (Frame 0 RGB565 : 153.6 Ko)';
-              statusEl.className = 'text-pink-400 font-bold';
-            }
           }
           this.applyCustomTheme();
         };
@@ -1598,17 +1728,46 @@
           localStorage.setItem('equalib_custom_wallpaper_gifurl', url);
         }
 
+        // Récupération multi-frames binaire
+        if (typeof fetch === 'function') {
+          fetch(url)
+            .then(res => res.arrayBuffer())
+            .then(ab => {
+              const rawBuf = new Uint8Array(ab);
+              const frames = this.decodeGifFrames(rawBuf, 3);
+              if (frames && frames.length > 1) {
+                this.gifMultiFrames = frames;
+                this.autoSyncWallpaper();
+                const statusEl = document.getElementById('ws-active-theme-status');
+                if (statusEl) {
+                  statusEl.textContent = `✓ ${name} actif (${frames.length} images animées prêtes pour la calculatrice)`;
+                  statusEl.className = 'text-pink-400 font-bold';
+                }
+              }
+            })
+            .catch(() => {});
+        } else if (typeof require === 'function') {
+          try {
+            const nodeFs = require('fs');
+            const nodePath = require('path');
+            const localPath = nodePath.join(process.cwd(), 'web', url);
+            if (nodeFs.existsSync(localPath)) {
+              const rawBuf = new Uint8Array(nodeFs.readFileSync(localPath));
+              const frames = this.decodeGifFrames(rawBuf, 3);
+              if (frames && frames.length > 1) {
+                this.gifMultiFrames = frames;
+                this.autoSyncWallpaper();
+              }
+            }
+          } catch (_) {}
+        }
+
         const img = new Image();
         img.crossOrigin = 'anonymous';
         img.onload = () => {
           this.processLoadedImage(img, 'cover', this.useDithering);
           this.updateGifPreview();
           if (fileStatus) fileStatus.textContent = `✓ ${name} appliqué avec succès !`;
-          const statusEl = document.getElementById('ws-active-theme-status');
-          if (statusEl) {
-            statusEl.textContent = `✓ ${name} actif (Frame 0 RGB565 généré 153.6 Ko)`;
-            statusEl.className = 'text-pink-400 font-bold';
-          }
           this.applyCustomTheme();
         };
         img.onerror = (e) => {
@@ -1828,7 +1987,15 @@
      */
     autoSyncWallpaper() {
       try {
-        const bytes = this.generateRGB565Bytes();
+        let bytes = this.generateRGB565Bytes();
+        if (this.gifMultiFrames && this.gifMultiFrames.length > 1) {
+          const totalLen = this.gifMultiFrames.length * 153600;
+          const multi = new Uint8Array(totalLen);
+          for (let i = 0; i < this.gifMultiFrames.length; i++) {
+            multi.set(this.gifMultiFrames[i], i * 153600);
+          }
+          bytes = multi;
+        }
         const dataUrl = this.canvas ? this.canvas.toDataURL('image/png') : null;
 
         window.customWallpaperRGB565 = bytes;
@@ -2063,5 +2230,6 @@
   }
 
   window.EquaLibWallpaperStudio = WallpaperStudio;
+  window.WallpaperStudio = WallpaperStudio;
 
 })(window);

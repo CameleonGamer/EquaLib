@@ -153,6 +153,12 @@ class EquaLibBundler {
 
     // Wallpaper offset (offset + 16) et size (offset + 20)
     if (wallpaperBytes && wallpaperBytes.length > 0) {
+      let finalWpBytes = wallpaperBytes;
+      const isModel110 = (options.targetModel === 'N0110' || this.options?.targetModel === 'N0110' || (typeof window !== 'undefined' && window.userSettings?.targetModel === 'N0110'));
+      if (isModel110 && finalWpBytes.length > 153600) {
+        finalWpBytes = finalWpBytes.slice(0, 153600);
+      }
+
       const wpOffset = (currentExtraOffset + 3) & ~3;
       const pad = wpOffset - currentExtraOffset;
       if (pad > 0) {
@@ -165,13 +171,13 @@ class EquaLibBundler {
       u8[offset + 18] = (wpOffset >> 16) & 0xFF;
       u8[offset + 19] = (wpOffset >> 24) & 0xFF;
 
-      const wpSize = wallpaperBytes.length;
+      const wpSize = finalWpBytes.length;
       u8[offset + 20] = wpSize & 0xFF;
       u8[offset + 21] = (wpSize >> 8) & 0xFF;
       u8[offset + 22] = (wpSize >> 16) & 0xFF;
       u8[offset + 23] = (wpSize >> 24) & 0xFF;
 
-      extraPayloads.push(wallpaperBytes);
+      extraPayloads.push(finalWpBytes);
       currentExtraOffset += wpSize;
     } else {
       u8[offset + 16] = 0;
