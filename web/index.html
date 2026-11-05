@@ -1096,6 +1096,36 @@
         </label>
       </div>
 
+      <!-- 7. Choisir un GIF Custom ou Prédéfini -->
+      <div class="p-3.5 rounded-none bg-[#030814] border-2 border-[#1B3B6F] font-mono shadow-[3px_3px_0px_#01040A] space-y-2.5">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h4 class="font-heading font-bold text-xs text-[#F8FAFC] flex items-center gap-1.5 uppercase tracking-wide">
+              <span>🎬</span> Fond Écran Animé (GIF)
+            </h4>
+            <p class="text-[11px] text-[#8EA5C8] mt-0.5">
+              Sélectionnez un GIF animé d'exemple ou importez votre propre GIF custom pour l'afficher sur Equalib.
+            </p>
+          </div>
+          <input type="file" id="modal-gif-file-input" accept="image/gif,image/png,image/jpeg,image/webp" class="hidden">
+          <button id="modal-browse-gif-btn" class="px-2.5 py-1.5 bg-[#FFD700] hover:bg-[#FFE55C] text-[#030814] font-bold text-xs border border-[#01040A] shadow-[2px_2px_0px_#01040A] cursor-pointer flex items-center gap-1.5 active:translate-x-[1px] active:translate-y-[1px]">
+            <span>📂</span> Importer mon GIF...
+          </button>
+        </div>
+        <div class="grid grid-cols-3 gap-2 pt-1 border-t border-[#11264B]">
+          <button type="button" class="modal-gif-preset-btn p-1.5 text-center bg-[#07132B] hover:bg-[#11264B] border border-[#1B3B6F] text-pink-300 text-xs font-bold flex items-center justify-center gap-1 cursor-pointer transition-all" data-gif="assets/gifs/sakura.gif" data-name="Sakura Animé">
+            <span>🌸</span> Sakura
+          </button>
+          <button type="button" class="modal-gif-preset-btn p-1.5 text-center bg-[#07132B] hover:bg-[#11264B] border border-[#1B3B6F] text-cyan-300 text-xs font-bold flex items-center justify-center gap-1 cursor-pointer transition-all" data-gif="assets/gifs/hacker.gif" data-name="Hacker Animé">
+            <span>💻</span> Hacker
+          </button>
+          <button type="button" class="modal-gif-preset-btn p-1.5 text-center bg-[#07132B] hover:bg-[#11264B] border border-[#1B3B6F] text-amber-300 text-xs font-bold flex items-center justify-center gap-1 cursor-pointer transition-all" data-gif="assets/gifs/abeilles.gif" data-name="Abeilles Animé">
+            <span>🐝</span> Abeilles
+          </button>
+        </div>
+        <p id="modal-gif-status" class="text-[10px] text-[#8EA5C8] italic">GIF actuel prêt pour la calculatrice et le simulateur.</p>
+      </div>
+
       <!-- 5. Thèmes Prédéfinis (Presets) -->
       <div class="space-y-2">
         <label class="text-xs font-heading font-bold uppercase tracking-wider text-[#8EA5C8] flex items-center gap-1.5">

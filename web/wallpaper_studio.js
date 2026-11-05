@@ -259,22 +259,27 @@
               <span id="ws-file-status" class="text-xs text-[#8b949e]">Aucun fichier sélectionné (Glissez-déposez ou choisissez un fichier)</span>
             </div>
 
-            <!-- Fonds Animés GIF d'exemple -->
+            <!-- Fonds Animés GIF d'exemple & Bouton Appliquer Direct -->
             <div class="pt-2 border-t border-[#30363d] flex flex-wrap items-center justify-between gap-2">
-              <span class="text-xs font-bold text-[#e6edf3] flex items-center gap-1.5">
-                <span>🎬</span> Exemples de Fonds Animés (GIF) :
-              </span>
-              <div class="flex flex-wrap items-center gap-2">
-                <button type="button" class="ws-gif-preset-btn px-2.5 py-1 rounded bg-[#21262d] hover:bg-[#30363d] text-pink-300 font-bold text-xs border border-pink-400/30 hover:border-pink-400 transition-all cursor-pointer flex items-center gap-1 shadow-[1px_1px_0px_#000]" data-gif="assets/gifs/sakura.gif" data-name="Sakura Animé">
-                  <span>🌸</span> Sakura Animé
-                </button>
-                <button type="button" class="ws-gif-preset-btn px-2.5 py-1 rounded bg-[#21262d] hover:bg-[#30363d] text-cyan-300 font-bold text-xs border border-cyan-400/30 hover:border-cyan-400 transition-all cursor-pointer flex items-center gap-1 shadow-[1px_1px_0px_#000]" data-gif="assets/gifs/hacker.gif" data-name="Hacker Animé">
-                  <span>💻</span> Hacker Animé
-                </button>
-                <button type="button" class="ws-gif-preset-btn px-2.5 py-1 rounded bg-[#21262d] hover:bg-[#30363d] text-amber-300 font-bold text-xs border border-amber-400/30 hover:border-amber-400 transition-all cursor-pointer flex items-center gap-1 shadow-[1px_1px_0px_#000]" data-gif="assets/gifs/abeilles.gif" data-name="Abeilles Animé">
-                  <span>🐝</span> Abeilles Animé
-                </button>
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-bold text-[#e6edf3] flex items-center gap-1.5">
+                  <span>🎬</span> Exemples de Fonds Animés (GIF) :
+                </span>
+                <div class="flex flex-wrap items-center gap-1.5">
+                  <button type="button" class="ws-gif-preset-btn px-2.5 py-1 rounded bg-[#21262d] hover:bg-[#30363d] text-pink-300 font-bold text-xs border border-pink-400/30 hover:border-pink-400 transition-all cursor-pointer flex items-center gap-1 shadow-[1px_1px_0px_#000]" data-gif="assets/gifs/sakura.gif" data-name="Sakura Animé">
+                    <span>🌸</span> Sakura Animé
+                  </button>
+                  <button type="button" class="ws-gif-preset-btn px-2.5 py-1 rounded bg-[#21262d] hover:bg-[#30363d] text-cyan-300 font-bold text-xs border border-cyan-400/30 hover:border-cyan-400 transition-all cursor-pointer flex items-center gap-1 shadow-[1px_1px_0px_#000]" data-gif="assets/gifs/hacker.gif" data-name="Hacker Animé">
+                    <span>💻</span> Hacker Animé
+                  </button>
+                  <button type="button" class="ws-gif-preset-btn px-2.5 py-1 rounded bg-[#21262d] hover:bg-[#30363d] text-amber-300 font-bold text-xs border border-amber-400/30 hover:border-amber-400 transition-all cursor-pointer flex items-center gap-1 shadow-[1px_1px_0px_#000]" data-gif="assets/gifs/abeilles.gif" data-name="Abeilles Animé">
+                    <span>🐝</span> Abeilles Animé
+                  </button>
+                </div>
               </div>
+              <button id="ws-apply-gif-btn" class="px-3 py-1.5 rounded bg-[#FFBB00] hover:bg-[#E5A600] text-black font-extrabold text-xs border-2 border-black shadow-[2px_2px_0px_#000] cursor-pointer flex items-center gap-1 active:translate-x-[1px] active:translate-y-[1px]">
+                <span>⭐</span> Appliquer ce GIF sur la Calculatrice
+              </button>
             </div>
           </div>
 
@@ -704,6 +709,10 @@
       container.querySelector('#ws-export-png-btn')?.addEventListener('click', () => this.exportPNG());
       container.querySelector('#ws-export-bin-btn')?.addEventListener('click', () => this.exportBIN());
       container.querySelector('#ws-apply-theme-btn')?.addEventListener('click', () => this.applyCustomTheme());
+      container.querySelector('#ws-apply-gif-btn')?.addEventListener('click', () => {
+        this.applyCustomTheme();
+        window.soundFx?.playSuccess?.();
+      });
 
       // Contrôles des Paramètres d'Affichage & Personnalisation dans le Studio
       const glassToggle = container.querySelector('#ws-glass-toggle');
@@ -1571,6 +1580,7 @@
               statusEl.className = 'text-pink-400 font-bold';
             }
           }
+          this.applyCustomTheme();
         };
         img.src = dataUrl;
       };
@@ -1599,6 +1609,7 @@
             statusEl.textContent = `✓ ${name} actif (Frame 0 RGB565 généré 153.6 Ko)`;
             statusEl.className = 'text-pink-400 font-bold';
           }
+          this.applyCustomTheme();
         };
         img.onerror = (e) => {
           console.warn('[Wallpaper Studio] Erreur chargement image GIF :', e);

@@ -5,19 +5,30 @@
  */
 static eq_storage_t* get_storage_target(void) {
 #if PLATFORM_DEVICE
+    /* 1. Détection prioritaire par l'adresse Flash du code (infaillible sur XIP Flash) */
+    uintptr_t pc = (uintptr_t)&get_storage_target;
+    if (pc >= 0x90600000UL && pc < 0x90800000UL) {
+        /* NumWorks N0115 (STM32F730 SRAM : [0x200118a4, 0x200218a4]) */
+        return (eq_storage_t*)0x2001D000;
+    } else if (pc >= 0x90180000UL && pc < 0x90200000UL) {
+        /* NumWorks N0120 (STM32H725 AXI SRAM : [0x240118a4, 0x240218a4]) */
+        return (eq_storage_t*)0x2401D000;
+    } else if (pc >= 0x90200000UL && pc < 0x90600000UL) {
+        /* NumWorks N0110 (STM32F412 SRAM : [0x20000000, 0x20010000]) */
+        return (eq_storage_t*)0x2000E000;
+    }
+
+    /* 2. Détection par adresse de pile sp */
     uintptr_t sp_addr = 0;
     __asm__ volatile("mov %0, sp" : "=r"(sp_addr));
     if (sp_addr >= 0x24000000 && sp_addr <= 0x24050000) {
-        /* NumWorks N0120 (STM32H725 AXI SRAM)
-         * Zone MPU externe autorisée : [0x240118a4, 0x240218a4].
-         * La section .bss se termine vers 0x2401913c.
-         * Le pointeur de pile sp débute à 0x240218a4.
-         * L'adresse 0x2401D000 est en zone autorisée MPU, 16 Ko au-dessus de .bss
-         * et 18 Ko en dessous du haut de la pile, donc jamais écrasée par _start ni par la pile.
-         */
+        /* NumWorks N0120 */
         return (eq_storage_t*)0x2401D000;
-    } else if (sp_addr >= 0x20000000 && sp_addr <= 0x20040000) {
-        /* NumWorks N0110 (STM32F412 SRAM) */
+    } else if (sp_addr >= 0x200118a4 && sp_addr <= 0x20030000) {
+        /* NumWorks N0115 */
+        return (eq_storage_t*)0x2001D000;
+    } else if (sp_addr >= 0x20000000 && sp_addr < 0x200118a4) {
+        /* NumWorks N0110 */
         return (eq_storage_t*)0x2000E000;
     }
 #endif

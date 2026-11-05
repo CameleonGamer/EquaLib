@@ -1182,6 +1182,44 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   });
 
+  // Gestion des sélecteurs de GIF Animé dans la modale Paramètres
+  const modalGifFileInput = document.getElementById('modal-gif-file-input');
+  const modalBrowseGifBtn = document.getElementById('modal-browse-gif-btn');
+  const modalGifStatus = document.getElementById('modal-gif-status');
+
+  modalBrowseGifBtn?.addEventListener('click', () => {
+    modalGifFileInput?.click();
+  });
+
+  modalGifFileInput?.addEventListener('change', (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (window.wallpaperStudio?.loadImageFile) {
+      window.wallpaperStudio.loadImageFile(file, 'cover', true);
+      if (modalGifStatus) {
+        modalGifStatus.textContent = `✓ GIF "${file.name}" importé et appliqué !`;
+        modalGifStatus.className = 'text-[10px] text-pink-400 font-bold';
+      }
+      showToast(`GIF "${file.name}" appliqué comme fond d'écran !`, 'success');
+    }
+  });
+
+  document.querySelectorAll('.modal-gif-preset-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      window.soundFx?.playClick();
+      const gifUrl = btn.getAttribute('data-gif');
+      const name = btn.getAttribute('data-name');
+      if (window.wallpaperStudio?.loadGifUrl) {
+        window.wallpaperStudio.loadGifUrl(gifUrl, name);
+      }
+      if (modalGifStatus) {
+        modalGifStatus.textContent = `✓ ${name} appliqué !`;
+        modalGifStatus.className = 'text-[10px] text-pink-400 font-bold';
+      }
+      showToast(`Fond animé "${name}" appliqué avec succès !`, 'success');
+    });
+  });
+
   document.querySelectorAll('.quick-theme-pill').forEach(btn => {
     btn.addEventListener('click', () => {
       window.soundFx?.playClick();

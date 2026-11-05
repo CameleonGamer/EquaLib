@@ -158,18 +158,41 @@ static void save_persistent_settings(void) {
 #define WALLPAPER_BAND_HEIGHT 8
 static eadk_color_t s_wallpaper_ram_band[EADK_SCREEN_WIDTH * WALLPAPER_BAND_HEIGHT];
 
-#define EQUALIB_FLASH_BASE_N0120 0x90180000UL
+#define EQUALIB_FLASH_BASE_N0115 0x90600000UL
 #define EQUALIB_FLASH_BASE_N0110 0x90200000UL
+#define EQUALIB_FLASH_BASE_N0120 0x90180000UL
 
 static inline uintptr_t get_app_flash_base(void) {
-    uintptr_t cand = (uintptr_t)eadk_app_name - 32;
-    if (*(const uint32_t*)cand == 0xDEC0BEBA) {
-        return cand;
+    /* 1. Détection directe par plage de PC d'exécution (100% infaillible sur XIP Flash) */
+    uintptr_t pc = (uintptr_t)&get_app_flash_base;
+    if (pc >= 0x90600000UL && pc < 0x90800000UL) {
+        return EQUALIB_FLASH_BASE_N0115;
     }
-    if ((uintptr_t)eadk_app_name >= 0x90200000UL) {
+    if (pc >= 0x90200000UL && pc < 0x90600000UL) {
         return EQUALIB_FLASH_BASE_N0110;
     }
-    return EQUALIB_FLASH_BASE_N0120;
+    if (pc >= 0x90180000UL && pc < 0x90200000UL) {
+        return EQUALIB_FLASH_BASE_N0120;
+    }
+
+    /* 2. Détection par l'adresse du symbole eadk_app_name */
+    uintptr_t name_addr = (uintptr_t)eadk_app_name;
+    if (name_addr >= 0x90600000UL && name_addr < 0x90800000UL) {
+        return EQUALIB_FLASH_BASE_N0115;
+    }
+    if (name_addr >= 0x90200000UL && name_addr < 0x90600000UL) {
+        return EQUALIB_FLASH_BASE_N0110;
+    }
+    if (name_addr >= 0x90180000UL && name_addr < 0x90200000UL) {
+        return EQUALIB_FLASH_BASE_N0120;
+    }
+
+    /* 3. En-tête EADK direct si magic 0xDEC0BEBA trouvé à eadk_app_name - 40 */
+    if (name_addr >= 40 && *(const uint32_t*)(name_addr - 40) == 0xDEC0BEBA) {
+        return name_addr - 40;
+    }
+
+    return EQUALIB_FLASH_BASE_N0115;
 }
 
 /* Rendu sécurisé du fond d'écran ou fond uni avec vérification MPU et protection anti-HardFault */
@@ -180,8 +203,14 @@ static void __attribute__((noinline)) draw_screen_background(const theme_t* cur_
         g_equalib_manifest.wallpaper_offset <= 0x400000) {
 
         const uintptr_t flash_base = get_app_flash_base();
-        uint32_t total_app_size = *(const uint32_t*)(flash_base + 24);
-        if (g_equalib_manifest.wallpaper_offset + g_equalib_manifest.wallpaper_size <= total_app_size) {
+        bool size_valid = true;
+        if (*(const uint32_t*)flash_base == 0xDEC0BEBA) {
+            uint32_t total_app_size = *(const uint32_t*)(flash_base + 24);
+            if (g_equalib_manifest.wallpaper_offset + 153600 > total_app_size) {
+                size_valid = false;
+            }
+        }
+        if (size_valid) {
             const eadk_color_t* wp_ptr = (const eadk_color_t*)(flash_base + g_equalib_manifest.wallpaper_offset);
             for (uint16_t y = 0; y < EADK_SCREEN_HEIGHT; y += WALLPAPER_BAND_HEIGHT) {
                 eadk_rect_t band_r = {0, y, EADK_SCREEN_WIDTH, WALLPAPER_BAND_HEIGHT};
@@ -1004,6 +1033,17 @@ int main(int argc, char* argv[]) {
     g_current_theme = st->theme;
     if (g_current_theme == 6 && (g_equalib_manifest.wallpaper_size < 153600 || g_equalib_manifest.wallpaper_offset < 0x10000)) {
         g_current_theme = 0;
+    }
+    /* Si le manifest a été flashé avec un fond custom (Theme 6) valide, priorité au thème custom */
+    if ((g_equalib_manifest.flags & 0x0F) == 6 &&
+        g_equalib_manifest.wallpaper_size >= 153600 &&
+        g_equalib_manifest.wallpaper_offset >= 0x10000) {
+        g_current_theme = 6;
+        st->theme = 6;
+    }
+    if (g_equalib_manifest.flags & 0x10) {
+        g_animated_bg = true;
+        st->animated_bg = 1;
     }
     g_view_mode = st->view_mode;
     g_show_tooltips = (st->tooltips != 0);
