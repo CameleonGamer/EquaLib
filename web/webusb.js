@@ -64,6 +64,12 @@ class NumWorksWebUSB {
     this.ramAddress = 0x240118a4;
     this.interfaceNumber = 0;
     this.alternateSetting = 0;
+    this._addrBuf = new ArrayBuffer(5);
+    this._addrView = new DataView(this._addrBuf);
+    this._addrView.setUint8(0, ST_DFU_COMMANDS.SET_ADDRESS);
+    this._eraseBuf = new ArrayBuffer(5);
+    this._eraseView = new DataView(this._eraseBuf);
+    this._eraseView.setUint8(0, ST_DFU_COMMANDS.ERASE_PAGE);
   }
 
   isSupported() {
@@ -423,7 +429,7 @@ class NumWorksWebUSB {
 
   /**
    * Attend activement qu'une condition d'état DFU soit remplie
-   * Respecte strictement le pollTimeout annoncé par le microcontrôleur STM32
+   * Respecte le bwPollTimeout annoncé par le microcontrôleur STM32 (cadencement matériel optimal)
    */
   async pollUntil(predicate, timeoutMs = 30000) {
     const startTime = Date.now();
@@ -434,8 +440,10 @@ class NumWorksWebUSB {
         throw new Error(`Délai d'attente DFU dépassé (${timeoutMs} ms)`);
       }
 
-      // Attente requise par le microcontrôleur STM32 (au moins 10 ms)
-      const delay = Math.max(status.pollTimeout || 10, 10);
+      // Attente minimale respectant strictement bwPollTimeout du microcontrôleur (ou 1 ms si prêt)
+      const delay = (status.pollTimeout !== undefined && status.pollTimeout > 0)
+        ? status.pollTimeout
+        : 1;
       await new Promise(r => setTimeout(r, delay));
       status = await this.getStatus();
     }
@@ -452,12 +460,14 @@ class NumWorksWebUSB {
    * Positionne le pointeur d'adresse en mémoire Flash (Commande ST DFU 0x21)
    */
   async setAddress(address) {
-    const buf = new ArrayBuffer(5);
-    const view = new DataView(buf);
-    view.setUint8(0, ST_DFU_COMMANDS.SET_ADDRESS);
-    view.setUint32(1, address, true); // Little-endian 32-bit uint
+    if (!this._addrBuf) {
+      this._addrBuf = new ArrayBuffer(5);
+      this._addrView = new DataView(this._addrBuf);
+      this._addrView.setUint8(0, ST_DFU_COMMANDS.SET_ADDRESS);
+    }
+    this._addrView.setUint32(1, address, true); // Little-endian 32-bit uint
 
-    await this.controlTransferOut(DFU_REQUESTS.DNLOAD, buf, 0);
+    await this.controlTransferOut(DFU_REQUESTS.DNLOAD, this._addrBuf, 0);
     const status = await this.pollUntil(state => state !== DFU_STATES.dfuDNBUSY);
     if (status.status !== DFU_STATUS_OK) {
       throw new Error(`Échec setAddress à 0x${address.toString(16)} (status ${status.status})`);
@@ -472,12 +482,14 @@ class NumWorksWebUSB {
       await this.abortToIdle();
     }
 
-    const buf = new ArrayBuffer(5);
-    const view = new DataView(buf);
-    view.setUint8(0, ST_DFU_COMMANDS.ERASE_PAGE);
-    view.setUint32(1, address, true); // Little-endian 32-bit uint
+    if (!this._eraseBuf) {
+      this._eraseBuf = new ArrayBuffer(5);
+      this._eraseView = new DataView(this._eraseBuf);
+      this._eraseView.setUint8(0, ST_DFU_COMMANDS.ERASE_PAGE);
+    }
+    this._eraseView.setUint32(1, address, true); // Little-endian 32-bit uint
 
-    await this.controlTransferOut(DFU_REQUESTS.DNLOAD, buf, 0);
+    await this.controlTransferOut(DFU_REQUESTS.DNLOAD, this._eraseBuf, 0);
     const status = await this.pollUntil(state => state !== DFU_STATES.dfuDNBUSY, 30000);
     if (status.status !== DFU_STATUS_OK) {
       console.warn(`[WebUSB] Avertissement effacement secteur à 0x${address.toString(16)} (status ${status.status})`);
@@ -564,21 +576,27 @@ class NumWorksWebUSB {
       ? targetFlashAddr 
       : (this.flashAddress || defaultForModel);
 
-    // Alignement sur secteur 64 Ko et ajout du secteur terminateur 0xFF
-    const rem = uint8.byteLength % FLASH_SECTOR_SIZE;
-    const padSize = (rem > 0) ? (FLASH_SECTOR_SIZE - rem) : 0;
-    const terminatorSize = FLASH_SECTOR_SIZE;
-    const totalProgramSize = uint8.byteLength + padSize + terminatorSize;
+    // Calcul optimisé des secteurs Flash :
+    // - On efface tous les secteurs nécessaires pour le binaire + 1 secteur terminateur
+    // - L'effacement matériel d'un secteur NOR Flash met déjà tous ses octets à 0xFF
+    // - Il est donc inutile de transmettre par USB des dizaines de Ko de 0xFF redondants
+    const nbBinarySectors = Math.ceil(uint8.byteLength / FLASH_SECTOR_SIZE);
+    const nbSectors = nbBinarySectors + 1; // +1 secteur terminateur garanti vierge (0xFF)
 
-    const paddedData = new Uint8Array(totalProgramSize);
-    paddedData.set(uint8, 0);
-    paddedData.fill(0xFF, uint8.byteLength);
+    // Alignement minimal sur mot 32 bits (4 octets) requis par le contrôleur Flash STM32
+    const rem4 = uint8.byteLength % 4;
+    const alignedSize = rem4 > 0 ? (uint8.byteLength + (4 - rem4)) : uint8.byteLength;
+    let payload = uint8;
+    if (alignedSize > uint8.byteLength) {
+      payload = new Uint8Array(alignedSize);
+      payload.set(uint8, 0);
+      payload.fill(0xFF, uint8.byteLength);
+    }
 
-    const nbSectors = Math.ceil(totalProgramSize / FLASH_SECTOR_SIZE);
-
-    console.log(`[WebUSB] Début du flashage vers 0x${flashAddress.toString(16)} :`);
-    console.log(`         - Taille utile : ${uint8.byteLength} octets`);
-    console.log(`         - Taille totale programmée : ${paddedData.byteLength} octets (${nbSectors} secteurs de 64 Ko)`);
+    console.log(`[WebUSB] Début du flashage optimisé vers 0x${flashAddress.toString(16)} :`);
+    console.log(`         - Taille binaire utile : ${uint8.byteLength} octets (${(uint8.byteLength / 1024).toFixed(1)} Ko)`);
+    console.log(`         - Secteurs effacés : ${nbSectors} secteurs de 64 Ko (inclut secteur terminateur)`);
+    console.log(`         - Blocs programmés : ${Math.ceil(payload.byteLength / DFU_TRANSFER_SIZE)} blocs DFU de ${DFU_TRANSFER_SIZE} octets`);
 
     // Phase 1 : Effacement des secteurs Flash de l'application (Progression 5% à 25%)
     onProgress({ phase: 'erase', percent: 5, message: 'Effacement de la mémoire Flash...' });
@@ -599,29 +617,35 @@ class NumWorksWebUSB {
       });
     }
 
-    // Phase 2 : Écriture des blocs de 2048 octets (Progression 25% à 96%)
-    const totalBytes = paddedData.byteLength;
+    // Phase 2 : Écriture optimisée des blocs DFU de 2048 octets (Progression 25% à 96%)
+    // Débit maximal : suppression des délais hôte artificiels et cadence de progression fluide
+    const totalBytes = payload.byteLength;
     let offset = 0;
+    let lastProgressTime = 0;
 
     onProgress({ phase: 'write', percent: 25, message: 'Écriture du binaire en Flash...' });
 
     while (offset < totalBytes) {
       const chunkLength = Math.min(DFU_TRANSFER_SIZE, totalBytes - offset);
-      const chunk = paddedData.subarray(offset, offset + chunkLength);
+      const chunk = payload.subarray(offset, offset + chunkLength);
       const currentTargetAddr = flashAddress + offset;
 
       await this.downloadBlock(chunk, currentTargetAddr);
 
       offset += chunkLength;
-      const writePercent = 25 + Math.round((offset / totalBytes) * 71);
-      onProgress({
-        phase: 'write',
-        percent: Math.min(96, writePercent),
-        message: `Programmation Flash : ${Math.round((offset / totalBytes) * 100)}%`
-      });
 
-      // Bref répit pour soulager le bus USB
-      await new Promise(r => setTimeout(r, 4));
+      // Cadencement UI pour garantir une fluidité visuelle maximale sans impacter le bus USB
+      const now = (typeof performance !== 'undefined') ? performance.now() : Date.now();
+      const isFinished = (offset >= totalBytes);
+      if (isFinished || (now - lastProgressTime > 40)) {
+        lastProgressTime = now;
+        const writePercent = 25 + Math.round((offset / totalBytes) * 71);
+        onProgress({
+          phase: 'write',
+          percent: Math.min(96, writePercent),
+          message: `Programmation Flash : ${Math.round((offset / totalBytes) * 100)}% (${Math.round(offset / 1024)}/${Math.round(totalBytes / 1024)} Ko)`
+        });
+      }
     }
 
     // Phase 3 : Sortie DFU et redémarrage de la calculatrice (Progression 97% à 100%)
