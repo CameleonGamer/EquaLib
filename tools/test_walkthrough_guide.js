@@ -935,11 +935,13 @@ describe('Tier 1 - Feature 7: Nettoyage Intégral du DOM & Restauration des Inte
 // SUITE 8: TIER 1 - Feature 8: Non-Regression on Existing Test Suites
 // =============================================================
 describe('Tier 1 - Feature 8: Non-Régression sur les Suites de Tests Existantes', () => {
-  it('8.1. Exécution réussie de tools/beta_test_suite.js (85/85 tests passants)', () => {
+  it('8.1. Exécution réussie de tools/beta_test_suite.js (>= 85 tests passants, 0 échec)', () => {
     const res = cp.spawnSync(process.execPath, ['tools/beta_test_suite.js'], { encoding: 'utf8' });
     assert.strictEqual(res.status, 0, `beta_test_suite.js a échoué avec code ${res.status}: ${res.stderr || res.stdout}`);
-    assert(res.stdout.includes('Tests réussis : 85') && res.stdout.includes('Tests échoués : 0'),
-      'beta_test_suite.js doit exécuter et valider 85 tests avec 0 échec');
+    const m = res.stdout.match(/Tests réussis : (\d+)/);
+    const passed = m ? parseInt(m[1], 10) : 0;
+    assert(passed >= 85 && res.stdout.includes('Tests échoués : 0'),
+      'beta_test_suite.js doit exécuter et valider au moins 85 tests avec 0 échec');
   });
 
   it('8.2. Exécution réussie de tools/test_brush_and_wallpaper.js (10/10 tests passants)', () => {

@@ -406,12 +406,12 @@ class EquaLibBundler {
    */
   async buildBundle(apps = [], format = 'bin', options = {}) {
     const isBin = (format === 'bin');
-    const modelOption = (options.targetModel || this.options?.targetModel || (typeof window !== 'undefined' && window.userSettings?.targetModel) || 'N0120').toUpperCase();
-    const isN0110 = modelOption.includes('110');
+    const modelOption = (options.targetModel || this.options?.targetModel || (typeof window !== 'undefined' && window.userSettings?.targetModel) || 'N0110').toUpperCase();
+    const isN0110 = modelOption.includes('110') || modelOption.includes('115');
     const modelSuffix = isN0110 ? 'n0110' : 'n0120';
     const targetFile = isBin ? `equalib_${modelSuffix}.bin` : `equalib_${modelSuffix}.nwa`;
-    const fallbackFile = isBin ? 'equalib_n0120.bin' : 'equalib_n0120.nwa';
-    console.log(`[EquaLib] Génération du pack personnalisé (${apps.length} apps, format: ${format}, modèle: ${isN0110 ? 'N0110' : 'N0120'})...`);
+    const fallbackFile = isBin ? 'equalib_n0110.bin' : 'equalib_n0110.nwa';
+    console.log(`[EquaLib] Génération du pack personnalisé (${apps.length} apps, format: ${format}, modèle: ${isN0110 ? 'N0110/N0115' : 'N0120'})...`);
 
     let rawData = null;
 

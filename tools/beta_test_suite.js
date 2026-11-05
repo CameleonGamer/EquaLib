@@ -860,6 +860,75 @@ describe('7. Compilation et Validité Syntaxique des Jeux Python (.NWS)', () => 
       assert.strictEqual(res.flashAddress, 0x90200000, 'Le slot de destination doit être 0x90200000');
     });
 
+    it('Support complet et détection matérielle N0115 (STM32F730, BCD 0x0115 = 277)', async () => {
+      const usb = new NumWorksWebUSB();
+
+      // Test helper isN110Model
+      assert.strictEqual(usb.isN110Model('N0115'), true, 'N0115 doit correspondre au profil STM32F730');
+      assert.strictEqual(usb.isN110Model('NumWorks N0115'), true, 'NumWorks N0115 doit correspondre au profil STM32F730');
+      assert.strictEqual(usb.isN110Model('NumWorks N0110 / N0115'), true, 'Modèle combiné doit correspondre au profil');
+
+      // Test setTargetModel('N0115')
+      usb.setTargetModel('N0115');
+      assert.strictEqual(usb.model, 'NumWorks N0115', 'Modèle doit être NumWorks N0115');
+      assert.strictEqual(usb.flashAddress, 0x90200000, 'Flash slot N0115 doit être 0x90200000');
+      assert.strictEqual(usb.ramAddress, 0x20000000, 'RAM base N0115 doit être 0x20000000');
+
+      // Mock device WebUSB Chrome pour N0115 réel
+      usb.device = {
+        opened: true,
+        productId: 0xA291, // Epsilon OS standard
+        productName: 'NumWorks Calculator',
+        deviceVersionMajor: 1,
+        deviceVersionMinor: 1,
+        deviceVersionSubminor: 5, // bcdDevice 0x0115 = 277
+        configurations: [{
+          configurationValue: 1,
+          interfaces: [{
+            interfaceNumber: 0,
+            alternates: [{ interfaceClass: 0xFE, interfaceSubclass: 0x01 }]
+          }]
+        }],
+        selectConfiguration: async () => {},
+        claimInterface: async () => {},
+        controlTransferIn: async (req) => {
+          if (req.request === 6) {
+            // GET_DESCRIPTOR : octets 12-13 = 0x0115 (277)
+            const buf = new Uint8Array(18);
+            buf[12] = 0x15; // LSB
+            buf[13] = 0x01; // MSB
+            return { status: 'ok', data: { buffer: buf.buffer, byteOffset: 0, byteLength: 18 } };
+          }
+          // DFU GETSTATUS (idle)
+          const statusBuf = new Uint8Array([0x00, 0x00, 0x00, 0x00, 0x02, 0x00]);
+          return { status: 'ok', data: { buffer: statusBuf.buffer, byteOffset: 0, byteLength: 6 } };
+        },
+        controlTransferOut: async () => ({ status: 'ok' })
+      };
+      global.navigator.usb.requestDevice = async () => usb.device;
+
+      const res = await usb.connect();
+      assert.strictEqual(res.model, 'NumWorks N0115', 'La calculatrice doit être identifiée comme NumWorks N0115');
+      assert.strictEqual(res.flashAddress, 0x90200000, 'Le slot de destination N0115 doit être 0x90200000');
+      assert.strictEqual(usb.ramAddress, 0x20000000, 'La RAM de destination N0115 doit être 0x20000000');
+    });
+
+    it('Bundler sélectionne le binaire Cortex-M7 F730 pour le modèle N0115', async () => {
+      const EquaLibBundler = require(path.resolve('web/bundler.js'));
+      const bundler = new EquaLibBundler();
+      const res = await bundler.buildBundle([], 'bin', { targetModel: 'N0115' });
+      assert(res.arrayBuffer.byteLength > 64, 'Le binaire généré pour N0115 doit être non-vide');
+      const u8 = new Uint8Array(res.arrayBuffer);
+      // Signature EADK 0xDEC0BEBA (babec0de)
+      assert.strictEqual(u8[0], 0xba, 'Magic byte 0 doit être 0xba');
+      assert.strictEqual(u8[1], 0xbe, 'Magic byte 1 doit être 0xbe');
+      assert.strictEqual(u8[2], 0xc0, 'Magic byte 2 doit être 0xc0');
+      assert.strictEqual(u8[3], 0xde, 'Magic byte 3 doit être 0xde');
+      // RAM start offset 8 : 0x20000000 (STM32F730)
+      const dv = new DataView(res.arrayBuffer);
+      assert.strictEqual(dv.getUint32(8, true), 0x20000000, 'RAM start du pack N0115 doit être 0x20000000');
+    });
+
     it('Verrouillage manuel : le choix N0110 de l utilisateur ne bascule jamais vers N0120 au clic Installer', () => {
       // Simulation des réglages utilisateur de l'interface
       const userSettings = { targetModel: 'N0110', manualModel: 'N0110' };

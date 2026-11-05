@@ -201,13 +201,13 @@
         <div class="lg:col-span-7 space-y-4">
           <div class="inline-flex items-center gap-2 px-3 py-1.5 border-2 border-[#FFD700] bg-[#030814] text-[#FFD700] font-mono text-xs font-bold tracking-wider shadow-[3px_3px_0px_#01040A]">
             <span class="animate-pulse">⚡</span>
-            <span>&gt;_ NUMWORKS N0120 &amp; N0110 // EADK NATIVE HUB v3.5</span>
+            <span>&gt;_ NUMWORKS N0120 &amp; N0110 / N0115 // EADK NATIVE HUB v3.5</span>
           </div>
           <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black text-white font-orbitron tracking-wide leading-tight uppercase">
             Toutes vos applications et jeux dans <span class="bg-gradient-to-r from-[#FFD700] via-[#FF9100] to-[#FF4500] bg-clip-text text-transparent drop-shadow-[0_0_20px_rgba(255,215,0,0.6)]">un seul lanceur</span>.
           </h2>
           <p class="text-xs sm:text-sm text-[#8EA5C8] leading-relaxed max-w-2xl font-mono">
-            Sur les calculatrices NumWorks (N0120 &amp; N0110), le système Epsilon n'autorise qu'un seul emplacement pour application externe. 
+            Sur les calculatrices NumWorks (N0110, N0115 &amp; N0120), le système Epsilon n'autorise qu'un seul emplacement pour application externe. 
             <strong class="text-[#FFD700]">EquaLib contourne cette limitation</strong> en fournissant un lanceur modulaire autonome tout-en-un avec jeux natifs 60 FPS, outils scientifiques et fiches de révision.
           </p>
 
@@ -725,11 +725,11 @@
                 <span>📟</span> Modèle cible :
               </span>
               <div class="flex items-center gap-1 bg-[#09152B] border-2 border-[#1B3B6F] p-0.5 rounded-none shadow-[1px_1px_0px_#01040A]">
-                <button type="button" id="model-select-n0120" class="px-2.5 py-1 rounded-none text-xs font-mono font-bold transition-all bg-[#FFD700] text-black border-2 border-black cursor-pointer shadow-[2px_2px_0px_#01040A]" title="NumWorks N0120 (Cortex-M7 @ 550MHz)">
-                  N0120
+                <button type="button" id="model-select-n0110" class="px-2.5 py-1 rounded-none text-xs font-mono font-bold transition-all bg-[#FFD700] text-black border-2 border-black cursor-pointer shadow-[2px_2px_0px_#01040A]" title="NumWorks N0110 &amp; N0115 (Cortex-M7 @ 216MHz)">
+                  N0110 / N0115
                 </button>
-                <button type="button" id="model-select-n0110" class="px-2.5 py-1 rounded-none text-xs font-mono font-semibold transition-all text-[#8EA5C8] hover:text-[#F8FAFC] cursor-pointer" title="NumWorks N0110 (Cortex-M7 @ 216MHz)">
-                  N0110
+                <button type="button" id="model-select-n0120" class="px-2.5 py-1 rounded-none text-xs font-mono font-semibold transition-all text-[#8EA5C8] hover:text-[#F8FAFC] cursor-pointer" title="NumWorks N0120 (Cortex-M7 @ 550MHz)">
+                  N0120
                 </button>
               </div>
             </div>
@@ -809,8 +809,8 @@
           </p>
           <ul class="space-y-2 text-[11px] leading-relaxed">
             <li class="p-2 bg-[#030814] border border-[#1B3B6F]">
-              <strong class="text-[#FFD700]">1. Mauvais modèle sélectionné (N0110 vs N0120) :</strong><br>
-              Plus de 90% des NumWorks au lycée sont des <strong class="text-white">N0110</strong>. Cliquez sur le bouton <strong class="text-[#00E5FF]">« N0110 »</strong> juste au-dessus du bouton jaune avant d'installer.
+              <strong class="text-[#FFD700]">1. Profil matériel (N0110 / N0115 vs N0120) :</strong><br>
+              Plus de 95% des NumWorks au lycée sont des <strong class="text-white">N0110 ou N0115</strong> (port Micro-USB ou USB-C avec processeur STM32F730). Le profil <strong class="text-[#00E5FF]">« N0110 / N0115 »</strong> est activé par défaut. Si vous possédez une N0120 (processeur STM32H725 @ 550MHz), sélectionnez « N0120 ».
             </li>
             <li class="p-2 bg-[#030814] border border-[#1B3B6F]">
               <strong class="text-[#FFD700]">2. Mode Examen actif (LED rouge clignotante) :</strong><br>

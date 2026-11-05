@@ -325,7 +325,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const SETTINGS_STORAGE_KEY = 'equalib_user_settings';
   let userSettings = {
-    targetModel: 'N0120',
+    targetModel: 'N0110', // Défaut : N0110 / N0115 (majorité absolue des calculatrices)
     displayMode: 'gallery', // Défaut : galerie carrée comme demandé
     showTooltips: true,
     glassMode: true,
@@ -360,8 +360,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
   window.saveUserSettings = saveUserSettings;
 
+  function isN110orN115(model) {
+    if (!model) return true;
+    return model === 'N0110' || model === 'N0115' || model.includes('110') || model.includes('115');
+  }
+
   function setTargetModel(model, save = true) {
-    const isN110 = (model === 'N0110' || (model && model.includes('110')));
+    const isN110 = isN110orN115(model);
     userSettings.targetModel = isN110 ? 'N0110' : 'N0120';
     if (save) saveUserSettings();
 
@@ -384,19 +389,22 @@ document.addEventListener('DOMContentLoaded', async () => {
       const slotAddr = (usb && usb.isConnected && usb.flashAddress) 
         ? ` - Slot 0x${usb.flashAddress.toString(16)}` 
         : (isN110 ? ' - Slot 0x90200000' : ' - Slot 0x90180000');
-      modelText.textContent = `${userSettings.targetModel}${modeSuffix}${slotAddr}`;
+      const displayedName = (usb && usb.isConnected)
+        ? usb.model
+        : (isN110 ? 'NumWorks N0110 / N0115' : 'NumWorks N0120');
+      modelText.textContent = `${displayedName}${modeSuffix}${slotAddr}`;
     }
 
     if (downloadBtn) {
-      downloadBtn.innerHTML = `<span>💾</span> <span>Télécharger .nwa (${userSettings.targetModel})</span>`;
+      downloadBtn.innerHTML = `<span>💾</span> <span>Télécharger .nwa (${isN110 ? 'N0110/N0115' : 'N0120'})</span>`;
     }
 
     const memLabel = document.getElementById('memory-flash-label');
     if (memLabel) {
-      memLabel.textContent = `Mémoire Flash QSPI (${userSettings.targetModel})`;
+      memLabel.textContent = `Mémoire Flash QSPI (${isN110 ? 'N0110 / N0115' : 'N0120'})`;
     }
 
-    const specText = isN110 ? 'NumWorks N0110 (STM32F730 @ 216 MHz)' : 'NumWorks N0120 (STM32H725 @ 550 MHz)';
+    const specText = isN110 ? 'NumWorks N0110 & N0115 (STM32F730 @ 216 MHz)' : 'NumWorks N0120 (STM32H725 @ 550 MHz)';
     const footerSpec = document.getElementById('footer-model-spec');
     if (footerSpec) footerSpec.textContent = specText;
 
@@ -404,7 +412,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (helpModel) helpModel.textContent = specText;
 
     const modalControls = document.getElementById('modal-controls-model');
-    if (modalControls) modalControls.textContent = userSettings.targetModel;
+    if (modalControls) modalControls.textContent = isN110 ? 'N0110 / N0115' : 'N0120';
   }
 
   modelSelectN0120?.addEventListener('click', () => {
@@ -418,11 +426,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.soundFx?.playClick();
     userSettings.manualModel = 'N0110';
     setTargetModel('N0110', true);
-    showToast('Modèle cible : NumWorks N0110 (Cortex-M7 @ 216MHz)', 'info');
+    showToast('Modèle cible : NumWorks N0110 & N0115 (Cortex-M7 @ 216MHz)', 'info');
   });
 
   // Initialisation du modèle cible
-  setTargetModel(userSettings.targetModel || 'N0120', false);
+  setTargetModel(userSettings.targetModel || 'N0110', false);
 
   function applyCustomColorVariables(hex) {
     const DEFAULT_PRIMARY = '#FFD700';
@@ -2475,7 +2483,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       showToast('Calculatrice déconnectée', 'info');
     } else {
       try {
-        const preferred = userSettings.manualModel || userSettings.targetModel || 'N0120';
+        const preferred = userSettings.manualModel || userSettings.targetModel || 'N0110';
         const res = await usb.connect(preferred);
         connectionDot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse';
         connectionText.textContent = 'Connectée';
@@ -2483,12 +2491,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         modelText.textContent = `${res.model} (${res.mode})${slotText}`;
         connectBtn.innerHTML = '<span>✕</span> <span class="hidden sm:inline">Déconnecter</span>';
         
-        let detectedModel = res.model.includes('N0110') ? 'N0110' : 'N0120';
-        if (userSettings.manualModel === 'N0110') {
-          detectedModel = 'N0110';
+        const isDetectedN110 = isN110orN115(res.model);
+        let detectedModel = isDetectedN110 ? 'N0110' : 'N0120';
+        if (userSettings.manualModel) {
+          detectedModel = isN110orN115(userSettings.manualModel) ? 'N0110' : 'N0120';
         }
         setTargetModel(detectedModel, true);
-        showToast(`NumWorks connectée (${detectedModel} - ${res.mode}) !`, 'success');
+        showToast(`NumWorks connectée (${res.model} - ${res.mode}) !`, 'success');
       } catch (err) {
         showToast(err.message || 'Échec de connexion USB', 'error');
       }
@@ -2510,10 +2519,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     try {
-      const activeModel = (userSettings.manualModel || userSettings.targetModel || 'N0120').toUpperCase();
-      const isN110 = activeModel.includes('110');
+      const activeModel = (userSettings.manualModel || userSettings.targetModel || 'N0110').toUpperCase();
+      const isN110 = isN110orN115(activeModel);
       const modelSuffix = isN110 ? 'n0110' : 'n0120';
-      showToast(`Génération du pack natif ${isN110 ? 'N0110' : 'N0120'} avec vos ${selectedApps.length} applications...`, 'info');
+      showToast(`Génération du pack natif ${isN110 ? 'N0110 / N0115' : 'N0120'} avec vos ${selectedApps.length} applications...`, 'info');
       const wpBytes = window.customWallpaperRGB565 || (window.wallpaperStudio?.generateRGB565Bytes?.());
       const effectiveTheme = (wpBytes && (userSettings.theme === 'custom' || userSettings.theme === 'default')) ? 'custom' : userSettings.theme;
       const bundle = await bundler.buildBundle(selectedApps, 'nwa', { 
@@ -2568,8 +2577,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   flashBtn.addEventListener('click', async () => {
-    // Si l'utilisateur a choisi N0110 dans l'interface, on préserve impérativement son choix
-    const isUserChoiceN110 = (userSettings.manualModel === 'N0110' || userSettings.targetModel === 'N0110');
+    // Si l'utilisateur a choisi N0110 / N0115 dans l'interface, on préserve impérativement son choix
+    const isUserChoiceN110 = isN110orN115(userSettings.manualModel || userSettings.targetModel);
 
     if (!usb.isConnected) {
       showToast('Ouverture du sélecteur USB...', 'info');
@@ -2582,11 +2591,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         modelText.textContent = `${res.model} (${res.mode})${slotText}`;
         connectBtn.innerHTML = '<span>✕</span> <span class="hidden sm:inline">Déconnecter</span>';
         
-        // Si l'utilisateur a choisi N0110, préserver IMPÉRATIVEMENT son choix
-        const detectedModel = isUserChoiceN110 ? 'N0110' : (res.model.includes('N0110') ? 'N0110' : 'N0120');
+        // Si l'utilisateur a choisi N0110/N0115, préserver IMPÉRATIVEMENT son choix
+        const isDetectedN110 = isN110orN115(res.model);
+        const detectedModel = isUserChoiceN110 ? (userSettings.manualModel || 'N0110') : (isDetectedN110 ? 'N0110' : 'N0120');
         setTargetModel(detectedModel, true);
         window.soundFx?.playClick();
-        showToast(`NumWorks détectée (${detectedModel} - ${res.mode}) !`, 'success');
+        showToast(`NumWorks détectée (${res.model} - ${res.mode}) !`, 'success');
       } catch (e) {
         window.soundFx?.playHit();
         showToast(e.message || 'Échec de connexion USB', 'error');
@@ -2600,8 +2610,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       flashProgress.style.width = '0%';
       progressText.textContent = `Génération du pack personnalisé (${selectedApps.length} application${selectedApps.length > 1 ? 's' : ''})...`;
 
-      // 1. Détermination STRICTE du modèle cible : si userSettings est N0110 ou usb est N0110 -> N0110 !
-      const isTargetN110 = (isUserChoiceN110 || userSettings.targetModel === 'N0110' || (usb.isConnected && usb.model.includes('N0110')));
+      // 1. Détermination STRICTE du modèle cible : si userSettings est N0110/N0115 ou usb est N0110/N0115 -> N0110 !
+      const isTargetN110 = (isUserChoiceN110 || isN110orN115(userSettings.targetModel) || (usb.isConnected && isN110orN115(usb.model)));
       const targetModel = isTargetN110 ? 'N0110' : 'N0120';
 
       // Synchroniser usb avec le modèle cible

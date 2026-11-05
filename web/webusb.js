@@ -58,10 +58,10 @@ class NumWorksWebUSB {
   constructor() {
     this.device = null;
     this.isConnected = false;
-    this.model = 'NumWorks N0120';
+    this.model = 'NumWorks N0110 / N0115';
     this.mode = 'Inconnu';
-    this.flashAddress = DEFAULT_FLASH_ADDR_N0120;
-    this.ramAddress = 0x240118a4;
+    this.flashAddress = DEFAULT_FLASH_ADDR_N0110;
+    this.ramAddress = 0x20000000;
     this.interfaceNumber = 0;
     this.alternateSetting = 0;
     this._addrBuf = new ArrayBuffer(5);
@@ -70,6 +70,14 @@ class NumWorksWebUSB {
     this._eraseBuf = new ArrayBuffer(5);
     this._eraseView = new DataView(this._eraseBuf);
     this._eraseView.setUint8(0, ST_DFU_COMMANDS.ERASE_PAGE);
+  }
+
+  /**
+   * Vérifie si un modèle correspond à l'architecture STM32F730 (N0110 / N0115)
+   */
+  isN110Model(m = this.model) {
+    if (!m) return true;
+    return m === 'N0110' || m === 'N0115' || m.includes('110') || m.includes('115');
   }
 
   isSupported() {
@@ -82,7 +90,7 @@ class NumWorksWebUSB {
    */
   async extractFirmwareInfos() {
     try {
-      const isN0110 = (this.model === 'NumWorks N0110');
+      const isN0110 = this.isN110Model();
       const ramStart = isN0110 ? 0x20000000 : 0x24000000;
 
       // Lecture 16 octets SlotInfo en RAM (conforme nwlink, Alternate 0 natif)
@@ -140,11 +148,19 @@ class NumWorksWebUSB {
 
   /**
    * Force ou synchronise manuellement le modèle cible et ses adresses mémoire
-   * @param {string} model 'N0110' ou 'N0120'
+   * @param {string} model 'N0110', 'N0115' ou 'N0120'
    */
   setTargetModel(model) {
-    const isN110 = (model === 'N0110' || (model && model.includes('110')));
-    this.model = isN110 ? 'NumWorks N0110' : 'NumWorks N0120';
+    const isN110 = this.isN110Model(model);
+    if (!isN110) {
+      this.model = 'NumWorks N0120';
+    } else if (model && model.includes('115') && !model.includes('110')) {
+      this.model = 'NumWorks N0115';
+    } else if (model && model.includes('110') && !model.includes('115')) {
+      this.model = 'NumWorks N0110';
+    } else {
+      this.model = 'NumWorks N0110 / N0115';
+    }
     this.flashAddress = isN110 ? DEFAULT_FLASH_ADDR_N0110 : DEFAULT_FLASH_ADDR_N0120;
     this.ramAddress = isN110 ? 0x20000000 : 0x240118a4;
     console.log(`[WebUSB] Modèle synchronisé : ${this.model} (Flash: 0x${this.flashAddress.toString(16)}, RAM: 0x${this.ramAddress.toString(16)})`);
@@ -245,12 +261,13 @@ class NumWorksWebUSB {
 
       const effectiveBcd = (rawBcd !== null) ? rawBcd : bcdFromProps;
 
-      const isPrefN110 = (preferredModel === 'N0110' || (preferredModel && preferredModel.includes('110')));
+      const isPrefN110 = this.isN110Model(preferredModel);
       const isPrefN120 = (preferredModel === 'N0120' || (preferredModel && preferredModel.includes('120')));
 
       // Détection officielle NumWorks (conforme nwlink) :
       // - Seul le modèle N0120 a deviceVersionMinor === 2 (bcdDevice 0x0120) ou bootloader Scandium (0xA51A)
-      // - TOUTES les autres NumWorks (y compris minor=0, minor=1, bcd 0x0110, DFU STM32) sont des N0110
+      // - Le modèle N0115 a bcdDevice 0x0115 (subminor = 5) avec le même MCU STM32F730 que N0110
+      // - TOUTES les autres NumWorks (y compris minor=0, minor=1, bcd 0x0110, DFU STM32) sont des N0110 / N0115
       const isExplicitN0120 = (
         minor === 2 ||
         (major === 1 && minor === 2) ||
@@ -261,24 +278,34 @@ class NumWorksWebUSB {
         prodName.includes('Scandium')
       );
 
-      const isExplicitN0110 = (
-        effectiveBcd === 0x0110 ||
+      const isExplicitN0115 = (
         effectiveBcd === 0x0115 ||
-        (major === 1 && minor === 1) ||
+        prodName.includes('N0115') ||
+        (major === 1 && minor === 1 && subminor === 5)
+      );
+
+      const isExplicitN0110 = (
+        isExplicitN0115 ||
+        effectiveBcd === 0x0110 ||
+        (major === 1 && (minor === 1 || minor === 0)) ||
         pid === NUMWORKS_PIDS.DFU_STM32 ||
         prodName.includes('STM32') ||
         prodName.includes('N0110') ||
         prodName.includes('F7')
       );
 
-      let modelName = 'NumWorks N0110'; // N0110 EST LE MODÈLE PAR DÉFAUT (majorité des calculatrices)
+      let modelName = 'NumWorks N0110 / N0115'; // Modèle par défaut (majorité absolue des calculatrices)
 
-      if (isPrefN110) {
-        modelName = 'NumWorks N0110';
-      } else if (isExplicitN0120) {
+      if (isExplicitN0120) {
         modelName = 'NumWorks N0120';
+      } else if (isExplicitN0115) {
+        modelName = 'NumWorks N0115';
+      } else if (isExplicitN0110) {
+        modelName = 'NumWorks N0110';
       } else if (isPrefN120 && !isExplicitN0110) {
         modelName = 'NumWorks N0120';
+      } else if (isPrefN110) {
+        modelName = (preferredModel && preferredModel.includes('115')) ? 'NumWorks N0115' : 'NumWorks N0110 / N0115';
       }
 
       let modeName = 'Epsilon OS';
@@ -290,7 +317,7 @@ class NumWorksWebUSB {
 
       this.model = modelName;
       this.mode = modeName;
-      const isN0110 = (this.model === 'NumWorks N0110');
+      const isN0110 = this.isN110Model();
       this.flashAddress = isN0110 ? DEFAULT_FLASH_ADDR_N0110 : DEFAULT_FLASH_ADDR_N0120;
       this.ramAddress = isN0110 ? 0x20000000 : 0x240118a4;
 
@@ -530,7 +557,7 @@ class NumWorksWebUSB {
    * Quitte le mode DFU et déclenche l'exécution du code Flash
    */
   async leave(resetAddress = null) {
-    const isN0110 = (this.model === 'NumWorks N0110');
+    const isN0110 = this.isN110Model();
     const defaultForModel = isN0110 ? DEFAULT_FLASH_ADDR_N0110 : DEFAULT_FLASH_ADDR_N0120;
     const targetReset = (resetAddress && resetAddress !== 0x90000000) ? resetAddress : (this.flashAddress || defaultForModel);
     console.log(`[WebUSB] Sortie DFU vers 0x${targetReset.toString(16)}...`);
@@ -550,7 +577,7 @@ class NumWorksWebUSB {
    * Flashe le binaire complet dans le slot d'applications externes de la NumWorks
    * @param {ArrayBuffer|Uint8Array} binaryData Données binaires exécutables
    * @param {Function} onProgress Callback de progression ({ phase, percent, message })
-   * @param {number|null} targetFlashAddr Adresse optionnelle de destination en Flash (0x90200000 pour N0110, 0x90180000 pour N0120)
+   * @param {number|null} targetFlashAddr Adresse optionnelle de destination en Flash (0x90200000 pour N0110/N0115, 0x90180000 pour N0120)
    */
   async flashBinary(binaryData, onProgress = () => {}, targetFlashAddr = null) {
     if (!this.isConnected || !this.device) {
@@ -569,7 +596,7 @@ class NumWorksWebUSB {
     if (uint8[0] === 0x7F && uint8[1] === 0x45 && uint8[2] === 0x4C && uint8[3] === 0x46) {
       console.warn("[WebUSB] Détection d'un fichier ELF .nwa. Liaison automatique vers binaire exécutable .bin...");
       if (typeof EquaLibLinker !== 'undefined' && EquaLibLinker.convertNwaToBin) {
-        const isN0110 = (this.model === 'NumWorks N0110');
+        const isN0110 = this.isN110Model();
         const defaultForModel = isN0110 ? DEFAULT_FLASH_ADDR_N0110 : DEFAULT_FLASH_ADDR_N0120;
         const converted = await EquaLibLinker.convertNwaToBin(uint8, {
           flashStart: '0x' + (targetFlashAddr || this.flashAddress || defaultForModel).toString(16),
@@ -579,15 +606,15 @@ class NumWorksWebUSB {
         });
         return await this.flashBinary(converted, onProgress, targetFlashAddr);
       }
-      const modelBin = (this.model === 'NumWorks N0110') ? 'equalib_n0110.bin' : 'equalib_n0120.bin';
+      const modelBin = this.isN110Model() ? 'equalib_n0110.bin' : 'equalib_n0120.bin';
       const binResp = await fetch(`${modelBin}?v=${Date.now()}`);
       if (binResp.ok) {
         return await this.flashBinary(await binResp.arrayBuffer(), onProgress, targetFlashAddr);
       }
     }
 
-    // Utilisation de l'adresse de slot appropriée (N0110: 0x90200000, N0120: 0x90180000)
-    const isN0110 = (this.model === 'NumWorks N0110');
+    // Utilisation de l'adresse de slot appropriée (N0110/N0115: 0x90200000, N0120: 0x90180000)
+    const isN0110 = this.isN110Model();
     const defaultForModel = isN0110 ? DEFAULT_FLASH_ADDR_N0110 : DEFAULT_FLASH_ADDR_N0120;
     const flashAddress = (targetFlashAddr && targetFlashAddr !== 0x90000000) 
       ? targetFlashAddr 
@@ -687,7 +714,7 @@ class NumWorksWebUSB {
    * Alias de compatibilité ascendante pour flashBinary
    */
   async flashBundle(bundleData, onProgress = () => {}) {
-    return await this.flashBinary(bundleData, onProgress, DEFAULT_FLASH_ADDR);
+    return await this.flashBinary(bundleData, onProgress, this.flashAddress);
   }
 }
 

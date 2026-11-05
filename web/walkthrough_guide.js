@@ -59,7 +59,7 @@
         targetSelector: '#model-select-n0120',
         title: '1. Choix du Modèle NumWorks',
         badge: 'Étape 1 / 5',
-        text: 'Sélectionnez votre modèle de calculatrice : NumWorks N0120 (Cortex-M7 @ 550 MHz) ou N0110 (Cortex-M7 @ 216 MHz). EquaLib adapte dynamiquement l\'adressage mémoire Flash (slot 0x90180000 ou 0x90200000) et les exécutables ARM.',
+        text: 'Sélectionnez votre modèle de calculatrice : NumWorks N0110 / N0115 (Cortex-M7 @ 216 MHz) ou N0120 (Cortex-M7 @ 550 MHz). EquaLib adapte dynamiquement l\'adressage mémoire Flash (slot 0x90200000 ou 0x90180000) et les exécutables ARM.',
         beforeStep: function () {}
       },
       {
