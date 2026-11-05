@@ -213,8 +213,20 @@ document.addEventListener('DOMContentLoaded', async () => {
   let searchQuery = '';
   let catalogSearchText = '';
   
-  const usb = new NumWorksWebUSB();
-  const bundler = new EquaLibBundler();
+  let usb = null;
+  try {
+    const WebUSBClass = window.NumWorksWebUSB || (typeof NumWorksWebUSB !== 'undefined' ? NumWorksWebUSB : null);
+    if (WebUSBClass) usb = new WebUSBClass();
+  } catch (e) {
+    console.warn('NumWorksWebUSB non disponible:', e);
+  }
+  let bundler = null;
+  try {
+    const BundlerClass = window.EquaLibBundler || (typeof EquaLibBundler !== 'undefined' ? EquaLibBundler : null);
+    if (BundlerClass) bundler = new BundlerClass();
+  } catch (e) {
+    console.warn('EquaLibBundler non disponible:', e);
+  }
   window.usb = usb;
   window.bundler = bundler;
 
@@ -1497,9 +1509,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Initialisation du Studio Fond d'écran
   const studioRoot = document.getElementById('wallpaper-studio-root');
   if (studioRoot && typeof window.EquaLibWallpaperStudio === 'function') {
-    const studio = new window.EquaLibWallpaperStudio();
-    studio.mount(studioRoot);
-    window.wallpaperStudio = studio;
+    try {
+      const studio = new window.EquaLibWallpaperStudio();
+      studio.mount(studioRoot);
+      window.wallpaperStudio = studio;
+    } catch (errStudio) {
+      console.warn('Erreur initialisation WallpaperStudio (non-bloquante) :', errStudio);
+    }
   }
 
 
@@ -1696,13 +1712,41 @@ document.addEventListener('DOMContentLoaded', async () => {
   initColorWheel();
 
   // ==================== CHARGEMENT DES BASES DE DONNÉES ====================
+  const FALLBACK_CATALOG = [
+    { id: "mariokart", name: "Super Mario Kart 3D", author: "MathDS & EquaLib", version: "2.0", size_kb: 750, category: "Jeux / Arcade", description: "Vrai jeu 3D Mode 7 complet pour NumWorks N0120 avec 8 pilotes, IA, objets et 4 circuits authentiques.", icon_initial: "🏎️", icon_url: "assets/icons/mariokart.png", color: "#EF4444", recommended: true },
+    { id: "periodique", name: "Tableau Périodique", author: "Mendeleïev & EquaLib", version: "2.0", size_kb: 120, category: "Sciences", description: "118 éléments chimiques avec masses molaires, configurations électroniques et familles.", icon_initial: "🧪", color: "#10B981", recommended: true },
+    { id: "fiches", name: "Fiches de Cours & Formules", author: "EquaLib Study", version: "1.2", size_kb: 85, category: "Révision", description: "Formulaires complets : Maths (dérivées, intégrales, trigo, suites), Physique et Chimie.", icon_initial: "📚", color: "#F59E0B", recommended: true },
+    { id: "math_solver", name: "Solveur de Maths 2nd Degré", author: "EquaLib Math", version: "1.1", size_kb: 60, category: "Maths", description: "Résolution d'équations ax²+bx+c=0, calcul de Delta et racines réelles ou complexes.", icon_initial: "📐", color: "#3B82F6", recommended: true },
+    { id: "comm_flappy", name: "Flappy Bird NW", author: "EquaLib Arcade", version: "1.4", size_kb: 25, category: "Jeux / Arcade", description: "Le célèbre jeu Flappy Bird adapté en C natif 60 FPS pour NumWorks N0120.", icon_initial: "🐦", icon_url: "assets/icons/flappy.png", color: "#EAB308", recommended: true },
+    { id: "comm_2048", name: "2048 Ultimate", author: "EquaLib Arcade", version: "2.0", size_kb: 28, category: "Jeux / Arcade", description: "Le puzzle 2048 en C natif 60 FPS : fusionnez les tuiles avec les flèches directionnelles.", icon_initial: "🔢", icon_url: "assets/icons/2048.png", color: "#F97316", recommended: true },
+    { id: "comm_snake", name: "Snake Classic", author: "EquaLib Arcade", version: "1.2", size_kb: 22, category: "Jeux / Arcade", description: "Le jeu du serpent rétro en C natif 60 FPS avec vitesse progressive et gestion de records.", icon_initial: "🐍", icon_url: "assets/icons/snake.png", color: "#22C55E", recommended: true },
+    { id: "comm_tetris", name: "Tetris NumWorks", author: "EquaLib Arcade", version: "1.5", size_kb: 35, category: "Jeux / Arcade", description: "Le jeu de briques légendaire en C natif 60 FPS avec 7 tétraminos et score.", icon_initial: "🧱", icon_url: "assets/icons/tetris.png", color: "#06B6D4", recommended: true },
+    { id: "comm_minesweeper", name: "Démineur NumWorks", author: "EquaLib Arcade", version: "1.0", size_kb: 26, category: "Jeux / Arcade", description: "Démineur complet en C natif 60 FPS avec drapeaux, révélation auto et smiley.", icon_initial: "💣", icon_url: "assets/icons/minesweeper.png", color: "#EF4444", recommended: true },
+    { id: "pong", name: "Pong Retro Arcade", author: "EquaLib Arcade", version: "1.2", size_kb: 20, category: "Jeux / Arcade", description: "Le classique Pong revisité avec néons, rebonds rapides, IA fluide et score à 7.", icon_initial: "🏓", color: "#6366F1", recommended: true },
+    { id: "dino", name: "Chrome Dino Runner", author: "EquaLib Arcade", version: "1.3", size_kb: 22, category: "Jeux / Arcade", description: "Courez et sautez au-dessus des cactus et ptérodactyles dans ce runner rétro infini.", icon_initial: "🦖", icon_url: "assets/icons/dino.png", color: "#78716C", recommended: true },
+    { id: "space_invaders", name: "Space Invaders Retro", author: "EquaLib Arcade", version: "1.2", size_kb: 28, category: "Jeux / Arcade", description: "Défendez la Terre contre les vagues d'aliens avec votre canon laser et bunkers protecteurs.", icon_initial: "👾", icon_url: "assets/icons/space_invaders.png", color: "#10B981", recommended: true },
+    { id: "breakout", name: "Casse-Briques (Breakout)", author: "EquaLib Arcade", version: "1.2", size_kb: 24, category: "Jeux / Arcade", description: "Détruisez les briques colorées avec votre balle rebondissante et raquette dynamique.", icon_initial: "🧱", icon_url: "assets/icons/breakout.png", color: "#F59E0B", recommended: true },
+    { id: "puissance4", name: "Puissance 4", author: "EquaLib Arcade", version: "1.1", size_kb: 26, category: "Jeux / Arcade", description: "Le duel stratégique : alignez 4 jetons contre l'IA intelligente ou un ami.", icon_initial: "🟡", icon_url: "assets/icons/puissance4.png", color: "#3B82F6", recommended: true },
+    { id: "morpion", name: "Morpion (Tic-Tac-Toe)", author: "EquaLib Arcade", version: "1.1", size_kb: 20, category: "Jeux / Arcade", description: "Alignez 3 symboles face à une IA imbattable (Minimax) ou en mode 2 joueurs.", icon_initial: "❌", icon_url: "assets/icons/morpion.png", color: "#EC4899", recommended: true }
+  ];
+
   try {
+    const fetchBuster = '?v=' + Date.now();
     const [catRes, commRes] = await Promise.all([
-      fetch('catalog.json'),
-      fetch('community_apps.json')
+      fetch('catalog.json' + fetchBuster).catch(() => null),
+      fetch('community_apps.json' + fetchBuster).catch(() => null)
     ]);
-    catalogApps = await catRes.json();
-    communityApps = await commRes.json();
+    if (catRes && catRes.ok) {
+      catalogApps = await catRes.json();
+    } else {
+      console.warn('Utilisation du catalogue de secours intégré');
+      catalogApps = FALLBACK_CATALOG;
+    }
+    if (commRes && commRes.ok) {
+      communityApps = await commRes.json();
+    } else {
+      communityApps = [];
+    }
 
     renderCatalog();
     renderCommunitySearch();
