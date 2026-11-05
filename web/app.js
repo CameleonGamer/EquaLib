@@ -2624,9 +2624,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       progressText.textContent = 'Préparation du flash USB...';
 
       // 2. Flashage USB DFU réel vers le slot approprié (0x90200000 sur N0110, 0x90180000 sur N0120)
-      const targetFlashAddr = isTargetN110 
-        ? DEFAULT_FLASH_ADDR_N0110 
-        : (usb.flashAddress || DEFAULT_FLASH_ADDR_N0120);
+      const defaultForModel = isTargetN110 ? DEFAULT_FLASH_ADDR_N0110 : DEFAULT_FLASH_ADDR_N0120;
+      const targetFlashAddr = (usb.flashAddress && usb.flashAddress !== 0x90000000) 
+        ? usb.flashAddress 
+        : defaultForModel;
 
       await usb.flashBinary(bundle.arrayBuffer, (progress) => {
         const percent = (typeof progress === 'number') ? progress : progress.percent;

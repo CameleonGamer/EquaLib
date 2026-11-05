@@ -85,39 +85,47 @@ class NumWorksWebUSB {
       const isN0110 = (this.model === 'NumWorks N0110');
       const ramStart = isN0110 ? 0x20000000 : 0x24000000;
 
-      // Basculer vers Alternate 1 (RAM) si disponible
-      if (this.device && this.device.selectAlternateInterface) {
-        await this.device.selectAlternateInterface(this.interfaceNumber, 1);
-        await this.abortToIdle();
-
-        // Lire 16 octets de SlotInfo en RAM (magic BADBEEEF)
+      // Lecture 16 octets SlotInfo en RAM (conforme nwlink, Alternate 0 natif)
+      let slotBuf = null;
+      try {
         await this.setAddress(ramStart);
-        const slotBuf = await this.controlTransferIn(DFU_REQUESTS.UPLOAD, 2, 16);
+        slotBuf = await this.controlTransferIn(DFU_REQUESTS.UPLOAD, 2, 16);
+      } catch (directRamErr) {
+        // Fallback Alternate 1 uniquement si supporté par le contrôleur
+        if (this.device && this.device.selectAlternateInterface) {
+          try {
+            await this.device.selectAlternateInterface(this.interfaceNumber, 1);
+            await this.abortToIdle();
+            await this.setAddress(ramStart);
+            slotBuf = await this.controlTransferIn(DFU_REQUESTS.UPLOAD, 2, 16);
+          } finally {
+            try {
+              await this.device.selectAlternateInterface(this.interfaceNumber, 0);
+              await this.abortToIdle();
+            } catch (_) {}
+          }
+        }
+      }
 
-        // Rebasculer immédiatement vers Alternate 0 (Flash)
-        await this.device.selectAlternateInterface(this.interfaceNumber, 0);
-        await this.abortToIdle();
-
-        if (slotBuf && slotBuf.byteLength >= 16) {
-          const u8 = new Uint8Array(slotBuf.buffer, slotBuf.byteOffset, 16);
-          const isBadBeef = (u8[0] === 0xEF && u8[1] === 0xEE && u8[2] === 0xDB && u8[3] === 0xBA);
-          if (isBadBeef) {
-            const dv = new DataView(slotBuf.buffer, slotBuf.byteOffset);
-            const userlandHeaderAddr = dv.getUint32(8, true);
-            if (userlandHeaderAddr >= 0x90000000 && userlandHeaderAddr < 0x90400000) {
-              await this.setAddress(userlandHeaderAddr);
-              const userlandBuf = await this.controlTransferIn(DFU_REQUESTS.UPLOAD, 2, 48);
-              if (userlandBuf && userlandBuf.byteLength >= 28) {
-                const uH = new Uint8Array(userlandBuf.buffer, userlandBuf.byteOffset, userlandBuf.byteLength);
-                const isFeedCode = (uH[0] === 0xDE && uH[1] === 0xC0 && uH[2] === 0xED && uH[3] === 0xFE);
-                if (isFeedCode) {
-                  const udv = new DataView(userlandBuf.buffer, userlandBuf.byteOffset);
-                  const extFlashStart = udv.getUint32(20, true);
-                  if (extFlashStart >= 0x90000000 && extFlashStart < 0x90800000) {
-                    this.flashAddress = extFlashStart;
-                    console.log(`[WebUSB] Slot d'applications externes matériel confirmé : 0x${this.flashAddress.toString(16)}`);
-                    return this.flashAddress;
-                  }
+      if (slotBuf && slotBuf.byteLength >= 16) {
+        const u8 = new Uint8Array(slotBuf.buffer, slotBuf.byteOffset, 16);
+        const isBadBeef = (u8[0] === 0xEF && u8[1] === 0xEE && u8[2] === 0xDB && u8[3] === 0xBA);
+        if (isBadBeef) {
+          const dv = new DataView(slotBuf.buffer, slotBuf.byteOffset);
+          const userlandHeaderAddr = dv.getUint32(8, true);
+          if (userlandHeaderAddr >= 0x90000000 && userlandHeaderAddr < 0x90400000) {
+            await this.setAddress(userlandHeaderAddr);
+            const userlandBuf = await this.controlTransferIn(DFU_REQUESTS.UPLOAD, 2, 48);
+            if (userlandBuf && userlandBuf.byteLength >= 28) {
+              const uH = new Uint8Array(userlandBuf.buffer, userlandBuf.byteOffset, userlandBuf.byteLength);
+              const isFeedCode = (uH[0] === 0xDE && uH[1] === 0xC0 && uH[2] === 0xED && uH[3] === 0xFE);
+              if (isFeedCode) {
+                const udv = new DataView(userlandBuf.buffer, userlandBuf.byteOffset);
+                const extFlashStart = udv.getUint32(20, true);
+                if (extFlashStart >= 0x90000000 && extFlashStart < 0x90800000) {
+                  this.flashAddress = extFlashStart;
+                  console.log(`[WebUSB] Slot d'applications externes matériel confirmé : 0x${this.flashAddress.toString(16)}`);
+                  return this.flashAddress;
                 }
               }
             }
@@ -126,12 +134,6 @@ class NumWorksWebUSB {
       }
     } catch (e) {
       console.log('[WebUSB] Détection automatique du slot via RAM non disponible, utilisation du slot par défaut :', e.message);
-      try {
-        if (this.device && this.device.selectAlternateInterface) {
-          await this.device.selectAlternateInterface(this.interfaceNumber, 0);
-          await this.abortToIdle();
-        }
-      } catch (_) {}
     }
     return this.flashAddress;
   }
@@ -243,25 +245,40 @@ class NumWorksWebUSB {
 
       const effectiveBcd = (rawBcd !== null) ? rawBcd : bcdFromProps;
 
-      let modelName = 'NumWorks N0120';
       const isPrefN110 = (preferredModel === 'N0110' || (preferredModel && preferredModel.includes('110')));
+      const isPrefN120 = (preferredModel === 'N0120' || (preferredModel && preferredModel.includes('120')));
 
-      // Détection exhaustive du modèle conforme au protocole officiel nwlink :
-      // - 0x0110 (272) ou 0x0115 (277) : NumWorks N0110 (STM32F730)
-      // - 0x0120 (288) : NumWorks N0120 (STM32H725)
-      // - Mode DFU STM32 (0xDF11) : NumWorks N0110
-      // - Bootloader Scandium (0xA51A) : NumWorks N0120
-      if (effectiveBcd === 0x0110 || effectiveBcd === 0x0115 || (major === 1 && minor === 1)) {
+      // Détection officielle NumWorks (conforme nwlink) :
+      // - Seul le modèle N0120 a deviceVersionMinor === 2 (bcdDevice 0x0120) ou bootloader Scandium (0xA51A)
+      // - TOUTES les autres NumWorks (y compris minor=0, minor=1, bcd 0x0110, DFU STM32) sont des N0110
+      const isExplicitN0120 = (
+        minor === 2 ||
+        (major === 1 && minor === 2) ||
+        effectiveBcd === 0x0120 ||
+        pid === NUMWORKS_PIDS.SCANDIUM ||
+        prodName.includes('N0120') ||
+        prodName.includes('H7') ||
+        prodName.includes('Scandium')
+      );
+
+      const isExplicitN0110 = (
+        effectiveBcd === 0x0110 ||
+        effectiveBcd === 0x0115 ||
+        (major === 1 && minor === 1) ||
+        pid === NUMWORKS_PIDS.DFU_STM32 ||
+        prodName.includes('STM32') ||
+        prodName.includes('N0110') ||
+        prodName.includes('F7')
+      );
+
+      let modelName = 'NumWorks N0110'; // N0110 EST LE MODÈLE PAR DÉFAUT (majorité des calculatrices)
+
+      if (isPrefN110) {
         modelName = 'NumWorks N0110';
-      } else if (effectiveBcd === 0x0120 || (major === 1 && minor === 2)) {
+      } else if (isExplicitN0120) {
         modelName = 'NumWorks N0120';
-      } else if (pid === NUMWORKS_PIDS.DFU_STM32 || prodName.includes('STM32') || prodName.includes('N0110') || prodName.includes('F7')) {
-        modelName = 'NumWorks N0110';
-      } else if (pid === NUMWORKS_PIDS.SCANDIUM || prodName.includes('N0120') || prodName.includes('H7') || prodName.includes('Scandium')) {
+      } else if (isPrefN120 && !isExplicitN0110) {
         modelName = 'NumWorks N0120';
-      } else if (isPrefN110) {
-        // En cas de chaîne générique 'NumWorks Calculator', respecter le choix explicite de l'utilisateur
-        modelName = 'NumWorks N0110';
       }
 
       let modeName = 'Epsilon OS';
