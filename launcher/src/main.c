@@ -1528,8 +1528,8 @@ int main(int argc, char* argv[]) {
             s_anim_tick++;
             uint32_t num_frames = g_equalib_manifest.wallpaper_size / 153600;
             if (g_current_theme == 6 && num_frames > 1) {
-                /* Lecture ultra-fluide des frames GIF à 10 FPS (~100 ms = 5 * 20 ms) */
-                if (s_anim_tick >= 5) {
+                /* Lecture ultra-fluide des frames GIF à ~12.5 FPS (~80 ms = 4 * 20 ms) */
+                if (s_anim_tick >= 4) {
                     s_anim_tick = 0;
                     s_anim_frame_idx = (s_anim_frame_idx + 1) % num_frames;
                     draw_background_corridors(cur_th);

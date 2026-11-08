@@ -2682,7 +2682,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const displayLabel = isN120 ? 'N0120' : (isN115 ? 'N0115' : 'N0110 / N0115');
 
       showToast(`Génération du pack natif ${displayLabel} avec vos ${selectedApps.length} applications...`, 'info');
-      const wpBytes = window.customWallpaperRGB565 || (window.wallpaperStudio?.generateRGB565Bytes?.());
+      const wpBytes = window.customWallpaperRGB565 || (window.wallpaperStudio?.getWallpaperBytes?.()) || (window.wallpaperStudio?.generateRGB565Bytes?.());
       const effectiveTheme = (wpBytes && (userSettings.theme === 'custom' || userSettings.theme === 'default')) ? 'custom' : userSettings.theme;
       const bundle = await bundler.buildBundle(selectedApps, 'nwa', { 
         targetModel: targetModel,
@@ -2804,7 +2804,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         ? usb.flashAddress 
         : defaultForModel;
 
-      const wpBytes = window.customWallpaperRGB565 || (window.wallpaperStudio?.generateRGB565Bytes?.());
+      const wpBytes = window.customWallpaperRGB565 || (window.wallpaperStudio?.getWallpaperBytes?.()) || (window.wallpaperStudio?.generateRGB565Bytes?.());
       const effectiveTheme = (wpBytes && (userSettings.theme === 'custom' || userSettings.theme === 'default')) ? 'custom' : userSettings.theme;
       const bundle = await bundler.buildBundle(selectedApps, 'bin', { 
         targetModel: targetModel,

@@ -1555,10 +1555,10 @@
 
     /**
      * Décodeur natif pur JavaScript des images GIF animées (GIF87a / GIF89a avec LZW)
-     * Recompose fidèlement chaque image sur la toile logique et extrait un cycle fluide
-     * de maxFrames images redimensionnées en RGB565 (320x240) sans saccade ni découpe tronquée.
+     * Recompose fidèlement chaque image sur la toile logique et extrait l'intégralité
+     * du cycle d'animation (jusqu'à 30 frames réelles) en RGB565 (320x240) sans coupure.
      */
-    decodeGifFrames(buf, maxFrames = 6) {
+    decodeGifFrames(buf, maxFrames = 30) {
       if (!buf || buf.length < 13) return [];
       const screenW = buf[6] | (buf[7] << 8) || 320;
       const screenH = buf[8] | (buf[9] << 8) || 240;
@@ -1626,9 +1626,14 @@
           initD();
           let pix = new Uint8Array(w * h);
           let pIdx = 0, bitBuf = 0, bitCount = 0, prevCode = -1;
+          let endReached = false;
           while (p < buf.length) {
             let blen = buf[p++];
             if (blen === 0) break;
+            if (endReached) {
+              p += blen;
+              continue;
+            }
             for (let i = 0; i < blen; i++) {
               bitBuf |= (buf[p++] << bitCount);
               bitCount += 8;
@@ -1643,7 +1648,10 @@
                   prevCode = -1;
                   continue;
                 }
-                if (code === endCode) break;
+                if (code === endCode) {
+                  endReached = true;
+                  break;
+                }
                 let entry = (code < dict.length && dict[code]) ? dict[code] : (prevCode !== -1 && dict[prevCode] ? dict[prevCode].concat(dict[prevCode][0]) : []);
                 for (let k = 0; k < entry.length && pIdx < pix.length; k++) pix[pIdx++] = entry[k];
                 if (prevCode !== -1 && dict[prevCode] && dict.length < 4096) {
@@ -1654,6 +1662,10 @@
                   }
                 }
                 prevCode = code;
+              }
+              if (endReached) {
+                p += (blen - 1 - i);
+                break;
               }
             }
           }
@@ -1706,7 +1718,7 @@
         return allFrames;
       }
 
-      // Échantillonnage régulier sur l'ensemble de la boucle pour un mouvement complet et fluide
+      // Si le GIF dépasse la limite matérielle (ex: 60+ images), échantillonnage régulier sur 100% du cycle
       const sampled = [];
       for (let i = 0; i < maxFrames; i++) {
         const idx = Math.floor(i * allFrames.length / maxFrames);
@@ -1723,7 +1735,7 @@
         abReader.onload = (abe) => {
           try {
             const rawBuf = new Uint8Array(abe.target.result);
-            const frames = this.decodeGifFrames(rawBuf, 6);
+            const frames = this.decodeGifFrames(rawBuf, 30);
             if (frames && frames.length > 1) {
               this.gifMultiFrames = frames;
             } else {
@@ -1792,7 +1804,7 @@
         }
 
         const decodeAndApply = (rawBuf) => {
-          const frames = this.decodeGifFrames(rawBuf, 6);
+          const frames = this.decodeGifFrames(rawBuf, 30);
           if (frames && frames.length > 1) {
             this.gifMultiFrames = frames;
             this.autoSyncWallpaper();
@@ -2047,19 +2059,26 @@
     }
 
     /**
+     * Retourne les octets binaires complets du fond (image fixe 153.6 Ko ou multi-frames animé jusqu'à 30 frames)
+     */
+    getWallpaperBytes() {
+      if (this.gifMultiFrames && this.gifMultiFrames.length > 1) {
+        const totalLen = this.gifMultiFrames.length * 153600;
+        const multi = new Uint8Array(totalLen);
+        for (let i = 0; i < this.gifMultiFrames.length; i++) {
+          multi.set(this.gifMultiFrames[i], i * 153600);
+        }
+        return multi;
+      }
+      return this.generateRGB565Bytes();
+    }
+
+    /**
      * Auto-synchronise le fond d'écran actif dans window et localStorage
      */
     autoSyncWallpaper() {
       try {
-        let bytes = this.generateRGB565Bytes();
-        if (this.gifMultiFrames && this.gifMultiFrames.length > 1) {
-          const totalLen = this.gifMultiFrames.length * 153600;
-          const multi = new Uint8Array(totalLen);
-          for (let i = 0; i < this.gifMultiFrames.length; i++) {
-            multi.set(this.gifMultiFrames[i], i * 153600);
-          }
-          bytes = multi;
-        }
+        const bytes = this.getWallpaperBytes();
         const dataUrl = this.canvas ? this.canvas.toDataURL('image/png') : null;
 
         window.customWallpaperRGB565 = bytes;
@@ -2072,7 +2091,9 @@
             } catch (_) {}
           }
           try {
-            const b64 = this.uint8ToBase64(bytes);
+            // Sauvegarder jusqu'à 12 frames en local pour ne pas dépasser le quota 5Mo
+            const storeBytes = (bytes.length > 12 * 153600) ? bytes.subarray(0, 12 * 153600) : bytes;
+            const b64 = this.uint8ToBase64(storeBytes);
             localStorage.setItem('equalib_custom_wallpaper_rgb565', b64);
           } catch (_) {}
         }

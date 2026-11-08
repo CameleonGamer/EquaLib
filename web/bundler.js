@@ -29,6 +29,17 @@ class EquaLibBundler {
   /**
    * Recherche l'offset du manifeste EquaLib (Signature 'EQAL', version 1)
    */
+  sampleFrames(wpBytes, targetFrames) {
+    const totalFrames = Math.floor(wpBytes.length / 153600);
+    if (totalFrames <= targetFrames) return wpBytes;
+    const sampled = new Uint8Array(targetFrames * 153600);
+    for (let i = 0; i < targetFrames; i++) {
+      const srcFrame = Math.floor(i * totalFrames / targetFrames);
+      sampled.set(wpBytes.subarray(srcFrame * 153600, (srcFrame + 1) * 153600), i * 153600);
+    }
+    return sampled;
+  }
+
   findManifestOffset(buf) {
     const magic = [0x45, 0x51, 0x41, 0x4C]; // "EQAL"
     for (let i = 0; i <= buf.length - 24 - 20 * 144; i += 1) {
@@ -145,8 +156,15 @@ class EquaLibBundler {
     if (wallpaperBytes && wallpaperBytes.length > 0) {
       let finalWpBytes = wallpaperBytes;
       const isModel110 = (options.targetModel === 'N0110' || this.options?.targetModel === 'N0110' || (typeof window !== 'undefined' && window.userSettings?.targetModel === 'N0110'));
+      const isSlot58 = (options.flashAddress === 0x90580000 || options.targetModel === 'N0120_58');
+      const isModel115 = (options.targetModel === 'N0115' || options.flashAddress === 0x90600000);
+
       if (isModel110 && finalWpBytes.length > 153600) {
         finalWpBytes = finalWpBytes.slice(0, 153600);
+      } else if (isSlot58 && finalWpBytes.length > 11 * 153600) {
+        finalWpBytes = this.sampleFrames(finalWpBytes, 11);
+      } else if (isModel115 && finalWpBytes.length > 8 * 153600) {
+        finalWpBytes = this.sampleFrames(finalWpBytes, 8);
       }
 
       const wpOffset = (currentExtraOffset + 3) & ~3;
