@@ -122,7 +122,8 @@ class EquaLibBundler {
     let flags = 0;
     const themeName = (options.theme || this.options?.theme || (typeof window !== 'undefined' && window.userSettings?.theme) || 'default').toLowerCase();
     let themeIndex = 0;
-    if (themeName.includes('custom')) themeIndex = 6;
+    if (wallpaperBytes && wallpaperBytes.length > 153600) themeIndex = 6;
+    else if (themeName.includes('custom')) themeIndex = 6;
     else if (themeName.includes('sakura')) themeIndex = 1;
     else if (themeName.includes('hacker') || themeName.includes('matrix') || themeName.includes('cyber')) themeIndex = 2;
     else if (themeName.includes('bee') || themeName.includes('abeille')) themeIndex = 3;

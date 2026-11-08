@@ -1197,6 +1197,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!file) return;
     if (window.wallpaperStudio?.loadImageFile) {
       window.wallpaperStudio.loadImageFile(file, 'cover', true);
+      userSettings.theme = 'custom';
+      saveUserSettings();
+      applyUserSettings();
       if (modalGifStatus) {
         modalGifStatus.textContent = `✓ GIF "${file.name}" importé et appliqué !`;
         modalGifStatus.className = 'text-[10px] text-pink-400 font-bold';
@@ -1213,6 +1216,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (window.wallpaperStudio?.loadGifUrl) {
         window.wallpaperStudio.loadGifUrl(gifUrl, name);
       }
+      userSettings.theme = 'custom';
+      saveUserSettings();
+      applyUserSettings();
       if (modalGifStatus) {
         modalGifStatus.textContent = `✓ ${name} appliqué !`;
         modalGifStatus.className = 'text-[10px] text-pink-400 font-bold';

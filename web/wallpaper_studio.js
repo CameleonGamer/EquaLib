@@ -1557,7 +1557,7 @@
      * Décodeur natif pur JavaScript des images GIF animées (GIF87a / GIF89a avec LZW)
      * Extrait jusqu'à maxFrames images complètes redimensionnées en RGB565 (320x240)
      */
-    decodeGifFrames(buf, maxFrames = 3) {
+    decodeGifFrames(buf, maxFrames = 4) {
       if (!buf || buf.length < 13) return [];
       let gct = [];
       let p = 13;
@@ -1685,52 +1685,65 @@
 
     loadImageFile(file, fitMode = 'cover', applyDither = true) {
       const isGif = file.type === 'image/gif' || file.name.toLowerCase().endsWith('.gif');
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const dataUrl = e.target.result;
-        if (isGif) {
-          this.currentGifUrl = dataUrl;
-          window.customWallpaperGifUrl = dataUrl;
-          if (typeof localStorage !== 'undefined') {
-            try {
-              localStorage.setItem('equalib_custom_wallpaper_gifurl', dataUrl);
-            } catch (err) {
-              console.warn('[Wallpaper Studio] DataURL trop grand pour localStorage, conservé en mémoire vive');
+      if (isGif) {
+        // 1. Lire d'abord en ArrayBuffer pour extraire immédiatement toutes les frames GIF
+        const abReader = new FileReader();
+        abReader.onload = (abe) => {
+          try {
+            const rawBuf = new Uint8Array(abe.target.result);
+            const frames = this.decodeGifFrames(rawBuf, 4);
+            if (frames && frames.length > 1) {
+              this.gifMultiFrames = frames;
+            } else {
+              this.gifMultiFrames = null;
             }
+          } catch (err) {
+            console.warn('[Wallpaper Studio] Décodage frames GIF échoué :', err);
+            this.gifMultiFrames = null;
           }
 
-          // Décodage multi-frames pour animation réelle sur calculatrice
-          try {
-            const abReader = new FileReader();
-            abReader.onload = (abe) => {
-              const rawBuf = new Uint8Array(abe.target.result);
-              const frames = this.decodeGifFrames(rawBuf, 3);
-              if (frames && frames.length > 1) {
-                this.gifMultiFrames = frames;
-                this.autoSyncWallpaper();
-                const statusEl = document.getElementById('ws-active-theme-status');
-                if (statusEl) {
-                  statusEl.textContent = `✓ GIF animé multi-frames chargé (${frames.length} images RGB565 prêtes pour la calculatrice) !`;
-                  statusEl.className = 'text-pink-400 font-bold';
-                }
+          // 2. Lire ensuite le DataURL pour rendu visuel
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            const dataUrl = e.target.result;
+            this.currentGifUrl = dataUrl;
+            window.customWallpaperGifUrl = dataUrl;
+            try {
+              localStorage.setItem('equalib_custom_wallpaper_gifurl', dataUrl);
+            } catch (_) {}
+
+            const img = new Image();
+            img.onload = () => {
+              this.processLoadedImage(img, fitMode, applyDither);
+              this.updateGifPreview();
+              this.applyCustomTheme();
+              const statusEl = document.getElementById('ws-active-theme-status');
+              if (statusEl && this.gifMultiFrames && this.gifMultiFrames.length > 1) {
+                statusEl.textContent = `✓ GIF animé (${this.gifMultiFrames.length} images RGB565) prêt pour la calculatrice !`;
+                statusEl.className = 'text-pink-400 font-bold';
               }
             };
-            abReader.readAsArrayBuffer(file);
-          } catch (_) {}
-        } else {
-          this.gifMultiFrames = null;
-        }
-        const img = new Image();
-        img.onload = () => {
-          this.processLoadedImage(img, fitMode, applyDither);
-          if (isGif) {
-            this.updateGifPreview();
-          }
-          this.applyCustomTheme();
+            img.src = dataUrl;
+          };
+          reader.readAsDataURL(file);
         };
-        img.src = dataUrl;
-      };
-      reader.readAsDataURL(file);
+        abReader.readAsArrayBuffer(file);
+      } else {
+        this.gifMultiFrames = null;
+        this.currentGifUrl = null;
+        window.customWallpaperGifUrl = null;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const dataUrl = e.target.result;
+          const img = new Image();
+          img.onload = () => {
+            this.processLoadedImage(img, fitMode, applyDither);
+            this.applyCustomTheme();
+          };
+          img.src = dataUrl;
+        };
+        reader.readAsDataURL(file);
+      }
     }
 
     async loadGifUrl(url, name = 'Fond GIF Animé') {
@@ -1741,39 +1754,42 @@
         this.currentGifUrl = url;
         window.customWallpaperGifUrl = url;
         if (typeof localStorage !== 'undefined') {
-          localStorage.setItem('equalib_custom_wallpaper_gifurl', url);
+          try {
+            localStorage.setItem('equalib_custom_wallpaper_gifurl', url);
+          } catch (_) {}
         }
+
+        const decodeAndApply = (rawBuf) => {
+          const frames = this.decodeGifFrames(rawBuf, 4);
+          if (frames && frames.length > 1) {
+            this.gifMultiFrames = frames;
+            this.autoSyncWallpaper();
+            const statusEl = document.getElementById('ws-active-theme-status');
+            if (statusEl) {
+              statusEl.textContent = `✓ ${name} actif (${frames.length} images animées prêtes pour la calculatrice)`;
+              statusEl.className = 'text-pink-400 font-bold';
+            }
+          }
+        };
 
         // Récupération multi-frames binaire
         if (typeof fetch === 'function') {
-          fetch(url)
-            .then(res => res.arrayBuffer())
-            .then(ab => {
-              const rawBuf = new Uint8Array(ab);
-              const frames = this.decodeGifFrames(rawBuf, 3);
-              if (frames && frames.length > 1) {
-                this.gifMultiFrames = frames;
-                this.autoSyncWallpaper();
-                const statusEl = document.getElementById('ws-active-theme-status');
-                if (statusEl) {
-                  statusEl.textContent = `✓ ${name} actif (${frames.length} images animées prêtes pour la calculatrice)`;
-                  statusEl.className = 'text-pink-400 font-bold';
-                }
-              }
-            })
-            .catch(() => {});
+          try {
+            const resp = await fetch(url);
+            if (resp.ok) {
+              const ab = await resp.arrayBuffer();
+              decodeAndApply(new Uint8Array(ab));
+            }
+          } catch (fetchErr) {
+            console.warn('[Wallpaper Studio] fetch GIF échoué :', fetchErr);
+          }
         } else if (typeof require === 'function') {
           try {
             const nodeFs = require('fs');
             const nodePath = require('path');
             const localPath = nodePath.join(process.cwd(), 'web', url);
             if (nodeFs.existsSync(localPath)) {
-              const rawBuf = new Uint8Array(nodeFs.readFileSync(localPath));
-              const frames = this.decodeGifFrames(rawBuf, 3);
-              if (frames && frames.length > 1) {
-                this.gifMultiFrames = frames;
-                this.autoSyncWallpaper();
-              }
+              decodeAndApply(new Uint8Array(nodeFs.readFileSync(localPath)));
             }
           } catch (_) {}
         }
@@ -2018,9 +2034,15 @@
         if (dataUrl) window.customWallpaperDataUrl = dataUrl;
 
         if (typeof localStorage !== 'undefined') {
-          if (dataUrl) localStorage.setItem('equalib_custom_wallpaper_dataurl', dataUrl);
-          const b64 = this.uint8ToBase64(bytes);
-          localStorage.setItem('equalib_custom_wallpaper_rgb565', b64);
+          if (dataUrl) {
+            try {
+              localStorage.setItem('equalib_custom_wallpaper_dataurl', dataUrl);
+            } catch (_) {}
+          }
+          try {
+            const b64 = this.uint8ToBase64(bytes);
+            localStorage.setItem('equalib_custom_wallpaper_rgb565', b64);
+          } catch (_) {}
         }
 
         // Si le simulateur ou le site utilise le thème custom, rafraîchir en direct
@@ -2144,8 +2166,17 @@
         const storedB64 = localStorage.getItem('equalib_custom_wallpaper_rgb565');
         if (storedB64) {
           const bytes = this.base64ToUint8(storedB64);
-          if (bytes && bytes.length === RGB565_BYTES) {
+          if (bytes && bytes.length >= RGB565_BYTES && (bytes.length % RGB565_BYTES === 0)) {
             window.customWallpaperRGB565 = bytes;
+            const numFrames = Math.floor(bytes.length / RGB565_BYTES);
+            if (numFrames > 1) {
+              this.gifMultiFrames = [];
+              for (let f = 0; f < numFrames; f++) {
+                this.gifMultiFrames.push(bytes.subarray(f * RGB565_BYTES, (f + 1) * RGB565_BYTES));
+              }
+            } else {
+              this.gifMultiFrames = null;
+            }
 
             for (let i = 0; i < TOTAL_PIXELS; i++) {
               const byteIdx = i * 2;
@@ -2167,16 +2198,18 @@
             const dataUrl = this.canvas ? this.canvas.toDataURL('image/png') : null;
             if (dataUrl) {
               window.customWallpaperDataUrl = dataUrl;
-              localStorage.setItem('equalib_custom_wallpaper_dataurl', dataUrl);
+              try {
+                localStorage.setItem('equalib_custom_wallpaper_dataurl', dataUrl);
+              } catch (_) {}
             }
 
             if (typeof document !== 'undefined') {
               const statusEl = document.getElementById('ws-active-theme-status');
               if (statusEl) {
-                statusEl.textContent = this.currentGifUrl 
-                  ? '✓ Fond d\'écran animé GIF actif (Frame 0 RGB565 : 153.6 Ko)' 
+                statusEl.textContent = (this.gifMultiFrames && this.gifMultiFrames.length > 1)
+                  ? `✓ Fond d'écran animé GIF actif (${this.gifMultiFrames.length} images animées)`
                   : '✓ Fond d\'écran personnalisé chargé (153.6 Ko)';
-                statusEl.className = 'text-amber-400 font-bold';
+                statusEl.className = 'text-pink-400 font-bold';
               }
             }
             return;

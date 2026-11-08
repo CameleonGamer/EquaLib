@@ -104,6 +104,13 @@ eq_storage_t* eq_storage_get(void) {
             s->theme = (init_theme < 6) ? (int32_t)init_theme : 0;
             s->checksum = eq_storage_calc_checksum(s);
         }
+
+        /* Si un fond animé (multi-frames) est présent avec le flag actif, synchroniser */
+        if (g_equalib_manifest.wallpaper_size >= 307200 &&
+            (g_equalib_manifest.flags & MANIFEST_FLAG_ANIMATED_BG)) {
+            s->animated_bg = 1;
+            s->checksum = eq_storage_calc_checksum(s);
+        }
     }
     return s;
 }

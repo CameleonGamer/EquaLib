@@ -1230,21 +1230,22 @@ int main(int argc, char* argv[]) {
         g_current_theme = 0;
     }
     /* Si le manifest a été flashé avec un fond custom (Theme 6) valide, priorité au thème custom */
-    if ((g_equalib_manifest.flags & 0x0F) == 6 &&
+    if (((g_equalib_manifest.flags & 0x0F) == 6 || st->theme == 6) &&
         g_equalib_manifest.wallpaper_size >= 153600 &&
         g_equalib_manifest.wallpaper_offset >= 0x10000) {
         g_current_theme = 6;
         st->theme = 6;
     }
-    if (g_equalib_manifest.flags & 0x10) {
-        g_animated_bg = true;
-        st->animated_bg = 1;
-    }
     g_view_mode = st->view_mode;
     g_show_tooltips = (st->tooltips != 0);
     g_glass_mode = (st->glass_mode != 0);
     g_smooth_corners = (st->smooth_corners != 0);
-    g_animated_bg = (st->animated_bg != 0);
+    if (g_equalib_manifest.flags & MANIFEST_FLAG_ANIMATED_BG) {
+        g_animated_bg = true;
+        st->animated_bg = 1;
+    } else {
+        g_animated_bg = (st->animated_bg != 0);
+    }
 
     while (eadk_keyboard_scan() != 0) {
         eadk_timing_msleep(20);
@@ -1516,35 +1517,33 @@ int main(int argc, char* argv[]) {
             s_anim_tick++;
             uint32_t num_frames = g_equalib_manifest.wallpaper_size / 153600;
             if (g_current_theme == 6 && num_frames > 1) {
-                /* Lecture fluide des frames GIF toutes les ~400 ms (20 * 20 ms) sans redessiner les cartes */
-                if (s_anim_tick >= 20) {
+                /* Lecture fluide des frames GIF toutes les ~160 ms (8 * 20 ms) */
+                if (s_anim_tick >= 8) {
                     s_anim_tick = 0;
                     s_anim_frame_idx = (s_anim_frame_idx + 1) % num_frames;
                     draw_background_corridors(cur_th);
-                    if (g_glass_mode) {
-                        if (g_view_mode == VIEW_MODE_GALLERY) {
-                            int page = selected / 6;
-                            int page_start = page * 6;
-                            for (int slot = 0; slot < 6; slot++) {
-                                int app_idx = page_start + slot;
-                                if (app_idx < (int)total_apps) {
-                                    int col = slot % 3;
-                                    int row = slot / 3;
-                                    draw_gallery_card(app_idx, col, row, app_idx == selected, cur_th);
-                                }
-                            }
-                        } else {
-                            int visible_count = 4;
-                            if (visible_count > (int)total_apps - scroll_offset) {
-                                visible_count = (int)total_apps - scroll_offset;
-                            }
-                            for (int v = 0; v < visible_count; v++) {
-                                int i = scroll_offset + v;
-                                draw_list_card(i, v, i == selected, cur_th);
+                    if (g_view_mode == VIEW_MODE_GALLERY) {
+                        int page = selected / 6;
+                        int page_start = page * 6;
+                        for (int slot = 0; slot < 6; slot++) {
+                            int app_idx = page_start + slot;
+                            if (app_idx < (int)total_apps) {
+                                int col = slot % 3;
+                                int row = slot / 3;
+                                draw_gallery_card(app_idx, col, row, app_idx == selected, cur_th);
                             }
                         }
-                        draw_bottom_active_dock(selected, cur_th);
+                    } else {
+                        int visible_count = 4;
+                        if (visible_count > (int)total_apps - scroll_offset) {
+                            visible_count = (int)total_apps - scroll_offset;
+                        }
+                        for (int v = 0; v < visible_count; v++) {
+                            int i = scroll_offset + v;
+                            draw_list_card(i, v, i == selected, cur_th);
+                        }
                     }
+                    draw_bottom_active_dock(selected, cur_th);
                 }
             } else if (g_current_theme >= 1 && g_current_theme <= 5) {
                 if ((s_anim_tick % 2) == 0) { // ~40 ms (25 FPS)
