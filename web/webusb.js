@@ -161,6 +161,8 @@ class NumWorksWebUSB {
                 }
                 if (this.flashAddress === 0x90600000 && this.isN110Model()) {
                   this.model = 'NumWorks N0115';
+                } else if (this.flashAddress === 0x90180000) {
+                  this.model = 'NumWorks N0120';
                 }
                 console.log(`[WebUSB] Slot d'applications externes matériel confirmé : 0x${this.flashAddress.toString(16)} (RAM: 0x${this.ramAddress.toString(16)}, Modèle: ${this.model})`);
                 return this.flashAddress;
@@ -298,31 +300,46 @@ class NumWorksWebUSB {
       const isPrefN110 = this.isN110Model(preferredModel);
       const isPrefN120 = (preferredModel === 'N0120' || (preferredModel && preferredModel.includes('120')));
 
+      const serialNum = (this.device.serialNumber || '').trim();
+      const isSerialN0120 = (
+        serialNum === 'EAA0AAVRNTA2NTcw' ||
+        serialNum === 'EAAbABVROTUxNDM4' ||
+        serialNum.startsWith('EAA0AAV') ||
+        serialNum.includes('RNTA2NTcw') ||
+        serialNum.includes('N0120') ||
+        serialNum.includes('2ALWP-N0120')
+      );
+
       // Détection officielle NumWorks (conforme nwlink) :
       // - Seul le modèle N0120 a deviceVersionMinor === 2 (bcdDevice 0x0120) ou bootloader Scandium (0xA51A)
       // - Le modèle N0115 a bcdDevice 0x0115 (subminor = 5) avec le même MCU STM32F730 que N0110
       // - TOUTES les autres NumWorks (y compris minor=0, minor=1, bcd 0x0110, DFU STM32) sont des N0110 / N0115
       const isExplicitN0120 = (
         minor === 2 ||
-        (major === 1 && minor === 2) ||
+        minor === 32 ||
+        minor === 20 ||
+        (major === 1 && (minor === 2 || minor === 32 || minor === 20)) ||
         effectiveBcd === 0x0120 ||
+        effectiveBcd === 288 ||
+        (effectiveBcd & 0xFFF0) === 0x0120 ||
         pid === NUMWORKS_PIDS.SCANDIUM ||
         prodName.includes('N0120') ||
         prodName.includes('H7') ||
-        prodName.includes('Scandium')
+        prodName.includes('Scandium') ||
+        isSerialN0120
       );
 
-      const isExplicitN0115 = (
+      const isExplicitN0115 = !isExplicitN0120 && (
         effectiveBcd === 0x0115 ||
         prodName.includes('N0115') ||
         (major === 1 && minor === 1 && subminor === 5)
       );
 
-      const isExplicitN0110 = (
+      const isExplicitN0110 = !isExplicitN0120 && (
         isExplicitN0115 ||
         effectiveBcd === 0x0110 ||
         (major === 1 && (minor === 1 || minor === 0)) ||
-        pid === NUMWORKS_PIDS.DFU_STM32 ||
+        (pid === NUMWORKS_PIDS.DFU_STM32 && !isSerialN0120) ||
         prodName.includes('STM32') ||
         prodName.includes('N0110') ||
         prodName.includes('F7')
@@ -375,6 +392,7 @@ class NumWorksWebUSB {
         model: this.model,
         mode: this.mode,
         flashAddress: this.flashAddress,
+        ramAddress: this.ramAddress,
         device: this.device
       };
     } catch (err) {

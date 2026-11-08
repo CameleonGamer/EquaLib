@@ -1057,6 +1057,57 @@ describe('7. Compilation et Validité Syntaxique des Jeux Python (.NWS)', () => 
       const res = await bundler.buildBundle([], 'bin', { targetModel: 'NumWorks N0110 / N0115' });
       assert(res.arrayBuffer.byteLength > 64, 'Binaire N0110 généré');
     });
+
+    await itAsync('Reconnaissance infaillible du modèle N0120 via le numéro de série physique EAA0AAVRNTA2NTcw et FCC ID 2ALWP-N0120', async () => {
+      const usb = new NumWorksWebUSB();
+      const mockDevice = {
+        opened: true,
+        vendorId: 0x0483,
+        productId: 0xA291,
+        deviceVersionMajor: 1,
+        deviceVersionMinor: 2,
+        deviceVersionSubminor: 0,
+        productName: 'NumWorks Calculator',
+        serialNumber: 'EAA0AAVRNTA2NTcw',
+        configurations: [{
+          configurationValue: 1,
+          interfaces: [{
+            interfaceNumber: 0,
+            alternates: [{ interfaceClass: 0xFE, interfaceSubclass: 0x01 }]
+          }]
+        }],
+        open: async () => {},
+        selectConfiguration: async () => {},
+        claimInterface: async () => {},
+        controlTransferIn: async (opts) => {
+          if (opts.request === 6) { // GET_DESCRIPTOR
+            const b = new Uint8Array(18);
+            b[12] = 0x20; b[13] = 0x01; // bcdDevice 0x0120
+            return { status: 'ok', data: { buffer: b.buffer, byteOffset: 0, byteLength: 18 } };
+          }
+          // DFU GETSTATUS (idle)
+          const statusBuf = new Uint8Array([0x00, 0x00, 0x00, 0x00, 0x02, 0x00]);
+          return { status: 'ok', data: { buffer: statusBuf.buffer, byteOffset: 0, byteLength: 6 } };
+        },
+        controlTransferOut: async () => ({ status: 'ok', bytesWritten: 0 })
+      };
+
+      const origRequestDevice = global.navigator && global.navigator.usb ? global.navigator.usb.requestDevice : null;
+      if (!global.navigator) global.navigator = {};
+      if (!global.navigator.usb) global.navigator.usb = {};
+      global.navigator.usb.requestDevice = async () => mockDevice;
+
+      try {
+        const res = await usb.connect('N0110'); // Même si l'ancien modèle mémorisé était N0110
+        assert.strictEqual(res.model, 'NumWorks N0120', 'Doit détecter NumWorks N0120 malgré un preferredModel N0110');
+        assert.strictEqual(res.flashAddress, 0x90180000, 'Flash slot N0120 doit être 0x90180000');
+        assert.strictEqual(res.ramAddress, 0x240118a4, 'RAM base N0120 doit être 0x240118a4');
+      } finally {
+        if (origRequestDevice && global.navigator && global.navigator.usb) {
+          global.navigator.usb.requestDevice = origRequestDevice;
+        }
+      }
+    });
   });
 
   // -------------------------------------------------------------

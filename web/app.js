@@ -2623,15 +2623,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         let detectedModel = 'N0110';
         if (res.model && (res.model.includes('120') || res.flashAddress === 0x90180000)) {
-          detectedModel = (userSettings.manualModel && isN110orN115(userSettings.manualModel)) ? userSettings.manualModel : 'N0120';
+          detectedModel = 'N0120';
         } else if (res.model && isN0115Model(res.model, res.flashAddress)) {
           detectedModel = 'N0115';
         } else {
           detectedModel = (userSettings.manualModel && isN0115Model(userSettings.manualModel)) ? 'N0115' : 'N0110';
         }
-        if (detectedModel === 'N0115') {
-          userSettings.manualModel = 'N0115';
-        }
+        userSettings.manualModel = detectedModel;
         setTargetModel(detectedModel, false);
         showToast(`NumWorks connectée (${res.model} - ${res.mode}) !`, 'success');
       } catch (err) {
@@ -2724,7 +2722,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!usb.isConnected) {
       showToast('Ouverture du sélecteur USB...', 'info');
       try {
-        const preferred = isUserChoiceN110 ? 'N0110' : 'N0120';
+        const preferred = (userSettings.manualModel && userSettings.manualModel.includes('120')) ? 'N0120' : (isUserChoiceN110 ? 'N0110' : 'N0120');
         const res = await usb.connect(preferred);
         connectionDot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse';
         connectionText.textContent = 'Connectée';
@@ -2732,18 +2730,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         modelText.textContent = `${res.model} (${res.mode})${slotText}`;
         connectBtn.innerHTML = '<span>✕</span> <span class="hidden sm:inline">Déconnecter</span>';
         
-        // Si l'utilisateur a choisi N0110/N0115, préserver IMPÉRATIVEMENT son choix
         let detectedModel = 'N0110';
         if (res.model && (res.model.includes('120') || res.flashAddress === 0x90180000)) {
-          detectedModel = isUserChoiceN110 ? (userSettings.manualModel || 'N0110') : 'N0120';
+          detectedModel = 'N0120';
         } else if (res.model && isN0115Model(res.model, res.flashAddress)) {
           detectedModel = 'N0115';
         } else {
           detectedModel = (userSettings.manualModel && isN0115Model(userSettings.manualModel)) ? 'N0115' : 'N0110';
         }
-        if (detectedModel === 'N0115') {
-          userSettings.manualModel = 'N0115';
-        }
+        userSettings.manualModel = detectedModel;
         setTargetModel(detectedModel, true);
         window.soundFx?.playClick();
         showToast(`NumWorks détectée (${res.model} - ${res.mode}) !`, 'success');
