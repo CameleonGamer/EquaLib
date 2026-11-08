@@ -2622,7 +2622,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         connectBtn.innerHTML = '<span>✕</span> <span class="hidden sm:inline">Déconnecter</span>';
         
         let detectedModel = 'N0110';
-        if (res.model && (res.model.includes('120') || res.flashAddress === 0x90180000)) {
+        if (res.model && (res.model.includes('120') || res.flashAddress === 0x90180000 || res.flashAddress === 0x90580000)) {
           detectedModel = 'N0120';
         } else if (res.model && isN0115Model(res.model, res.flashAddress)) {
           detectedModel = 'N0115';
@@ -2731,7 +2731,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         connectBtn.innerHTML = '<span>✕</span> <span class="hidden sm:inline">Déconnecter</span>';
         
         let detectedModel = 'N0110';
-        if (res.model && (res.model.includes('120') || res.flashAddress === 0x90180000)) {
+        if (res.model && (res.model.includes('120') || res.flashAddress === 0x90180000 || res.flashAddress === 0x90580000)) {
           detectedModel = 'N0120';
         } else if (res.model && isN0115Model(res.model, res.flashAddress)) {
           detectedModel = 'N0115';
@@ -2758,7 +2758,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       // 1. Détermination STRICTE du modèle cible :
       let targetModel = 'N0110';
       if (usb && usb.isConnected) {
-        if (usb.model.includes('120') || usb.flashAddress === 0x90180000) {
+        if (usb.model.includes('120') || usb.flashAddress === 0x90180000 || usb.flashAddress === 0x90580000) {
           targetModel = 'N0120';
         } else if (isN0115Model(usb.model, usb.flashAddress)) {
           targetModel = 'N0115';

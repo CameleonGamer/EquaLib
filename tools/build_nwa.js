@@ -84,8 +84,13 @@ console.log('\nConverting NWA to flat BIN with nwlink for N0115 / Epsilon 26+ (F
 execSync('npx --yes -- nwlink@1.0.0 nwa-bin launcher/equalib.nwa test_equalib_n0115.bin --flash-start 0x90600000 --ram-start 0x200118a4', { stdio: 'inherit' });
 console.log('✓ test_equalib_n0115.bin generated successfully!');
 
+console.log('\nConverting NWA to flat BIN with nwlink for N0120 / Epsilon 26+ (Flash: 0x90580000, RAM: 0x240118a4)...');
+execSync('npx --yes -- nwlink@1.0.0 nwa-bin launcher/equalib.nwa test_equalib_n0120_58.bin --flash-start 0x90580000 --ram-start 0x240118a4', { stdio: 'inherit' });
+console.log('✓ test_equalib_n0120_58.bin generated successfully!');
+
 // Copy to web/
 fs.copyFileSync('test_equalib_n0120.bin', 'web/equalib_n0120.bin');
+fs.copyFileSync('test_equalib_n0120_58.bin', 'web/equalib_n0120_58.bin');
 fs.copyFileSync('test_equalib_n0110.bin', 'web/equalib_n0110.bin');
 fs.copyFileSync('test_equalib_n0115.bin', 'web/equalib_n0115.bin');
 fs.copyFileSync('launcher/equalib.nwa', 'web/equalib_n0120.nwa');

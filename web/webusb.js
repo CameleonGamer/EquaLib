@@ -50,7 +50,8 @@ const ST_DFU_COMMANDS = {
 
 const FLASH_SECTOR_SIZE = 65536;       // 64 Ko par secteur Flash externe QSPI
 const DFU_TRANSFER_SIZE = 2048;        // 2048 octets par bloc USB DFU
-const DEFAULT_FLASH_ADDR_N0120 = 0x90180000; // Adresse officielle des applications externes Epsilon N0120
+const DEFAULT_FLASH_ADDR_N0120 = 0x90180000; // Adresse officielle des applications externes Epsilon N0120 (Epsilon < 24)
+const DEFAULT_FLASH_ADDR_N0120_EPS26 = 0x90580000; // Adresse officielle des applications externes Epsilon N0120 (Epsilon 24 / 26+)
 const DEFAULT_FLASH_ADDR_N0115 = 0x90600000; // Adresse officielle des applications externes Epsilon N0115 / Epsilon 26+
 const DEFAULT_FLASH_ADDR_N0110 = 0x90200000; // Adresse officielle des applications externes Epsilon N0110 (Epsilon < 26)
 const DEFAULT_RAM_ADDR_N0120   = 0x240118a4; // RAM de base pour applications externes N0120
@@ -138,7 +139,10 @@ class NumWorksWebUSB {
 
       if (slotBuf && slotBuf.byteLength >= 16) {
         const u8 = new Uint8Array(slotBuf.buffer, slotBuf.byteOffset, 16);
-        const isBadBeef = (u8[0] === 0xEF && u8[1] === 0xEE && u8[2] === 0xDB && u8[3] === 0xBA);
+        const isBadBeef = (
+          (u8[0] === 0xBA && u8[1] === 0xDB && u8[2] === 0xEE && u8[3] === 0xEF) ||
+          (u8[0] === 0xEF && u8[1] === 0xEE && u8[2] === 0xDB && u8[3] === 0xBA)
+        );
         if (isBadBeef) {
           const dv = new DataView(slotBuf.buffer, slotBuf.byteOffset);
           const userlandHeaderAddr = dv.getUint32(8, true);
@@ -146,9 +150,12 @@ class NumWorksWebUSB {
             await this.setAddress(userlandHeaderAddr);
             await this.abortToIdle();
             const userlandBuf = await this.controlTransferIn(DFU_REQUESTS.UPLOAD, 2, 48);
-            if (userlandBuf && userlandBuf.byteLength >= 28) {
+            if (userlandBuf && userlandBuf.byteLength >= 32) {
               const uH = new Uint8Array(userlandBuf.buffer, userlandBuf.byteOffset, userlandBuf.byteLength);
-              const isFeedCode = (uH[0] === 0xDE && uH[1] === 0xC0 && uH[2] === 0xED && uH[3] === 0xFE);
+              const isFeedCode = (
+                (uH[0] === 0xFE && uH[1] === 0xED && uH[2] === 0xC0 && uH[3] === 0xDE) ||
+                (uH[0] === 0xDE && uH[1] === 0xC0 && uH[2] === 0xED && uH[3] === 0xFE)
+              );
               if (isFeedCode) {
                 const udv = new DataView(userlandBuf.buffer, userlandBuf.byteOffset);
                 const extFlashStart = udv.getUint32(20, true);
@@ -161,7 +168,7 @@ class NumWorksWebUSB {
                 }
                 if (this.flashAddress === 0x90600000 && this.isN110Model()) {
                   this.model = 'NumWorks N0115';
-                } else if (this.flashAddress === 0x90180000) {
+                } else if (this.flashAddress === 0x90580000 || this.flashAddress === 0x90180000 || !this.isN110Model()) {
                   this.model = 'NumWorks N0120';
                 }
                 console.log(`[WebUSB] Slot d'applications externes matériel confirmé : 0x${this.flashAddress.toString(16)} (RAM: 0x${this.ramAddress.toString(16)}, Modèle: ${this.model})`);
@@ -616,9 +623,8 @@ class NumWorksWebUSB {
    * Quitte le mode DFU et déclenche l'exécution du code Flash
    */
   async leave(resetAddress = null) {
-    // 0x08000000 (134217728) est l'adresse officielle de réinitialisation matérielle STM32 (conforme nwlink)
-    // Redémarre proprement le kernel Epsilon depuis la mémoire Flash interne
-    const targetReset = resetAddress || 0x08000000;
+    // Redémarre proprement le kernel Epsilon depuis la mémoire Flash (conforme nwlink dfu.leave)
+    const targetReset = resetAddress || (this.flashAddress && this.flashAddress !== 0x90000000 ? this.flashAddress : 0x08000000);
     console.log(`[WebUSB] Sortie DFU vers 0x${targetReset.toString(16)}...`);
     try {
       await this.setAddress(targetReset);
@@ -666,7 +672,9 @@ class NumWorksWebUSB {
         return await this.flashBinary(converted, onProgress, targetFlashAddr);
       }
       let modelBin = 'equalib_n0110.bin';
-      if (this.flashAddress === 0x90180000 || this.model.includes('120')) {
+      if (this.flashAddress === 0x90580000) {
+        modelBin = 'equalib_n0120_58.bin';
+      } else if (this.flashAddress === 0x90180000 || this.model.includes('120')) {
         modelBin = 'equalib_n0120.bin';
       } else if (this.flashAddress === 0x90600000 || this.model === 'N0115' || (this.model.includes('115') && !this.model.includes('110'))) {
         modelBin = 'equalib_n0115.bin';
@@ -791,6 +799,7 @@ if (typeof window !== 'undefined') {
   window.DEFAULT_FLASH_ADDR_N0110 = DEFAULT_FLASH_ADDR_N0110;
   window.DEFAULT_FLASH_ADDR_N0115 = DEFAULT_FLASH_ADDR_N0115;
   window.DEFAULT_FLASH_ADDR_N0120 = DEFAULT_FLASH_ADDR_N0120;
+  window.DEFAULT_FLASH_ADDR_N0120_EPS26 = DEFAULT_FLASH_ADDR_N0120_EPS26;
   window.DEFAULT_RAM_ADDR_N0110 = DEFAULT_RAM_ADDR_N0110;
   window.DEFAULT_RAM_ADDR_N0115 = DEFAULT_RAM_ADDR_N0115;
   window.DEFAULT_RAM_ADDR_N0120 = DEFAULT_RAM_ADDR_N0120;
@@ -802,6 +811,7 @@ if (typeof module !== 'undefined' && module.exports) {
     DEFAULT_FLASH_ADDR_N0110,
     DEFAULT_FLASH_ADDR_N0115,
     DEFAULT_FLASH_ADDR_N0120,
+    DEFAULT_FLASH_ADDR_N0120_EPS26,
     DEFAULT_RAM_ADDR_N0110,
     DEFAULT_RAM_ADDR_N0115,
     DEFAULT_RAM_ADDR_N0120,

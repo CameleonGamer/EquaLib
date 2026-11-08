@@ -66,6 +66,7 @@ describe('1. Intégrité des Fichiers et Syntaxe Web', () => {
     'web/catalog.json',
     'web/community_apps.json',
     'web/equalib_n0120.bin',
+    'web/equalib_n0120_58.bin',
     'web/equalib_n0120.nwa',
     'web/equalib_n0115.bin',
     'web/equalib_n0115.nwa',
@@ -535,6 +536,15 @@ describe('6. Intégrité des Binaires Natifs & Manifeste (N0120 & N0110)', () =>
     assert.strictEqual(bin.readUInt32LE(0x1748), 0x240118a4);
     const flashPtr = bin.readUInt32LE(0x1750);
     assert(flashPtr >= 0x90180000 && flashPtr < 0x90280000, `Pointeur Flash N0120 hors du slot 0x90180000 (valeur: 0x${flashPtr.toString(16)})`);
+  });
+
+  it('equalib_n0120_58.bin est lié pour le slot officiel N0120 / Epsilon 26+ (Flash: 0x90580000, RAM: 0x240118a4)', () => {
+    const bin = fs.readFileSync('web/equalib_n0120_58.bin');
+    assert.strictEqual(bin.readUInt32LE(0), 0xdec0beba);
+    assert.strictEqual(bin.readUInt32LE(28), 0xdec0beba);
+    assert.strictEqual(bin.readUInt32LE(0x1748), 0x240118a4);
+    const flashPtr = bin.readUInt32LE(0x1750);
+    assert(flashPtr >= 0x90580000 && flashPtr < 0x90800000, `Pointeur Flash N0120_58 hors du slot 0x90580000 (valeur: 0x${flashPtr.toString(16)})`);
   });
 
   it('equalib_n0115.bin est lié pour le slot officiel N0115 / Epsilon 26+ (Flash: 0x90600000, RAM: 0x200118a4)', () => {
@@ -1102,6 +1112,101 @@ describe('7. Compilation et Validité Syntaxique des Jeux Python (.NWS)', () => 
         assert.strictEqual(res.model, 'NumWorks N0120', 'Doit détecter NumWorks N0120 malgré un preferredModel N0110');
         assert.strictEqual(res.flashAddress, 0x90180000, 'Flash slot N0120 doit être 0x90180000');
         assert.strictEqual(res.ramAddress, 0x240118a4, 'RAM base N0120 doit être 0x240118a4');
+      } finally {
+        if (origRequestDevice && global.navigator && global.navigator.usb) {
+          global.navigator.usb.requestDevice = origRequestDevice;
+        }
+      }
+    });
+
+    await itAsync('Extraction dynamique du slot 0x90580000 sur NumWorks N0120 (Epsilon 26.4.0)', async () => {
+      const usb = new NumWorksWebUSB();
+      let curAddr = 0;
+      const mockDevice = {
+        opened: true,
+        vendorId: 0x0483,
+        productId: 0xA291,
+        deviceVersionMajor: 1,
+        deviceVersionMinor: 2,
+        deviceVersionSubminor: 0,
+        productName: 'NumWorks Calculator',
+        serialNumber: 'EAA0AAVRNTA2NTcw',
+        configurations: [{
+          configurationValue: 1,
+          interfaces: [{
+            interfaceNumber: 0,
+            alternates: [
+              { interfaceNumber: 0, alternateSetting: 0, interfaceClass: 0xFE, interfaceSubclass: 0x01 },
+              { interfaceNumber: 0, alternateSetting: 1, interfaceClass: 0xFE, interfaceSubclass: 0x01 }
+            ]
+          }]
+        }],
+        open: async () => {},
+        selectConfiguration: async () => {},
+        selectAlternateInterface: async () => {},
+        claimInterface: async () => {},
+        controlTransferIn: async (opts) => {
+          if (opts.request === 6) { // GET_DESCRIPTOR
+            const b = new Uint8Array(18);
+            b[12] = 0x20; b[13] = 0x01; // bcdDevice 0x0120
+            return { status: 'ok', data: new DataView(b.buffer) };
+          }
+          if (opts.request === 2) { // UPLOAD
+            if (curAddr === 0x24000000) {
+              // SlotInfo en RAM : [BADBEEEF, kernel=0x90400008, userland=0x90420000, BADBEEEF]
+              const b = new Uint8Array(16);
+              b[0] = 0xba; b[1] = 0xdb; b[2] = 0xee; b[3] = 0xef;
+              const dv = new DataView(b.buffer);
+              dv.setUint32(4, 0x90400008, true);
+              dv.setUint32(8, 0x90420000, true);
+              b[12] = 0xba; b[13] = 0xdb; b[14] = 0xee; b[15] = 0xef;
+              return { status: 'ok', data: new DataView(b.buffer) };
+            }
+            if (curAddr === 0x90420000) {
+              // UserlandHeader : FEEDC0DE, version, storage, flashStart=0x90580000, ramStart=0x240118a4
+              const b = new Uint8Array(48);
+              b[0] = 0xfe; b[1] = 0xed; b[2] = 0xc0; b[3] = 0xde;
+              const dv = new DataView(b.buffer);
+              dv.setUint32(20, 0x90580000, true);
+              dv.setUint32(24, 0x907f0000, true);
+              dv.setUint32(28, 0x240118a4, true);
+              dv.setUint32(32, 0x24037000, true);
+              return { status: 'ok', data: new DataView(b.buffer) };
+            }
+          }
+          // DFU GETSTATUS (idle)
+          const statusBuf = new Uint8Array([0x00, 0x00, 0x00, 0x00, 0x02, 0x00]);
+          return { status: 'ok', data: new DataView(statusBuf.buffer) };
+        },
+        controlTransferOut: async (opts, data) => {
+          if (opts.request === 1 && data && data.byteLength >= 5) {
+            const u8 = new Uint8Array(data);
+            if (u8[0] === 0x21) { // SET_ADDRESS
+              const dv = new DataView(data);
+              curAddr = dv.getUint32(1, true);
+            }
+          }
+          return { status: 'ok', bytesWritten: data ? data.byteLength : 0 };
+        }
+      };
+
+      const origRequestDevice = global.navigator && global.navigator.usb ? global.navigator.usb.requestDevice : null;
+      if (!global.navigator) global.navigator = {};
+      if (!global.navigator.usb) global.navigator.usb = {};
+      global.navigator.usb.requestDevice = async () => mockDevice;
+
+      try {
+        const res = await usb.connect();
+        assert.strictEqual(res.model, 'NumWorks N0120');
+        assert.strictEqual(res.flashAddress, 0x90580000, 'Slot N0120 Epsilon 26+ doit être 0x90580000');
+        assert.strictEqual(res.ramAddress, 0x240118a4, 'RAM N0120 doit être 0x240118a4');
+
+        const EquaLibBundler = require(path.resolve('web/bundler.js'));
+        const bundler = new EquaLibBundler();
+        const pack = await bundler.buildBundle([], 'bin', { flashAddress: res.flashAddress, targetModel: 'N0120' });
+        assert(pack.arrayBuffer.byteLength > 64, 'Pack binaire généré');
+        const packDv = new DataView(pack.arrayBuffer);
+        assert.strictEqual(packDv.getUint32(0, true), 0xdec0beba);
       } finally {
         if (origRequestDevice && global.navigator && global.navigator.usb) {
           global.navigator.usb.requestDevice = origRequestDevice;
