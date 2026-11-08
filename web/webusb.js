@@ -75,6 +75,16 @@ class NumWorksWebUSB {
     this._eraseBuf = new ArrayBuffer(5);
     this._eraseView = new DataView(this._eraseBuf);
     this._eraseView.setUint8(0, ST_DFU_COMMANDS.ERASE_PAGE);
+
+    if (typeof navigator !== 'undefined' && navigator.usb && typeof navigator.usb.addEventListener === 'function') {
+      navigator.usb.addEventListener('disconnect', (event) => {
+        if (this.device && (event.device === this.device || !this.device.opened)) {
+          this.isConnected = false;
+          this.device = null;
+          console.log('[WebUSB] Débranchement matériel détecté');
+        }
+      });
+    }
   }
 
   /**
@@ -239,6 +249,13 @@ class NumWorksWebUSB {
     if (!this.isSupported()) {
       throw new Error("WebUSB n'est pas supporté par votre navigateur. Veuillez utiliser Google Chrome, Microsoft Edge ou Brave.");
     }
+
+    if (this.device && this.device.opened) {
+      try {
+        await this.device.close();
+      } catch (_) {}
+    }
+    this.isConnected = false;
 
     try {
       const filters = [

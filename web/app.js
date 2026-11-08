@@ -2610,6 +2610,20 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // ==================== CONNEXION WEBUSB ====================
+  // Détection automatique du débranchement physique du câble USB pour réinitialiser l'état
+  if (typeof navigator !== 'undefined' && navigator.usb && typeof navigator.usb.addEventListener === 'function') {
+    navigator.usb.addEventListener('disconnect', (event) => {
+      console.log('[WebUSB] Événement débranchement USB reçu :', event.device?.serialNumber);
+      usb.isConnected = false;
+      usb.device = null;
+      if (connectionDot) connectionDot.className = 'w-2.5 h-2.5 rounded-full bg-slate-500';
+      if (connectionText) connectionText.textContent = 'Non connectée';
+      if (modelText) modelText.textContent = `${userSettings.targetModel || 'N0120'}`;
+      if (connectBtn) connectBtn.innerHTML = '<span>🔌</span> <span class="hidden sm:inline">Connecter</span>';
+      showToast('Calculatrice débranchée. Rebranchez votre calculatrice pour installer.', 'info');
+    });
+  }
+
   connectBtn.addEventListener('click', async () => {
     if (usb.isConnected) {
       await usb.disconnect();
@@ -2726,7 +2740,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Si l'utilisateur a choisi N0110 / N0115 dans l'interface, on préserve impérativement son choix
     const isUserChoiceN110 = isN110orN115(userSettings.manualModel || userSettings.targetModel);
 
-    if (!usb.isConnected) {
+    // Vérifier si la calculatrice est connectée ET que son interface est toujours ouverte
+    if (!usb.isConnected || !usb.device || !usb.device.opened) {
+      usb.isConnected = false;
+      usb.device = null;
       showToast('Ouverture du sélecteur USB...', 'info');
       try {
         const preferred = (userSettings.manualModel && userSettings.manualModel.includes('120')) ? 'N0120' : (isUserChoiceN110 ? 'N0110' : 'N0120');
@@ -2819,6 +2836,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       showToast(`🎉 Installation réussie ! Touche [Home] de votre NumWorks : ouvrez l'application « EquaLib » (ne cherchez pas dans Python) !`, 'success');
     } catch (err) {
       console.error('[Flash] Erreur :', err);
+      // Réinitialiser la connexion en cas d'erreur de transfert pour permettre de reconnecter immédiatement
+      if (!usb.device || !usb.device.opened || err.message?.includes('déconnect') || err.message?.includes('disconnect')) {
+        usb.isConnected = false;
+        usb.device = null;
+        if (connectionDot) connectionDot.className = 'w-2.5 h-2.5 rounded-full bg-slate-500';
+        if (connectionText) connectionText.textContent = 'Non connectée';
+        if (connectBtn) connectBtn.innerHTML = '<span>🔌</span> <span class="hidden sm:inline">Connecter</span>';
+      }
       window.soundFx?.playHit();
       showToast(err.message || 'Erreur lors du téléversement USB', 'error');
     } finally {
