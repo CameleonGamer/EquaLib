@@ -313,31 +313,32 @@ static void draw_background_corridors(const theme_t* th) {
     if (!wp_ptr && th->screen_bg == 0) return;
 
     if (g_view_mode == VIEW_MODE_GALLERY) {
-        /* 1. Étagère au-dessus des cartes (y=22..27) */
-        draw_bg_rect(0, 22, 320, 6, th, wp_ptr);
-        /* 2. Gouttière gauche (x=0..15, y=28..187) */
-        draw_bg_rect(0, 28, 16, 160, th, wp_ptr);
-        /* 3. Allée verticale entre colonne 0 et 1 (x=104..115, y=28..187) */
-        draw_bg_rect(104, 28, 12, 160, th, wp_ptr);
-        /* 4. Allée verticale entre colonne 1 et 2 (x=204..215, y=28..187) */
-        draw_bg_rect(204, 28, 12, 160, th, wp_ptr);
-        /* 5. Gouttière droite (x=304..319, y=28..187) */
-        draw_bg_rect(304, 28, 16, 160, th, wp_ptr);
-        /* 6. Étagère horizontale entre rangée 0 et 1 (x=16..303, y=98..105) */
-        draw_bg_rect(16, 98, 288, 8, th, wp_ptr);
-        /* 7. Espace au-dessus du dock (x=16..303, y=176..187) */
-        draw_bg_rect(16, 176, 288, 12, th, wp_ptr);
-        /* 8. Espace sous le dock */
+        /* 1. Marges latérales complètes du haut en bas (zéro scintillement, push direct continu) */
+        draw_bg_rect(0, 22, 16, 218, th, wp_ptr);
+        draw_bg_rect(304, 22, 16, 218, th, wp_ptr);
+
+        /* 2. Bandes horizontales transversales (sans chevauchement avec les marges) */
+        draw_bg_rect(16, 22, 288, 6, th, wp_ptr);   /* Au-dessus des cartes */
+        draw_bg_rect(16, 98, 288, 8, th, wp_ptr);   /* Entre rangée 0 et rangée 1 */
+        draw_bg_rect(16, 176, 288, 12, th, wp_ptr); /* Entre rangée 1 et dock */
         int bot_h = g_show_tooltips ? 12 : 28;
-        draw_bg_rect(0, 212, 320, bot_h, th, wp_ptr);
+        draw_bg_rect(16, 212, 288, bot_h, th, wp_ptr); /* Sous le dock */
+
+        /* 3. Interstices verticaux entre les cartes de la rangée 0 (y=28..97, h=70) */
+        draw_bg_rect(104, 28, 12, 70, th, wp_ptr);
+        draw_bg_rect(204, 28, 12, 70, th, wp_ptr);
+
+        /* 4. Interstices verticaux entre les cartes de la rangée 1 (y=106..175, h=70) */
+        draw_bg_rect(104, 106, 12, 70, th, wp_ptr);
+        draw_bg_rect(204, 106, 12, 70, th, wp_ptr);
     } else {
-        /* Mode liste */
-        draw_bg_rect(0, 22, 320, 6, th, wp_ptr);
-        draw_bg_rect(0, 28, 8, 155, th, wp_ptr);
-        draw_bg_rect(312, 28, 8, 155, th, wp_ptr);
-        draw_bg_rect(0, 183, 320, 5, th, wp_ptr);
+        /* Mode liste : marges et intercalaires */
+        draw_bg_rect(0, 22, 8, 218, th, wp_ptr);
+        draw_bg_rect(312, 22, 8, 218, th, wp_ptr);
+        draw_bg_rect(8, 22, 304, 6, th, wp_ptr);
+        draw_bg_rect(8, 183, 304, 5, th, wp_ptr);
         int bot_h = g_show_tooltips ? 12 : 28;
-        draw_bg_rect(0, 212, 320, bot_h, th, wp_ptr);
+        draw_bg_rect(8, 212, 304, bot_h, th, wp_ptr);
     }
 }
 
@@ -470,74 +471,84 @@ static void __attribute__((noinline)) draw_styled_container(
     const theme_t* theme,
     const eadk_color_t* wp_ptr
 ) {
-    if (w <= 0 || h <= 0 || w > EADK_SCREEN_WIDTH) return;
+    if (w <= 0 || h <= 0 || w > EADK_SCREEN_WIDTH || x < 0 || y < 0 || x + w > EADK_SCREEN_WIDTH || y + h > EADK_SCREEN_HEIGHT) return;
 
     /* Masque d'arrondi de rayon R=6 px pour de superbes bords lisses */
     static const uint8_t corner_indents[6] = { 5, 3, 2, 1, 1, 0 };
 
-    for (int r = 0; r < h; r++) {
-        int py = y + r;
-        int ind = 0;
-        if (g_smooth_corners && h >= 16) {
-            if (r < 6) ind = corner_indents[r];
-            else if (r >= h - 6) ind = corner_indents[h - 1 - r];
-        } else if (g_smooth_corners && h >= 10) {
-            if (r < 3) ind = corner_indents[r + 3];
-            else if (r >= h - 3) ind = corner_indents[h - 1 - r + 3];
+    int max_chunk_rows = (int)(sizeof(s_wallpaper_ram_band) / sizeof(eadk_color_t)) / w;
+    if (max_chunk_rows <= 0) max_chunk_rows = 1;
+
+    int r_start = 0;
+    while (r_start < h) {
+        int chunk_rows = (h - r_start > max_chunk_rows) ? max_chunk_rows : (h - r_start);
+        int buf_idx = 0;
+
+        for (int r = r_start; r < r_start + chunk_rows; r++) {
+            int py = y + r;
+            int ind = 0;
+            if (g_smooth_corners && h >= 16) {
+                if (r < 6) ind = corner_indents[r];
+                else if (r >= h - 6) ind = corner_indents[h - 1 - r];
+            } else if (g_smooth_corners && h >= 10) {
+                if (r < 3) ind = corner_indents[r + 3];
+                else if (r >= h - 3) ind = corner_indents[h - 1 - r + 3];
+            }
+
+            int x_start = ind;
+            int x_end = w - 1 - ind;
+
+            for (int c = 0; c < w; c++) {
+                int px = x + c;
+                eadk_color_t bg_pix = get_bg_pixel(px, py, theme, wp_ptr);
+
+                if (c < x_start || c > x_end) {
+                    /* Pixel en dehors de l'arrondi du conteneur : afficher le fond sous-jacent */
+                    s_wallpaper_ram_band[buf_idx++] = bg_pix;
+                    continue;
+                }
+
+                /* Détection des pixels de bordure */
+                bool is_border = false;
+                bool is_specular = false;
+
+                if (r == 0 || r == h - 1) {
+                    is_border = true;
+                    if (r == 0 && g_glass_mode) is_specular = true;
+                } else if (c == x_start || c == x_end) {
+                    is_border = true;
+                    if (c == x_start && g_glass_mode && r < h - 2) is_specular = true;
+                } else if (is_sel && (r == 1 || r == h - 2 || c == x_start + 1 || c == x_end - 1)) {
+                    /* Bordure élargie à 2px pour l'élément actif sélectionné */
+                    is_border = true;
+                }
+
+                if (is_border) {
+                    if (is_sel) {
+                        s_wallpaper_ram_band[buf_idx++] = border_color;
+                    } else if (is_specular) {
+                        /* Liséré spéculaire supérieur façon Apple Glass : reflet blanc pur éclatant */
+                        s_wallpaper_ram_band[buf_idx++] = 0xFFFF;
+                    } else if (g_glass_mode) {
+                        /* Bordure translucide lumineuse façon verre biseauté */
+                        s_wallpaper_ram_band[buf_idx++] = rgb565_blend_50_50(0xFFFF, bg_pix);
+                    } else {
+                        s_wallpaper_ram_band[buf_idx++] = border_color;
+                    }
+                } else {
+                    /* Corps du conteneur : mélange verre dépoli 50/50 ou couleur pleine */
+                    if (g_glass_mode) {
+                        s_wallpaper_ram_band[buf_idx++] = rgb565_blend_50_50(card_color, bg_pix);
+                    } else {
+                        s_wallpaper_ram_band[buf_idx++] = card_color;
+                    }
+                }
+            }
         }
 
-        int x_start = ind;
-        int x_end = w - 1 - ind;
-
-        for (int c = 0; c < w; c++) {
-            int px = x + c;
-            eadk_color_t bg_pix = get_bg_pixel(px, py, theme, wp_ptr);
-
-            if (c < x_start || c > x_end) {
-                /* Pixel en dehors de l'arrondi du conteneur : afficher le fond sous-jacent */
-                s_styled_line_buf[c] = bg_pix;
-                continue;
-            }
-
-            /* Détection des pixels de bordure */
-            bool is_border = false;
-            bool is_specular = false;
-
-            if (r == 0 || r == h - 1) {
-                is_border = true;
-                if (r == 0 && g_glass_mode) is_specular = true;
-            } else if (c == x_start || c == x_end) {
-                is_border = true;
-                if (c == x_start && g_glass_mode && r < h - 2) is_specular = true;
-            } else if (is_sel && (r == 1 || r == h - 2 || c == x_start + 1 || c == x_end - 1)) {
-                /* Bordure élargie à 2px pour l'élément actif sélectionné */
-                is_border = true;
-            }
-
-            if (is_border) {
-                if (is_sel) {
-                    s_styled_line_buf[c] = border_color;
-                } else if (is_specular) {
-                    /* Liséré spéculaire supérieur façon Apple Glass : reflet blanc pur éclatant */
-                    s_styled_line_buf[c] = 0xFFFF;
-                } else if (g_glass_mode) {
-                    /* Bordure translucide lumineuse façon verre biseauté */
-                    s_styled_line_buf[c] = rgb565_blend_50_50(0xFFFF, bg_pix);
-                } else {
-                    s_styled_line_buf[c] = border_color;
-                }
-            } else {
-                /* Corps du conteneur : mélange verre dépoli 50/50 ou couleur pleine */
-                if (g_glass_mode) {
-                    s_styled_line_buf[c] = rgb565_blend_50_50(card_color, bg_pix);
-                } else {
-                    s_styled_line_buf[c] = card_color;
-                }
-            }
-        }
-
-        eadk_rect_t row_rect = {(uint16_t)x, (uint16_t)py, (uint16_t)w, 1};
-        eadk_display_push_rect(row_rect, s_styled_line_buf);
+        eadk_rect_t chunk_rect = {(uint16_t)x, (uint16_t)(y + r_start), (uint16_t)w, (uint16_t)chunk_rows};
+        eadk_display_push_rect(chunk_rect, s_wallpaper_ram_band);
+        r_start += chunk_rows;
     }
 }
 
@@ -1517,33 +1528,36 @@ int main(int argc, char* argv[]) {
             s_anim_tick++;
             uint32_t num_frames = g_equalib_manifest.wallpaper_size / 153600;
             if (g_current_theme == 6 && num_frames > 1) {
-                /* Lecture fluide des frames GIF toutes les ~160 ms (8 * 20 ms) */
-                if (s_anim_tick >= 8) {
+                /* Lecture ultra-fluide des frames GIF à 10 FPS (~100 ms = 5 * 20 ms) */
+                if (s_anim_tick >= 5) {
                     s_anim_tick = 0;
                     s_anim_frame_idx = (s_anim_frame_idx + 1) % num_frames;
                     draw_background_corridors(cur_th);
-                    if (g_view_mode == VIEW_MODE_GALLERY) {
-                        int page = selected / 6;
-                        int page_start = page * 6;
-                        for (int slot = 0; slot < 6; slot++) {
-                            int app_idx = page_start + slot;
-                            if (app_idx < (int)total_apps) {
-                                int col = slot % 3;
-                                int row = slot / 3;
-                                draw_gallery_card(app_idx, col, row, app_idx == selected, cur_th);
+                    /* Si le mode Apple Glass est actif, recalculer le verre translucide des cartes */
+                    if (g_glass_mode) {
+                        if (g_view_mode == VIEW_MODE_GALLERY) {
+                            int page = selected / 6;
+                            int page_start = page * 6;
+                            for (int slot = 0; slot < 6; slot++) {
+                                int app_idx = page_start + slot;
+                                if (app_idx < (int)total_apps) {
+                                    int col = slot % 3;
+                                    int row = slot / 3;
+                                    draw_gallery_card(app_idx, col, row, app_idx == selected, cur_th);
+                                }
+                            }
+                        } else {
+                            int visible_count = 4;
+                            if (visible_count > (int)total_apps - scroll_offset) {
+                                visible_count = (int)total_apps - scroll_offset;
+                            }
+                            for (int v = 0; v < visible_count; v++) {
+                                int i = scroll_offset + v;
+                                draw_list_card(i, v, i == selected, cur_th);
                             }
                         }
-                    } else {
-                        int visible_count = 4;
-                        if (visible_count > (int)total_apps - scroll_offset) {
-                            visible_count = (int)total_apps - scroll_offset;
-                        }
-                        for (int v = 0; v < visible_count; v++) {
-                            int i = scroll_offset + v;
-                            draw_list_card(i, v, i == selected, cur_th);
-                        }
+                        draw_bottom_active_dock(selected, cur_th);
                     }
-                    draw_bottom_active_dock(selected, cur_th);
                 }
             } else if (g_current_theme >= 1 && g_current_theme <= 5) {
                 if ((s_anim_tick % 2) == 0) { // ~40 ms (25 FPS)

@@ -1555,10 +1555,14 @@
 
     /**
      * Décodeur natif pur JavaScript des images GIF animées (GIF87a / GIF89a avec LZW)
-     * Extrait jusqu'à maxFrames images complètes redimensionnées en RGB565 (320x240)
+     * Recompose fidèlement chaque image sur la toile logique et extrait un cycle fluide
+     * de maxFrames images redimensionnées en RGB565 (320x240) sans saccade ni découpe tronquée.
      */
-    decodeGifFrames(buf, maxFrames = 4) {
+    decodeGifFrames(buf, maxFrames = 6) {
       if (!buf || buf.length < 13) return [];
+      const screenW = buf[6] | (buf[7] << 8) || 320;
+      const screenH = buf[8] | (buf[9] << 8) || 240;
+
       let gct = [];
       let p = 13;
       if (buf[10] & 0x80) {
@@ -1568,13 +1572,14 @@
           p += 3;
         }
       }
-      let frames = [];
-      let prevFrameRgb = null;
+
+      let canvas = new Uint8Array(screenW * screenH * 3);
+      let allFrames = [];
       let transparentColorIndex = -1;
 
-      while (p < buf.length && frames.length < maxFrames) {
+      while (p < buf.length) {
         let b = buf[p];
-        if (b === 0x3B) break;
+        if (b === 0x3B) break; // Fin du flux GIF
         if (b === 0x21) {
           let extCode = buf[p + 1];
           if (extCode === 0xF9) {
@@ -1653,34 +1658,61 @@
             }
           }
           if (w > 0 && h > 0) {
-            // Accumuler les deltas transparents par-dessus la frame précédente pour éliminer tout trou noir
-            let rgb565 = prevFrameRgb ? new Uint8Array(prevFrameRgb) : new Uint8Array(320 * 240 * 2);
-            for (let y = 0; y < 240; y++) {
-              let srcY = Math.min(h - 1, Math.floor(y * h / 240));
-              let rowOffset = srcY * w;
-              for (let x = 0; x < 320; x++) {
-                let srcX = Math.min(w - 1, Math.floor(x * w / 320));
-                let colIdx = pix[rowOffset + srcX];
+            // Recomposition exacte sur la toile logique screenW x screenH
+            for (let py = 0; py < h; py++) {
+              let cy = top + py;
+              if (cy >= screenH) break;
+              let rowOff = py * w;
+              let cRowOff = cy * screenW;
+              for (let px = 0; px < w; px++) {
+                let cx = left + px;
+                if (cx >= screenW) break;
+                let colIdx = pix[rowOff + px];
                 if (colIdx !== transparentColorIndex) {
                   let c = (pal && pal[colIdx]) ? pal[colIdx] : [0, 0, 0];
-                  let r = c[0] >> 3;
-                  let g = c[1] >> 2;
-                  let b = c[2] >> 3;
-                  let val = (r << 11) | (g << 5) | b;
-                  let oIdx = (y * 320 + x) * 2;
-                  rgb565[oIdx] = val & 0xFF;
-                  rgb565[oIdx + 1] = (val >> 8) & 0xFF;
+                  let o = (cRowOff + cx) * 3;
+                  canvas[o] = c[0];
+                  canvas[o + 1] = c[1];
+                  canvas[o + 2] = c[2];
                 }
               }
             }
-            prevFrameRgb = rgb565;
-            frames.push(rgb565);
+            // Conversion propre vers l'écran LCD 320x240 RGB565
+            let rgb565 = new Uint8Array(320 * 240 * 2);
+            for (let y = 0; y < 240; y++) {
+              let sy = Math.min(screenH - 1, Math.floor(y * screenH / 240));
+              let sRow = sy * screenW;
+              let dRow = y * 320;
+              for (let x = 0; x < 320; x++) {
+                let sx = Math.min(screenW - 1, Math.floor(x * screenW / 320));
+                let sIdx = (sRow + sx) * 3;
+                let r = canvas[sIdx] >> 3;
+                let g = canvas[sIdx + 1] >> 2;
+                let b = canvas[sIdx + 2] >> 3;
+                let val = (r << 11) | (g << 5) | b;
+                let dIdx = (dRow + x) * 2;
+                rgb565[dIdx] = val & 0xFF;
+                rgb565[dIdx + 1] = (val >> 8) & 0xFF;
+              }
+            }
+            allFrames.push(rgb565);
           }
         } else {
           p++;
         }
       }
-      return frames;
+
+      if (allFrames.length <= maxFrames) {
+        return allFrames;
+      }
+
+      // Échantillonnage régulier sur l'ensemble de la boucle pour un mouvement complet et fluide
+      const sampled = [];
+      for (let i = 0; i < maxFrames; i++) {
+        const idx = Math.floor(i * allFrames.length / maxFrames);
+        sampled.push(allFrames[idx]);
+      }
+      return sampled;
     }
 
     loadImageFile(file, fitMode = 'cover', applyDither = true) {
@@ -1691,7 +1723,7 @@
         abReader.onload = (abe) => {
           try {
             const rawBuf = new Uint8Array(abe.target.result);
-            const frames = this.decodeGifFrames(rawBuf, 4);
+            const frames = this.decodeGifFrames(rawBuf, 6);
             if (frames && frames.length > 1) {
               this.gifMultiFrames = frames;
             } else {
@@ -1760,7 +1792,7 @@
         }
 
         const decodeAndApply = (rawBuf) => {
-          const frames = this.decodeGifFrames(rawBuf, 4);
+          const frames = this.decodeGifFrames(rawBuf, 6);
           if (frames && frames.length > 1) {
             this.gifMultiFrames = frames;
             this.autoSyncWallpaper();
