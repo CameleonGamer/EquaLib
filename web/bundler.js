@@ -278,9 +278,11 @@ class EquaLibBundler {
           if (isElf) {
             const modelOpt = (options.targetModel || this.options?.targetModel || 'N0120').toUpperCase();
             const isModel110 = modelOpt.includes('110');
-            const baseFlash = isModel110 ? 0x90200000 : 0x90180000;
+            const isModel115 = modelOpt.includes('115') || options.flashAddress === 0x90600000;
+            const isModel120_18 = options.flashAddress === 0x90180000;
+            const baseFlash = isModel110 ? 0x90200000 : (isModel115 ? 0x90600000 : (isModel120_18 ? 0x90180000 : 0x90580000));
             const targetFlash = baseFlash + currentExtraOffset;
-            const targetRam = (isModel110 ? 0x20010000 : 0x24020000) + (extraPayloads.length * 0x8000);
+            const targetRam = (isModel110 ? 0x20010000 : (isModel115 ? 0x200118a4 : 0x24020000)) + (extraPayloads.length * 0x8000);
             console.log('[EquaLib Bundler] Liaison dynamique de "' + app.name + '" pour Flash 0x' + targetFlash.toString(16) + ', RAM 0x' + targetRam.toString(16) + '...');
             if (typeof EquaLibLinker !== 'undefined' && EquaLibLinker.convertNwaToBin) {
               try {
@@ -416,10 +418,13 @@ class EquaLibBundler {
   async buildBundle(apps = [], format = 'bin', options = {}) {
     const isBin = (format === 'bin');
     const modelOption = (options.targetModel || this.options?.targetModel || (typeof window !== 'undefined' && window.userSettings?.targetModel) || 'N0110').toUpperCase();
-    const isN0120 = modelOption.includes('120') || options.flashAddress === 0x90180000;
+    const isSlot58 = (options.flashAddress === 0x90580000);
+    const isSlot18 = (options.flashAddress === 0x90180000);
+    const isN0120 = modelOption.includes('120') || isSlot18 || isSlot58;
     const isN0115 = modelOption.includes('115') || options.flashAddress === 0x90600000;
-    const modelSuffix = isN0120 ? 'n0120' : (isN0115 ? 'n0115' : 'n0110');
-    const targetFile = isBin ? `equalib_${modelSuffix}.bin` : `equalib_${modelSuffix}.nwa`;
+    const n0120Suffix = isSlot18 ? 'n0120' : 'n0120_58';
+    const modelSuffix = isN0120 ? n0120Suffix : (isN0115 ? 'n0115' : 'n0110');
+    const targetFile = isBin ? `equalib_${modelSuffix}.bin` : (isN0120 ? 'equalib_n0120.nwa' : (isN0115 ? 'equalib_n0115.nwa' : 'equalib_n0110.nwa'));
     const fallbackFile = isBin ? 'equalib_n0110.bin' : 'equalib_n0110.nwa';
     console.log(`[EquaLib] Génération du pack personnalisé (${apps.length} apps, format: ${format}, modèle: ${modelSuffix.toUpperCase()})...`);
 

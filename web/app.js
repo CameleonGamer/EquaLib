@@ -202,6 +202,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Constantes
   const MAX_FLASH_BYTES = 4.0 * 1024 * 1024; // 4.0 Mo alloués aux applications externes
   const DEFAULT_FLASH_ADDR_N0120 = 0x90180000;
+  const DEFAULT_FLASH_ADDR_N0120_EPS26 = 0x90580000;
   const DEFAULT_FLASH_ADDR_N0115 = 0x90600000;
   const DEFAULT_FLASH_ADDR_N0110 = 0x90200000;
 
@@ -2774,7 +2775,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
 
       const defaultForModel = (targetModel === 'N0120') 
-        ? DEFAULT_FLASH_ADDR_N0120 
+        ? ((usb && usb.flashAddress === 0x90180000) ? DEFAULT_FLASH_ADDR_N0120 : DEFAULT_FLASH_ADDR_N0120_EPS26) 
         : ((targetModel === 'N0115') ? DEFAULT_FLASH_ADDR_N0115 : DEFAULT_FLASH_ADDR_N0110);
       const targetFlashAddr = (usb && usb.flashAddress && usb.flashAddress !== 0x90000000) 
         ? usb.flashAddress 
