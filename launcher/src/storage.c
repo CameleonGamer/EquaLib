@@ -5,30 +5,35 @@
  */
 static eq_storage_t* get_storage_target(void) {
 #if PLATFORM_DEVICE
-    /* 1. Détection prioritaire par l'adresse Flash du code (infaillible sur XIP Flash) */
-    uintptr_t pc = (uintptr_t)&get_storage_target;
-    if (pc >= 0x90600000UL && pc < 0x90800000UL) {
+    /* 1. Détection prioritaire par adresse de pile SP ou variable RAM de l'app */
+    uintptr_t sp_addr = 0;
+    __asm__ volatile("mov %0, sp" : "=r"(sp_addr));
+    uintptr_t ram_addr = (uintptr_t)&g_eq_storage;
+
+    if ((sp_addr >= 0x24000000 && sp_addr <= 0x24060000) || (ram_addr >= 0x24000000 && ram_addr <= 0x24060000)) {
+        /* NumWorks N0120 (STM32H725 AXI SRAM : [0x240118a4, 0x24037000]) */
+        return (eq_storage_t*)0x2401D000;
+    } else if ((sp_addr >= 0x200118a4 && sp_addr <= 0x20030000) || (ram_addr >= 0x20010000 && ram_addr <= 0x20030000)) {
         /* NumWorks N0115 (STM32F730 SRAM : [0x200118a4, 0x200218a4]) */
         return (eq_storage_t*)0x2001D000;
-    } else if (pc >= 0x90180000UL && pc < 0x90200000UL) {
-        /* NumWorks N0120 (STM32H725 AXI SRAM : [0x240118a4, 0x240218a4]) */
-        return (eq_storage_t*)0x2401D000;
-    } else if (pc >= 0x90200000UL && pc < 0x90600000UL) {
+    } else if ((sp_addr >= 0x20000000 && sp_addr < 0x200118a4) || (ram_addr >= 0x20000000 && ram_addr < 0x200118a4)) {
         /* NumWorks N0110 (STM32F412 SRAM : [0x20000000, 0x20010000]) */
         return (eq_storage_t*)0x2000E000;
     }
 
-    /* 2. Détection par adresse de pile sp */
-    uintptr_t sp_addr = 0;
-    __asm__ volatile("mov %0, sp" : "=r"(sp_addr));
-    if (sp_addr >= 0x24000000 && sp_addr <= 0x24050000) {
-        /* NumWorks N0120 */
-        return (eq_storage_t*)0x2401D000;
-    } else if (sp_addr >= 0x200118a4 && sp_addr <= 0x20030000) {
-        /* NumWorks N0115 */
+    /* 2. Détection secondaire par l'adresse Flash du code (infaillible sur XIP Flash) */
+    uintptr_t pc = (uintptr_t)&get_storage_target;
+    if (pc >= 0x90600000UL && pc < 0x90800000UL) {
+        /* NumWorks N0115 (STM32F730) */
         return (eq_storage_t*)0x2001D000;
-    } else if (sp_addr >= 0x20000000 && sp_addr < 0x200118a4) {
-        /* NumWorks N0110 */
+    } else if (pc >= 0x90580000UL && pc < 0x90600000UL) {
+        /* NumWorks N0120 Epsilon 24+ (STM32H725) */
+        return (eq_storage_t*)0x2401D000;
+    } else if (pc >= 0x90180000UL && pc < 0x90200000UL) {
+        /* NumWorks N0120 early Epsilon (STM32H725) */
+        return (eq_storage_t*)0x2401D000;
+    } else if (pc >= 0x90200000UL && pc < 0x90580000UL) {
+        /* NumWorks N0110 (STM32F412) */
         return (eq_storage_t*)0x2000E000;
     }
 #endif

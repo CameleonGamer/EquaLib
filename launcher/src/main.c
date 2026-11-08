@@ -159,6 +159,7 @@ static void save_persistent_settings(void) {
 static eadk_color_t s_wallpaper_ram_band[EADK_SCREEN_WIDTH * WALLPAPER_BAND_HEIGHT];
 
 #define EQUALIB_FLASH_BASE_N0115 0x90600000UL
+#define EQUALIB_FLASH_BASE_N0120_58 0x90580000UL
 #define EQUALIB_FLASH_BASE_N0110 0x90200000UL
 #define EQUALIB_FLASH_BASE_N0120 0x90180000UL
 
@@ -168,7 +169,10 @@ static inline uintptr_t get_app_flash_base(void) {
     if (pc >= 0x90600000UL && pc < 0x90800000UL) {
         return EQUALIB_FLASH_BASE_N0115;
     }
-    if (pc >= 0x90200000UL && pc < 0x90600000UL) {
+    if (pc >= 0x90580000UL && pc < 0x90600000UL) {
+        return EQUALIB_FLASH_BASE_N0120_58;
+    }
+    if (pc >= 0x90200000UL && pc < 0x90580000UL) {
         return EQUALIB_FLASH_BASE_N0110;
     }
     if (pc >= 0x90180000UL && pc < 0x90200000UL) {
@@ -180,7 +184,10 @@ static inline uintptr_t get_app_flash_base(void) {
     if (name_addr >= 0x90600000UL && name_addr < 0x90800000UL) {
         return EQUALIB_FLASH_BASE_N0115;
     }
-    if (name_addr >= 0x90200000UL && name_addr < 0x90600000UL) {
+    if (name_addr >= 0x90580000UL && name_addr < 0x90600000UL) {
+        return EQUALIB_FLASH_BASE_N0120_58;
+    }
+    if (name_addr >= 0x90200000UL && name_addr < 0x90580000UL) {
         return EQUALIB_FLASH_BASE_N0110;
     }
     if (name_addr >= 0x90180000UL && name_addr < 0x90200000UL) {

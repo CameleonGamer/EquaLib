@@ -623,8 +623,9 @@ class NumWorksWebUSB {
    * Quitte le mode DFU et déclenche l'exécution du code Flash
    */
   async leave(resetAddress = null) {
-    // Redémarre proprement le kernel Epsilon depuis la mémoire Flash (conforme nwlink dfu.leave)
-    const targetReset = resetAddress || (this.flashAddress && this.flashAddress !== 0x90000000 ? this.flashAddress : 0x08000000);
+    // 0x08000000 (134217728) est l'adresse officielle de réinitialisation matérielle STM32 (conforme nwlink)
+    // Redémarre proprement le kernel Epsilon depuis la mémoire Flash interne
+    const targetReset = resetAddress || 0x08000000;
     console.log(`[WebUSB] Sortie DFU vers 0x${targetReset.toString(16)}...`);
     try {
       await this.setAddress(targetReset);
