@@ -3711,6 +3711,28 @@ class NumWorksSimulator {
     const canvas = document.getElementById('fnaf-canvas');
     const ctx = canvas?.getContext?.('2d');
 
+    // Préchargement des véritables textures 3D originales de Scott Cawthon
+    const realTextures = {};
+    const textureNames = [
+      'office_normal_left', 'office_normal_center', 'office_normal_right',
+      'office_light_l_left', 'office_light_l_center', 'office_light_l_right',
+      'office_bonnie_left', 'office_bonnie_center', 'office_bonnie_right',
+      'office_light_r_left', 'office_light_r_center', 'office_light_r_right',
+      'office_chica_left', 'office_chica_center', 'office_chica_right',
+      'office_blackout_left', 'office_blackout_center', 'office_blackout_right',
+      'cam_1a_stage', 'cam_1b_dining', 'cam_1c_cove', 'cam_2a_west_hall',
+      'cam_2b_west_corner', 'cam_3_closet', 'cam_4a_east_hall', 'cam_4b_east_corner',
+      'scare_bonnie', 'scare_chica', 'scare_foxy', 'scare_freddy'
+    ];
+
+    if (typeof window !== 'undefined' && typeof window.Image === 'function') {
+      for (const name of textureNames) {
+        const img = new Image();
+        img.src = `assets/fnaf/${name}.png`;
+        realTextures[name] = img;
+      }
+    }
+
     // État FNAF
     let gameState = 'TITLE'; // TITLE, OFFICE, POWER_OUT, JUMPSCARE, GAME_OVER, WIN_6AM, CUSTOM_NIGHT
     let night = 1;
@@ -4218,122 +4240,243 @@ class NumWorksSimulator {
           ctx.fillText('Clic sur bot = changer IA | Clic Lancer = Jouer', 25, 218);
 
         } else if (gameState === 'OFFICE') {
-          const offX = (viewPan === 0) ? 0 : ((viewPan === 1) ? -50 : -100);
+          const panStr = (viewPan === 0) ? 'left' : ((viewPan === 2) ? 'right' : 'center');
+          let texKey = 'office_normal_' + panStr;
 
-          // Mur fond
-          ctx.fillStyle = '#1e293b';
-          ctx.fillRect(0, 0, 320, 165);
-
-          // Bande jaune et noire
-          for (let x = -20; x < 360; x += 30) {
-            ctx.fillStyle = '#facc15';
-            ctx.fillRect(x + (offX % 30), 145, 15, 12);
-            ctx.fillStyle = '#000000';
-            ctx.fillRect(x + 15 + (offX % 30), 145, 15, 12);
-          }
-
-          // Sol damier
-          for (let y = 157; y < 240; y += 14) {
-            for (let x = (offX % 28) - 28; x < 348; x += 28) {
-              const chk = ((Math.floor(x / 28) + Math.floor(y / 14)) & 1);
-              ctx.fillStyle = chk ? '#475569' : '#0f172a';
-              ctx.fillRect(x, y, 14, 14);
-            }
-          }
-
-          // VUE GAUCHE
-          if (viewPan === 0 || viewPan === 1) {
-            const dlx = 20 + offX;
-            ctx.fillStyle = '#000000';
-            ctx.fillRect(dlx, 20, 70, 140);
-
-            if (lightLeft && bonnieLoc === 'DOOR_LEFT') {
-              // Bonnie à la porte
-              ctx.fillStyle = '#6d28d9';
-              ctx.fillRect(dlx + 15, 30, 40, 80);
-              ctx.fillRect(dlx + 18, 10, 8, 25);
-              ctx.fillRect(dlx + 42, 10, 8, 25);
-              ctx.fillStyle = '#ffffff';
-              ctx.fillRect(dlx + 22, 40, 8, 8);
-              ctx.fillRect(dlx + 40, 40, 8, 8);
-            }
-
-            if (doorLeft) {
-              ctx.fillStyle = '#64748b';
-              ctx.fillRect(dlx, 20, 70, 140);
-              ctx.fillStyle = '#facc15';
-              ctx.fillRect(dlx, 145, 70, 15);
-            }
-
-            // Boutons Porte G
-            ctx.fillStyle = '#334155';
-            ctx.fillRect(dlx + 75, 60, 24, 55);
-            ctx.fillStyle = doorLeft ? '#ef4444' : '#22c55e';
-            ctx.fillRect(dlx + 78, 65, 18, 20);
-            ctx.fillStyle = lightLeft ? '#ffffff' : '#64748b';
-            ctx.fillRect(dlx + 78, 90, 18, 20);
-          }
-
-          // VUE CENTRE
-          if (viewPan === 1 || viewPan === 0 || viewPan === 2) {
-            const cx = 120 + offX;
-            // Poster CELEBRATE!
-            ctx.fillStyle = '#f8fafc';
-            ctx.fillRect(cx + 10, 25, 75, 45);
-            ctx.fillStyle = '#facc15';
-            ctx.font = 'bold 9px monospace';
-            ctx.fillText('CELEBRATE!', cx + 16, 40);
-
-            // Bureau métallique
-            ctx.fillStyle = '#334155';
-            ctx.fillRect(cx - 30, 125, 160, 40);
-
-            // Ventilateur animé
-            ctx.fillStyle = '#1e293b';
-            ctx.beginPath();
-            ctx.arc(cx + 40, 105, 18, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.fillStyle = '#cbd5e1';
-            if (fanFrame === 0) {
-              ctx.fillRect(cx + 36, 92, 8, 26);
-              ctx.fillRect(cx + 27, 101, 26, 8);
-            } else if (fanFrame === 1) {
-              ctx.fillRect(cx + 30, 95, 20, 20);
+          if (lightLeft) {
+            if (bonnieLoc === 'DOOR_LEFT') {
+              texKey = 'office_bonnie_' + panStr;
             } else {
-              ctx.fillRect(cx + 27, 101, 26, 8);
-              ctx.fillRect(cx + 36, 92, 8, 26);
+              texKey = 'office_light_l_' + panStr;
+            }
+          } else if (lightRight) {
+            if (chicaLoc === 'DOOR_RIGHT') {
+              texKey = 'office_chica_' + panStr;
+            } else {
+              texKey = 'office_light_r_' + panStr;
             }
           }
 
-          // VUE DROITE
-          if (viewPan === 1 || viewPan === 2) {
-            const drx = 230 + offX;
-            // Boutons Porte D
-            ctx.fillStyle = '#334155';
-            ctx.fillRect(drx - 28, 60, 24, 55);
-            ctx.fillStyle = doorRight ? '#ef4444' : '#22c55e';
-            ctx.fillRect(drx - 25, 65, 18, 20);
-            ctx.fillStyle = lightRight ? '#ffffff' : '#64748b';
-            ctx.fillRect(drx - 25, 90, 18, 20);
+          const curTex = realTextures[texKey];
+          let texDrawn = false;
+          if (curTex && curTex.complete && curTex.naturalWidth > 0) {
+            ctx.drawImage(curTex, 0, 0, 320, 240);
+            texDrawn = true;
+          }
 
-            // Fenêtre
-            ctx.fillStyle = lightRight ? '#334155' : '#0f172a';
-            ctx.fillRect(drx, 20, 35, 55);
-            if (lightRight && chicaLoc === 'DOOR_RIGHT') {
-              ctx.fillStyle = '#eab308';
-              ctx.fillRect(drx + 2, 25, 30, 40);
-              ctx.fillStyle = '#ea580c';
-              ctx.fillRect(drx + 10, 45, 16, 12);
+          if (!texDrawn) {
+            const offX = (viewPan === 0) ? 0 : ((viewPan === 1) ? -50 : -100);
+
+            // Mur fond
+            ctx.fillStyle = '#1e293b';
+            ctx.fillRect(0, 0, 320, 165);
+
+            // Bande jaune et noire
+            for (let x = -20; x < 360; x += 30) {
+              ctx.fillStyle = '#facc15';
+              ctx.fillRect(x + (offX % 30), 145, 15, 12);
+              ctx.fillStyle = '#000000';
+              ctx.fillRect(x + 15 + (offX % 30), 145, 15, 12);
             }
 
-            // Porte Droite
-            ctx.fillStyle = '#000000';
-            ctx.fillRect(drx + 40, 20, 70, 140);
-            if (doorRight) {
-              ctx.fillStyle = '#64748b';
-              ctx.fillRect(drx + 40, 20, 70, 140);
+            // Sol damier
+            for (let y = 157; y < 240; y += 14) {
+              for (let x = (offX % 28) - 28; x < 348; x += 28) {
+                const chk = ((Math.floor(x / 28) + Math.floor(y / 14)) & 1);
+                ctx.fillStyle = chk ? '#475569' : '#0f172a';
+                ctx.fillRect(x, y, 14, 14);
+              }
+            }
+
+            // VUE GAUCHE
+            if (viewPan === 0 || viewPan === 1) {
+              const dlx = 20 + offX;
+              ctx.fillStyle = '#000000';
+              ctx.fillRect(dlx, 20, 70, 140);
+
+              if (lightLeft && bonnieLoc === 'DOOR_LEFT') {
+                ctx.fillStyle = '#6d28d9';
+                ctx.fillRect(dlx + 15, 30, 40, 80);
+                ctx.fillRect(dlx + 18, 10, 8, 25);
+                ctx.fillRect(dlx + 42, 10, 8, 25);
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(dlx + 22, 40, 8, 8);
+                ctx.fillRect(dlx + 40, 40, 8, 8);
+              }
+
+              if (doorLeft) {
+                ctx.fillStyle = '#64748b';
+                ctx.fillRect(dlx, 20, 70, 140);
+                ctx.fillStyle = '#facc15';
+                ctx.fillRect(dlx, 145, 70, 15);
+              }
+
+              // Boutons Porte G
+              ctx.fillStyle = '#334155';
+              ctx.fillRect(dlx + 75, 60, 24, 55);
+              ctx.fillStyle = doorLeft ? '#ef4444' : '#22c55e';
+              ctx.fillRect(dlx + 78, 65, 18, 20);
+              ctx.fillStyle = lightLeft ? '#ffffff' : '#64748b';
+              ctx.fillRect(dlx + 78, 90, 18, 20);
+            }
+
+            // VUE CENTRE
+            if (viewPan === 1 || viewPan === 0 || viewPan === 2) {
+              const cx = 120 + offX;
+              ctx.fillStyle = '#f8fafc';
+              ctx.fillRect(cx + 10, 25, 75, 45);
               ctx.fillStyle = '#facc15';
-              ctx.fillRect(drx + 40, 145, 70, 15);
+              ctx.font = 'bold 9px monospace';
+              ctx.fillText('CELEBRATE!', cx + 16, 40);
+
+              ctx.fillStyle = '#334155';
+              ctx.fillRect(cx - 30, 125, 160, 40);
+
+              ctx.fillStyle = '#1e293b';
+              ctx.beginPath();
+              ctx.arc(cx + 40, 105, 18, 0, Math.PI * 2);
+              ctx.fill();
+              ctx.fillStyle = '#cbd5e1';
+              if (fanFrame === 0) {
+                ctx.fillRect(cx + 36, 92, 8, 26);
+                ctx.fillRect(cx + 27, 101, 26, 8);
+              } else if (fanFrame === 1) {
+                ctx.fillRect(cx + 30, 95, 20, 20);
+              } else {
+                ctx.fillRect(cx + 27, 101, 26, 8);
+                ctx.fillRect(cx + 36, 92, 8, 26);
+              }
+            }
+
+            // VUE DROITE
+            if (viewPan === 1 || viewPan === 2) {
+              const drx = 230 + offX;
+              ctx.fillStyle = '#334155';
+              ctx.fillRect(drx - 28, 60, 24, 55);
+              ctx.fillStyle = doorRight ? '#ef4444' : '#22c55e';
+              ctx.fillRect(drx - 25, 65, 18, 20);
+              ctx.fillStyle = lightRight ? '#ffffff' : '#64748b';
+              ctx.fillRect(drx - 25, 90, 18, 20);
+
+              ctx.fillStyle = lightRight ? '#334155' : '#0f172a';
+              ctx.fillRect(drx, 20, 35, 55);
+              if (lightRight && chicaLoc === 'DOOR_RIGHT') {
+                ctx.fillStyle = '#eab308';
+                ctx.fillRect(drx + 2, 25, 30, 40);
+                ctx.fillStyle = '#ea580c';
+                ctx.fillRect(drx + 10, 45, 16, 12);
+              }
+
+              ctx.fillStyle = '#000000';
+              ctx.fillRect(drx + 40, 20, 70, 140);
+              if (doorRight) {
+                ctx.fillStyle = '#64748b';
+                ctx.fillRect(drx + 40, 20, 70, 140);
+                ctx.fillStyle = '#facc15';
+                ctx.fillRect(drx + 40, 145, 70, 15);
+              }
+            }
+          } else {
+            // Sur-couche authentique au-dessus de la texture 3D
+            // 1. Portes de sécurité blindées si fermées
+            if (doorLeft) {
+              if (viewPan === 0) {
+                ctx.fillStyle = '#1e2430';
+                ctx.fillRect(0, 0, 76, 215);
+                for (let dy = 0; dy < 195; dy += 14) {
+                  ctx.fillStyle = '#334155';
+                  ctx.fillRect(0, dy, 76, 12);
+                  ctx.fillStyle = '#475569';
+                  ctx.fillRect(0, dy, 76, 2);
+                  ctx.fillStyle = '#0f172a';
+                  ctx.fillRect(0, dy + 11, 76, 2);
+                }
+                for (let sx = -15; sx < 76; sx += 14) {
+                  ctx.fillStyle = '#facc15';
+                  ctx.beginPath();
+                  ctx.moveTo(sx, 215);
+                  ctx.lineTo(sx + 8, 215);
+                  ctx.lineTo(sx + 15, 198);
+                  ctx.lineTo(sx + 7, 198);
+                  ctx.closePath();
+                  ctx.fill();
+                }
+              } else if (viewPan === 1) {
+                ctx.fillStyle = '#1e2430';
+                ctx.fillRect(0, 15, 18, 190);
+                for (let dy = 15; dy < 190; dy += 14) {
+                  ctx.fillStyle = '#334155';
+                  ctx.fillRect(0, dy, 18, 12);
+                }
+              }
+            }
+
+            if (doorRight) {
+              if (viewPan === 2) {
+                ctx.fillStyle = '#1e2430';
+                ctx.fillRect(244, 0, 76, 215);
+                for (let dy = 0; dy < 195; dy += 14) {
+                  ctx.fillStyle = '#334155';
+                  ctx.fillRect(244, dy, 76, 12);
+                  ctx.fillStyle = '#475569';
+                  ctx.fillRect(244, dy, 76, 2);
+                  ctx.fillStyle = '#0f172a';
+                  ctx.fillRect(244, dy + 11, 76, 2);
+                }
+                for (let sx = 230; sx < 320; sx += 14) {
+                  ctx.fillStyle = '#facc15';
+                  ctx.beginPath();
+                  ctx.moveTo(sx, 215);
+                  ctx.lineTo(sx + 8, 215);
+                  ctx.lineTo(sx + 15, 198);
+                  ctx.lineTo(sx + 7, 198);
+                  ctx.closePath();
+                  ctx.fill();
+                }
+              } else if (viewPan === 1) {
+                ctx.fillStyle = '#1e2430';
+                ctx.fillRect(302, 15, 18, 190);
+                for (let dy = 15; dy < 190; dy += 14) {
+                  ctx.fillStyle = '#334155';
+                  ctx.fillRect(302, dy, 18, 12);
+                }
+              }
+            }
+
+            // 2. Boutons de contrôle muraux
+            if (viewPan === 0) {
+              ctx.fillStyle = '#1e293b';
+              ctx.fillRect(78, 62, 22, 52);
+              ctx.strokeStyle = '#0f172a';
+              ctx.strokeRect(78, 62, 22, 52);
+              ctx.fillStyle = doorLeft ? '#ef4444' : '#15803d';
+              ctx.fillRect(81, 65, 16, 20);
+              ctx.fillStyle = lightLeft ? '#38bdf8' : '#475569';
+              ctx.fillRect(81, 90, 16, 20);
+            } else if (viewPan === 2) {
+              ctx.fillStyle = '#1e293b';
+              ctx.fillRect(220, 62, 22, 52);
+              ctx.strokeStyle = '#0f172a';
+              ctx.strokeRect(220, 62, 22, 52);
+              ctx.fillStyle = doorRight ? '#ef4444' : '#15803d';
+              ctx.fillRect(223, 65, 16, 20);
+              ctx.fillStyle = lightRight ? '#38bdf8' : '#475569';
+              ctx.fillRect(223, 90, 16, 20);
+            }
+
+            // 3. Pales du ventilateur en rotation
+            if (viewPan === 1) {
+              ctx.save();
+              ctx.translate(160, 124);
+              ctx.rotate(fanFrame * (Math.PI / 1.5));
+              ctx.fillStyle = 'rgba(226, 232, 240, 0.45)';
+              for (let b = 0; b < 3; b++) {
+                ctx.beginPath();
+                ctx.arc(0, -9, 4, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.rotate((2 * Math.PI) / 3);
+              }
+              ctx.restore();
             }
           }
 
@@ -4369,37 +4512,25 @@ class NumWorksSimulator {
             ctx.fillStyle = '#020617';
             ctx.fillRect(0, 0, 320, 240);
 
-            // Flux de la caméra active
-            if (activeCam === '1A') {
-              ctx.fillStyle = '#1e1b4b';
-              ctx.fillRect(20, 35, 180, 145);
-              if (bonnieLoc === 'STAGE') { ctx.fillStyle = '#7c3aed'; ctx.fillRect(35, 70, 30, 90); }
-              if (freddyLoc === 'STAGE') { ctx.fillStyle = '#854d0e'; ctx.fillRect(90, 65, 36, 95); }
-              if (chicaLoc === 'STAGE') { ctx.fillStyle = '#eab308'; ctx.fillRect(145, 70, 32, 90); }
-            } else if (activeCam === '1C') {
-              ctx.fillStyle = '#311042';
-              ctx.fillRect(30, 35, 160, 150);
-              ctx.fillStyle = '#facc15';
-              ctx.font = 'bold 11px monospace';
-              ctx.fillText(foxyStage >= 3 ? "IT'S ME!" : "HORS SERV", 45, 175);
-              if (foxyStage === 1) { ctx.fillStyle = '#dc2626'; ctx.fillRect(80, 70, 30, 40); }
-              else if (foxyStage === 2) { ctx.fillStyle = '#dc2626'; ctx.fillRect(70, 65, 45, 80); }
-              else if (foxyStage === 3) {
-                ctx.fillStyle = '#ef4444';
-                ctx.fillText('CRIQUE VIDE !', 50, 90);
-              }
-            } else if (activeCam === '2A') {
-              ctx.fillStyle = '#1e293b';
-              ctx.fillRect(20, 20, 180, 180);
-              if (foxyStage === 3) {
-                ctx.fillStyle = '#dc2626';
-                ctx.fillRect(70 + ((hourTimer / 80) % 3) * 15, 80, 40, 70);
-                ctx.fillStyle = '#ef4444';
-                ctx.fillText('ALERTE: FOXY SPRINTE !', 30, 40);
-              }
-            } else if (activeCam === '6') {
+            const camTexMap = {
+              '1A': 'cam_1a_stage',
+              '1B': 'cam_1b_dining',
+              '1C': 'cam_1c_cove',
+              '2A': 'cam_2a_west_hall',
+              '2B': 'cam_2b_west_corner',
+              '3':  'cam_3_closet',
+              '4A': 'cam_4a_east_hall',
+              '4B': 'cam_4b_east_corner',
+              '5':  'cam_3_closet',
+              '7':  'cam_1b_dining'
+            };
+
+            const camTexName = camTexMap[activeCam];
+            const camTex = camTexName ? realTextures[camTexName] : null;
+
+            if (activeCam === '6') {
               ctx.fillStyle = '#000000';
-              ctx.fillRect(10, 30, 200, 160);
+              ctx.fillRect(0, 0, 215, 240);
               ctx.fillStyle = '#ffffff';
               ctx.font = '10px monospace';
               ctx.fillText('- CAMERA DESACTIVEE -', 35, 80);
@@ -4407,15 +4538,60 @@ class NumWorksSimulator {
               ctx.fillText('[ AUDIO SEUL ]', 55, 105);
               if (chicaLoc === 'KITCHEN') { ctx.fillStyle = '#facc15'; ctx.fillText('* Casseroles & Bruits *', 35, 130); }
               if (freddyLoc === 'KITCHEN') { ctx.fillStyle = '#38bdf8'; ctx.fillText('* Boite a Musique *', 40, 130); }
+            } else if (camTex && camTex.complete && camTex.naturalWidth > 0) {
+              ctx.drawImage(camTex, 0, 0, 320, 240);
+              if (activeCam === '2A' && foxyStage === 3) {
+                ctx.fillStyle = 'rgba(220, 38, 38, 0.45)';
+                ctx.fillRect(0, 0, 215, 240);
+                ctx.fillStyle = '#ef4444';
+                ctx.font = 'bold 11px monospace';
+                ctx.fillText('ALERTE: FOXY SPRINTE !', 25, 55);
+              }
             } else {
-              ctx.fillStyle = '#1e293b';
-              ctx.fillRect(20, 30, 180, 165);
+              // Fallback géométrique
+              if (activeCam === '1A') {
+                ctx.fillStyle = '#1e1b4b';
+                ctx.fillRect(20, 35, 180, 145);
+                if (bonnieLoc === 'STAGE') { ctx.fillStyle = '#7c3aed'; ctx.fillRect(35, 70, 30, 90); }
+                if (freddyLoc === 'STAGE') { ctx.fillStyle = '#854d0e'; ctx.fillRect(90, 65, 36, 95); }
+                if (chicaLoc === 'STAGE') { ctx.fillStyle = '#eab308'; ctx.fillRect(145, 70, 32, 90); }
+              } else if (activeCam === '1C') {
+                ctx.fillStyle = '#311042';
+                ctx.fillRect(30, 35, 160, 150);
+                ctx.fillStyle = '#facc15';
+                ctx.font = 'bold 11px monospace';
+                ctx.fillText(foxyStage >= 3 ? "IT'S ME!" : "HORS SERV", 45, 175);
+                if (foxyStage === 1) { ctx.fillStyle = '#dc2626'; ctx.fillRect(80, 70, 30, 40); }
+                else if (foxyStage === 2) { ctx.fillStyle = '#dc2626'; ctx.fillRect(70, 65, 45, 80); }
+                else if (foxyStage === 3) {
+                  ctx.fillStyle = '#ef4444';
+                  ctx.fillText('CRIQUE VIDE !', 50, 90);
+                }
+              } else if (activeCam === '2A') {
+                ctx.fillStyle = '#1e293b';
+                ctx.fillRect(20, 20, 180, 180);
+                if (foxyStage === 3) {
+                  ctx.fillStyle = '#dc2626';
+                  ctx.fillRect(70 + ((hourTimer / 80) % 3) * 15, 80, 40, 70);
+                  ctx.fillStyle = '#ef4444';
+                  ctx.fillText('ALERTE: FOXY SPRINTE !', 30, 40);
+                }
+              } else {
+                ctx.fillStyle = '#1e293b';
+                ctx.fillRect(20, 30, 180, 165);
+              }
+            }
+
+            // Scanlines authentiques CRT
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.22)';
+            for (let sl = 0; sl < 240; sl += 4) {
+              ctx.fillRect(0, sl, 320, 2);
             }
 
             // Neige TV
-            for (let i = 0; i < 400; i++) {
-              ctx.fillStyle = Math.random() < 0.5 ? '#ffffff' : '#000000';
-              ctx.fillRect(Math.random() * 210, Math.random() * 210, 2, 2);
+            for (let i = 0; i < 300; i++) {
+              ctx.fillStyle = Math.random() < 0.5 ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.3)';
+              ctx.fillRect(Math.random() * 215, Math.random() * 240, 2, 2);
             }
 
             // Point REC
@@ -4464,18 +4640,23 @@ class NumWorksSimulator {
           ctx.fillStyle = '#000000';
           ctx.fillRect(0, 0, 320, 240);
 
+          const blackoutTex = realTextures['office_blackout_left'];
           if (Math.floor(blackoutTimer / 250) % 2 === 0) {
-            ctx.fillStyle = '#38bdf8';
-            ctx.fillRect(45, 80, 10, 10);
-            ctx.fillRect(75, 80, 10, 10);
-            ctx.fillStyle = '#ffffff';
-            ctx.fillRect(47, 82, 6, 6);
-            ctx.fillRect(77, 82, 6, 6);
+            if (blackoutTex && blackoutTex.complete && blackoutTex.naturalWidth > 0) {
+              ctx.drawImage(blackoutTex, 0, 0, 320, 240);
+            } else {
+              ctx.fillStyle = '#38bdf8';
+              ctx.fillRect(45, 80, 10, 10);
+              ctx.fillRect(75, 80, 10, 10);
+              ctx.fillStyle = '#ffffff';
+              ctx.fillRect(47, 82, 6, 6);
+              ctx.fillRect(77, 82, 6, 6);
+            }
           }
 
           ctx.fillStyle = '#64748b';
           ctx.font = '10px monospace';
-          ctx.fillText('* Toreador March *', 105, 120);
+          ctx.fillText('* Toreador March *', 105, 215);
 
           if (blackoutTimer >= 7500) {
             gameState = 'JUMPSCARE';
@@ -4486,40 +4667,47 @@ class NumWorksSimulator {
 
         } else if (gameState === 'JUMPSCARE') {
           scareTimer += dt;
-          const shakeX = Math.round((Math.random() - 0.5) * 12);
-          const shakeY = Math.round((Math.random() - 0.5) * 12);
+          const shakeX = Math.round((Math.random() - 0.5) * 16);
+          const shakeY = Math.round((Math.random() - 0.5) * 16);
 
           ctx.fillStyle = (Math.floor(scareTimer / 60) % 2 === 0) ? '#dc2626' : '#000000';
           ctx.fillRect(0, 0, 320, 240);
 
-          const cx = 160 + shakeX;
-          const cy = 120 + shakeY;
+          const scareKey = 'scare_' + scareType.toLowerCase();
+          const scareImg = realTextures[scareKey];
 
-          if (scareType === 'BONNIE') {
-            ctx.fillStyle = '#6d28d9';
-            ctx.fillRect(cx - 60, cy - 70, 120, 140);
-            ctx.fillRect(cx - 45, cy - 110, 20, 50);
-            ctx.fillRect(cx + 25, cy - 110, 20, 50);
-          } else if (scareType === 'CHICA') {
-            ctx.fillStyle = '#eab308';
-            ctx.fillRect(cx - 65, cy - 65, 130, 130);
-            ctx.fillStyle = '#ea580c';
-            ctx.fillRect(cx - 40, cy, 80, 40);
-          } else if (scareType === 'FOXY') {
-            ctx.fillStyle = '#dc2626';
-            ctx.fillRect(cx - 70, cy - 60, 140, 120);
+          if (scareImg && scareImg.complete && scareImg.naturalWidth > 0) {
+            ctx.drawImage(scareImg, shakeX, shakeY, 320, 240);
           } else {
-            ctx.fillStyle = '#854d0e';
-            ctx.fillRect(cx - 65, cy - 65, 130, 130);
-            ctx.fillStyle = '#000000';
-            ctx.fillRect(cx - 25, cy - 100, 50, 40);
-          }
+            const cx = 160 + shakeX;
+            const cy = 120 + shakeY;
 
-          // Dents et yeux
-          ctx.fillStyle = '#ffffff';
-          ctx.fillRect(cx - 35, cy - 40, 18, 18);
-          ctx.fillRect(cx + 17, cy - 40, 18, 18);
-          ctx.fillRect(cx - 30, cy + 15, 60, 15);
+            if (scareType === 'BONNIE') {
+              ctx.fillStyle = '#6d28d9';
+              ctx.fillRect(cx - 60, cy - 70, 120, 140);
+              ctx.fillRect(cx - 45, cy - 110, 20, 50);
+              ctx.fillRect(cx + 25, cy - 110, 20, 50);
+            } else if (scareType === 'CHICA') {
+              ctx.fillStyle = '#eab308';
+              ctx.fillRect(cx - 65, cy - 65, 130, 130);
+              ctx.fillStyle = '#ea580c';
+              ctx.fillRect(cx - 40, cy, 80, 40);
+            } else if (scareType === 'FOXY') {
+              ctx.fillStyle = '#dc2626';
+              ctx.fillRect(cx - 70, cy - 60, 140, 120);
+            } else {
+              ctx.fillStyle = '#854d0e';
+              ctx.fillRect(cx - 65, cy - 65, 130, 130);
+              ctx.fillStyle = '#000000';
+              ctx.fillRect(cx - 25, cy - 100, 50, 40);
+            }
+
+            // Dents et yeux
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(cx - 35, cy - 40, 18, 18);
+            ctx.fillRect(cx + 17, cy - 40, 18, 18);
+            ctx.fillRect(cx - 30, cy + 15, 60, 15);
+          }
 
           if (scareTimer >= 1800) {
             gameState = 'GAME_OVER';
