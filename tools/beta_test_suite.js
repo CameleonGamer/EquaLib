@@ -487,6 +487,35 @@ describe('5. Simulateur Virtuel et Jeux NumWorks', () => {
     sim.returnToMenu();
     assert.strictEqual(sim.currentView, 'MENU');
   });
+
+  it('Lancement du jeu Five Nights at Freddy\'s (surveillance, portes, moniteur, IA et 20/20/20/20)', () => {
+    sim.launchApp('FNAF');
+    assert.strictEqual(sim.currentView, 'FNAF');
+    assert(typeof sim.fnafPan === 'function');
+    assert(typeof sim.fnafToggleDoorLeft === 'function');
+    assert(typeof sim.fnafToggleDoorRight === 'function');
+    assert(typeof sim.fnafToggleLightLeft === 'function');
+    assert(typeof sim.fnafToggleLightRight === 'function');
+    assert(typeof sim.fnafToggleMonitor === 'function');
+    assert(typeof sim.fnafSelectCam === 'function');
+    assert(typeof sim.fnafHonk === 'function');
+    assert(typeof sim.fnafRestart === 'function');
+    sim.fnafPan(-1);
+    sim.fnafToggleDoorLeft();
+    sim.fnafToggleLightLeft();
+    sim.fnafPan(1);
+    sim.fnafToggleDoorRight();
+    sim.fnafToggleLightRight();
+    sim.fnafPan(0);
+    sim.fnafHonk();
+    sim.fnafToggleMonitor();
+    sim.fnafSelectCam('1C');
+    sim.fnafSelectCam('2A');
+    sim.fnafToggleMonitor();
+    sim.fnafRestart();
+    sim.returnToMenu();
+    assert.strictEqual(sim.currentView, 'MENU');
+  });
 });
 
 // -------------------------------------------------------------
@@ -1219,7 +1248,7 @@ describe('7. Compilation et Validité Syntaxique des Jeux Python (.NWS)', () => 
   // SUITE 11: Chargement DOMContentLoaded de web/app.js & Catalogue
   // -------------------------------------------------------------
   await describe('11. Chargement DOMContentLoaded de web/app.js & Catalogue', async () => {
-    await itAsync('Exécution DOMContentLoaded sans exception et rendu complet des 15 applications du catalogue', async () => {
+    await itAsync('Exécution DOMContentLoaded sans exception et rendu complet des 16 applications du catalogue', async () => {
       class MockClassList {
         constructor(el) {
           this.el = el;
@@ -1456,7 +1485,7 @@ describe('7. Compilation et Validité Syntaxique des Jeux Python (.NWS)', () => 
         }
 
         const catalogList = getOrCreateElement('catalog-list');
-        assert.strictEqual(catalogList.children.length, 15, `Le catalogue #catalog-list doit contenir 15 applications après DOMContentLoaded (reçu : ${catalogList.children.length})`);
+        assert.strictEqual(catalogList.children.length, 16, `Le catalogue #catalog-list doit contenir 16 applications après DOMContentLoaded (reçu : ${catalogList.children.length})`);
 
         // Test setTargetModel pour N0115, N0120, N0110
         assert(typeof global.window.setTargetModel === 'function', 'setTargetModel doit être accessible');

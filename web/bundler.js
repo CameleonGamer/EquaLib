@@ -277,6 +277,8 @@ class EquaLibBundler {
         appType = 19; // Puissance 4 natif C 60 FPS
       } else if (appIdLower === 'morpion' || appIdLower === 'comm_morpion' || appNameLower.includes('morpion') || appNameLower.includes('tic tac toe')) {
         appType = 20; // Morpion natif C 60 FPS
+      } else if (appIdLower === 'fnaf' || appIdLower === 'comm_fnaf' || appNameLower.includes('fnaf') || appNameLower.includes('freddy')) {
+        appType = 21; // Five Nights at Freddy's 1 natif C 60 FPS
       } else if (appIdLower === 'settings' || appIdLower === 'comm_settings' || appIdLower.includes('setting') || appNameLower.includes('option') || appNameLower.includes('param')) {
         appType = 14; // Options & Themes natif C (APP_TYPE_SETTINGS)
       } else if (isNative) {

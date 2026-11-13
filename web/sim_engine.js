@@ -43,7 +43,9 @@ const SIM_GAME_ICON_URL_MAP = {
   puissance4: 'assets/icons/puissance4.png',
   comm_puissance4: 'assets/icons/puissance4.png',
   morpion: 'assets/icons/morpion.png',
-  comm_morpion: 'assets/icons/morpion.png'
+  comm_morpion: 'assets/icons/morpion.png',
+  fnaf: 'assets/icons/fnaf.png',
+  comm_fnaf: 'assets/icons/fnaf.png'
 };
 
 function getSimAppIconUrl(app) {
@@ -85,7 +87,8 @@ class NumWorksSimulator {
       { id: 'breakout', name: '12. Casse-Briques', cat: 'Arcade', type: 'BREAKOUT', icon: '🧱', icon_url: 'assets/icons/breakout.png' },
       { id: 'puissance4', name: '13. Puissance 4', cat: 'Tactique', type: 'PUISSANCE4', icon: '🟡', icon_url: 'assets/icons/puissance4.png' },
       { id: 'morpion', name: '14. Morpion (Tic-Tac-Toe)', cat: 'Tactique', type: 'MORPION', icon: '❌', icon_url: 'assets/icons/morpion.png' },
-      { id: 'settings', name: '15. Paramètres & Thèmes', cat: 'Options', type: 'SETTINGS', icon: '⚙️' }
+      { id: 'fnaf', name: '15. Five Nights at Freddy\'s', cat: 'Horreur', type: 'FNAF', icon: '🐻', icon_url: 'assets/icons/fnaf.png' },
+      { id: 'settings', name: '16. Paramètres & Thèmes', cat: 'Options', type: 'SETTINGS', icon: '⚙️' }
     ];
 
     let savedSettings = null;
@@ -340,6 +343,18 @@ class NumWorksSimulator {
         else if (e.key === 'ArrowDown' || keyL === 's') { e.preventDefault(); this.morpionMove?.(1, 0); }
         else if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); this.morpionPlace?.(); }
         else if (e.key === 'Escape' || e.key === 'Backspace') { e.preventDefault(); this.returnToMenu(); }
+      } else if (this.currentView === 'FNAF') {
+        if (this.fnafIsGameOver?.()) {
+          if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); this.fnafRestart?.(); return; }
+          else if (e.key === 'Escape' || e.key === 'Backspace') { e.preventDefault(); this.returnToMenu(); return; }
+        }
+        if (e.key === 'ArrowLeft' || keyL === 'q' || keyL === 'a') { e.preventDefault(); this.fnafPan?.(-1); }
+        else if (e.key === 'ArrowRight' || keyL === 'd') { e.preventDefault(); this.fnafPan?.(1); }
+        else if (e.key === 'ArrowUp' || keyL === 'z' || keyL === 'w') { e.preventDefault(); this.fnafToggleMonitor?.(); }
+        else if (e.key === 'ArrowDown' || keyL === 's') { e.preventDefault(); this.fnafPan?.(0); }
+        else if (['1','2','3','4','5','6','7','8','9','0'].includes(e.key)) { e.preventDefault(); this.fnafKey?.(e.key); }
+        else if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); this.fnafInteract?.(); }
+        else if (e.key === 'Escape' || e.key === 'Backspace') { e.preventDefault(); this.returnToMenu(); }
       } else if (this.currentView === 'COURSES') {
         if (e.key === 'ArrowRight' || keyL === 'd') { e.preventDefault(); this.nextCoursePage(1); }
         else if (e.key === 'ArrowLeft' || keyL === 'q' || keyL === 'a') { e.preventDefault(); this.nextCoursePage(-1); }
@@ -526,6 +541,16 @@ class NumWorksSimulator {
         else this.morpionPlace?.();
       }
       else if (action === 'BACK') this.returnToMenu();
+    } else if (this.currentView === 'FNAF') {
+      if (action === 'LEFT') this.fnafPan?.(-1);
+      else if (action === 'RIGHT') this.fnafPan?.(1);
+      else if (action === 'UP') this.fnafToggleMonitor?.();
+      else if (action === 'DOWN') this.fnafPan?.(0);
+      else if (action === 'OK') {
+        if (this.fnafIsGameOver?.()) this.fnafRestart?.();
+        else this.fnafInteract?.();
+      }
+      else if (action === 'BACK') this.returnToMenu();
     } else if (this.currentView === 'COURSES') {
       if (action === 'RIGHT') this.nextCoursePage(1);
       else if (action === 'LEFT') this.nextCoursePage(-1);
@@ -590,6 +615,9 @@ class NumWorksSimulator {
     } else if (t === 'MORPION' || t.includes('MORPION') || t.includes('TICTAC')) {
       this.currentView = 'MORPION';
       this.startMorpionGame();
+    } else if (t === 'FNAF' || t.includes('FNAF') || t.includes('FREDDY')) {
+      this.currentView = 'FNAF';
+      this.startFnafGame();
     } else if (t === 'COURSES' || t.includes('FICHE') || t.includes('COURS')) {
       this.currentView = 'COURSES';
       this.startCoursesViewer();
@@ -811,6 +839,7 @@ class NumWorksSimulator {
 
   returnToMenu() {
     window.soundFx?.playClick();
+    this.fnafCleanup?.();
     if (this.gameLoopId) {
       cancelAnimationFrame(this.gameLoopId);
       this.gameLoopId = null;
@@ -1058,7 +1087,8 @@ class NumWorksSimulator {
         { id: 'breakout', name: '12. Casse-Briques', cat: 'Arcade', type: 'BREAKOUT', icon: '🧱', icon_url: 'assets/icons/breakout.png' },
         { id: 'puissance4', name: '13. Puissance 4', cat: 'Tactique', type: 'PUISSANCE4', icon: '🟡', icon_url: 'assets/icons/puissance4.png' },
         { id: 'morpion', name: '14. Morpion (Tic-Tac-Toe)', cat: 'Tactique', type: 'MORPION', icon: '❌', icon_url: 'assets/icons/morpion.png' },
-        { id: 'settings', name: '15. Paramètres & Thèmes', cat: 'Options', type: 'SETTINGS', icon: '⚙️' }
+        { id: 'fnaf', name: '15. Five Nights at Freddy\'s', cat: 'Horreur', type: 'FNAF', icon: '🐻', icon_url: 'assets/icons/fnaf.png' },
+        { id: 'settings', name: '16. Paramètres & Thèmes', cat: 'Options', type: 'SETTINGS', icon: '⚙️' }
       ];
     } else {
       this.apps = pack.map((app, i) => {
@@ -1082,6 +1112,7 @@ class NumWorksSimulator {
         else if (idL.includes('breakout') || idL.includes('brique') || nameL.includes('brique')) { type = 'BREAKOUT'; icon = '🧱'; }
         else if (idL.includes('puissance') || nameL.includes('puissance') || idL.includes('connect4') || nameL.includes('connect4')) { type = 'PUISSANCE4'; icon = '🟡'; }
         else if (idL.includes('morpion') || nameL.includes('morpion') || idL.includes('tic') || nameL.includes('tic tac toe')) { type = 'MORPION'; icon = '❌'; }
+        else if (idL.includes('fnaf') || nameL.includes('fnaf') || idL.includes('freddy') || nameL.includes('freddy')) { type = 'FNAF'; icon = '🐻'; }
 
         const iconUrl = app.icon_url || getSimAppIconUrl(app) || null;
 
@@ -3570,7 +3601,968 @@ class NumWorksSimulator {
     loop();
   }
 
-  // ==================== FICHES DE COURS & FORMULAIRES ====================
+  // ==================== FIVE NIGHTS AT FREDDY'S 1 ====================
+  startFnafGame() {
+    this.title.textContent = "Five Nights at Freddy's";
+    this.topbar.style.backgroundColor = '#78350f';
+
+    // Système Sonorisation Synthétisée (Web Audio API)
+    let audioCtx = null;
+    let fanOsc = null;
+    let fanGain = null;
+
+    const initAudio = () => {
+      if (audioCtx) return;
+      try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (AudioContext) audioCtx = new AudioContext();
+      } catch (_) {}
+    };
+
+    const playFanSound = (start) => {
+      if (!audioCtx) return;
+      try {
+        if (start) {
+          if (fanOsc) return;
+          fanOsc = audioCtx.createOscillator();
+          fanGain = audioCtx.createGain();
+          fanOsc.type = 'sawtooth';
+          fanOsc.frequency.setValueAtTime(65, audioCtx.currentTime);
+          fanGain.gain.setValueAtTime(0.015, audioCtx.currentTime);
+          fanOsc.connect(fanGain);
+          fanGain.connect(audioCtx.destination);
+          fanOsc.start();
+        } else {
+          if (fanOsc) {
+            fanOsc.stop();
+            fanOsc.disconnect();
+            fanOsc = null;
+            fanGain = null;
+          }
+        }
+      } catch (_) {}
+    };
+
+    const playTone = (freq, type, duration, vol = 0.08) => {
+      initAudio();
+      if (!audioCtx) return;
+      try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+      } catch (_) {}
+    };
+
+    const playDoorSound = () => playTone(110, 'square', 0.22, 0.12);
+    const playLightSound = () => playTone(240, 'triangle', 0.12, 0.06);
+    const playCamSound = () => playTone(880, 'sine', 0.08, 0.05);
+    const playHonkSound = () => {
+      playTone(480, 'sawtooth', 0.15, 0.1);
+      setTimeout(() => playTone(600, 'sawtooth', 0.18, 0.12), 120);
+    };
+    const playJumpscareSound = () => {
+      initAudio();
+      if (!audioCtx) return;
+      try {
+        const dur = 1.4;
+        const now = audioCtx.currentTime;
+        const osc1 = audioCtx.createOscillator();
+        const osc2 = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc1.type = 'sawtooth';
+        osc2.type = 'square';
+        osc1.frequency.setValueAtTime(140, now);
+        osc1.frequency.exponentialRampToValueAtTime(80, now + dur);
+        osc2.frequency.setValueAtTime(420, now);
+        osc2.frequency.linearRampToValueAtTime(260, now + dur);
+        gain.gain.setValueAtTime(0.35, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + dur);
+        osc1.connect(gain);
+        osc2.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc1.start(now);
+        osc2.start(now);
+        osc1.stop(now + dur);
+        osc2.stop(now + dur);
+      } catch (_) {}
+    };
+
+    // Boîte à Musique Toreador March (Georges Bizet)
+    const playToreadorChime = () => {
+      const melody = [293, 370, 392, 440, 293, 493, 440, 392, 370];
+      melody.forEach((freq, idx) => {
+        setTimeout(() => playTone(freq, 'sine', 0.35, 0.06), idx * 320);
+      });
+    };
+
+    this.content.innerHTML = `
+      <div class="h-full flex flex-col justify-between bg-black p-0 select-none relative overflow-hidden font-mono">
+        <canvas id="fnaf-canvas" width="320" height="240" class="block w-full h-full cursor-pointer"></canvas>
+      </div>
+    `;
+
+    const canvas = document.getElementById('fnaf-canvas');
+    const ctx = canvas?.getContext?.('2d');
+
+    // État FNAF
+    let gameState = 'TITLE'; // TITLE, OFFICE, POWER_OUT, JUMPSCARE, GAME_OVER, WIN_6AM, CUSTOM_NIGHT
+    let night = 1;
+    let hour = 0; // 0 = 12 AM, 1 = 1 AM ... 6 = 6 AM
+    let hourTimer = 0;
+    const HOUR_MS = 55000;
+
+    let power = 100.0;
+    let usageBars = 1;
+
+    let viewPan = 1; // 0: Porte G, 1: Centre Bureau, 2: Porte D
+    let doorLeft = false;
+    let doorRight = false;
+    let lightLeft = false;
+    let lightRight = false;
+    let monitorUp = false;
+    let activeCam = '1A';
+
+    let fanFrame = 0;
+    let fanTick = 0;
+
+    let aiFreddy = 0;
+    let aiBonnie = 0;
+    let aiChica = 0;
+    let aiFoxy = 0;
+
+    let bonnieLoc = 'STAGE';
+    let chicaLoc = 'STAGE';
+    let freddyLoc = 'STAGE';
+    let foxyStage = 0; // 0, 1, 2, 3
+    let foxySprintTimer = 0;
+    let foxyBangCount = 0;
+
+    let bonnieTimer = 0;
+    let chicaTimer = 0;
+    let foxyTimer = 0;
+    let freddyTimer = 0;
+
+    let scareType = 'BONNIE';
+    let scareTimer = 0;
+    let blackoutTimer = 0;
+    let winTimer = 0;
+
+    let customSelectedBot = 0; // 0: Freddy, 1: Bonnie, 2: Chica, 3: Foxy, 4: Start
+    let titleSel = 0;
+
+    const CAMS = [
+      { id: '1A', name: 'CAM 1A - SHOW STAGE', x: 232, y: 72, w: 32, h: 16 },
+      { id: '1B', name: 'CAM 1B - DINING AREA', x: 222, y: 96, w: 32, h: 16 },
+      { id: '1C', name: 'CAM 1C - PIRATE COVE', x: 196, y: 116, w: 32, h: 16 },
+      { id: '2A', name: 'CAM 2A - WEST HALL', x: 210, y: 142, w: 32, h: 16 },
+      { id: '2B', name: 'CAM 2B - W. CORNER', x: 210, y: 178, w: 32, h: 16 },
+      { id: '3',  name: 'CAM 3 - SUPPLY CLOSET', x: 178, y: 166, w: 32, h: 16 },
+      { id: '4A', name: 'CAM 4A - EAST HALL', x: 256, y: 142, w: 32, h: 16 },
+      { id: '4B', name: 'CAM 4B - E. CORNER', x: 256, y: 178, w: 32, h: 16 },
+      { id: '5',  name: 'CAM 5 - BACKSTAGE', x: 172, y: 92, w: 32, h: 16 },
+      { id: '6',  name: 'CAM 6 - KITCHEN', x: 282, y: 160, w: 32, h: 16 },
+      { id: '7',  name: 'CAM 7 - RESTROOMS', x: 282, y: 98, w: 32, h: 16 }
+    ];
+
+    const initNight = (num) => {
+      night = num;
+      hour = 0;
+      hourTimer = 0;
+      power = 100.0;
+      viewPan = 1;
+      doorLeft = false;
+      doorRight = false;
+      lightLeft = false;
+      lightRight = false;
+      monitorUp = false;
+      activeCam = '1A';
+
+      bonnieLoc = 'STAGE';
+      chicaLoc = 'STAGE';
+      freddyLoc = 'STAGE';
+      foxyStage = 0;
+      foxyBangCount = 0;
+      bonnieTimer = 0;
+      chicaTimer = 0;
+      foxyTimer = 0;
+      freddyTimer = 0;
+
+      if (num === 1) { aiFreddy = 0; aiBonnie = 0; aiChica = 0; aiFoxy = 0; }
+      else if (num === 2) { aiFreddy = 0; aiBonnie = 3; aiChica = 1; aiFoxy = 1; }
+      else if (num === 3) { aiFreddy = 1; aiBonnie = 0; aiChica = 5; aiFoxy = 2; }
+      else if (num === 4) { aiFreddy = 2; aiBonnie = 2; aiChica = 4; aiFoxy = 6; }
+      else if (num === 5) { aiFreddy = 3; aiBonnie = 5; aiChica = 7; aiFoxy = 5; }
+      else if (num === 6) { aiFreddy = 4; aiBonnie = 10; aiChica = 12; aiFoxy = 6; }
+
+      gameState = 'OFFICE';
+      playFanSound(true);
+    };
+
+    // Commandes exposées
+    this.fnafPan = (dir) => {
+      if (dir === -1) viewPan = 0;
+      else if (dir === 1) viewPan = 2;
+      else viewPan = 1;
+    };
+
+    this.fnafToggleDoorLeft = () => {
+      doorLeft = !doorLeft;
+      playDoorSound();
+    };
+
+    this.fnafToggleDoorRight = () => {
+      doorRight = !doorRight;
+      playDoorSound();
+    };
+
+    this.fnafToggleLightLeft = () => {
+      lightLeft = !lightLeft;
+      if (lightLeft) lightRight = false;
+      playLightSound();
+    };
+
+    this.fnafToggleLightRight = () => {
+      lightRight = !lightRight;
+      if (lightRight) lightLeft = false;
+      playLightSound();
+    };
+
+    this.fnafToggleMonitor = () => {
+      monitorUp = !monitorUp;
+      if (monitorUp) {
+        lightLeft = false;
+        lightRight = false;
+        playCamSound();
+      }
+    };
+
+    this.fnafSelectCam = (camId) => {
+      activeCam = camId;
+      playCamSound();
+    };
+
+    this.fnafHonk = () => playHonkSound();
+
+    this.fnafKey = (k) => {
+      if (gameState === 'TITLE') {
+        if (k === '1') initNight(1);
+        else if (k === '2') initNight(5);
+        else if (k === '3') gameState = 'CUSTOM_NIGHT';
+      } else if (gameState === 'CUSTOM_NIGHT') {
+        if (k === '1') { aiFreddy = 20; aiBonnie = 20; aiChica = 20; aiFoxy = 20; }
+      } else if (gameState === 'OFFICE') {
+        if (monitorUp) {
+          const map = { '1': '1A', '2': '1B', '3': '1C', '4': '2A', '5': '2B', '6': '3', '7': '4A', '8': '4B', '9': '5', '0': '6' };
+          if (map[k]) this.fnafSelectCam(map[k]);
+        } else {
+          if (k === '1') this.fnafToggleDoorLeft();
+          else if (k === '4') this.fnafToggleLightLeft();
+          else if (k === '3') this.fnafToggleDoorRight();
+          else if (k === '6') this.fnafToggleLightRight();
+          else if (k === '5') this.fnafHonk();
+        }
+      }
+    };
+
+    this.fnafInteract = () => {
+      if (gameState === 'TITLE') {
+        if (titleSel === 0) initNight(1);
+        else if (titleSel === 1) initNight(5);
+        else gameState = 'CUSTOM_NIGHT';
+      } else if (gameState === 'CUSTOM_NIGHT') {
+        initNight(7);
+      } else if (gameState === 'OFFICE') {
+        if (viewPan === 0) this.fnafToggleDoorLeft();
+        else if (viewPan === 2) this.fnafToggleDoorRight();
+        else this.fnafHonk();
+      } else if (gameState === 'GAME_OVER') {
+        initNight(night);
+      } else if (gameState === 'WIN_6AM') {
+        if (night < 5) initNight(night + 1);
+        else gameState = 'TITLE';
+      }
+    };
+
+    this.fnafIsGameOver = () => (gameState === 'GAME_OVER' || gameState === 'JUMPSCARE');
+    this.fnafRestart = () => initNight(night);
+    this.fnafCleanup = () => {
+      playFanSound(false);
+      if (audioCtx) {
+        try { audioCtx.close(); } catch (_) {}
+        audioCtx = null;
+      }
+    };
+
+    // Gestion du clic sur le Canvas
+    if (canvas) {
+      canvas.addEventListener('click', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const mx = (e.clientX - rect.left) * (320 / rect.width);
+        const my = (e.clientY - rect.top) * (240 / rect.height);
+
+        if (gameState === 'TITLE') {
+          if (my >= 115 && my < 140) initNight(1);
+          else if (my >= 140 && my < 165) initNight(5);
+          else if (my >= 165 && my < 195) gameState = 'CUSTOM_NIGHT';
+        } else if (gameState === 'CUSTOM_NIGHT') {
+          if (my >= 165 && my <= 195) initNight(7);
+          else {
+            const b = Math.floor((mx - 15) / 72);
+            if (b >= 0 && b < 4) {
+              if (b === 0) aiFreddy = (aiFreddy + 5) % 25;
+              if (b === 1) aiBonnie = (aiBonnie + 5) % 25;
+              if (b === 2) aiChica = (aiChica + 5) % 25;
+              if (b === 3) aiFoxy = (aiFoxy + 5) % 25;
+            }
+          }
+        } else if (gameState === 'OFFICE') {
+          // Clic barre moniteur en bas
+          if (my >= 215) {
+            this.fnafToggleMonitor();
+            return;
+          }
+
+          if (monitorUp) {
+            // Clic sur l'une des 11 caméras
+            for (const c of CAMS) {
+              if (mx >= c.x && mx <= c.x + c.w && my >= c.y && my <= c.y + c.h) {
+                this.fnafSelectCam(c.id);
+                return;
+              }
+            }
+          } else {
+            // Panoramique par clic gauche/droite
+            if (mx < 60) this.fnafPan(-1);
+            else if (mx > 260) this.fnafPan(1);
+            else {
+              // Clics dans la vue active
+              if (viewPan === 0) {
+                if (mx >= 75 && mx <= 100 && my >= 60 && my <= 85) this.fnafToggleDoorLeft();
+                else if (mx >= 75 && mx <= 100 && my >= 90 && my <= 115) this.fnafToggleLightLeft();
+                else this.fnafPan(0);
+              } else if (viewPan === 2) {
+                if (mx >= 200 && mx <= 225 && my >= 60 && my <= 85) this.fnafToggleDoorRight();
+                else if (mx >= 200 && mx <= 225 && my >= 90 && my <= 115) this.fnafToggleLightRight();
+                else this.fnafPan(0);
+              } else {
+                // Clic sur le nez de Freddy sur le poster (Easter egg)
+                if (mx >= 155 && mx <= 175 && my >= 45 && my <= 65) this.fnafHonk();
+              }
+            }
+          }
+        } else if (gameState === 'GAME_OVER') {
+          initNight(night);
+        } else if (gameState === 'WIN_6AM') {
+          if (night < 5) initNight(night + 1);
+          else gameState = 'TITLE';
+        }
+      });
+    }
+
+    // Boucle de rendu et d'IA (60 FPS)
+    let lastTime = performance.now();
+    const loop = (now) => {
+      if (this.currentView !== 'FNAF') {
+        playFanSound(false);
+        return;
+      }
+
+      const dt = Math.min(now - lastTime, 100);
+      lastTime = now;
+
+      fanTick += dt;
+      if (fanTick >= 50) {
+        fanTick = 0;
+        fanFrame = (fanFrame + 1) % 3;
+      }
+
+      // ================= IA & TIMERS SCOTT CAWTHON =================
+      if (gameState === 'OFFICE') {
+        // 1. Bonnie (4.97s)
+        bonnieTimer += dt;
+        if (bonnieTimer >= 4970) {
+          bonnieTimer = 0;
+          if (aiBonnie > 0 && (Math.random() * 20 + 1) <= aiBonnie) {
+            if (bonnieLoc === 'STAGE') bonnieLoc = 'DINING';
+            else if (bonnieLoc === 'DINING') bonnieLoc = Math.random() < 0.5 ? 'BACKSTAGE' : 'WEST_HALL';
+            else if (bonnieLoc === 'BACKSTAGE') bonnieLoc = 'WEST_HALL';
+            else if (bonnieLoc === 'WEST_HALL') bonnieLoc = Math.random() < 0.5 ? 'SUPPLY_CLOSET' : 'WEST_CORNER';
+            else if (bonnieLoc === 'SUPPLY_CLOSET') bonnieLoc = 'WEST_CORNER';
+            else if (bonnieLoc === 'WEST_CORNER') bonnieLoc = 'DOOR_LEFT';
+            else if (bonnieLoc === 'DOOR_LEFT') {
+              if (!doorLeft) bonnieLoc = 'OFFICE';
+              else bonnieLoc = 'DINING';
+            } else if (bonnieLoc === 'OFFICE' && !monitorUp) {
+              gameState = 'JUMPSCARE';
+              scareType = 'BONNIE';
+              scareTimer = 0;
+              playFanSound(false);
+              playJumpscareSound();
+            }
+          }
+        }
+
+        // 2. Chica (4.98s)
+        chicaTimer += dt;
+        if (chicaTimer >= 4980) {
+          chicaTimer = 0;
+          if (aiChica > 0 && (Math.random() * 20 + 1) <= aiChica) {
+            if (chicaLoc === 'STAGE') chicaLoc = 'DINING';
+            else if (chicaLoc === 'DINING') chicaLoc = Math.random() < 0.5 ? 'RESTROOMS' : 'KITCHEN';
+            else if (chicaLoc === 'RESTROOMS' || chicaLoc === 'KITCHEN') chicaLoc = 'EAST_HALL';
+            else if (chicaLoc === 'EAST_HALL') chicaLoc = 'EAST_CORNER';
+            else if (chicaLoc === 'EAST_CORNER') chicaLoc = 'DOOR_RIGHT';
+            else if (chicaLoc === 'DOOR_RIGHT') {
+              if (!doorRight) chicaLoc = 'OFFICE';
+              else chicaLoc = 'DINING';
+            } else if (chicaLoc === 'OFFICE' && !monitorUp) {
+              gameState = 'JUMPSCARE';
+              scareType = 'CHICA';
+              scareTimer = 0;
+              playFanSound(false);
+              playJumpscareSound();
+            }
+          }
+        }
+
+        // 3. Foxy (5.01s)
+        if (!monitorUp || activeCam !== '1C') {
+          foxyTimer += dt;
+          if (foxyTimer >= 5010) {
+            foxyTimer = 0;
+            if (aiFoxy > 0 && (Math.random() * 20 + 1) <= aiFoxy) {
+              if (foxyStage < 3) {
+                foxyStage++;
+                if (foxyStage === 3) foxySprintTimer = 0;
+              }
+            }
+          }
+        }
+
+        if (foxyStage === 3) {
+          foxySprintTimer += dt;
+          if (foxySprintTimer >= 2600) {
+            if (doorLeft) {
+              foxyBangCount++;
+              power = Math.max(0, power - (1 + 5 * (foxyBangCount - 1)));
+              foxyStage = Math.random() < 0.5 ? 0 : 1;
+              foxySprintTimer = 0;
+              playDoorSound();
+            } else {
+              gameState = 'JUMPSCARE';
+              scareType = 'FOXY';
+              scareTimer = 0;
+              playFanSound(false);
+              playJumpscareSound();
+            }
+          }
+        }
+
+        // 4. Freddy (3.02s)
+        if (bonnieLoc !== 'STAGE' && chicaLoc !== 'STAGE') {
+          const freddyWatched = monitorUp && (
+            (freddyLoc === 'STAGE' && activeCam === '1A') ||
+            (freddyLoc === 'DINING' && activeCam === '1B') ||
+            (freddyLoc === 'RESTROOMS' && activeCam === '7') ||
+            (freddyLoc === 'KITCHEN' && activeCam === '6') ||
+            (freddyLoc === 'EAST_HALL' && activeCam === '4A') ||
+            (freddyLoc === 'EAST_CORNER' && activeCam === '4B')
+          );
+
+          if (!freddyWatched) {
+            freddyTimer += dt;
+            if (freddyTimer >= 3020) {
+              freddyTimer = 0;
+              if (aiFreddy > 0 && (Math.random() * 20 + 1) <= aiFreddy) {
+                if (freddyLoc === 'STAGE') freddyLoc = 'DINING';
+                else if (freddyLoc === 'DINING') freddyLoc = 'RESTROOMS';
+                else if (freddyLoc === 'RESTROOMS') freddyLoc = 'KITCHEN';
+                else if (freddyLoc === 'KITCHEN') freddyLoc = 'EAST_HALL';
+                else if (freddyLoc === 'EAST_HALL') freddyLoc = 'EAST_CORNER';
+                else if (freddyLoc === 'EAST_CORNER') {
+                  if (!doorRight) freddyLoc = 'OFFICE';
+                } else if (freddyLoc === 'OFFICE' && !monitorUp) {
+                  gameState = 'JUMPSCARE';
+                  scareType = 'FREDDY';
+                  scareTimer = 0;
+                  playFanSound(false);
+                  playJumpscareSound();
+                }
+              }
+            }
+          }
+        }
+
+        // 5. Batterie
+        let usage = 1;
+        if (doorLeft) usage++;
+        if (doorRight) usage++;
+        if (lightLeft) usage++;
+        if (lightRight) usage++;
+        if (monitorUp) usage++;
+        usageBars = Math.min(5, usage);
+
+        power -= (0.1 * usageBars * (dt / 1000));
+        if (power <= 0) {
+          power = 0;
+          gameState = 'POWER_OUT';
+          doorLeft = false;
+          doorRight = false;
+          lightLeft = false;
+          lightRight = false;
+          monitorUp = false;
+          blackoutTimer = 0;
+          playFanSound(false);
+          playToreadorChime();
+        }
+
+        // 6. Horloge 12 AM -> 6 AM
+        hourTimer += dt;
+        if (hourTimer >= HOUR_MS) {
+          hourTimer = 0;
+          hour++;
+          if (hour === 2) aiBonnie++;
+          else if (hour === 3) { aiBonnie++; aiChica++; aiFoxy++; }
+          else if (hour === 4) { aiBonnie++; aiChica++; aiFoxy++; }
+
+          if (hour >= 6) {
+            gameState = 'WIN_6AM';
+            winTimer = 0;
+            playFanSound(false);
+          }
+        }
+      }
+
+      // ================= RENDU CANVAS =================
+      if (ctx) {
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(0, 0, 320, 240);
+
+        if (gameState === 'TITLE') {
+          // Écran Titre
+          ctx.fillStyle = '#0f172a';
+          ctx.fillRect(170, 25, 95, 170);
+          ctx.fillStyle = '#000000';
+          ctx.fillRect(195, 10, 45, 30);
+          ctx.fillRect(185, 35, 65, 6);
+
+          // Yeux luisants
+          if (Math.random() > 0.15) {
+            ctx.fillStyle = '#38bdf8';
+            ctx.fillRect(198, 50, 10, 10);
+            ctx.fillRect(232, 50, 10, 10);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(201, 52, 4, 4);
+            ctx.fillRect(235, 52, 4, 4);
+          }
+
+          ctx.fillStyle = '#ffffff';
+          ctx.font = 'bold 16px monospace';
+          ctx.fillText('Five Nights', 20, 42);
+          ctx.fillText("at Freddy's", 20, 64);
+
+          ctx.font = '11px monospace';
+          ctx.fillStyle = (titleSel === 0) ? '#facc15' : '#94a3b8';
+          ctx.fillText('> Nouvelle Partie (Nuit 1)', 20, 130);
+          ctx.fillStyle = (titleSel === 1) ? '#facc15' : '#94a3b8';
+          ctx.fillText('  Continuer (Nuit 5)', 20, 155);
+          ctx.fillStyle = (titleSel === 2) ? '#facc15' : '#94a3b8';
+          ctx.fillText('  Custom Night (20/20/20/20)', 20, 180);
+
+          ctx.fillStyle = '#64748b';
+          ctx.font = '9px monospace';
+          ctx.fillText('(c) Scott Cawthon - Port NumWorks', 20, 222);
+
+        } else if (gameState === 'CUSTOM_NIGHT') {
+          ctx.fillStyle = '#ffffff';
+          ctx.font = 'bold 13px monospace';
+          ctx.fillText('PERSONNALISER LA NUIT 7', 60, 28);
+
+          const bots = [
+            { name: 'Freddy', val: aiFreddy, col: '#854d0e' },
+            { name: 'Bonnie', val: aiBonnie, col: '#7c3aed' },
+            { name: 'Chica', val: aiChica, col: '#eab308' },
+            { name: 'Foxy', val: aiFoxy, col: '#dc2626' }
+          ];
+
+          bots.forEach((b, i) => {
+            const bx = 16 + i * 72;
+            const by = 60;
+            ctx.strokeStyle = '#facc15';
+            ctx.strokeRect(bx, by, 64, 90);
+            ctx.fillStyle = b.col;
+            ctx.fillRect(bx + 12, by + 10, 40, 40);
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '10px monospace';
+            ctx.fillText(b.name, bx + 12, by + 65);
+            ctx.fillStyle = '#4ade80';
+            ctx.font = 'bold 12px monospace';
+            ctx.fillText(`< ${String(b.val).padStart(2, '0')} >`, bx + 10, by + 82);
+          });
+
+          ctx.fillStyle = '#facc15';
+          ctx.fillRect(85, 168, 150, 26);
+          ctx.fillStyle = '#000000';
+          ctx.font = 'bold 11px monospace';
+          ctx.fillText('LANCER LA NUIT !', 105, 185);
+
+          ctx.fillStyle = '#94a3b8';
+          ctx.font = '9px monospace';
+          ctx.fillText('Clic sur bot = changer IA | Clic Lancer = Jouer', 25, 218);
+
+        } else if (gameState === 'OFFICE') {
+          const offX = (viewPan === 0) ? 0 : ((viewPan === 1) ? -50 : -100);
+
+          // Mur fond
+          ctx.fillStyle = '#1e293b';
+          ctx.fillRect(0, 0, 320, 165);
+
+          // Bande jaune et noire
+          for (let x = -20; x < 360; x += 30) {
+            ctx.fillStyle = '#facc15';
+            ctx.fillRect(x + (offX % 30), 145, 15, 12);
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(x + 15 + (offX % 30), 145, 15, 12);
+          }
+
+          // Sol damier
+          for (let y = 157; y < 240; y += 14) {
+            for (let x = (offX % 28) - 28; x < 348; x += 28) {
+              const chk = ((Math.floor(x / 28) + Math.floor(y / 14)) & 1);
+              ctx.fillStyle = chk ? '#475569' : '#0f172a';
+              ctx.fillRect(x, y, 14, 14);
+            }
+          }
+
+          // VUE GAUCHE
+          if (viewPan === 0 || viewPan === 1) {
+            const dlx = 20 + offX;
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(dlx, 20, 70, 140);
+
+            if (lightLeft && bonnieLoc === 'DOOR_LEFT') {
+              // Bonnie à la porte
+              ctx.fillStyle = '#6d28d9';
+              ctx.fillRect(dlx + 15, 30, 40, 80);
+              ctx.fillRect(dlx + 18, 10, 8, 25);
+              ctx.fillRect(dlx + 42, 10, 8, 25);
+              ctx.fillStyle = '#ffffff';
+              ctx.fillRect(dlx + 22, 40, 8, 8);
+              ctx.fillRect(dlx + 40, 40, 8, 8);
+            }
+
+            if (doorLeft) {
+              ctx.fillStyle = '#64748b';
+              ctx.fillRect(dlx, 20, 70, 140);
+              ctx.fillStyle = '#facc15';
+              ctx.fillRect(dlx, 145, 70, 15);
+            }
+
+            // Boutons Porte G
+            ctx.fillStyle = '#334155';
+            ctx.fillRect(dlx + 75, 60, 24, 55);
+            ctx.fillStyle = doorLeft ? '#ef4444' : '#22c55e';
+            ctx.fillRect(dlx + 78, 65, 18, 20);
+            ctx.fillStyle = lightLeft ? '#ffffff' : '#64748b';
+            ctx.fillRect(dlx + 78, 90, 18, 20);
+          }
+
+          // VUE CENTRE
+          if (viewPan === 1 || viewPan === 0 || viewPan === 2) {
+            const cx = 120 + offX;
+            // Poster CELEBRATE!
+            ctx.fillStyle = '#f8fafc';
+            ctx.fillRect(cx + 10, 25, 75, 45);
+            ctx.fillStyle = '#facc15';
+            ctx.font = 'bold 9px monospace';
+            ctx.fillText('CELEBRATE!', cx + 16, 40);
+
+            // Bureau métallique
+            ctx.fillStyle = '#334155';
+            ctx.fillRect(cx - 30, 125, 160, 40);
+
+            // Ventilateur animé
+            ctx.fillStyle = '#1e293b';
+            ctx.beginPath();
+            ctx.arc(cx + 40, 105, 18, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#cbd5e1';
+            if (fanFrame === 0) {
+              ctx.fillRect(cx + 36, 92, 8, 26);
+              ctx.fillRect(cx + 27, 101, 26, 8);
+            } else if (fanFrame === 1) {
+              ctx.fillRect(cx + 30, 95, 20, 20);
+            } else {
+              ctx.fillRect(cx + 27, 101, 26, 8);
+              ctx.fillRect(cx + 36, 92, 8, 26);
+            }
+          }
+
+          // VUE DROITE
+          if (viewPan === 1 || viewPan === 2) {
+            const drx = 230 + offX;
+            // Boutons Porte D
+            ctx.fillStyle = '#334155';
+            ctx.fillRect(drx - 28, 60, 24, 55);
+            ctx.fillStyle = doorRight ? '#ef4444' : '#22c55e';
+            ctx.fillRect(drx - 25, 65, 18, 20);
+            ctx.fillStyle = lightRight ? '#ffffff' : '#64748b';
+            ctx.fillRect(drx - 25, 90, 18, 20);
+
+            // Fenêtre
+            ctx.fillStyle = lightRight ? '#334155' : '#0f172a';
+            ctx.fillRect(drx, 20, 35, 55);
+            if (lightRight && chicaLoc === 'DOOR_RIGHT') {
+              ctx.fillStyle = '#eab308';
+              ctx.fillRect(drx + 2, 25, 30, 40);
+              ctx.fillStyle = '#ea580c';
+              ctx.fillRect(drx + 10, 45, 16, 12);
+            }
+
+            // Porte Droite
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(drx + 40, 20, 70, 140);
+            if (doorRight) {
+              ctx.fillStyle = '#64748b';
+              ctx.fillRect(drx + 40, 20, 70, 140);
+              ctx.fillStyle = '#facc15';
+              ctx.fillRect(drx + 40, 145, 70, 15);
+            }
+          }
+
+          // HUD Bureau
+          ctx.fillStyle = '#ffffff';
+          ctx.font = 'bold 16px monospace';
+          const amStr = (hour === 0) ? '12 AM' : `${hour} AM`;
+          ctx.fillText(amStr, 255, 24);
+          ctx.font = '10px monospace';
+          ctx.fillStyle = '#94a3b8';
+          ctx.fillText(`Nuit ${night}`, 262, 40);
+
+          ctx.fillStyle = power > 20 ? '#ffffff' : '#ef4444';
+          ctx.font = '11px monospace';
+          ctx.fillText(`Batterie: ${Math.round(power)}%`, 12, 208);
+
+          ctx.fillStyle = '#ffffff';
+          ctx.fillText('Usage: ', 12, 225);
+          for (let b = 0; b < 5; b++) {
+            ctx.fillStyle = (b < usageBars) ? ((b < 2) ? '#22c55e' : ((b < 4) ? '#facc15' : '#ef4444')) : '#1e293b';
+            ctx.fillRect(58 + b * 10, 215, 7, 12);
+          }
+
+          // Bouton Moniteur
+          ctx.fillStyle = '#1e293b';
+          ctx.fillRect(105, 222, 110, 16);
+          ctx.fillStyle = '#ffffff';
+          ctx.font = '9px monospace';
+          ctx.fillText('[^] MONITEUR', 125, 233);
+
+          // VUE MONITEUR DE CAMÉRAS
+          if (monitorUp) {
+            ctx.fillStyle = '#020617';
+            ctx.fillRect(0, 0, 320, 240);
+
+            // Flux de la caméra active
+            if (activeCam === '1A') {
+              ctx.fillStyle = '#1e1b4b';
+              ctx.fillRect(20, 35, 180, 145);
+              if (bonnieLoc === 'STAGE') { ctx.fillStyle = '#7c3aed'; ctx.fillRect(35, 70, 30, 90); }
+              if (freddyLoc === 'STAGE') { ctx.fillStyle = '#854d0e'; ctx.fillRect(90, 65, 36, 95); }
+              if (chicaLoc === 'STAGE') { ctx.fillStyle = '#eab308'; ctx.fillRect(145, 70, 32, 90); }
+            } else if (activeCam === '1C') {
+              ctx.fillStyle = '#311042';
+              ctx.fillRect(30, 35, 160, 150);
+              ctx.fillStyle = '#facc15';
+              ctx.font = 'bold 11px monospace';
+              ctx.fillText(foxyStage >= 3 ? "IT'S ME!" : "HORS SERV", 45, 175);
+              if (foxyStage === 1) { ctx.fillStyle = '#dc2626'; ctx.fillRect(80, 70, 30, 40); }
+              else if (foxyStage === 2) { ctx.fillStyle = '#dc2626'; ctx.fillRect(70, 65, 45, 80); }
+              else if (foxyStage === 3) {
+                ctx.fillStyle = '#ef4444';
+                ctx.fillText('CRIQUE VIDE !', 50, 90);
+              }
+            } else if (activeCam === '2A') {
+              ctx.fillStyle = '#1e293b';
+              ctx.fillRect(20, 20, 180, 180);
+              if (foxyStage === 3) {
+                ctx.fillStyle = '#dc2626';
+                ctx.fillRect(70 + ((hourTimer / 80) % 3) * 15, 80, 40, 70);
+                ctx.fillStyle = '#ef4444';
+                ctx.fillText('ALERTE: FOXY SPRINTE !', 30, 40);
+              }
+            } else if (activeCam === '6') {
+              ctx.fillStyle = '#000000';
+              ctx.fillRect(10, 30, 200, 160);
+              ctx.fillStyle = '#ffffff';
+              ctx.font = '10px monospace';
+              ctx.fillText('- CAMERA DESACTIVEE -', 35, 80);
+              ctx.fillStyle = '#22c55e';
+              ctx.fillText('[ AUDIO SEUL ]', 55, 105);
+              if (chicaLoc === 'KITCHEN') { ctx.fillStyle = '#facc15'; ctx.fillText('* Casseroles & Bruits *', 35, 130); }
+              if (freddyLoc === 'KITCHEN') { ctx.fillStyle = '#38bdf8'; ctx.fillText('* Boite a Musique *', 40, 130); }
+            } else {
+              ctx.fillStyle = '#1e293b';
+              ctx.fillRect(20, 30, 180, 165);
+            }
+
+            // Neige TV
+            for (let i = 0; i < 400; i++) {
+              ctx.fillStyle = Math.random() < 0.5 ? '#ffffff' : '#000000';
+              ctx.fillRect(Math.random() * 210, Math.random() * 210, 2, 2);
+            }
+
+            // Point REC
+            if (Math.floor(hourTimer / 500) % 2 === 0) {
+              ctx.fillStyle = '#ef4444';
+              ctx.beginPath();
+              ctx.arc(18, 18, 5, 0, Math.PI * 2);
+              ctx.fill();
+              ctx.fillStyle = '#ffffff';
+              ctx.font = 'bold 9px monospace';
+              ctx.fillText('REC', 28, 22);
+            }
+
+            // Titre Caméra
+            ctx.fillStyle = '#22c55e';
+            ctx.font = 'bold 10px monospace';
+            const curCamInfo = CAMS.find(c => c.id === activeCam);
+            ctx.fillText(curCamInfo?.name || `CAM ${activeCam}`, 12, 32);
+
+            // Minimap
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(215, 60, 103, 175);
+            ctx.strokeStyle = '#475569';
+            ctx.strokeRect(220, 65, 93, 165);
+
+            // Boutons Caméras
+            for (const c of CAMS) {
+              const isAct = (c.id === activeCam);
+              ctx.fillStyle = isAct ? '#22c55e' : '#1e293b';
+              ctx.fillRect(c.x, c.y, c.w, c.h);
+              ctx.fillStyle = isAct ? '#000000' : '#ffffff';
+              ctx.font = 'bold 9px monospace';
+              ctx.fillText(c.id, c.x + 6, c.y + 11);
+            }
+
+            // Fermer moniteur
+            ctx.fillStyle = '#1e293b';
+            ctx.fillRect(105, 222, 105, 16);
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '9px monospace';
+            ctx.fillText('[v] FERMER', 125, 233);
+          }
+
+        } else if (gameState === 'POWER_OUT') {
+          blackoutTimer += dt;
+          ctx.fillStyle = '#000000';
+          ctx.fillRect(0, 0, 320, 240);
+
+          if (Math.floor(blackoutTimer / 250) % 2 === 0) {
+            ctx.fillStyle = '#38bdf8';
+            ctx.fillRect(45, 80, 10, 10);
+            ctx.fillRect(75, 80, 10, 10);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(47, 82, 6, 6);
+            ctx.fillRect(77, 82, 6, 6);
+          }
+
+          ctx.fillStyle = '#64748b';
+          ctx.font = '10px monospace';
+          ctx.fillText('* Toreador March *', 105, 120);
+
+          if (blackoutTimer >= 7500) {
+            gameState = 'JUMPSCARE';
+            scareType = 'FREDDY';
+            scareTimer = 0;
+            playJumpscareSound();
+          }
+
+        } else if (gameState === 'JUMPSCARE') {
+          scareTimer += dt;
+          const shakeX = Math.round((Math.random() - 0.5) * 12);
+          const shakeY = Math.round((Math.random() - 0.5) * 12);
+
+          ctx.fillStyle = (Math.floor(scareTimer / 60) % 2 === 0) ? '#dc2626' : '#000000';
+          ctx.fillRect(0, 0, 320, 240);
+
+          const cx = 160 + shakeX;
+          const cy = 120 + shakeY;
+
+          if (scareType === 'BONNIE') {
+            ctx.fillStyle = '#6d28d9';
+            ctx.fillRect(cx - 60, cy - 70, 120, 140);
+            ctx.fillRect(cx - 45, cy - 110, 20, 50);
+            ctx.fillRect(cx + 25, cy - 110, 20, 50);
+          } else if (scareType === 'CHICA') {
+            ctx.fillStyle = '#eab308';
+            ctx.fillRect(cx - 65, cy - 65, 130, 130);
+            ctx.fillStyle = '#ea580c';
+            ctx.fillRect(cx - 40, cy, 80, 40);
+          } else if (scareType === 'FOXY') {
+            ctx.fillStyle = '#dc2626';
+            ctx.fillRect(cx - 70, cy - 60, 140, 120);
+          } else {
+            ctx.fillStyle = '#854d0e';
+            ctx.fillRect(cx - 65, cy - 65, 130, 130);
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(cx - 25, cy - 100, 50, 40);
+          }
+
+          // Dents et yeux
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(cx - 35, cy - 40, 18, 18);
+          ctx.fillRect(cx + 17, cy - 40, 18, 18);
+          ctx.fillRect(cx - 30, cy + 15, 60, 15);
+
+          if (scareTimer >= 1800) {
+            gameState = 'GAME_OVER';
+          }
+
+        } else if (gameState === 'GAME_OVER') {
+          // Bruit blanc
+          for (let i = 0; i < 900; i++) {
+            ctx.fillStyle = Math.random() < 0.5 ? '#94a3b8' : '#000000';
+            ctx.fillRect(Math.random() * 320, Math.random() * 240, 3, 3);
+          }
+          ctx.fillStyle = '#dc2626';
+          ctx.font = 'bold 22px monospace';
+          ctx.fillText('GAME OVER', 95, 110);
+          ctx.fillStyle = '#ffffff';
+          ctx.font = '10px monospace';
+          ctx.fillText('Clic / [OK] : Rejouer | [Back] : Hub', 50, 145);
+
+        } else if (gameState === 'WIN_6AM') {
+          winTimer += dt;
+          ctx.fillStyle = '#000000';
+          ctx.fillRect(0, 0, 320, 240);
+
+          ctx.fillStyle = '#facc15';
+          ctx.font = 'bold 24px monospace';
+          ctx.fillText('6:00 AM', 110, 105);
+
+          ctx.fillStyle = '#22c55e';
+          ctx.font = '11px monospace';
+          ctx.fillText('* ENFANTS EN JOIE ! *', 85, 135);
+
+          ctx.fillStyle = '#38bdf8';
+          ctx.font = '10px monospace';
+          if (night < 5) ctx.fillText(`Nuit ${night} Survécue ! [Clic: Nuit ${night + 1}]`, 45, 165);
+          else ctx.fillText('CHÈQUE DE PAIE REÇU : 120.00$ !', 55, 165);
+        }
+      }
+
+      this.gameLoopId = requestAnimationFrame(loop);
+    };
+
+    this.gameLoopId = requestAnimationFrame(loop);
+  }
   startCoursesViewer() {
     this.title.textContent = 'Fiches de Cours';
     this.topbar.style.backgroundColor = '#f59e0b';

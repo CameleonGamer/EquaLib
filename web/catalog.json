@@ -189,5 +189,18 @@
     "icon_url": "assets/icons/morpion.png",
     "color": "#EC4899",
     "recommended": true
+  },
+  {
+    "id": "fnaf",
+    "name": "Five Nights at Freddy's",
+    "author": "Scott Cawthon & EquaLib",
+    "version": "1.0",
+    "size_kb": 85,
+    "category": "Jeux / Horreur",
+    "description": "Le jeu d'horreur culte 100% fidèle sur NumWorks : caméras de surveillance, portes motorisées, gestion d'énergie, Bonnie, Chica, Foxy et Freddy (Nuits 1-7 et mode 20/20/20/20).",
+    "icon_initial": "🐻",
+    "icon_url": "assets/icons/fnaf.png",
+    "color": "#78350F",
+    "recommended": true
   }
 ]

@@ -195,6 +195,27 @@ const APP_DETAILS_MAP = {
       { key: 'Back', desc: 'Retour au Hub' }
     ],
     tips: 'Alignez 3 symboles face à l\'IA ou entre amis.'
+  },
+  'fnaf': {
+    controls: [
+      { key: 'Flèches G / D (Q / D)', desc: 'Pivoter la vue (Porte G, Bureau, Porte D)' },
+      { key: 'Touches 1 / 3', desc: 'Fermer / Ouvrir Porte Gauche / Droite' },
+      { key: 'Touches 4 / 6', desc: 'Allumer / Éteindre Lumière Gauche / Droite' },
+      { key: 'Flèche Haut (Z) / Ans', desc: 'Ouvrir / Fermer le Moniteur de Caméras' },
+      { key: '1 à 9, 0', desc: 'Changer directement de caméra de surveillance' },
+      { key: 'Touche 5', desc: 'Pouët-pouët nez de Freddy sur le poster' },
+      { key: 'Back', desc: 'Menu / Quitter' }
+    ],
+    tips: 'Surveillez Pirate Cove pour calmer Foxy, écoutez les casseroles en cuisine (CAM 6), et fermez vite les portes si Bonnie ou Chica sont là !'
+  },
+  'comm_fnaf': {
+    controls: [
+      { key: 'Flèches G / D', desc: 'Regarder à gauche ou à droite' },
+      { key: 'Touches 1 & 3', desc: 'Portes G / D' },
+      { key: 'Touches 4 & 6', desc: 'Lumières G / D' },
+      { key: 'Flèche Haut / Ans', desc: 'Moniteur' }
+    ],
+    tips: 'Économisez l\'énergie sous peine de subir la boîte à musique de Freddy dans le noir.'
   }
 };
 
@@ -814,7 +835,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     puissance4: 'assets/icons/puissance4.png',
     comm_puissance4: 'assets/icons/puissance4.png',
     morpion: 'assets/icons/morpion.png',
-    comm_morpion: 'assets/icons/morpion.png'
+    comm_morpion: 'assets/icons/morpion.png',
+    fnaf: 'assets/icons/fnaf.png',
+    comm_fnaf: 'assets/icons/fnaf.png'
   };
 
   function getAppIconHtml(app, customClass = 'w-full h-full object-contain p-0.5 rounded') {
@@ -1792,7 +1815,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     { id: "space_invaders", name: "Space Invaders Retro", author: "EquaLib Arcade", version: "1.2", size_kb: 28, category: "Jeux / Arcade", description: "Défendez la Terre contre les vagues d'aliens avec votre canon laser et bunkers protecteurs.", icon_initial: "👾", icon_url: "assets/icons/space_invaders.png", color: "#10B981", recommended: true },
     { id: "breakout", name: "Casse-Briques (Breakout)", author: "EquaLib Arcade", version: "1.2", size_kb: 24, category: "Jeux / Arcade", description: "Détruisez les briques colorées avec votre balle rebondissante et raquette dynamique.", icon_initial: "🧱", icon_url: "assets/icons/breakout.png", color: "#F59E0B", recommended: true },
     { id: "puissance4", name: "Puissance 4", author: "EquaLib Arcade", version: "1.1", size_kb: 26, category: "Jeux / Arcade", description: "Le duel stratégique : alignez 4 jetons contre l'IA intelligente ou un ami.", icon_initial: "🟡", icon_url: "assets/icons/puissance4.png", color: "#3B82F6", recommended: true },
-    { id: "morpion", name: "Morpion (Tic-Tac-Toe)", author: "EquaLib Arcade", version: "1.1", size_kb: 20, category: "Jeux / Arcade", description: "Alignez 3 symboles face à une IA imbattable (Minimax) ou en mode 2 joueurs.", icon_initial: "❌", icon_url: "assets/icons/morpion.png", color: "#EC4899", recommended: true }
+    { id: "morpion", name: "Morpion (Tic-Tac-Toe)", author: "EquaLib Arcade", version: "1.1", size_kb: 20, category: "Jeux / Arcade", description: "Alignez 3 symboles face à une IA imbattable (Minimax) ou en mode 2 joueurs.", icon_initial: "❌", icon_url: "assets/icons/morpion.png", color: "#EC4899", recommended: true },
+    { id: "fnaf", name: "Five Nights at Freddy's", author: "Scott Cawthon & EquaLib", version: "1.0", size_kb: 85, category: "Jeux / Horreur", description: "Le jeu d'horreur culte 100% fidèle sur NumWorks : caméras de surveillance, portes motorisées, gestion d'énergie, Bonnie, Chica, Foxy et Freddy (Nuits 1-7 et mode 20/20/20/20).", icon_initial: "🐻", icon_url: "assets/icons/fnaf.png", color: "#78350F", recommended: true }
   ];
 
   try {

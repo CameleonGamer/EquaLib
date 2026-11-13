@@ -707,6 +707,35 @@ static void draw_app_icon(uint8_t app_type, int cx, int cy, uint16_t accent_col)
         draw_bitmap_icon_20x20(cx, cy, s_icon_puissance4_rgb, s_icon_puissance4_mask);
     } else if (app_type == APP_TYPE_MORPION) {
         draw_bitmap_icon_20x20(cx, cy, s_icon_morpion_rgb, s_icon_morpion_mask);
+    } else if (app_type == APP_TYPE_FNAF) {
+        /* Icône Freddy Fazbear : Tête d'ours, chapeau haut-de-forme, yeux bleus et nœud papillon */
+        eadk_rect_t ear_l = {(uint16_t)(cx - 8), (uint16_t)(cy - 8), 4, 4};
+        eadk_rect_t ear_r = {(uint16_t)(cx + 4), (uint16_t)(cy - 8), 4, 4};
+        eadk_rect_t head = {(uint16_t)(cx - 7), (uint16_t)(cy - 5), 14, 13};
+        eadk_rect_t hat_brim = {(uint16_t)(cx - 6), (uint16_t)(cy - 6), 12, 2};
+        eadk_rect_t hat_top = {(uint16_t)(cx - 4), (uint16_t)(cy - 11), 8, 5};
+        eadk_rect_t hat_band = {(uint16_t)(cx - 4), (uint16_t)(cy - 7), 8, 1};
+        eadk_rect_t eye_l = {(uint16_t)(cx - 4), (uint16_t)(cy - 2), 3, 3};
+        eadk_rect_t eye_r = {(uint16_t)(cx + 1), (uint16_t)(cy - 2), 3, 3};
+        eadk_rect_t pup_l = {(uint16_t)(cx - 3), (uint16_t)(cy - 2), 1, 1};
+        eadk_rect_t pup_r = {(uint16_t)(cx + 2), (uint16_t)(cy - 2), 1, 1};
+        eadk_rect_t muzzle = {(uint16_t)(cx - 5), (uint16_t)(cy + 2), 10, 5};
+        eadk_rect_t nose = {(uint16_t)(cx - 2), (uint16_t)(cy + 2), 4, 2};
+        eadk_rect_t bowtie = {(uint16_t)(cx - 3), (uint16_t)(cy + 8), 6, 2};
+
+        eadk_display_push_rect_uniform(ear_l, 0x5180);
+        eadk_display_push_rect_uniform(ear_r, 0x5180);
+        eadk_display_push_rect_uniform(head, 0x79A2);
+        eadk_display_push_rect_uniform(hat_top, 0x0000);
+        eadk_display_push_rect_uniform(hat_brim, 0x0000);
+        eadk_display_push_rect_uniform(hat_band, 0x03FF);
+        eadk_display_push_rect_uniform(eye_l, 0xFFFF);
+        eadk_display_push_rect_uniform(eye_r, 0xFFFF);
+        eadk_display_push_rect_uniform(pup_l, 0x03FF);
+        eadk_display_push_rect_uniform(pup_r, 0x03FF);
+        eadk_display_push_rect_uniform(muzzle, 0x4180);
+        eadk_display_push_rect_uniform(nose, 0x0000);
+        eadk_display_push_rect_uniform(bowtie, 0x0000);
     } else if (app_type == APP_TYPE_PERIODIC) {
         /* Fiole de chimie avec liquide cyan et bulles */
         eadk_rect_t neck = {(uint16_t)(cx - 2), (uint16_t)(cy - 9), 4, 6};
@@ -1355,6 +1384,7 @@ int main(int argc, char* argv[]) {
             else if (type == APP_TYPE_BREAKOUT) run_breakout_app();
             else if (type == APP_TYPE_PUISSANCE4) run_puissance4_app();
             else if (type == APP_TYPE_MORPION) run_morpion_app();
+            else if (type == APP_TYPE_FNAF) run_fnaf_app();
             else if (type == APP_TYPE_SETTINGS) run_settings_screen();
             else if (type == APP_TYPE_NATIVE_EXEC) {
                 uintptr_t flash_base = get_app_flash_base();

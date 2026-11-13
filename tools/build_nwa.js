@@ -24,6 +24,7 @@ const srcFiles = [
   'app_breakout.c',
   'app_puissance4.c',
   'app_morpion.c',
+  'app_fnaf.c',
   'app_python.c',
   'storage.c',
   'eq_font.c',
