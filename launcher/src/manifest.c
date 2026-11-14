@@ -3,7 +3,7 @@
 const equalib_manifest_t g_equalib_manifest __attribute__((used, aligned(4), section(".rodata.equalib_manifest"))) = {
     .magic = EQUALIB_MANIFEST_MAGIC,
     .version = 1,
-    .app_count = 16,
+    .app_count = 17,
     .flags = MANIFEST_FLAG_GLASS_MODE | MANIFEST_FLAG_SMOOTH_CORNERS,
     .wallpaper_offset = 0,
     .wallpaper_size = 0,
@@ -23,6 +23,7 @@ const equalib_manifest_t g_equalib_manifest __attribute__((used, aligned(4), sec
         {"breakout", "13. Casse-Briques", "Jeu / Arcade", "Casse-briques retro paddle et rebonds", APP_TYPE_BREAKOUT, {0,0,0}, 0, 0},
         {"puissance4", "14. Puissance 4", "Jeu / Tactique", "Puissance 4 en C natif grille 7x6 et IA Minimax", APP_TYPE_PUISSANCE4, {0,0,0}, 0, 0},
         {"morpion", "15. Morpion (Tic-Tac-Toe)", "Jeu / Tactique", "Morpion en C natif grille 3x3 et IA Minimax", APP_TYPE_MORPION, {0,0,0}, 0, 0},
-        {"settings", "16. Options & Themes", "Systeme", "Themes, mode galerie/liste et aide", APP_TYPE_SETTINGS, {0,0,0}, 0, 0}
+        {"settings", "16. Options & Themes", "Systeme", "Themes, mode galerie/liste et aide", APP_TYPE_SETTINGS, {0,0,0}, 0, 0},
+        {"fnaf", "17. Five Nights at Freddy's", "Jeu / Horreur", "Survivez jusqu'a 6 AM face aux animatroniques", APP_TYPE_FNAF, {0,0,0}, 0, 0}
     }
 };

@@ -1,18 +1,27 @@
+/* =========================================================================
+ * Five Nights at Freddy's (FNAF) 1 - Moteur Haute Fidélité pour NumWorks
+ * Conforme aux algorithmes de Scott Cawthon & au port TI-84 Plus CE
+ * ========================================================================= */
+
 #ifndef APP_FNAF_H
 #define APP_FNAF_H
 
 #include <stdint.h>
 #include <stdbool.h>
+#include "fnaf_assets.h"
 
-/* =========================================================================
- * Five Nights at Freddy's 1 - Moteur Officiel Haute Fidélité pour NumWorks
- * 100% conforme aux formules algorithmiques et timings de Scott Cawthon
- * ========================================================================= */
+#define APP_TYPE_FNAF 21
 
 #define FNAF_SCREEN_WIDTH   320
 #define FNAF_SCREEN_HEIGHT  240
 
-/* Caméras de surveillance */
+/* Modes de rythme (Pacing) */
+typedef enum {
+    FNAF_PACING_NORMAL = 0, // 89.16s par heure (Scott Cawthon authentique, ~8:55 la nuit)
+    FNAF_PACING_FAST   = 1  // 40.0s par heure (Rythme rapide calculatrice, 4:00 la nuit)
+} fnaf_pacing_mode_t;
+
+/* Caméras de surveillance (11 caméras) */
 typedef enum {
     CAM_1A = 0, // Show Stage (Scène)
     CAM_1B,     // Dining Area (Salle à manger)
@@ -28,7 +37,7 @@ typedef enum {
     CAM_COUNT
 } fnaf_cam_id_t;
 
-/* Emplacements & États d'animatroniques */
+/* Emplacements & Salles des Animatroniques */
 typedef enum {
     LOC_STAGE = 0,
     LOC_DINING,
@@ -45,7 +54,7 @@ typedef enum {
     LOC_IN_OFFICE
 } fnaf_location_t;
 
-/* État du jeu */
+/* États généraux du jeu */
 typedef enum {
     FNAF_STATE_TITLE = 0,
     FNAF_STATE_NIGHT_INTRO,
@@ -57,7 +66,7 @@ typedef enum {
     FNAF_STATE_CUSTOM_NIGHT
 } fnaf_game_state_t;
 
-/* Types de jumpscare */
+/* Types de Jumpscare */
 typedef enum {
     SCARE_NONE = 0,
     SCARE_BONNIE,
@@ -70,25 +79,32 @@ typedef enum {
 /* Structure complète de l'état de jeu FNAF */
 typedef struct {
     fnaf_game_state_t state;
-    uint8_t night;              // 1 à 7 (Nuit 1-5, Nuit 6, Nuit 7 Custom)
+    fnaf_pacing_mode_t pacing_mode;
+    uint8_t night;              // 1 à 7 (Nuits 1-5, Nuit 6, Nuit 7 Custom)
     uint8_t hour;               // 0 = 12 AM, 1 = 1 AM, ... 5 = 5 AM, 6 = 6 AM (Victoire)
     uint32_t hour_timer_ms;     // Horloge interne de progression de l'heure
+    uint32_t hour_duration_ms;  // 89166 ms (NORMAL) ou 40000 ms (FAST)
 
     /* Batterie & Énergie */
     float power_percent;        // 100.0% à 0.0%
-    uint8_t power_usage_bars;   // 1 à 5 barres (ventilateur + portes + lumières + écran)
-    uint32_t power_drain_tick;  // Compteur ms pour le calcul de décharge
+    uint8_t power_usage_bars;   // 1 à 5 barres
+    uint32_t power_drain_accum_ms;
 
     /* Bureau */
     int8_t view_pan;            // 0: Regard Gauche (Porte G), 1: Centre (Bureau/Ventilo), 2: Droite (Porte D)
-    float pan_smooth_x;         // Position X continue pour défilement fluide
     bool door_left_closed;
     bool door_right_closed;
     bool light_left_on;
     bool light_right_on;
+    bool door_left_jammed;
+    bool door_right_jammed;
+    bool light_left_jammed;
+    bool light_right_jammed;
+
+    /* Moniteur de Surveillance */
     bool monitor_up;
-    float monitor_anim_progress;// 0.0 (fermé) à 1.0 (ouvert)
     fnaf_cam_id_t active_cam;
+    uint32_t cam_static_timer_ms;
 
     /* Niveaux d'IA (0 à 20) */
     uint8_t ai_freddy;
@@ -98,23 +114,27 @@ typedef struct {
 
     /* Positions & Minuteurs des Animatroniques */
     fnaf_location_t bonnie_loc;
-    uint32_t bonnie_timer_ms;   // Fréquence officielle Scott Cawthon: 4.97s
+    uint32_t bonnie_timer_ms;   // Fréquence officielle: 4.97s (4970 ms)
+    bool bonnie_in_office;
 
     fnaf_location_t chica_loc;
-    uint32_t chica_timer_ms;    // Fréquence officielle Scott Cawthon: 4.98s
+    uint32_t chica_timer_ms;    // Fréquence officielle: 4.98s (4980 ms)
+    bool chica_in_office;
 
-    uint8_t foxy_stage;         // 0: Caché, 1: Regarde, 2: Sorti, 3: En sprint vers le bureau
-    uint32_t foxy_timer_ms;     // Fréquence officielle Scott Cawthon: 5.01s
-    uint32_t foxy_sprint_timer; // ~2.5s pour fermer la porte gauche
-    uint8_t foxy_bang_count;    // Compte des coups sur la porte (draine de plus en plus)
+    uint8_t foxy_stage;         // 0: Rideau fermé, 1: Regarde, 2: Sorti, 3: En sprint
+    uint32_t foxy_timer_ms;     // Fréquence officielle: 5.01s (5010 ms)
+    uint32_t foxy_sprint_timer; // Temps imparti pour fermer la porte gauche
+    uint8_t foxy_bang_count;    // Compteur de frappes (pénalité 1% + 5%*(N-1))
 
     fnaf_location_t freddy_loc;
-    uint32_t freddy_timer_ms;   // Fréquence officielle Scott Cawthon: 3.02s
+    uint32_t freddy_timer_ms;   // Fréquence officielle: 3.02s (3020 ms)
 
-    /* Panne d'énergie */
-    uint32_t blackout_timer;
+    /* Panne d'énergie (Blackout) */
+    uint32_t blackout_timer_ms;
     bool toreador_flashing;
-    uint32_t toreador_flicker_timer;
+    uint32_t toreador_timer_ms;
+    uint32_t toreador_duration_ms;
+    bool toreador_ended;
 
     /* Jumpscare & Game Over */
     fnaf_scare_type_t scare_type;
@@ -128,15 +148,40 @@ typedef struct {
     uint8_t fan_frame;
     uint32_t fan_timer_ms;
 
-    /* Générateur pseudo-aléatoire XorShift pour neige TV en temps réel */
+    /* Générateur pseudo-aléatoire XorShift32 */
     uint32_t rng_state;
+
+    /* Bannières de sous-titres sonores */
+    char subtitle_text[48];
+    uint16_t subtitle_color;
+    uint32_t subtitle_timer_ms;
 
     /* Menu Custom Night */
     uint8_t custom_selected_bot; // 0: Freddy, 1: Bonnie, 2: Chica, 3: Foxy, 4: READY
 
+    /* Écran d'intro de nuit */
+    uint32_t night_intro_timer_ms;
+
 } fnaf_game_t;
 
-/* Lancement de l'application Five Nights at Freddy's */
-void run_fnaf_app(void);
+extern fnaf_game_t g_fnaf;
 
-#endif // APP_FNAF_H
+/* Contrat Display Subsystem */
+void fnaf_display_init(void);
+void fnaf_draw_image(fnaf_asset_id_t asset_id, int16_t dst_x, int16_t dst_y);
+void fnaf_draw_tv_snow(uint16_t intensity);
+void fnaf_draw_subtitle(const char *text, uint16_t color_rgb565);
+void fnaf_display_flip(void);
+
+/* Contrat Application Entry */
+void run_fnaf_app(void);
+void app_fnaf_entry(void);
+
+/* Moteur de jeu */
+void fnaf_init_game(fnaf_pacing_mode_t pacing);
+void fnaf_start_night(uint8_t night);
+void fnaf_update(uint32_t dt_ms);
+void fnaf_render(void);
+void fnaf_handle_input(uint64_t pressed_keys, uint64_t down_keys);
+
+#endif /* APP_FNAF_H */
