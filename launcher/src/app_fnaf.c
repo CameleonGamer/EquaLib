@@ -297,6 +297,7 @@ void fnaf_init_game(fnaf_pacing_mode_t pacing) {
     g_fnaf.subtitle_timer_ms = 0;
 
     g_fnaf.custom_selected_bot = 0;
+    g_fnaf.title_selected_option = 0;
     g_fnaf.ai_freddy = 0;
     g_fnaf.ai_bonnie = 0;
     g_fnaf.ai_chica = 0;
@@ -793,12 +794,27 @@ void fnaf_handle_input(uint64_t pressed, uint64_t down) {
 
     /* Entrée dans l'écran titre */
     if (g_fnaf.state == FNAF_STATE_TITLE) {
-        if (pressed & (1ULL << eadk_key_ok | 1ULL << eadk_key_exe)) {
-            fnaf_start_night(g_fnaf.night);
+        if (pressed & (1ULL << eadk_key_up)) {
+            if (g_fnaf.title_selected_option > 0) g_fnaf.title_selected_option--;
+        } else if (pressed & (1ULL << eadk_key_down)) {
+            if (g_fnaf.title_selected_option < 3) g_fnaf.title_selected_option++;
+        } else if (pressed & (1ULL << eadk_key_ok | 1ULL << eadk_key_exe)) {
+            if (g_fnaf.title_selected_option == 0) {
+                fnaf_start_night(1);
+            } else if (g_fnaf.title_selected_option == 1) {
+                fnaf_start_night(g_fnaf.night > 0 ? g_fnaf.night : 1);
+            } else if (g_fnaf.title_selected_option == 2) {
+                fnaf_start_night(6);
+            } else if (g_fnaf.title_selected_option == 3) {
+                g_fnaf.state = FNAF_STATE_CUSTOM_NIGHT;
+                g_fnaf.custom_selected_bot = 0;
+            }
         } else if (pressed & (1ULL << eadk_key_left | 1ULL << eadk_key_right)) {
             /* Basculer le mode de rythme (NORMAL vs FAST) */
             g_fnaf.pacing_mode = (g_fnaf.pacing_mode == FNAF_PACING_NORMAL) ? FNAF_PACING_FAST : FNAF_PACING_NORMAL;
             g_fnaf.hour_duration_ms = (g_fnaf.pacing_mode == FNAF_PACING_FAST) ? FAST_HOUR_DURATION_MS : NORMAL_HOUR_DURATION_MS;
+        } else if (pressed & (1ULL << eadk_key_one)) {
+            fnaf_start_night(1);
         } else if (pressed & (1ULL << eadk_key_six)) {
             /* Déverrouillage direct Nuit 6 */
             fnaf_start_night(6);
@@ -934,13 +950,193 @@ void fnaf_handle_input(uint64_t pressed, uint64_t down) {
                     }
                 }
             }
+
+            /* Easter Egg Scott Cawthon : Nez de Freddy sur le poster 'CELEBRATE!' (Touche 5 ou Ans) */
+            if (pressed & (1ULL << eadk_key_five | 1ULL << eadk_key_ans)) {
+                if (g_fnaf.view_pan == 1) {
+                    fnaf_draw_subtitle("* SQUEAK! (Honk!) *", COLOR_YELLOW);
+                }
+            }
         }
     }
 }
 
 /* =========================================================================
- * Moteur de Rendu Graphique
+ * Moteur de Rendu Graphique Authentique Scott Cawthon (Portes, Ventilo, Radar)
  * ========================================================================= */
+
+typedef struct {
+    fnaf_cam_id_t id;
+    const char *label;
+    uint16_t bx, by, bw, bh; /* Coordonnées du bouton pill */
+    uint16_t rx, ry, rw, rh; /* Contour de la pièce */
+} fnaf_map_cam_t;
+
+static const fnaf_map_cam_t s_fnaf_map_cams[CAM_COUNT] = {
+    { CAM_1A, "1A", 244,  74, 18, 12, 238,  70, 30, 18 }, /* Show Stage */
+    { CAM_1B, "1B", 244,  96, 18, 12, 234,  92, 38, 26 }, /* Dining Area */
+    { CAM_1C, "1C", 220, 114, 18, 12, 216, 110, 16, 22 }, /* Pirate Cove */
+    { CAM_2A, "2A", 228, 136, 18, 12, 224, 132, 14, 30 }, /* West Hall */
+    { CAM_2B, "2B", 228, 166, 18, 12, 224, 164, 14, 18 }, /* West Hall Corner */
+    { CAM_3,  "3",  215, 148, 14, 12, 212, 144, 10, 16 }, /* Supply Closet */
+    { CAM_4A, "4A", 270, 136, 18, 12, 268, 132, 14, 30 }, /* East Hall */
+    { CAM_4B, "4B", 270, 166, 18, 12, 268, 164, 14, 18 }, /* East Hall Corner */
+    { CAM_5,  "5",  218,  78, 16, 12, 214,  74, 16, 18 }, /* Backstage */
+    { CAM_6,  "6",  286, 130, 16, 12, 282, 124, 24, 24 }, /* Kitchen */
+    { CAM_7,  "7",  286,  96, 16, 12, 282,  92, 24, 22 }, /* Restrooms */
+};
+
+static void fnaf_draw_blast_door_left(void) {
+    /* Porte blindée métallique gauche Scott Cawthon (x: 0 à 76, y: 0 à 218) */
+    eadk_rect_t door_bg = {0, 0, 76, 218};
+    eadk_display_push_rect_uniform(door_bg, RGB565(0x18, 0x1c, 0x24));
+
+    /* Lattes métalliques industrielles horizontales avec rivets et reflets */
+    for (int y = 0; y < 196; y += 14) {
+        eadk_rect_t slat = {0, (uint16_t)y, 76, 12};
+        eadk_display_push_rect_uniform(slat, RGB565(0x34, 0x3a, 0x46));
+
+        eadk_rect_t hilight = {0, (uint16_t)y, 76, 2};
+        eadk_display_push_rect_uniform(hilight, RGB565(0x56, 0x60, 0x72));
+
+        eadk_rect_t shadow = {0, (uint16_t)(y + 10), 76, 2};
+        eadk_display_push_rect_uniform(shadow, RGB565(0x0e, 0x12, 0x18));
+
+        /* Rivets métalliques */
+        eadk_display_push_rect_uniform((eadk_rect_t){6, (uint16_t)(y + 4), 3, 3}, RGB565(0x82, 0x8c, 0x9c));
+        eadk_display_push_rect_uniform((eadk_rect_t){66, (uint16_t)(y + 4), 3, 3}, RGB565(0x82, 0x8c, 0x9c));
+    }
+
+    /* Bande inférieure de danger striée jaune/noir à 45° */
+    for (int sx = -14; sx < 76; sx += 14) {
+        for (int row = 0; row < 18; row++) {
+            int px = sx + row;
+            if (px >= 0 && px < 76) {
+                eadk_color_t stripe = ((sx / 14) & 1) ? RGB565(0xf5, 0xc0, 0x10) : COLOR_BLACK;
+                eadk_display_push_rect_uniform((eadk_rect_t){(uint16_t)px, (uint16_t)(198 + row), 1, 1}, stripe);
+            }
+        }
+    }
+}
+
+static void fnaf_draw_blast_door_right(void) {
+    /* Porte blindée métallique droite Scott Cawthon (x: 244 à 320, y: 0 à 218) */
+    eadk_rect_t door_bg = {244, 0, 76, 218};
+    eadk_display_push_rect_uniform(door_bg, RGB565(0x18, 0x1c, 0x24));
+
+    for (int y = 0; y < 196; y += 14) {
+        eadk_rect_t slat = {244, (uint16_t)y, 76, 12};
+        eadk_display_push_rect_uniform(slat, RGB565(0x34, 0x3a, 0x46));
+
+        eadk_rect_t hilight = {244, (uint16_t)y, 76, 2};
+        eadk_display_push_rect_uniform(hilight, RGB565(0x56, 0x60, 0x72));
+
+        eadk_rect_t shadow = {244, (uint16_t)(y + 10), 76, 2};
+        eadk_display_push_rect_uniform(shadow, RGB565(0x0e, 0x12, 0x18));
+
+        eadk_display_push_rect_uniform((eadk_rect_t){250, (uint16_t)(y + 4), 3, 3}, RGB565(0x82, 0x8c, 0x9c));
+        eadk_display_push_rect_uniform((eadk_rect_t){310, (uint16_t)(y + 4), 3, 3}, RGB565(0x82, 0x8c, 0x9c));
+    }
+
+    for (int sx = 230; sx < 320; sx += 14) {
+        for (int row = 0; row < 18; row++) {
+            int px = sx + row;
+            if (px >= 244 && px < 320) {
+                eadk_color_t stripe = (((sx - 230) / 14) & 1) ? RGB565(0xf5, 0xc0, 0x10) : COLOR_BLACK;
+                eadk_display_push_rect_uniform((eadk_rect_t){(uint16_t)px, (uint16_t)(198 + row), 1, 1}, stripe);
+            }
+        }
+    }
+}
+
+static void fnaf_draw_door_controls_left(void) {
+    /* Boîtier de commande mural gauche (x: 78, y: 62, w: 22, h: 52) */
+    eadk_display_push_rect_uniform((eadk_rect_t){78, 62, 22, 52}, RGB565(0x1e, 0x24, 0x30));
+    eadk_color_t btn_d = g_fnaf.door_left_closed ? RGB565(0xee, 0x33, 0x33) : RGB565(0x22, 0xaa, 0x44);
+    eadk_display_push_rect_uniform((eadk_rect_t){81, 65, 16, 20}, btn_d);
+    eadk_color_t btn_l = g_fnaf.light_left_on ? RGB565(0x38, 0xbd, 0xf8) : RGB565(0x47, 0x55, 0x69);
+    eadk_display_push_rect_uniform((eadk_rect_t){81, 90, 16, 20}, btn_l);
+}
+
+static void fnaf_draw_door_controls_right(void) {
+    /* Boîtier de commande mural droit (x: 220, y: 62, w: 22, h: 52) */
+    eadk_display_push_rect_uniform((eadk_rect_t){220, 62, 22, 52}, RGB565(0x1e, 0x24, 0x30));
+    eadk_color_t btn_d = g_fnaf.door_right_closed ? RGB565(0xee, 0x33, 0x33) : RGB565(0x22, 0xaa, 0x44);
+    eadk_display_push_rect_uniform((eadk_rect_t){223, 65, 16, 20}, btn_d);
+    eadk_color_t btn_l = g_fnaf.light_right_on ? RGB565(0x38, 0xbd, 0xf8) : RGB565(0x47, 0x55, 0x69);
+    eadk_display_push_rect_uniform((eadk_rect_t){223, 90, 16, 20}, btn_l);
+}
+
+static void fnaf_draw_fan(void) {
+    /* Ventilateur de bureau animé Scott Cawthon au centre du bureau (x: 160, y: 124) */
+    uint16_t cx = 160;
+    uint16_t cy = 124;
+    eadk_display_push_rect_uniform((eadk_rect_t){(uint16_t)(cx - 3), (uint16_t)(cy + 14), 6, 12}, RGB565(0x18, 0x1a, 0x20));
+    eadk_display_push_rect_uniform((eadk_rect_t){(uint16_t)(cx - 10), (uint16_t)(cy + 24), 20, 4}, RGB565(0x24, 0x28, 0x32));
+    eadk_display_push_rect_uniform((eadk_rect_t){(uint16_t)(cx - 4), (uint16_t)(cy - 4), 8, 8}, RGB565(0x18, 0x1c, 0x24));
+
+    eadk_color_t blade_col = RGB565(0xa4, 0xb0, 0xc4);
+    eadk_color_t blade_dim = RGB565(0x5a, 0x64, 0x78);
+
+    if (g_fnaf.fan_frame == 0) {
+        eadk_display_push_rect_uniform((eadk_rect_t){(uint16_t)(cx - 2), (uint16_t)(cy - 16), 4, 13}, blade_col);
+        eadk_display_push_rect_uniform((eadk_rect_t){(uint16_t)(cx - 14), (uint16_t)(cy + 4), 11, 7}, blade_dim);
+        eadk_display_push_rect_uniform((eadk_rect_t){(uint16_t)(cx + 3), (uint16_t)(cy + 4), 11, 7}, blade_dim);
+    } else if (g_fnaf.fan_frame == 1) {
+        eadk_display_push_rect_uniform((eadk_rect_t){(uint16_t)(cx + 4), (uint16_t)(cy - 12), 10, 8}, blade_col);
+        eadk_display_push_rect_uniform((eadk_rect_t){(uint16_t)(cx - 14), (uint16_t)(cy - 8), 10, 8}, blade_dim);
+        eadk_display_push_rect_uniform((eadk_rect_t){(uint16_t)(cx - 2), (uint16_t)(cy + 5), 4, 13}, blade_col);
+    } else {
+        eadk_display_push_rect_uniform((eadk_rect_t){(uint16_t)(cx - 14), (uint16_t)(cy - 4), 11, 7}, blade_col);
+        eadk_display_push_rect_uniform((eadk_rect_t){(uint16_t)(cx + 3), (uint16_t)(cy - 14), 11, 7}, blade_dim);
+        eadk_display_push_rect_uniform((eadk_rect_t){(uint16_t)(cx + 2), (uint16_t)(cy + 5), 8, 10}, blade_col);
+    }
+}
+
+static void fnaf_draw_pizzeria_minimap(void) {
+    /* Fond semi-transparent sombre du radar */
+    eadk_rect_t map_bg = {208, 62, 108, 172};
+    eadk_display_push_rect_uniform(map_bg, RGB565(0x0a, 0x0e, 0x18));
+
+    /* Cadre extérieur fin */
+    eadk_display_push_rect_uniform((eadk_rect_t){208, 62, 108, 1}, RGB565(0x33, 0x41, 0x55));
+    eadk_display_push_rect_uniform((eadk_rect_t){208, 233, 108, 1}, RGB565(0x33, 0x41, 0x55));
+    eadk_display_push_rect_uniform((eadk_rect_t){208, 62, 1, 172}, RGB565(0x33, 0x41, 0x55));
+    eadk_display_push_rect_uniform((eadk_rect_t){315, 62, 1, 172}, RGB565(0x33, 0x41, 0x55));
+
+    /* Lignes de couloirs et structures des pièces */
+    for (int i = 0; i < CAM_COUNT; i++) {
+        const fnaf_map_cam_t *m = &s_fnaf_map_cams[i];
+        eadk_display_push_rect_uniform((eadk_rect_t){m->rx, m->ry, m->rw, 1}, RGB565(0x47, 0x55, 0x69));
+        eadk_display_push_rect_uniform((eadk_rect_t){m->rx, (uint16_t)(m->ry + m->rh - 1), m->rw, 1}, RGB565(0x47, 0x55, 0x69));
+        eadk_display_push_rect_uniform((eadk_rect_t){m->rx, m->ry, 1, m->rh}, RGB565(0x47, 0x55, 0x69));
+        eadk_display_push_rect_uniform((eadk_rect_t){(uint16_t)(m->rx + m->rw - 1), m->ry, 1, m->rh}, RGB565(0x47, 0x55, 0x69));
+    }
+
+    /* Le Bureau du joueur (YOU) */
+    eadk_rect_t office_rect = {244, 188, 20, 16};
+    eadk_display_push_rect_uniform(office_rect, RGB565(0x15, 0x24, 0x1a));
+    eadk_display_push_rect_uniform((eadk_rect_t){244, 188, 20, 1}, COLOR_GREEN);
+    eadk_display_push_rect_uniform((eadk_rect_t){244, 203, 20, 1}, COLOR_GREEN);
+    eadk_display_push_rect_uniform((eadk_rect_t){244, 188, 1, 16}, COLOR_GREEN);
+    eadk_display_push_rect_uniform((eadk_rect_t){263, 188, 1, 16}, COLOR_GREEN);
+    eq_display_draw_string("YOU", (eadk_point_t){246, 192}, false, COLOR_GREEN, RGB565(0x15, 0x24, 0x1a));
+
+    /* Boutons des caméras */
+    for (int i = 0; i < CAM_COUNT; i++) {
+        const fnaf_map_cam_t *m = &s_fnaf_map_cams[i];
+        bool is_active = (g_fnaf.active_cam == m->id);
+        eadk_color_t btn_bg = is_active ? COLOR_GREEN : RGB565(0x1e, 0x28, 0x38);
+        eadk_color_t txt_col = is_active ? COLOR_BLACK : COLOR_WHITE;
+
+        eadk_rect_t pill = {m->bx, m->by, m->bw, m->bh};
+        eadk_display_push_rect_uniform(pill, btn_bg);
+
+        uint16_t tx = (uint16_t)(m->bx + (m->bw >= 18 ? 3 : 4));
+        uint16_t ty = (uint16_t)(m->by + 2);
+        eq_display_draw_string(m->label, (eadk_point_t){tx, ty}, false, txt_col, btn_bg);
+    }
+}
 
 static void fnaf_render_hud_overlay(void) {
     /* 1. Heure en haut à droite */
@@ -1024,34 +1220,69 @@ static void fnaf_render_hud_overlay(void) {
 }
 
 void fnaf_render(void) {
-    /* 1. Écran Titre */
+    /* 1. Écran Titre Authentique Scott Cawthon */
     if (g_fnaf.state == FNAF_STATE_TITLE) {
-        fnaf_draw_image(FNAF_IMG_OFFICE_NORMAL_CENTER, 0, 0);
-        /* Overlay sombre */
-        eadk_rect_t box = {20, 30, 280, 180};
-        eadk_display_push_rect_uniform(box, COLOR_BLACK);
+        /* Rendu de Freddy dans l'obscurité (Blackout Freddy) */
+        fnaf_draw_image(FNAF_IMG_OFFICE_BLACKOUT_CENTER, 0, 0);
 
-        eq_display_draw_string("FIVE NIGHTS AT FREDDY'S", (eadk_point_t){45, 45}, true, COLOR_WHITE, COLOR_BLACK);
-        eq_display_draw_string("NumWorks Edition - EquaLib", (eadk_point_t){70, 70}, false, COLOR_GRAY, COLOR_BLACK);
-
-        char night_buf[32];
-        night_buf[0] = '>'; night_buf[1] = ' '; night_buf[2] = 'C'; night_buf[3] = 'O'; night_buf[4] = 'N';
-        night_buf[5] = 'T'; night_buf[6] = 'I'; night_buf[7] = 'N'; night_buf[8] = 'U'; night_buf[9] = 'E';
-        night_buf[10] = ' '; night_buf[11] = '('; night_buf[12] = 'N'; night_buf[13] = 'I'; night_buf[14] = 'G';
-        night_buf[15] = 'H'; night_buf[16] = 'T'; night_buf[17] = ' '; night_buf[18] = '0' + g_fnaf.night;
-        night_buf[19] = ')'; night_buf[20] = '\0';
-        eq_display_draw_string(night_buf, (eadk_point_t){50, 100}, false, COLOR_GREEN, COLOR_BLACK);
-
-        eq_display_draw_string("  NIGHT 6 (Press 6)", (eadk_point_t){50, 120}, false, COLOR_YELLOW, COLOR_BLACK);
-        eq_display_draw_string("  CUSTOM NIGHT (Press 7)", (eadk_point_t){50, 140}, false, COLOR_BLUE, COLOR_BLACK);
-
-        if (g_fnaf.pacing_mode == FNAF_PACING_NORMAL) {
-            eq_display_draw_string("PACING: NORMAL (89s/hr) [< >]", (eadk_point_t){50, 165}, false, COLOR_WHITE, COLOR_BLACK);
-        } else {
-            eq_display_draw_string("PACING: FAST (40s/hr) [< >]", (eadk_point_t){50, 165}, false, COLOR_YELLOW, COLOR_BLACK);
+        /* Effet de clignotement / glitch des yeux bleus de Freddy */
+        uint32_t t = (uint32_t)eadk_timing_millis();
+        bool eyes_on = ((t / 250) % 7) != 0;
+        if (eyes_on) {
+            eadk_color_t eye_col = RGB565(0x38, 0xbd, 0xf8);
+            eadk_color_t pupil_col = COLOR_WHITE;
+            eadk_display_push_rect_uniform((eadk_rect_t){178, 56, 7, 7}, eye_col);
+            eadk_display_push_rect_uniform((eadk_rect_t){180, 58, 3, 3}, pupil_col);
+            eadk_display_push_rect_uniform((eadk_rect_t){212, 56, 7, 7}, eye_col);
+            eadk_display_push_rect_uniform((eadk_rect_t){214, 58, 3, 3}, pupil_col);
         }
 
-        eq_display_draw_string("Press [OK] to Start", (eadk_point_t){90, 190}, false, COLOR_WHITE, COLOR_BLACK);
+        /* Scanlines CRT */
+        for (int y = 0; y < FNAF_SCREEN_HEIGHT; y += 4) {
+            eadk_rect_t scanline = {0, (uint16_t)y, FNAF_SCREEN_WIDTH, 1};
+            eadk_display_push_rect_uniform(scanline, COLOR_BLACK);
+        }
+
+        /* Titre authentique Scott Cawthon */
+        eq_display_draw_string("Five Nights", (eadk_point_t){18, 24}, true, COLOR_WHITE, COLOR_BLACK);
+        eq_display_draw_string("at Freddy's", (eadk_point_t){18, 44}, true, COLOR_WHITE, COLOR_BLACK);
+        eq_display_draw_string("NUMWORKS EDITION", (eadk_point_t){18, 64}, false, COLOR_GRAY, COLOR_BLACK);
+
+        /* Menu interactif avec curseur >> */
+        const char *options[4] = {
+            "New Game",
+            "Continue",
+            "6th Night",
+            "Custom Night"
+        };
+        char cont_buf[32];
+        int n_len = 0;
+        const char *cont_pfx = "Continue (Night ";
+        while (cont_pfx[n_len]) { cont_buf[n_len] = cont_pfx[n_len]; n_len++; }
+        cont_buf[n_len++] = '0' + (g_fnaf.night > 0 ? g_fnaf.night : 1);
+        cont_buf[n_len++] = ')';
+        cont_buf[n_len] = '\0';
+        options[1] = cont_buf;
+
+        for (int opt = 0; opt < 4; opt++) {
+            bool is_sel = (g_fnaf.title_selected_option == opt);
+            uint16_t opt_y = 96 + opt * 20;
+            if (is_sel) {
+                eq_display_draw_string(">>", (eadk_point_t){16, opt_y}, false, COLOR_YELLOW, COLOR_BLACK);
+                eq_display_draw_string(options[opt], (eadk_point_t){36, opt_y}, false, COLOR_WHITE, COLOR_BLACK);
+            } else {
+                eq_display_draw_string(options[opt], (eadk_point_t){36, opt_y}, false, COLOR_DARK_GRAY, COLOR_BLACK);
+            }
+        }
+
+        if (g_fnaf.pacing_mode == FNAF_PACING_NORMAL) {
+            eq_display_draw_string("PACING: NORMAL (89s/hr) [< >]", (eadk_point_t){18, 186}, false, COLOR_WHITE, COLOR_BLACK);
+        } else {
+            eq_display_draw_string("PACING: FAST (40s/hr)   [< >]", (eadk_point_t){18, 186}, false, COLOR_YELLOW, COLOR_BLACK);
+        }
+
+        eq_display_draw_string("[OK] Start   (c) Scott Cawthon", (eadk_point_t){18, 212}, false, COLOR_DARK_GRAY, COLOR_BLACK);
+
         fnaf_display_flip();
         return;
     }
@@ -1187,7 +1418,13 @@ void fnaf_render(void) {
             }
         }
 
-        /* Nom de la caméra active */
+        /* Scanlines CRT sur la caméra */
+        for (int y = 0; y < FNAF_SCREEN_HEIGHT; y += 4) {
+            eadk_rect_t sl = {0, (uint16_t)y, 208, 1};
+            eadk_display_push_rect_uniform(sl, COLOR_BLACK);
+        }
+
+        /* Nom de la caméra active en haut à gauche */
         const char *cam_names[CAM_COUNT] = {
             "CAM 1A - SHOW STAGE",
             "CAM 1B - DINING AREA",
@@ -1201,7 +1438,7 @@ void fnaf_render(void) {
             "CAM 6  - KITCHEN (AUDIO ONLY)",
             "CAM 7  - RESTROOMS"
         };
-        eq_display_draw_string(cam_names[g_fnaf.active_cam], (eadk_point_t){10, 10}, false, COLOR_WHITE, COLOR_BLACK);
+        eq_display_draw_string(cam_names[g_fnaf.active_cam], (eadk_point_t){10, 10}, false, COLOR_GREEN, COLOR_BLACK);
 
         /* Blip d'enregistrement clignotant */
         if ((eadk_timing_millis() / 500) % 2 == 0) {
@@ -1210,24 +1447,28 @@ void fnaf_render(void) {
             eq_display_draw_string("REC", (eadk_point_t){20, 24}, false, COLOR_RED, COLOR_BLACK);
         }
 
-        /* Radar / Carte des caméras dans le coin inférieur droit */
-        eadk_rect_t map_bg = {220, 130, 95, 105};
-        eadk_display_push_rect_uniform(map_bg, COLOR_BLACK);
-        eq_display_draw_string("CAM MAP", (eadk_point_t){235, 135}, false, COLOR_GRAY, COLOR_BLACK);
-
-        /* Mini-boutons de sélection sur la carte */
-        for (int c = 0; c < CAM_COUNT; c++) {
-            uint16_t bx = 225 + (c % 3) * 30;
-            uint16_t by = 150 + (c / 3) * 18;
-            eadk_rect_t btn = {bx, by, 26, 14};
-            eadk_color_t btn_col = (g_fnaf.active_cam == c) ? COLOR_GREEN : COLOR_DARK_GRAY;
-            eadk_display_push_rect_uniform(btn, btn_col);
-
-            char btn_lbl[4];
-            btn_lbl[0] = (c < 9) ? ('1' + c) : ('A' + (c - 9));
-            btn_lbl[1] = '\0';
-            eq_display_draw_string(btn_lbl, (eadk_point_t){(uint16_t)(bx + 9), (uint16_t)(by + 3)}, false, COLOR_WHITE, btn_col);
+        /* Cues sonores pour la Cuisine (CAM 6) */
+        if (g_fnaf.active_cam == CAM_6) {
+            if (g_fnaf.chica_loc == LOC_KITCHEN) {
+                eq_display_draw_string("* Pots & Pans Clattering *", (eadk_point_t){20, 110}, false, COLOR_YELLOW, COLOR_BLACK);
+            } else if (g_fnaf.freddy_loc == LOC_KITCHEN) {
+                eq_display_draw_string("* Music Box Chimes (Toreador) *", (eadk_point_t){10, 110}, false, COLOR_BLUE, COLOR_BLACK);
+            } else {
+                eq_display_draw_string("- CAMERA DISABLED -", (eadk_point_t){35, 100}, false, COLOR_WHITE, COLOR_BLACK);
+                eq_display_draw_string("[ AUDIO ONLY ]", (eadk_point_t){50, 116}, false, COLOR_GREEN, COLOR_BLACK);
+            }
         }
+
+        /* Alertes spécifiques animatroniques */
+        if (g_fnaf.active_cam == CAM_1C && g_fnaf.foxy_stage >= 3) {
+            eq_display_draw_string("! PIRATE COVE EMPTY: IT'S ME !", (eadk_point_t){10, 45}, false, COLOR_RED, COLOR_BLACK);
+        }
+        if (g_fnaf.active_cam == CAM_2A && g_fnaf.foxy_stage == 3) {
+            eq_display_draw_string("! ALERT: FOXY SPRINTING !", (eadk_point_t){20, 45}, false, COLOR_RED, COLOR_BLACK);
+        }
+
+        /* Radar authentique Pizzeria Minimap Scott Cawthon avec indicateur 'YOU' */
+        fnaf_draw_pizzeria_minimap();
 
         eq_display_draw_string("[DOWN: LOWER MONITOR]", (eadk_point_t){90, 222}, false, COLOR_YELLOW, COLOR_BLACK);
 
@@ -1274,16 +1515,33 @@ void fnaf_render(void) {
 
     fnaf_draw_image(office_asset, 0, 0);
 
-    /* Si vue porte fermée : dessiner l'indicateur visuel de blindage de porte */
-    if (g_fnaf.view_pan == 0 && g_fnaf.door_left_closed) {
-        eadk_rect_t door_l = {0, 30, 45, 170};
-        eadk_display_push_rect_uniform(door_l, COLOR_DARK_GRAY);
-        eq_display_draw_string("CLOSED", (eadk_point_t){5, 110}, false, COLOR_RED, COLOR_DARK_GRAY);
-    }
-    if (g_fnaf.view_pan == 2 && g_fnaf.door_right_closed) {
-        eadk_rect_t door_r = {275, 30, 45, 170};
-        eadk_display_push_rect_uniform(door_r, COLOR_DARK_GRAY);
-        eq_display_draw_string("CLOSED", (eadk_point_t){280, 110}, false, COLOR_RED, COLOR_DARK_GRAY);
+    /* Éléments de bureau 1000% Scott Cawthon : Portes blindées, Boîtiers muraux et Ventilateur */
+    if (g_fnaf.view_pan == 0) {
+        if (g_fnaf.door_left_closed) {
+            fnaf_draw_blast_door_left();
+        }
+        fnaf_draw_door_controls_left();
+    } else if (g_fnaf.view_pan == 1) {
+        /* Arêtes visibles des portes fermées depuis le centre */
+        if (g_fnaf.door_left_closed) {
+            eadk_display_push_rect_uniform((eadk_rect_t){0, 15, 16, 192}, RGB565(0x34, 0x3a, 0x46));
+            for (int y = 15; y < 192; y += 14) {
+                eadk_display_push_rect_uniform((eadk_rect_t){0, (uint16_t)y, 16, 2}, RGB565(0x56, 0x60, 0x72));
+            }
+        }
+        if (g_fnaf.door_right_closed) {
+            eadk_display_push_rect_uniform((eadk_rect_t){304, 15, 16, 192}, RGB565(0x34, 0x3a, 0x46));
+            for (int y = 15; y < 192; y += 14) {
+                eadk_display_push_rect_uniform((eadk_rect_t){304, (uint16_t)y, 16, 2}, RGB565(0x56, 0x60, 0x72));
+            }
+        }
+        /* Ventilateur de bureau animé à 60 FPS */
+        fnaf_draw_fan();
+    } else if (g_fnaf.view_pan == 2) {
+        if (g_fnaf.door_right_closed) {
+            fnaf_draw_blast_door_right();
+        }
+        fnaf_draw_door_controls_right();
     }
 
     fnaf_render_hud_overlay();

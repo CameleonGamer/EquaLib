@@ -3714,20 +3714,26 @@ class NumWorksSimulator {
     // Préchargement des véritables textures 3D originales de Scott Cawthon
     const realTextures = {};
     const textureNames = [
-      'office_normal_left', 'office_normal_center', 'office_normal_right',
-      'office_light_l_left', 'office_light_l_center', 'office_light_l_right',
-      'office_bonnie_left', 'office_bonnie_center', 'office_bonnie_right',
-      'office_light_r_left', 'office_light_r_center', 'office_light_r_right',
-      'office_chica_left', 'office_chica_center', 'office_chica_right',
-      'office_blackout_left', 'office_blackout_center', 'office_blackout_right',
       'cam_1a_stage', 'cam_1b_dining', 'cam_1c_cove', 'cam_2a_west_hall',
       'cam_2b_west_corner', 'cam_3_closet', 'cam_4a_east_hall', 'cam_4b_east_corner',
+      'office_blackout_center', 'office_blackout_left', 'office_blackout_right',
+      'office_bonnie_center', 'office_bonnie_left', 'office_bonnie_right',
+      'office_chica_center', 'office_chica_left', 'office_chica_right',
+      'office_light_l_center', 'office_light_l_left', 'office_light_l_right',
+      'office_light_r_center', 'office_light_r_left', 'office_light_r_right',
+      'office_normal_center', 'office_normal_left', 'office_normal_right',
+      'scare_0210', 'scare_0225', 'scare_0245', 'scare_0280', 'scare_0295',
       'scare_bonnie', 'scare_chica', 'scare_foxy', 'scare_freddy'
     ];
 
     if (typeof window !== 'undefined' && typeof window.Image === 'function') {
       for (const name of textureNames) {
         const img = new Image();
+        img.onerror = () => {
+          if (!img.src.includes('web/assets/fnaf/')) {
+            img.src = `web/assets/fnaf/${name}.png`;
+          }
+        };
         img.src = `assets/fnaf/${name}.png`;
         realTextures[name] = img;
       }
@@ -3780,17 +3786,17 @@ class NumWorksSimulator {
     let titleSel = 0;
 
     const CAMS = [
-      { id: '1A', name: 'CAM 1A - SHOW STAGE', x: 232, y: 72, w: 32, h: 16 },
-      { id: '1B', name: 'CAM 1B - DINING AREA', x: 222, y: 96, w: 32, h: 16 },
-      { id: '1C', name: 'CAM 1C - PIRATE COVE', x: 196, y: 116, w: 32, h: 16 },
-      { id: '2A', name: 'CAM 2A - WEST HALL', x: 210, y: 142, w: 32, h: 16 },
-      { id: '2B', name: 'CAM 2B - W. CORNER', x: 210, y: 178, w: 32, h: 16 },
-      { id: '3',  name: 'CAM 3 - SUPPLY CLOSET', x: 178, y: 166, w: 32, h: 16 },
-      { id: '4A', name: 'CAM 4A - EAST HALL', x: 256, y: 142, w: 32, h: 16 },
-      { id: '4B', name: 'CAM 4B - E. CORNER', x: 256, y: 178, w: 32, h: 16 },
-      { id: '5',  name: 'CAM 5 - BACKSTAGE', x: 172, y: 92, w: 32, h: 16 },
-      { id: '6',  name: 'CAM 6 - KITCHEN', x: 282, y: 160, w: 32, h: 16 },
-      { id: '7',  name: 'CAM 7 - RESTROOMS', x: 282, y: 98, w: 32, h: 16 }
+      { id: '1A', name: 'CAM 1A - SHOW STAGE', x: 244, y: 74, w: 18, h: 12, bx: 244, by: 74, bw: 18, bh: 12, rx: 238, ry: 70, rw: 30, rh: 18 },
+      { id: '1B', name: 'CAM 1B - DINING AREA', x: 244, y: 96, w: 18, h: 12, bx: 244, by: 96, bw: 18, bh: 12, rx: 234, ry: 92, rw: 38, rh: 26 },
+      { id: '1C', name: 'CAM 1C - PIRATE COVE', x: 220, y: 114, w: 18, h: 12, bx: 220, by: 114, bw: 18, bh: 12, rx: 216, ry: 110, rw: 16, rh: 22 },
+      { id: '2A', name: 'CAM 2A - WEST HALL', x: 228, y: 136, w: 18, h: 12, bx: 228, by: 136, bw: 18, bh: 12, rx: 224, ry: 132, rw: 14, rh: 30 },
+      { id: '2B', name: 'CAM 2B - W. CORNER', x: 228, y: 166, w: 18, h: 12, bx: 228, by: 166, bw: 18, bh: 12, rx: 224, ry: 164, rw: 14, rh: 18 },
+      { id: '3',  name: 'CAM 3 - SUPPLY CLOSET', x: 215, y: 148, w: 14, h: 12, bx: 215, by: 148, bw: 14, bh: 12, rx: 212, ry: 144, rw: 10, rh: 16 },
+      { id: '4A', name: 'CAM 4A - EAST HALL', x: 270, y: 136, w: 18, h: 12, bx: 270, by: 136, bw: 18, bh: 12, rx: 268, ry: 132, rw: 14, rh: 30 },
+      { id: '4B', name: 'CAM 4B - E. CORNER', x: 270, y: 166, w: 18, h: 12, bx: 270, by: 166, bw: 18, bh: 12, rx: 268, ry: 164, rw: 14, rh: 18 },
+      { id: '5',  name: 'CAM 5 - BACKSTAGE', x: 218, y: 78, w: 16, h: 12, bx: 218, by: 78, bw: 16, bh: 12, rx: 214, ry: 74, rw: 16, rh: 18 },
+      { id: '6',  name: 'CAM 6 - KITCHEN', x: 286, y: 130, w: 16, h: 12, bx: 286, by: 130, bw: 16, bh: 12, rx: 282, ry: 124, rw: 24, rh: 24 },
+      { id: '7',  name: 'CAM 7 - RESTROOMS', x: 286, y: 96, w: 16, h: 12, bx: 286, by: 96, bw: 16, bh: 12, rx: 282, ry: 92, rw: 24, rh: 22 }
     ];
 
     const initNight = (num) => {
@@ -3829,6 +3835,12 @@ class NumWorksSimulator {
 
     // Commandes exposées
     this.fnafPan = (dir) => {
+      if (gameState === 'TITLE') {
+        if (dir === -1) titleSel = (titleSel + 2) % 3;
+        else if (dir === 1) titleSel = (titleSel + 1) % 3;
+        else titleSel = (titleSel + 1) % 3;
+        return;
+      }
       if (dir === -1) viewPan = 0;
       else if (dir === 1) viewPan = 2;
       else viewPan = 1;
@@ -3857,6 +3869,10 @@ class NumWorksSimulator {
     };
 
     this.fnafToggleMonitor = () => {
+      if (gameState === 'TITLE') {
+        titleSel = (titleSel + 2) % 3;
+        return;
+      }
       monitorUp = !monitorUp;
       if (monitorUp) {
         lightLeft = false;
@@ -3930,9 +3946,9 @@ class NumWorksSimulator {
         const my = (e.clientY - rect.top) * (240 / rect.height);
 
         if (gameState === 'TITLE') {
-          if (my >= 115 && my < 140) initNight(1);
-          else if (my >= 140 && my < 165) initNight(5);
-          else if (my >= 165 && my < 195) gameState = 'CUSTOM_NIGHT';
+          if (my >= 125 && my < 155) { titleSel = 0; initNight(1); }
+          else if (my >= 155 && my < 180) { titleSel = 1; initNight(5); }
+          else if (my >= 180 && my < 210) { titleSel = 2; gameState = 'CUSTOM_NIGHT'; }
         } else if (gameState === 'CUSTOM_NIGHT') {
           if (my >= 165 && my <= 195) initNight(7);
           else {
@@ -4168,39 +4184,65 @@ class NumWorksSimulator {
         ctx.fillRect(0, 0, 320, 240);
 
         if (gameState === 'TITLE') {
-          // Écran Titre
-          ctx.fillStyle = '#0f172a';
-          ctx.fillRect(170, 25, 95, 170);
-          ctx.fillStyle = '#000000';
-          ctx.fillRect(195, 10, 45, 30);
-          ctx.fillRect(185, 35, 65, 6);
-
-          // Yeux luisants
-          if (Math.random() > 0.15) {
-            ctx.fillStyle = '#38bdf8';
-            ctx.fillRect(198, 50, 10, 10);
-            ctx.fillRect(232, 50, 10, 10);
-            ctx.fillStyle = '#ffffff';
-            ctx.fillRect(201, 52, 4, 4);
-            ctx.fillRect(235, 52, 4, 4);
+          // Écran Titre Authentique Scott Cawthon (Freddy dans la pénombre + CRT scanlines)
+          const titleTex = realTextures['office_blackout_center'];
+          if (titleTex && titleTex.complete && titleTex.naturalWidth > 0) {
+            ctx.drawImage(titleTex, 0, 0, 320, 240);
+          } else {
+            ctx.fillStyle = '#0a0e17';
+            ctx.fillRect(0, 0, 320, 240);
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(170, 25, 95, 170);
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(195, 10, 45, 30);
+            ctx.fillRect(185, 35, 65, 6);
           }
 
-          ctx.fillStyle = '#ffffff';
-          ctx.font = 'bold 16px monospace';
-          ctx.fillText('Five Nights', 20, 42);
-          ctx.fillText("at Freddy's", 20, 64);
+          // Yeux luisants de Freddy dans l'obscurité (twitch aléatoire)
+          if (Math.random() > 0.20) {
+            ctx.fillStyle = '#38bdf8';
+            ctx.fillRect(198, 48, 8, 8);
+            ctx.fillRect(232, 48, 8, 8);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(200, 50, 4, 4);
+            ctx.fillRect(234, 50, 4, 4);
+          }
 
-          ctx.font = '11px monospace';
-          ctx.fillStyle = (titleSel === 0) ? '#facc15' : '#94a3b8';
-          ctx.fillText('> Nouvelle Partie (Nuit 1)', 20, 130);
-          ctx.fillStyle = (titleSel === 1) ? '#facc15' : '#94a3b8';
-          ctx.fillText('  Continuer (Nuit 5)', 20, 155);
-          ctx.fillStyle = (titleSel === 2) ? '#facc15' : '#94a3b8';
-          ctx.fillText('  Custom Night (20/20/20/20)', 20, 180);
+          // Scanlines CRT authentiques
+          ctx.fillStyle = 'rgba(0, 0, 0, 0.32)';
+          for (let y = 0; y < 240; y += 4) {
+            ctx.fillRect(0, y, 320, 2);
+          }
+          if (Math.random() < 0.12) {
+            const twitchY = Math.floor(Math.random() * 210);
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.12)';
+            ctx.fillRect(0, twitchY, 320, 5);
+          }
+
+          // Typographie originale Scott Cawthon
+          ctx.fillStyle = '#ffffff';
+          ctx.font = 'bold 18px monospace';
+          ctx.fillText('FIVE', 20, 32);
+          ctx.fillText('NIGHTS', 20, 52);
+          ctx.fillText('AT', 20, 72);
+          ctx.fillText("FREDDY'S", 20, 92);
+
+          ctx.font = 'bold 11px monospace';
+          const titleOptions = [
+            'New Game (Night 1)',
+            'Continue (Night 5)',
+            'Custom Night (20/20/20/20)'
+          ];
+          titleOptions.forEach((opt, idx) => {
+            const isSel = (titleSel === idx);
+            ctx.fillStyle = isSel ? '#facc15' : '#94a3b8';
+            const prefix = isSel ? '>> ' : '   ';
+            ctx.fillText(prefix + opt, 20, 140 + idx * 24);
+          });
 
           ctx.fillStyle = '#64748b';
           ctx.font = '9px monospace';
-          ctx.fillText('(c) Scott Cawthon - Port NumWorks', 20, 222);
+          ctx.fillText('(c) Scott Cawthon - Port NumWorks EquaLib', 20, 226);
 
         } else if (gameState === 'CUSTOM_NIGHT') {
           ctx.fillStyle = '#ffffff';
@@ -4611,20 +4653,48 @@ class NumWorksSimulator {
             const curCamInfo = CAMS.find(c => c.id === activeCam);
             ctx.fillText(curCamInfo?.name || `CAM ${activeCam}`, 12, 32);
 
-            // Minimap
-            ctx.fillStyle = '#0f172a';
-            ctx.fillRect(215, 60, 103, 175);
-            ctx.strokeStyle = '#475569';
-            ctx.strokeRect(220, 65, 93, 165);
+            // Minimap Authentique Scott Cawthon (Freddy Fazbear Pizza Floorplan)
+            ctx.fillStyle = '#0a0e18';
+            ctx.fillRect(208, 62, 108, 172);
+            ctx.strokeStyle = '#334155';
+            ctx.strokeRect(208, 62, 108, 172);
 
-            // Boutons Caméras
+            // Boîtes des pièces
+            for (const c of CAMS) {
+              ctx.strokeStyle = '#475569';
+              ctx.strokeRect(c.rx, c.ry, c.rw, c.rh);
+            }
+
+            // Couloirs de raccordement
+            ctx.strokeStyle = '#334155';
+            ctx.beginPath();
+            ctx.moveTo(234, 118); ctx.lineTo(234, 132);
+            ctx.moveTo(272, 118); ctx.lineTo(272, 132);
+            ctx.moveTo(231, 182); ctx.lineTo(244, 194);
+            ctx.moveTo(275, 182); ctx.lineTo(264, 194);
+            ctx.stroke();
+
+            // Bureau du joueur (YOU)
+            ctx.fillStyle = '#15241a';
+            ctx.fillRect(244, 188, 20, 16);
+            ctx.strokeStyle = '#22c55e';
+            ctx.strokeRect(244, 188, 20, 16);
+            ctx.fillStyle = '#22c55e';
+            ctx.font = 'bold 8px monospace';
+            ctx.fillText('YOU', 246, 200);
+
+            // Boutons Caméras (Pills)
             for (const c of CAMS) {
               const isAct = (c.id === activeCam);
-              ctx.fillStyle = isAct ? '#22c55e' : '#1e293b';
-              ctx.fillRect(c.x, c.y, c.w, c.h);
+              ctx.fillStyle = isAct ? '#22c55e' : '#1e2838';
+              ctx.fillRect(c.bx, c.by, c.bw, c.bh);
+              ctx.strokeStyle = isAct ? '#15803d' : '#334155';
+              ctx.strokeRect(c.bx, c.by, c.bw, c.bh);
               ctx.fillStyle = isAct ? '#000000' : '#ffffff';
-              ctx.font = 'bold 9px monospace';
-              ctx.fillText(c.id, c.x + 6, c.y + 11);
+              ctx.font = 'bold 8px monospace';
+              const tx = c.bx + (c.bw >= 18 ? 3 : 4);
+              const ty = c.by + 9;
+              ctx.fillText(c.id, tx, ty);
             }
 
             // Fermer moniteur

@@ -2,14 +2,14 @@
  * tools/encode_fnaf_assets.js
  * 
  * Five Nights at Freddy's (FNAF) Asset Compression Pipeline for NumWorks (EquaLib)
- * Converts 35 PNG assets into 160x120 4bpp (16-color) RLE-compressed C arrays
- * with custom RGB565 palettes.
+ * High-Fidelity 160x120 4bpp with 2x2 Box-Filter Downsampling & Floyd-Steinberg Dithering.
+ * Custom 16-color RGB565 palette per asset.
  * 
  * Output:
  *  - launcher/include/fnaf_assets.h
  *  - launcher/src/fnaf_assets.c
  * 
- * Footprint target: strictly under 350 KB, and keeping total binary under 1 MB.
+ * Budget constraint: strictly < 350 KB (< 358,400 bytes).
  */
 
 const fs = require('fs');
@@ -21,7 +21,6 @@ const ASSET_DIR = fs.existsSync('assets/fnaf') ? 'assets/fnaf' : 'web/assets/fna
 const HEADER_OUT = 'launcher/include/fnaf_assets.h';
 const SOURCE_OUT = 'launcher/src/fnaf_assets.c';
 
-// Explicit ordering of the 35 assets
 const ASSET_SPECS = [
   { id: 'FNAF_IMG_OFFICE_NORMAL_LEFT',     file: 'office_normal_left.png' },
   { id: 'FNAF_IMG_OFFICE_NORMAL_CENTER',   file: 'office_normal_center.png' },
@@ -60,7 +59,6 @@ const ASSET_SPECS = [
   { id: 'FNAF_IMG_SCARE_0295',             file: 'scare_0295.png' }
 ];
 
-// Pure Node.js PNG decoder (RGBA / RGB, 8-bit depth)
 function decodePNG(filePath) {
   const buf = fs.readFileSync(filePath);
   let pos = 8;
@@ -118,86 +116,131 @@ function decodePNG(filePath) {
   return { width: ihdr.width, height: ihdr.height, bpp, pixels };
 }
 
-// Downsample bilinear/nearest to 160x120
-function downsample(pixels, bpp, sw, sh, dw, dh) {
-  const out = Buffer.alloc(dw * dh * bpp);
-  const xRatio = sw / dw;
-  const yRatio = sh / dh;
-  for (let y = 0; y < dh; y++) {
-    const sy = Math.floor(y * yRatio);
-    for (let x = 0; x < dw; x++) {
-      const sx = Math.floor(x * xRatio);
-      const srcIdx = (sy * sw + sx) * bpp;
-      const dstIdx = (y * dw + x) * bpp;
-      for (let c = 0; c < bpp; c++) {
-        out[dstIdx + c] = pixels[srcIdx + c];
+// High-Fidelity 2x2 Area-Average Downscaling
+function boxDownscale2x(pixels, bpp, sw, sh) {
+  const dw = sw >> 1;
+  const dh = sh >> 1;
+  const out = Buffer.alloc(dw * dh * 3);
+  for (let dy = 0; dy < dh; dy++) {
+    for (let dx = 0; dx < dw; dx++) {
+      const sx = dx << 1;
+      const sy = dy << 1;
+      let r = 0, g = 0, b = 0;
+      for (let oy = 0; oy < 2; oy++) {
+        for (let ox = 0; ox < 2; ox++) {
+          const idx = ((sy + oy) * sw + (sx + ox)) * bpp;
+          r += pixels[idx];
+          g += pixels[idx + 1];
+          b += pixels[idx + 2];
+        }
       }
+      const outIdx = (dy * dw + dx) * 3;
+      out[outIdx]     = (r + 2) >> 2;
+      out[outIdx + 1] = (g + 2) >> 2;
+      out[outIdx + 2] = (b + 2) >> 2;
     }
   }
   return out;
 }
 
-// Convert 8-bit R,G,B to RGB565 uint16
 function toRGB565(r, g, b) {
   return (((r & 0xF8) << 8) | ((g & 0xFC) << 3) | ((b & 0xF8) >> 3)) & 0xFFFF;
 }
 
-// Quantize image to 16 RGB565 colors using diversity-initialized K-Means
-function quantize16(pixels, bpp, totalPixels) {
+// Adaptive 16-Color Palette Generation + Floyd-Steinberg Error Diffusion Dithering
+function quantizeAndDither16(rgbPixels, w, h) {
+  const total = w * h;
   const k = 16;
-  const shift = 4;
-  const map = new Map();
-  for (let i = 0; i < totalPixels; i++) {
-    const idx = i * bpp;
-    const r = (pixels[idx] >> shift) << shift;
-    const g = (pixels[idx+1] >> shift) << shift;
-    const b = (pixels[idx+2] >> shift) << shift;
+
+  // 1. Histogram with 4-bit perceptual quantization
+  const hist = new Map();
+  for (let i = 0; i < total; i++) {
+    const idx = i * 3;
+    const r = (rgbPixels[idx] >> 3) << 3;
+    const g = (rgbPixels[idx + 1] >> 3) << 3;
+    const b = (rgbPixels[idx + 2] >> 3) << 3;
     const key = (r << 16) | (g << 8) | b;
-    map.set(key, (map.get(key) || 0) + 1);
+    hist.set(key, (hist.get(key) || 0) + 1);
   }
 
-  const sorted = Array.from(map.entries()).sort((a,b) => b[1] - a[1]);
-  const centroids = [];
-  centroids.push([0, 0, 0]); // Pure black slot 0
+  const sorted = Array.from(hist.entries()).sort((a, b) => b[1] - a[1]);
+  const centroids = [[0, 0, 0]]; // Pure black slot 0
 
+  // Diversity-driven palette selection
   for (const [key, _] of sorted) {
     if (centroids.length >= k) break;
     const r = (key >> 16) & 0xff;
     const g = (key >> 8) & 0xff;
     const b = key & 0xff;
-    let tooClose = false;
+    let ok = true;
     for (const [cr, cg, cb] of centroids) {
-      const d = (r-cr)*(r-cr) + (g-cg)*(g-cg) + (b-cb)*(b-cb);
-      if (d < 400) { tooClose = true; break; }
+      const d = (r - cr) * (r - cr) * 0.299 + (g - cg) * (g - cg) * 0.587 + (b - cb) * (b - cb) * 0.114;
+      if (d < 180) { ok = false; break; }
     }
-    if (!tooClose) centroids.push([r, g, b]);
+    if (ok) centroids.push([r, g, b]);
   }
-  while (centroids.length < k) {
-    centroids.push([0, 0, 0]);
+  while (centroids.length < k) centroids.push([0, 0, 0]);
+
+  // Working float buffer for error diffusion
+  const bufR = new Float32Array(total);
+  const bufG = new Float32Array(total);
+  const bufB = new Float32Array(total);
+  for (let i = 0; i < total; i++) {
+    bufR[i] = rgbPixels[i * 3];
+    bufG[i] = rgbPixels[i * 3 + 1];
+    bufB[i] = rgbPixels[i * 3 + 2];
   }
 
-  const assignments = new Uint8Array(totalPixels);
-  for (let i = 0; i < totalPixels; i++) {
-    const idx = i * bpp;
-    let r = (pixels[idx] >> 3) << 3;
-    let g = (pixels[idx+1] >> 3) << 3;
-    let b = (pixels[idx+2] >> 3) << 3;
-    let bestDist = Infinity, bestC = 0;
-    for (let c = 0; c < k; c++) {
-      const cr = centroids[c][0], cg = centroids[c][1], cb = centroids[c][2];
-      const dist = (r-cr)*(r-cr) + (g-cg)*(g-cg) + (b-cb)*(b-cb);
-      if (dist < bestDist) { bestDist = dist; bestC = c; }
+  const indexed = new Uint8Array(total);
+  const ditherStrength = 0.65; // Balanced error diffusion for optimal RLE compression & smooth gradients
+
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const idx = y * w + x;
+      const r = Math.min(255, Math.max(0, bufR[idx]));
+      const g = Math.min(255, Math.max(0, bufG[idx]));
+      const b = Math.min(255, Math.max(0, bufB[idx]));
+
+      let bestDist = Infinity, bestC = 0;
+      for (let c = 0; c < k; c++) {
+        const cr = centroids[c][0], cg = centroids[c][1], cb = centroids[c][2];
+        const dist = (r - cr) * (r - cr) * 0.299 + (g - cg) * (g - cg) * 0.587 + (b - cb) * (b - cb) * 0.114;
+        if (dist < bestDist) { bestDist = dist; bestC = c; }
+      }
+      indexed[idx] = bestC;
+
+      const errR = (r - centroids[bestC][0]) * ditherStrength;
+      const errG = (g - centroids[bestC][1]) * ditherStrength;
+      const errB = (b - centroids[bestC][2]) * ditherStrength;
+
+      if (x + 1 < w) {
+        bufR[idx + 1] += errR * (7 / 16);
+        bufG[idx + 1] += errG * (7 / 16);
+        bufB[idx + 1] += errB * (7 / 16);
+      }
+      if (y + 1 < h) {
+        if (x > 0) {
+          bufR[idx + w - 1] += errR * (3 / 16);
+          bufG[idx + w - 1] += errG * (3 / 16);
+          bufB[idx + w - 1] += errB * (3 / 16);
+        }
+        bufR[idx + w] += errR * (5 / 16);
+        bufG[idx + w] += errG * (5 / 16);
+        bufB[idx + w] += errB * (5 / 16);
+        if (x + 1 < w) {
+          bufR[idx + w + 1] += errR * (1 / 16);
+          bufG[idx + w + 1] += errG * (1 / 16);
+          bufB[idx + w + 1] += errB * (1 / 16);
+        }
+      }
     }
-    assignments[i] = bestC;
   }
 
-  const palette = centroids.map(([r,g,b]) => toRGB565(r, g, b));
-  return { palette, indexed: assignments };
+  const palette = centroids.map(([r, g, b]) => toRGB565(r, g, b));
+  return { palette, indexed };
 }
 
-// 1-byte packed RLE:
-// byte = ((run - 1) << 4) | (color_index & 0x0F)
-// where run is 1 to 16
+// 1-byte packed RLE: ((run - 1) << 4) | (color_index & 0x0F)
 function encodeRLE(indexed) {
   const bytes = [];
   let i = 0;
@@ -214,11 +257,11 @@ function encodeRLE(indexed) {
 }
 
 // Main Encoding Process
-console.log('=== FNAF Asset Compression Pipeline ===');
+console.log('=== High-Fidelity FNAF Asset Compression Pipeline ===');
 console.log(`Processing ${ASSET_SPECS.length} assets from ${ASSET_DIR}...\n`);
 
 const encodedAssets = [];
-const contentHashMap = new Map(); // hash -> master asset index
+const contentHashMap = new Map();
 let totalFlashBytes = 0;
 
 for (let idx = 0; idx < ASSET_SPECS.length; idx++) {
@@ -231,7 +274,6 @@ for (let idx = 0; idx < ASSET_SPECS.length; idx++) {
   const hash = crypto.createHash('sha256').update(fileBuf).digest('hex');
 
   if (contentHashMap.has(hash)) {
-    // Reuse identical asset
     const masterIdx = contentHashMap.get(hash);
     const master = encodedAssets[masterIdx];
     encodedAssets.push({
@@ -250,8 +292,8 @@ for (let idx = 0; idx < ASSET_SPECS.length; idx++) {
   const decoded = decodePNG(filePath);
   const targetW = 160;
   const targetH = 120;
-  const dsPixels = downsample(decoded.pixels, decoded.bpp, decoded.width, decoded.height, targetW, targetH);
-  const { palette, indexed } = quantize16(dsPixels, decoded.bpp, targetW * targetH);
+  const dsPixels = boxDownscale2x(decoded.pixels, decoded.bpp, decoded.width, decoded.height);
+  const { palette, indexed } = quantizeAndDither16(dsPixels, targetW, targetH);
   const rleBuffer = encodeRLE(indexed);
 
   totalFlashBytes += rleBuffer.length + (palette.length * 2);
@@ -272,10 +314,10 @@ for (let idx = 0; idx < ASSET_SPECS.length; idx++) {
 
 console.log(`\nTotal Flash size for 35 compressed assets: ${totalFlashBytes} bytes (${(totalFlashBytes / 1024).toFixed(1)} KB)`);
 if (totalFlashBytes > 350 * 1024) {
-  console.error('ERROR: Total asset footprint exceeds 350 KB ceiling!');
+  console.error(`ERROR: Total asset footprint (${totalFlashBytes} bytes) exceeds 350 KB ceiling!`);
   process.exit(1);
 } else {
-  console.log('✓ Successfully under 350 KB Flash budget!\n');
+  console.log(`✓ Successfully under 350 KB Flash budget! (${(totalFlashBytes / 1024).toFixed(1)} KB / 350.0 KB)\n`);
 }
 
 // Generate launcher/include/fnaf_assets.h
@@ -323,12 +365,9 @@ extern const fnaf_asset_descriptor_t g_fnaf_assets[FNAF_ASSET_COUNT];
 #endif /* FNAF_ASSETS_H */
 `;
 
-fs.writeFileSync(HEADER_OUT, headerContent, 'utf8');
-console.log(`Generated ${HEADER_OUT}`);
-
 // Generate launcher/src/fnaf_assets.c
 let sourceContent = `/* =========================================================================
- * Five Nights at Freddy's (FNAF) Compressed Asset Tables
+ * Five Nights at Freddy's (FNAF) Asset Tables for NumWorks (EquaLib)
  * Auto-generated by tools/encode_fnaf_assets.js - DO NOT EDIT MANUALLY
  * ========================================================================= */
 
@@ -336,38 +375,54 @@ let sourceContent = `/* ========================================================
 
 `;
 
-// Write palettes and RLE data arrays (only for unique assets)
+// Output Palettes and RLE buffers for non-shared assets
 for (let i = 0; i < encodedAssets.length; i++) {
   const asset = encodedAssets[i];
-  if (asset.sharedWith !== null) continue; // Reuse master asset
+  if (asset.sharedWith !== null) continue;
 
-  sourceContent += `/* Asset ${i}: ${asset.id} (${asset.file}) */\n`;
-  sourceContent += `static const uint16_t s_fnaf_pal_${i}[16] = {\n  `;
-  for (let p = 0; p < asset.palette.length; p++) {
-    sourceContent += `0x${asset.palette[p].toString(16).padStart(4, '0')}`;
-    if (p < asset.palette.length - 1) sourceContent += ', ';
-    if ((p + 1) % 8 === 0 && p < asset.palette.length - 1) sourceContent += '\n  ';
+  const safeName = asset.id.toLowerCase();
+  sourceContent += `/* Asset #${i}: ${asset.file} (${asset.rleBuffer.length} bytes RLE) */\n`;
+  sourceContent += `static const uint16_t s_${safeName}_pal[16] = {\n`;
+  for (let p = 0; p < asset.palette.length; p += 8) {
+    const chunk = asset.palette.slice(p, p + 8);
+    sourceContent += `    ${chunk.map(c => '0x' + c.toString(16).padStart(4, '0')).join(', ')}${p + 8 < asset.palette.length ? ',' : ''}\n`;
   }
-  sourceContent += '\n};\n\n';
+  sourceContent += `};\n\n`;
 
-  sourceContent += `static const uint8_t s_fnaf_rle_${i}[${asset.rleBuffer.length}] = {\n  `;
-  for (let b = 0; b < asset.rleBuffer.length; b++) {
-    sourceContent += `0x${asset.rleBuffer[b].toString(16).padStart(2, '0')}`;
-    if (b < asset.rleBuffer.length - 1) sourceContent += ',';
-    if ((b + 1) % 16 === 0 && b < asset.rleBuffer.length - 1) sourceContent += '\n  ';
+  sourceContent += `static const uint8_t s_${safeName}_rle[${asset.rleBuffer.length}] = {\n`;
+  for (let r = 0; r < asset.rleBuffer.length; r += 16) {
+    const chunk = asset.rleBuffer.slice(r, r + 16);
+    const hexVals = [];
+    for (let b = 0; b < chunk.length; b++) {
+      hexVals.push('0x' + chunk[b].toString(16).padStart(2, '0'));
+    }
+    sourceContent += `    ${hexVals.join(', ')}${r + 16 < asset.rleBuffer.length ? ',' : ''}\n`;
   }
-  sourceContent += '\n};\n\n';
+  sourceContent += `};\n\n`;
 }
 
-// Write the descriptor table
+// Descriptor Table
 sourceContent += `const fnaf_asset_descriptor_t g_fnaf_assets[FNAF_ASSET_COUNT] = {\n`;
 for (let i = 0; i < encodedAssets.length; i++) {
   const asset = encodedAssets[i];
-  const masterIdx = (asset.sharedWith !== null) ? asset.sharedWith : i;
-  sourceContent += `    { ${asset.width}, ${asset.height}, 16, s_fnaf_pal_${masterIdx}, s_fnaf_rle_${masterIdx}, ${asset.rleBuffer.length} },\n`;
-}
-sourceContent += '};\n';
+  const refIndex = asset.sharedWith !== null ? asset.sharedWith : i;
+  const master = encodedAssets[refIndex];
+  const safeName = master.id.toLowerCase();
 
+  sourceContent += `    [${asset.id}] = {\n`;
+  sourceContent += `        .width = ${asset.width},\n`;
+  sourceContent += `        .height = ${asset.height},\n`;
+  sourceContent += `        .palette_size = ${asset.palette.length},\n`;
+  sourceContent += `        .palette_rgb565 = s_${safeName}_pal,\n`;
+  sourceContent += `        .rle_data = s_${safeName}_rle,\n`;
+  sourceContent += `        .rle_data_size = ${asset.rleBuffer.length}\n`;
+  sourceContent += `    }${i + 1 < encodedAssets.length ? ',' : ''}\n`;
+}
+sourceContent += `};\n`;
+
+fs.writeFileSync(HEADER_OUT, headerContent, 'utf8');
 fs.writeFileSync(SOURCE_OUT, sourceContent, 'utf8');
+
+console.log(`Generated ${HEADER_OUT}`);
 console.log(`Generated ${SOURCE_OUT}`);
-console.log('=== FNAF Asset Encoding Complete! ===');
+console.log('=== High-Fidelity FNAF Asset Encoding Complete! ===');

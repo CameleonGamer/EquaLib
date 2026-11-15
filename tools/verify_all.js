@@ -51,7 +51,7 @@ async function testAll() {
 
   const binFile = fs.readFileSync('web/equalib_n0120.bin');
   const bundler = new Bundler();
-  const patched = await bundler.patchManifest(new Uint8Array(binFile), selectedApps);
+  const patched = await bundler.patchManifest(new Uint8Array(binFile), selectedApps, { includeSettingsApp: false, flashAddress: 0x90180000 });
   console.log('Patched bundle size:', patched.length);
 
   // Inspect manifest in patched bundle

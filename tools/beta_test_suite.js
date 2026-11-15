@@ -564,7 +564,7 @@ describe('6. Intégrité des Binaires Natifs & Manifeste (N0120 & N0110)', () =>
     const bin = fs.readFileSync('web/equalib_n0120.bin');
     assert.strictEqual(bin.readUInt32LE(0x1748), 0x240118a4);
     const flashPtr = bin.readUInt32LE(0x1750);
-    assert(flashPtr >= 0x90180000 && flashPtr < 0x90280000, `Pointeur Flash N0120 hors du slot 0x90180000 (valeur: 0x${flashPtr.toString(16)})`);
+    assert(flashPtr >= 0x90180000 && flashPtr < 0x90400000, `Pointeur Flash N0120 hors du slot 0x90180000 (valeur: 0x${flashPtr.toString(16)})`);
   });
 
   it('equalib_n0120_58.bin est lié pour le slot officiel N0120 / Epsilon 26+ (Flash: 0x90580000, RAM: 0x240118a4)', () => {

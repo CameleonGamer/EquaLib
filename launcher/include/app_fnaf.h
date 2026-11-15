@@ -159,8 +159,9 @@ typedef struct {
     /* Menu Custom Night */
     uint8_t custom_selected_bot; // 0: Freddy, 1: Bonnie, 2: Chica, 3: Foxy, 4: READY
 
-    /* Écran d'intro de nuit */
+    /* Écran d'intro de nuit et écran titre */
     uint32_t night_intro_timer_ms;
+    uint8_t title_selected_option; // 0: New Game, 1: Continue, 2: Night 6, 3: Custom Night
 
 } fnaf_game_t;
 
