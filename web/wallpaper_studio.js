@@ -119,7 +119,6 @@
       this.renderOverlay();
       this.updateZoomCSS();
       this.checkStoredWallpaper();
-      this.autoSyncWallpaper();
       this.syncSettingsFromGlobal();
     }
 
@@ -2115,9 +2114,18 @@
         if (typeof document !== 'undefined') {
           const statusEl = document.getElementById('ws-active-theme-status');
           if (statusEl) {
-            statusEl.textContent = '✓ Fond d\'écran prêt pour la calculatrice (153.6 Ko)';
+            const frames = (this.gifMultiFrames && this.gifMultiFrames.length > 1)
+              ? this.gifMultiFrames.length
+              : Math.max(1, Math.floor((bytes ? bytes.length : 153600) / RGB565_BYTES));
+            statusEl.textContent = (frames > 1)
+              ? `✓ Fond animé GIF prêt (${frames} images animées)`
+              : '✓ Fond d\'écran prêt pour la calculatrice (153.6 Ko)';
             statusEl.className = 'text-amber-400 font-bold';
           }
+        }
+
+        if (typeof window.refreshPackUI === 'function') {
+          window.refreshPackUI();
         }
       } catch (err) {
         console.warn('[Wallpaper Studio] AutoSync échoué :', err);
@@ -2264,6 +2272,9 @@
                   : '✓ Fond d\'écran personnalisé chargé (153.6 Ko)';
                 statusEl.className = 'text-pink-400 font-bold';
               }
+            }
+            if (typeof window.refreshPackUI === 'function') {
+              window.refreshPackUI();
             }
             return;
           }

@@ -1598,6 +1598,34 @@ describe('7. Compilation et Validité Syntaxique des Jeux Python (.NWS)', () => 
         assert(memText.textContent.includes('1.94 Mo'), `Jauge N0110 doit afficher 1.94 Mo (reçu: ${memText.textContent})`);
         const cardDeltarune110 = catalogList.children.find(c => c.getAttribute('data-app-id') === 'np_deltarune');
         assert(cardDeltarune110 && cardDeltarune110.className.includes('is-too-heavy'), 'np_deltarune (1074 Ko > 904 Ko) doit être grisé sur N0110');
+
+        // Régression: Un fond GIF multi-frames stocké ne doit pas tout griser après vidage du pack
+        global.window.customWallpaperRGB565 = new Uint8Array(12 * 153600);
+        global.window.setAppTheme('default');
+        getOrCreateElement('btn-pack-clear').click();
+        const cardTetrisDefault = catalogList.children.find(c => c.getAttribute('data-app-id') === 'comm_tetris');
+        assert(cardTetrisDefault && !cardTetrisDefault.className.includes('is-too-heavy'), 'Thème default ne doit pas compter customWallpaperRGB565 ni griser les apps');
+        global.window.setAppTheme('custom');
+        const selectableInCustom = catalogList.children.filter(c => !c.className.includes('is-too-heavy'));
+        assert(selectableInCustom.length >= 50, `Avec GIF 12 frames en thème custom sur N0110 vide, au moins 50 apps doivent rester sélectionnables (reçu: ${selectableInCustom.length})`);
+        global.window.setTargetModel('N0120', false);
+        const cardDeltaruneCustom = catalogList.children.find(c => c.getAttribute('data-app-id') === 'np_deltarune');
+        assert(cardDeltaruneCustom && !cardDeltaruneCustom.className.includes('is-too-heavy'), 'Sur N0120 vide avec thème custom GIF, np_deltarune (1074 Ko <= 1266 Ko) doit être sélectionnable');
+        global.window.setAppTheme('default');
+        const cardFnaf3Default = catalogList.children.find(c => c.getAttribute('data-app-id') === 'np_fnaf3');
+        assert(cardFnaf3Default && !cardFnaf3Default.className.includes('is-too-heavy'), 'Sur N0120 vide avec thème default (sans wallpaper custom), np_fnaf3 (1313 Ko) doit être sélectionnable');
+
+        // Bundler doit adapter le nombre de frames GIF sans dépasser le slot quand des apps sont présentes
+        const gifBundler = new EquaLibBundler();
+        const patchedGif = await gifBundler.patchManifest(fs.readFileSync('web/equalib_n0120.bin'), [
+          { id: 'fake_nwa', name: 'Test App', format: 'NWA', data: new Uint8Array(700 * 1024).fill(0xDE).map((v, i) => i === 0 ? 0xBA : (i === 1 ? 0xBE : (i === 2 ? 0xC0 : (i === 3 ? 0xDE : 1)))) }
+        ], {
+          targetModel: 'N0120',
+          flashAddress: 0x90180000,
+          theme: 'custom',
+          customWallpaper: new Uint8Array(12 * 153600)
+        });
+        assert(patchedGif.length <= (0x903F0000 - 0x90180000), `Le binaire patché avec GIF + app (${patchedGif.length} B) ne doit pas dépasser le slot N0120`);
       } finally {
         global.document = originalDocument;
         global.window = originalWindow;

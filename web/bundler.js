@@ -102,9 +102,11 @@ class EquaLibBundler {
       u8[offset + 11] = (count >> 24) & 0xFF;
     }
 
-    // Custom Wallpaper extraction & injection
-    let wallpaperBytes = options.customWallpaper || this.options?.customWallpaper;
-    if (!wallpaperBytes && typeof window !== 'undefined') {
+    // Custom Wallpaper extraction & injection (uniquement si explicitement fourni ou si thème Custom actif)
+    const themeName = (options.theme || this.options?.theme || (typeof window !== 'undefined' && window.userSettings?.theme) || 'default').toLowerCase();
+    const isCustomThemeRequested = themeName.includes('custom');
+    let wallpaperBytes = (options.customWallpaper !== undefined) ? options.customWallpaper : this.options?.customWallpaper;
+    if (!wallpaperBytes && options.customWallpaper === undefined && isCustomThemeRequested && typeof window !== 'undefined') {
       if (window.customWallpaperRGB565) {
         wallpaperBytes = window.customWallpaperRGB565;
       } else {
@@ -120,10 +122,9 @@ class EquaLibBundler {
 
     // Mise à jour de manifest.flags (thème par défaut et mode d'affichage)
     let flags = 0;
-    const themeName = (options.theme || this.options?.theme || (typeof window !== 'undefined' && window.userSettings?.theme) || 'default').toLowerCase();
     let themeIndex = 0;
     if (wallpaperBytes && wallpaperBytes.length > 153600) themeIndex = 6;
-    else if (themeName.includes('custom')) themeIndex = 6;
+    else if (isCustomThemeRequested) themeIndex = 6;
     else if (themeName.includes('sakura')) themeIndex = 1;
     else if (themeName.includes('hacker') || themeName.includes('matrix') || themeName.includes('cyber')) themeIndex = 2;
     else if (themeName.includes('bee') || themeName.includes('abeille')) themeIndex = 3;
@@ -151,53 +152,6 @@ class EquaLibBundler {
 
     let extraPayloads = [];
     let currentExtraOffset = u8.length; // offset relatif au début du slot flash 0x90180000
-
-    // Wallpaper offset (offset + 16) et size (offset + 20)
-    if (wallpaperBytes && wallpaperBytes.length > 0) {
-      let finalWpBytes = wallpaperBytes;
-      const isModel110 = (options.targetModel === 'N0110' || this.options?.targetModel === 'N0110' || (typeof window !== 'undefined' && window.userSettings?.targetModel === 'N0110'));
-      const isSlot58 = (options.flashAddress === 0x90580000 || options.targetModel === 'N0120_58');
-      const isModel115 = (options.targetModel === 'N0115' || options.flashAddress === 0x90600000);
-
-      if (isModel110 && finalWpBytes.length > 153600) {
-        finalWpBytes = finalWpBytes.slice(0, 153600);
-      } else if (isSlot58 && finalWpBytes.length > 11 * 153600) {
-        finalWpBytes = this.sampleFrames(finalWpBytes, 11);
-      } else if (isModel115 && finalWpBytes.length > 8 * 153600) {
-        finalWpBytes = this.sampleFrames(finalWpBytes, 8);
-      }
-
-      const wpOffset = (currentExtraOffset + 3) & ~3;
-      const pad = wpOffset - currentExtraOffset;
-      if (pad > 0) {
-        extraPayloads.push(new Uint8Array(pad));
-        currentExtraOffset += pad;
-      }
-
-      u8[offset + 16] = wpOffset & 0xFF;
-      u8[offset + 17] = (wpOffset >> 8) & 0xFF;
-      u8[offset + 18] = (wpOffset >> 16) & 0xFF;
-      u8[offset + 19] = (wpOffset >> 24) & 0xFF;
-
-      const wpSize = finalWpBytes.length;
-      u8[offset + 20] = wpSize & 0xFF;
-      u8[offset + 21] = (wpSize >> 8) & 0xFF;
-      u8[offset + 22] = (wpSize >> 16) & 0xFF;
-      u8[offset + 23] = (wpSize >> 24) & 0xFF;
-
-      extraPayloads.push(finalWpBytes);
-      currentExtraOffset += wpSize;
-    } else {
-      u8[offset + 16] = 0;
-      u8[offset + 17] = 0;
-      u8[offset + 18] = 0;
-      u8[offset + 19] = 0;
-
-      u8[offset + 20] = 0;
-      u8[offset + 21] = 0;
-      u8[offset + 22] = 0;
-      u8[offset + 23] = 0;
-    }
 
     if (count > 0) {
       // Nettoyage de la table des 20 apps (20 * 144 = 2880 octets)
@@ -422,6 +376,58 @@ class EquaLibBundler {
       }
     }
   }
+
+    // Wallpaper offset (offset + 16) et size (offset + 20) ajustés à la mémoire restante
+    if (wallpaperBytes && wallpaperBytes.length > 0) {
+      let finalWpBytes = wallpaperBytes;
+      const modelOpt = (options.targetModel || this.options?.targetModel || (typeof window !== 'undefined' && window.userSettings?.targetModel) || 'N0110').toUpperCase();
+      const isModel110 = (modelOpt === 'N0110' || (modelOpt.includes('110') && !modelOpt.includes('120')));
+      const isSlot58 = (options.flashAddress === 0x90580000 || options.targetModel === 'N0120_58');
+      const isModel115 = (modelOpt.includes('115') || options.flashAddress === 0x90600000);
+      const isModel120 = (modelOpt.includes('120') || isSlot58 || options.flashAddress === 0x90180000);
+      const slotMaxBytes = (options.maxFlashBytes > 0)
+        ? options.maxFlashBytes
+        : (isModel120 ? (0x903F0000 - 0x90180000) : (0x903F0000 - 0x90200000));
+
+      const wpOffset = (currentExtraOffset + 3) & ~3;
+      const pad = wpOffset - currentExtraOffset;
+      const availWpBytes = Math.max(153600, slotMaxBytes - wpOffset);
+      const maxFitFrames = Math.max(1, Math.floor(availWpBytes / 153600));
+      const modelFrameCap = isModel110 ? 1 : (isModel115 ? 8 : (isSlot58 ? 11 : 12));
+      const targetFrames = Math.min(modelFrameCap, maxFitFrames);
+      if (finalWpBytes.length > targetFrames * 153600) {
+        finalWpBytes = (targetFrames === 1) ? finalWpBytes.slice(0, 153600) : this.sampleFrames(finalWpBytes, targetFrames);
+      }
+
+      if (pad > 0) {
+        extraPayloads.push(new Uint8Array(pad));
+        currentExtraOffset += pad;
+      }
+
+      u8[offset + 16] = wpOffset & 0xFF;
+      u8[offset + 17] = (wpOffset >> 8) & 0xFF;
+      u8[offset + 18] = (wpOffset >> 16) & 0xFF;
+      u8[offset + 19] = (wpOffset >> 24) & 0xFF;
+
+      const wpSize = finalWpBytes.length;
+      u8[offset + 20] = wpSize & 0xFF;
+      u8[offset + 21] = (wpSize >> 8) & 0xFF;
+      u8[offset + 22] = (wpSize >> 16) & 0xFF;
+      u8[offset + 23] = (wpSize >> 24) & 0xFF;
+
+      extraPayloads.push(finalWpBytes);
+      currentExtraOffset += wpSize;
+    } else {
+      u8[offset + 16] = 0;
+      u8[offset + 17] = 0;
+      u8[offset + 18] = 0;
+      u8[offset + 19] = 0;
+
+      u8[offset + 20] = 0;
+      u8[offset + 21] = 0;
+      u8[offset + 22] = 0;
+      u8[offset + 23] = 0;
+    }
 
     if (extraPayloads.length > 0) {
       const totalExtra = extraPayloads.reduce((sum, p) => sum + p.length, 0);

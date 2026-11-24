@@ -224,7 +224,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   const MAX_FLASH_BYTES_N0110 = 0x903F0000 - 0x90200000; // 1.94 Mo (1984 Ko) N0110 / N0115
   const MAX_FLASH_BYTES_N0120 = 0x903F0000 - 0x90180000; // 2.44 Mo (2496 Ko) N0120
   const BASE_LAUNCHER_BYTES = 1105720; // Taille réelle du binaire Hub EquaLib (~1.05 Mo)
-  const BUILTIN_HUB_IDS = new Set(['mariokart', 'periodique', 'fiches', 'math_solver', 'pong', 'settings', 'comm_settings']);
+  const WP_FRAME_BYTES = 153600;
+  const BUILTIN_HUB_IDS = new Set(['mariokart', 'periodique', 'fiches', 'math_solver', 'pong', 'morpion', 'settings', 'comm_settings']);
   const DEFAULT_FLASH_ADDR_N0120 = 0x90180000;
   const DEFAULT_FLASH_ADDR_N0120_EPS26 = 0x90580000;
   const DEFAULT_FLASH_ADDR_N0115 = 0x90600000;
@@ -416,22 +417,57 @@ document.addEventListener('DOMContentLoaded', async () => {
     return m === 'N0115' || (m.includes('115') && !m.includes('110'));
   }
 
-  function getMaxFlashBytes() {
-    if (usb && usb.isConnected && usb.maxFlashBytes > 0) {
-      return usb.maxFlashBytes;
-    }
+  function getActiveModelFlashInfo() {
     const activeModel = (usb && usb.isConnected)
       ? usb.model
       : (userSettings.targetModel || userSettings.manualModel || 'N0110');
     const isN120 = Boolean(activeModel && (String(activeModel).includes('120') || activeModel === 'N0120'));
-    return isN120 ? MAX_FLASH_BYTES_N0120 : MAX_FLASH_BYTES_N0110;
+    const isN115 = Boolean(activeModel && isN0115Model(activeModel));
+    const flashAddr = (usb && usb.isConnected && usb.flashAddress)
+      ? usb.flashAddress
+      : (isN120 ? DEFAULT_FLASH_ADDR_N0120_EPS26 : (isN115 ? DEFAULT_FLASH_ADDR_N0115 : DEFAULT_FLASH_ADDR_N0110));
+    const maxBytes = (usb && usb.isConnected && usb.maxFlashBytes > 0)
+      ? usb.maxFlashBytes
+      : (isN120 ? MAX_FLASH_BYTES_N0120 : MAX_FLASH_BYTES_N0110);
+    return { isN120, isN115, flashAddr, maxBytes };
+  }
+
+  function getMaxFlashBytes() {
+    return getActiveModelFlashInfo().maxBytes;
+  }
+
+  function getCustomWallpaperBuffer() {
+    if (userSettings.theme !== 'custom') return null;
+    if (typeof window !== 'undefined' && window.customWallpaperRGB565 && window.customWallpaperRGB565.byteLength > 0) {
+      return window.customWallpaperRGB565;
+    }
+    const studioBytes = window.wallpaperStudio?.getWallpaperBytes?.() || window.wallpaperStudio?.generateRGB565Bytes?.();
+    if (studioBytes && studioBytes.byteLength > 0) {
+      if (typeof window !== 'undefined') window.customWallpaperRGB565 = studioBytes;
+      return studioBytes;
+    }
+    return null;
+  }
+
+  function getWallpaperFlashBreakdown(appsBytes = 0) {
+    const wpBuf = getCustomWallpaperBuffer();
+    if (!wpBuf) return { minBytes: 0, fittedBytes: 0, fittedFrames: 0, totalFrames: 0 };
+    const { isN120, isN115, flashAddr, maxBytes } = getActiveModelFlashInfo();
+    const totalFrames = Math.max(1, Math.floor(wpBuf.byteLength / WP_FRAME_BYTES));
+    const maxFramesByModel = isN120 ? ((flashAddr === DEFAULT_FLASH_ADDR_N0120_EPS26) ? 11 : 12) : (isN115 ? 8 : 1);
+    const availForWp = Math.max(WP_FRAME_BYTES, maxBytes - BASE_LAUNCHER_BYTES - appsBytes);
+    const fittedFrames = Math.max(1, Math.min(totalFrames, maxFramesByModel, Math.floor(availForWp / WP_FRAME_BYTES)));
+    return {
+      minBytes: WP_FRAME_BYTES,
+      fittedBytes: fittedFrames * WP_FRAME_BYTES,
+      fittedFrames,
+      totalFrames
+    };
   }
 
   function getActiveWallpaperBytes() {
-    if (typeof window !== 'undefined' && window.customWallpaperRGB565 && (userSettings.theme === 'custom' || userSettings.theme === 'default')) {
-      return window.customWallpaperRGB565.byteLength || 0;
-    }
-    return 0;
+    const appsBytes = selectedApps.reduce((acc, s) => acc + getAppFlashBytes(s), 0);
+    return getWallpaperFlashBreakdown(appsBytes).fittedBytes;
   }
 
   function isBuiltinHubApp(app) {
@@ -472,11 +508,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   function getFlashStats() {
     const maxBytes = getMaxFlashBytes();
-    const baseBytes = BASE_LAUNCHER_BYTES + getActiveWallpaperBytes();
     const appsBytes = selectedApps.reduce((acc, s) => acc + getAppFlashBytes(s), 0);
-    const usedBytes = baseBytes + appsBytes;
-    const remainingBytes = Math.max(0, maxBytes - usedBytes);
-    return { maxBytes, baseBytes, appsBytes, usedBytes, remainingBytes };
+    const wp = getWallpaperFlashBreakdown(appsBytes);
+    const baseBytes = BASE_LAUNCHER_BYTES + wp.minBytes;
+    const usedBytes = BASE_LAUNCHER_BYTES + wp.fittedBytes + appsBytes;
+    const remainingBytes = Math.max(0, maxBytes - (baseBytes + appsBytes));
+    return { maxBytes, baseBytes, appsBytes, usedBytes, remainingBytes, wpFrames: wp.fittedFrames, wpTotalFrames: wp.totalFrames };
   }
 
   function getAddEligibility(app) {
@@ -1345,6 +1382,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     applyUserSettings();
     saveUserSettings();
+    if (typeof window.refreshPackUI === 'function') {
+      window.refreshPackUI();
+    }
     if (simulator && typeof simulator.setSimulatorTheme === 'function') {
       simulator.setSimulatorTheme(themeKey);
     }
@@ -2857,6 +2897,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
+  window.refreshPackUI = function() {
+    updateUI();
+    renderCatalog();
+    renderCommunitySearch();
+  };
+
   // ==================== GLISSER-DÉPOSER LOCAL ====================
   if (dropZone) {
     dropZone.addEventListener('dragover', (e) => {
@@ -3029,10 +3075,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       const displayLabel = isN120 ? 'N0120' : (isN115 ? 'N0115' : 'N0110 / N0115');
 
       showToast(`Génération du pack natif ${displayLabel} avec vos ${selectedApps.length} applications...`, 'info');
-      const wpBytes = window.customWallpaperRGB565 || (window.wallpaperStudio?.getWallpaperBytes?.()) || (window.wallpaperStudio?.generateRGB565Bytes?.());
-      const effectiveTheme = (wpBytes && (userSettings.theme === 'custom' || userSettings.theme === 'default')) ? 'custom' : userSettings.theme;
+      const wpBytes = getCustomWallpaperBuffer();
+      const effectiveTheme = (userSettings.theme === 'custom' && wpBytes) ? 'custom' : (userSettings.theme === 'custom' ? 'default' : userSettings.theme);
       const bundle = await bundler.buildBundle(selectedApps, 'nwa', { 
         targetModel: targetModel,
+        maxFlashBytes: getMaxFlashBytes(),
         theme: effectiveTheme, 
         displayMode: userSettings.displayMode,
         glassMode: userSettings.glassMode !== false,
@@ -3152,11 +3199,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         : defaultForModel;
 
       await ensurePackPayloads(selectedApps);
-      const wpBytes = window.customWallpaperRGB565 || (window.wallpaperStudio?.getWallpaperBytes?.()) || (window.wallpaperStudio?.generateRGB565Bytes?.());
-      const effectiveTheme = (wpBytes && (userSettings.theme === 'custom' || userSettings.theme === 'default')) ? 'custom' : userSettings.theme;
+      const wpBytes = getCustomWallpaperBuffer();
+      const effectiveTheme = (userSettings.theme === 'custom' && wpBytes) ? 'custom' : (userSettings.theme === 'custom' ? 'default' : userSettings.theme);
       const bundle = await bundler.buildBundle(selectedApps, 'bin', { 
         targetModel: targetModel,
         flashAddress: targetFlashAddr,
+        maxFlashBytes: getMaxFlashBytes(),
         theme: effectiveTheme, 
         displayMode: userSettings.displayMode,
         glassMode: userSettings.glassMode !== false,
