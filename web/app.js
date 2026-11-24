@@ -1023,6 +1023,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         </div>
       `;
     });
+    if (app.repo_url || (app.source && app.source.includes('NumPlay'))) {
+      const repoUrl = app.repo_url || 'https://github.com/Mason363/NumPlay';
+      controlsHtml += `
+        <div class="mt-2 pt-2 border-t border-slate-800 flex flex-wrap items-center justify-between gap-2 text-[11px]">
+          <span class="text-cyan-300 font-semibold">📦 Source : <a href="${repoUrl}" target="_blank" rel="noopener noreferrer" class="underline hover:text-amber-300">${repoUrl}</a></span>
+          ${app.download_url ? `<a href="${app.download_url}" download class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-mono text-[10px] hover:bg-emerald-500/30">⬇️ .NWA</a>` : ''}
+        </div>
+      `;
+    }
     if (keyDetails.tips) {
       controlsHtml += `
         <div class="mt-2 pt-2 border-t border-slate-800 text-[10px] text-slate-400 italic">
@@ -1895,15 +1904,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     catalogList.className = isGallery ? 'gallery-grid' : 'space-y-2.5';
     
     const filtered = catalogApps.filter(app => {
-      const matchCat = (activeCategory === 'ALL') || 
-        app.category.toLowerCase().includes(activeCategory.toLowerCase());
+      const catLower = (app.category || '').toLowerCase();
+      const activeLower = activeCategory.toLowerCase();
+      const matchCat = (activeCategory === 'ALL') ||
+        (activeLower.startsWith('jeux') ? catLower.startsWith('jeux') : catLower.includes(activeLower));
       if (!matchCat) return false;
       if (!catalogSearchText) return true;
       const q = catalogSearchText;
       return (app.name && app.name.toLowerCase().includes(q)) ||
              (app.description && app.description.toLowerCase().includes(q)) ||
              (app.category && app.category.toLowerCase().includes(q)) ||
-             (app.author && app.author.toLowerCase().includes(q));
+             (app.author && app.author.toLowerCase().includes(q)) ||
+             (app.source && app.source.toLowerCase().includes(q));
     });
 
     // Tri dynamique selon la sélection utilisateur (QOL)
@@ -1960,7 +1972,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
           <div class="w-full text-center space-y-0.5 px-1 pointer-events-none">
             <h4 class="font-extrabold text-[#F8FAFC] text-xs font-mono truncate" title="${app.name}">${app.name}</h4>
-            <p class="text-[10px] text-[#94A3B8] truncate font-mono">${app.size_kb} Ko • ${app.author || 'EquaLib'}</p>
+            <p class="text-[10px] text-[#94A3B8] truncate font-mono">${app.size_kb} Ko • ${app.source && app.source.includes('NumPlay') ? 'GitHub NumPlay' : (app.author || 'EquaLib')}</p>
           </div>
 
           <div class="w-full pt-1.5 border-t border-[#1E3A68] flex items-center justify-between gap-1">
@@ -1991,8 +2003,9 @@ document.addEventListener('DOMContentLoaded', async () => {
           openAppDetails(app);
         });
 
-        card.querySelector('.gallery-add-btn')?.addEventListener('click', (e) => {
+        card.querySelector('.gallery-add-btn')?.addEventListener('click', async (e) => {
           e.stopPropagation();
+          const btn = e.currentTarget;
           if (isSelected) {
             const idx = selectedApps.findIndex(s => s.id === app.id);
             if (idx !== -1) {
@@ -2000,6 +2013,10 @@ document.addEventListener('DOMContentLoaded', async () => {
               window.soundFx?.playHit();
               showToast(`"${app.name}" retiré du pack`, 'info');
             }
+          } else if (app.download_url && !app.data) {
+            btn.textContent = '⏳...';
+            btn.disabled = true;
+            await downloadAndAddCommunityApp(app);
           } else {
             addAppToSelection(app);
           }
@@ -2027,6 +2044,7 @@ document.addEventListener('DOMContentLoaded', async () => {
               <div class="flex items-center gap-2 flex-wrap">
                 <h4 class="font-heading font-bold text-[#F8FAFC] text-xs hover:text-[#FFD700] transition-colors uppercase tracking-wide">${app.name}</h4>
                 <span class="text-[10px] px-1.5 py-0.2 rounded-none bg-[#030814] border border-[#1B3B6F] text-[#8EA5C8] font-bold uppercase">${app.category}</span>
+                ${app.source ? `<span class="text-[9px] px-1.5 py-0.2 rounded-none bg-cyan-950/70 border border-cyan-500/40 text-cyan-300 font-bold uppercase">${app.source}</span>` : ''}
               </div>
               <p class="text-xs text-[#8EA5C8] line-clamp-1 leading-normal">&gt;_ ${app.description}</p>
               <div class="text-[11px] text-[#8EA5C8] flex items-center gap-2">
@@ -2065,7 +2083,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
 
         const btn = card.querySelector('.add-btn');
-        btn?.addEventListener('click', (e) => {
+        btn?.addEventListener('click', async (e) => {
           e.stopPropagation();
           if (isSelected) {
             const idx = selectedApps.findIndex(s => s.id === app.id);
@@ -2074,6 +2092,10 @@ document.addEventListener('DOMContentLoaded', async () => {
               window.soundFx?.playHit();
               showToast(`"${app.name}" retiré du pack`, 'info');
             }
+          } else if (app.download_url && !app.data) {
+            btn.textContent = '⏳...';
+            btn.disabled = true;
+            await downloadAndAddCommunityApp(app);
           } else {
             addAppToSelection(app);
           }
@@ -2291,8 +2313,13 @@ document.addEventListener('DOMContentLoaded', async () => {
       version: app.version,
       size_kb: app.size_kb || Math.max(1, Math.round(fileBuffer.byteLength / 1024)),
       category: app.category,
+      format: app.format || 'NWS',
       description: app.description,
       icon_initial: app.icon_initial || '🌐',
+      icon_url: app.icon_url,
+      download_url: app.download_url,
+      source: app.source,
+      repo_url: app.repo_url,
       color: app.color || '#10B981',
       data: new Uint8Array(fileBuffer)
     };
@@ -2684,8 +2711,24 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   // ==================== TÉLÉCHARGEMENT & FLASH ====================
+  async function ensurePackPayloads(apps) {
+    for (const a of apps) {
+      if (a.download_url && (!a.data || a.data.length === 0)) {
+        try {
+          const res = await fetch(a.download_url);
+          if (res && res.ok) {
+            a.data = new Uint8Array(await res.arrayBuffer());
+          }
+        } catch (err) {
+          console.warn('Impossible de précharger', a.name, err);
+        }
+      }
+    }
+  }
+
   downloadBtn.addEventListener('click', async () => {
-    const hasCustomApps = selectedApps.some(a => a.data && a.data.length > 0);
+    await ensurePackPayloads(selectedApps);
+    const hasCustomApps = selectedApps.some(a => a.data && a.data.length > 0 && !a.recommended);
     if (hasCustomApps) {
       const proceed = confirm(
         "⚠️ Attention Importante :\n\n" +
@@ -2828,6 +2871,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         ? usb.flashAddress 
         : defaultForModel;
 
+      await ensurePackPayloads(selectedApps);
       const wpBytes = window.customWallpaperRGB565 || (window.wallpaperStudio?.getWallpaperBytes?.()) || (window.wallpaperStudio?.generateRGB565Bytes?.());
       const effectiveTheme = (wpBytes && (userSettings.theme === 'custom' || userSettings.theme === 'default')) ? 'custom' : userSettings.theme;
       const bundle = await bundler.buildBundle(selectedApps, 'bin', { 

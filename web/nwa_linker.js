@@ -48,7 +48,7 @@
   const generateLinkerScript = (options) => `
 MEMORY {
   FLASH (rx) : ORIGIN = ${options.flashStart || '0x90180000'}, LENGTH = ${options.flashLength || '8M'}
-  RAM (rwx) : ORIGIN = ${options.ramStart || '0x240118a4'}, LENGTH = ${options.ramLength || '64K'}
+  RAM (rwx) : ORIGIN = ${options.ramStart || '0x240118a4'}, LENGTH = ${options.ramLength || '192K'}
 }
 
 ENTRY(_start);

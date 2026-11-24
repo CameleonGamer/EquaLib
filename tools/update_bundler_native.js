@@ -253,12 +253,15 @@ class EquaLibBundler {
       const appNameLower = (app.name || '').toLowerCase();
       const isBin = (app.format === 'BIN') || (app.category === 'BIN') || appIdLower.includes('.bin') || appNameLower.includes('.bin');
       const isNwa = (app.format === 'NWA') || (app.category === 'NWA') || appIdLower.includes('.nwa') || appNameLower.includes('.nwa');
-      const isNative = isBin || isNwa || (app.data && app.data.length >= 4 && (
+      const hasNativeBytes = !!(app.data && app.data.length >= 4 && (
         (app.data[0] === 0xBA && app.data[1] === 0xBE && app.data[2] === 0xC0 && app.data[3] === 0xDE) || // 0xDEC0BEBA EADK flat binary
         (app.data[0] === 0x7F && app.data[1] === 0x45 && app.data[2] === 0x4C && app.data[3] === 0x46)    // ELF relocatable object
       ));
+      const isNative = isBin || isNwa || hasNativeBytes;
 
-      if (appIdLower === 'mariokart' || appIdLower.includes('mario') || appNameLower.includes('mario')) {
+      if (hasNativeBytes) {
+        appType = 13; // Exécutable natif ARM EADK (.bin ou .nwa réel fourni dans app.data, ex: NumPlay)
+      } else if (appIdLower === 'mariokart' || appIdLower.includes('mario') || appNameLower.includes('mario')) {
         appType = 1; // Super Mario Kart 3D natif C (issu de MathDS)
       } else if (appIdLower === 'periodique' || appIdLower.includes('periodique')) {
         appType = 2; // Tableau Périodique natif C
@@ -314,13 +317,15 @@ class EquaLibBundler {
             const isModel120_18 = options.flashAddress === 0x90180000;
             const baseFlash = isModel110 ? 0x90200000 : (isModel115 ? 0x90600000 : (isModel120_18 ? 0x90180000 : 0x90580000));
             const targetFlash = baseFlash + currentExtraOffset;
-            const targetRam = (isModel110 ? 0x20010000 : (isModel115 ? 0x200118a4 : 0x24020000)) + (extraPayloads.length * 0x8000);
-            console.log('[EquaLib Bundler] Liaison dynamique de "' + app.name + '" pour Flash 0x' + targetFlash.toString(16) + ', RAM 0x' + targetRam.toString(16) + '...');
+            const targetRam = (isModel110 ? 0x20010000 : (isModel115 ? 0x200118a4 : 0x24020000));
+            const ramLength = (isModel110 || isModel115) ? '144K' : '192K';
+            console.log('[EquaLib Bundler] Liaison dynamique de "' + app.name + '" pour Flash 0x' + targetFlash.toString(16) + ', RAM 0x' + targetRam.toString(16) + ' (' + ramLength + ')...');
             if (typeof EquaLibLinker !== 'undefined' && EquaLibLinker.convertNwaToBin) {
               try {
                 binBytes = await EquaLibLinker.convertNwaToBin(binBytes, {
                   flashStart: '0x' + targetFlash.toString(16),
                   ramStart: '0x' + targetRam.toString(16),
+                  ramLength: ramLength,
                   ldWasmUrl: 'toolchain/ld.wasm',
                   objcopyWasmUrl: 'toolchain/objcopy.wasm'
                 });

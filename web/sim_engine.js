@@ -5496,14 +5496,19 @@ class NumWorksSimulator {
 
 
   startGenericPreview(type) {
-    this.title.textContent = 'EquaLib Application';
+    const appObj = (this.apps || []).find(a => a.type === type || a.id === type) || (this.apps || [])[this.selectedIndex];
+    const title = appObj ? appObj.name.replace(/^[0-9]+\.\s*/, '') : type;
+    const iconHtml = appObj?.icon_url
+      ? `<img src="${appObj.icon_url}" alt="${title}" class="w-12 h-12 rounded-lg object-contain mb-1.5 shadow">`
+      : `<div class="text-2xl mb-1">${appObj?.icon || '🎮'}</div>`;
+    this.title.textContent = title || 'EquaLib Application';
     this.topbar.style.backgroundColor = '#FFBB00';
     this.content.innerHTML = `
       <div class="h-full flex flex-col items-center justify-center text-center p-3 text-slate-700 bg-white rounded">
-        <div class="text-2xl mb-1">🎮</div>
-        <div class="font-bold text-xs text-slate-900">${type}</div>
-        <div class="text-[9px] text-slate-500 mt-1">Application compilée en C natif pour NumWorks N0120.</div>
-        <div class="text-[8px] text-amber-600 mt-2 font-bold">Appuyez sur Back pour revenir au Hub.</div>
+        ${iconHtml}
+        <div class="font-bold text-xs text-slate-900">${title}</div>
+        <div class="text-[9px] text-slate-500 mt-1">Application native C/NWA — Source : GitHub Mason363/NumPlay &amp; EquaLib.</div>
+        <div class="text-[8px] text-amber-600 mt-2 font-bold">Installez sur votre NumWorks via Flash USB pour jouer en plein écran • [Back] Menu.</div>
       </div>
     `;
   }

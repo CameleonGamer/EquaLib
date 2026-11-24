@@ -1485,7 +1485,10 @@ describe('7. Compilation et Validité Syntaxique des Jeux Python (.NWS)', () => 
         }
 
         const catalogList = getOrCreateElement('catalog-list');
-        assert.strictEqual(catalogList.children.length, 16, `Le catalogue #catalog-list doit contenir 16 applications après DOMContentLoaded (reçu : ${catalogList.children.length})`);
+        const expectedCatalog = JSON.parse(fs.readFileSync('web/catalog.json', 'utf8'));
+        assert.strictEqual(catalogList.children.length, expectedCatalog.length, `Le catalogue #catalog-list doit contenir ${expectedCatalog.length} applications après DOMContentLoaded (reçu : ${catalogList.children.length})`);
+        const numPlayEntries = expectedCatalog.filter(a => a.repo_url === 'https://github.com/Mason363/NumPlay');
+        assert(numPlayEntries.length >= 75, `Au moins 75 jeux Mason363/NumPlay attendus dans catalog.json (reçu : ${numPlayEntries.length})`);
 
         // Test setTargetModel pour N0115, N0120, N0110
         assert(typeof global.window.setTargetModel === 'function', 'setTargetModel doit être accessible');
