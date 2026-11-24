@@ -29,7 +29,7 @@ const code8006 = nwlinkCode.substring(p8006 + '8006:t=>{'.length, pNext8006);
 const linkerScriptTemplate = (options) => `
 MEMORY {
   FLASH (rx) : ORIGIN = ${options.flashStart || '0x90180000'}, LENGTH = ${options.flashLength || '8M'}
-  RAM (rwx) : ORIGIN = ${options.ramStart || '0x240118a4'}, LENGTH = ${options.ramLength || '256K'}
+  RAM (rwx) : ORIGIN = ${options.ramStart || '0x24013400'}, LENGTH = ${options.ramLength || '138K'}
 }
 
 ENTRY(_start);
@@ -80,6 +80,7 @@ SECTIONS {
     _bss_section_start_ram = .;
     *(.bss)
     *(.bss.*)
+    *(COMMON)
     _bss_section_end_ram = .;
   } >RAM
 
@@ -271,8 +272,8 @@ const outputContent = `/**
   async function convertNwaToBin(nwaBytes, options = {}) {
     const flashStart = options.flashStart || '0x90180000';
     const flashLength = options.flashLength || '8M';
-    const ramStart = options.ramStart || '0x24020000';
-    const ramLength = options.ramLength || '128K';
+    const ramStart = options.ramStart || '0x24013400';
+    const ramLength = options.ramLength || '138K';
 
     const linkerScript = generateLinkerScript({ flashStart, flashLength, ramStart, ramLength });
 

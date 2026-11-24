@@ -6,6 +6,7 @@
 #include "equalib_manifest.h"
 #include "storage.h"
 #include "game_icons_data.h"
+#include "numplay_icons_data.h"
 
 /* Déclarations mini libc */
 size_t strlen(const char* s);
@@ -553,19 +554,15 @@ static void __attribute__((noinline)) draw_styled_container(
 }
 
 /* Wrapper d'exécution sécurisé ARM Thumb avec alignement AAPCS et sauvegarde intégrale des registres */
-static void __attribute__((noinline)) call_app_entry_safe(uint32_t entry_addr) {
+__attribute__((naked, noinline)) static void call_app_entry_safe(uint32_t entry_addr __attribute__((unused))) {
     __asm__ volatile (
-        "push {r4-r11, lr}\n"       /* Sauvegarder tous les registres callee-saved */
-        "mov r4, sp\n"              /* Mémoriser le pointeur de pile d'origine */
-        "lsrs r1, r4, #3\n"         /* Aligner la pile sur 8 octets (requis AAPCS Cortex-M) */
-        "lsls r1, r1, #3\n"
+        "push {r4-r11, lr}\n"       /* Sauvegarder tous les registres callee-saved et LR */
+        "mov r4, sp\n"              /* Mémoriser SP d'origine dans r4 (r0 conserve entry_addr) */
+        "bic r1, r4, #7\n"          /* Aligner SP sur 8 octets (requis AAPCS Cortex-M) */
         "mov sp, r1\n"
-        "blx %0\n"                  /* Appel du point d'entrée natif Thumb */
+        "blx r0\n"                  /* Appel du point d'entrée natif Thumb via r0 intact */
         "mov sp, r4\n"              /* Restaurer la pile à son adresse exacte */
-        "pop {r4-r11, lr}\n"        /* Restaurer tous les registres */
-        :
-        : "r" (entry_addr)
-        : "r0", "r1", "r2", "r3", "ip", "memory", "cc"
+        "pop {r4-r11, pc}\n"        /* Restaurer callee-saved et retourner */
     );
 }
 
@@ -683,8 +680,72 @@ static void draw_bitmap_icon_20x20(int cx, int cy, const uint16_t* colors, const
     }
 }
 
-static void draw_app_icon(uint8_t app_type, int cx, int cy, uint16_t accent_col) {
+static const np_icon_20x20_t* find_numplay_icon(const char* app_id) {
+    if (!app_id || !app_id[0]) return NULL;
+    char norm[16];
+    int i = 0;
+    while (i < 15 && app_id[i]) {
+        char c = app_id[i];
+        if (c >= 'A' && c <= 'Z') c = (char)(c + ('a' - 'A'));
+        norm[i++] = c;
+    }
+    norm[i] = '\0';
+
+    const char* p = norm;
+    if (p[0] == 'c' && p[1] == 'o' && p[2] == 'm' && p[3] == 'm' && p[4] == '_') p += 5;
+    if (p[0] == 'n' && p[1] == 'p' && p[2] == '_') p += 3;
+    if (!p[0]) return NULL;
+
+    int lo = 0;
+    int hi = NP_ICON_MAP_COUNT - 1;
+    while (lo <= hi) {
+        int mid = (lo + hi) >> 1;
+        const char* k = s_np_icon_map[mid].key;
+        int j = 0;
+        while (p[j] && k[j] && p[j] == k[j]) j++;
+        int cmp = (int)(unsigned char)p[j] - (int)(unsigned char)k[j];
+        if (cmp == 0) {
+            return &s_np_icons[s_np_icon_map[mid].icon_idx];
+        } else if (cmp < 0) {
+            hi = mid - 1;
+        } else {
+            lo = mid + 1;
+        }
+    }
+    return NULL;
+}
+
+static void draw_np_icon_20x20(int cx, int cy, const np_icon_20x20_t* icon) {
+    int start_x = cx - 10;
+    int start_y = cy - 10;
+    uint16_t row_buf[20];
+    for (int y = 0; y < 20; y++) {
+        int py = start_y + y;
+        if (py < 0 || py >= EADK_SCREEN_HEIGHT) continue;
+        int run_start = -1;
+        const uint8_t* rp = &icon->pixels[y * 10];
+        for (int x = 0; x < 20; x++) {
+            uint8_t b = rp[x >> 1];
+            uint8_t idx = (x & 1) ? (b >> 4) : (b & 0x0F);
+            if (idx < 15) {
+                row_buf[x] = icon->palette[idx];
+                if (run_start == -1) run_start = x;
+            } else if (run_start != -1) {
+                eadk_rect_t r = {(uint16_t)(start_x + run_start), (uint16_t)py, (uint16_t)(x - run_start), 1};
+                eadk_display_push_rect(r, &row_buf[run_start]);
+                run_start = -1;
+            }
+        }
+        if (run_start != -1) {
+            eadk_rect_t r = {(uint16_t)(start_x + run_start), (uint16_t)py, (uint16_t)(20 - run_start), 1};
+            eadk_display_push_rect(r, &row_buf[run_start]);
+        }
+    }
+}
+
+static void draw_app_icon(const equalib_manifest_app_t* app, int cx, int cy, uint16_t accent_col) {
     (void)accent_col;
+    uint8_t app_type = app ? app->app_type : 0;
     if (app_type == APP_TYPE_MARIOKART) {
         draw_bitmap_icon_20x20(cx, cy, s_icon_mariokart_rgb, s_icon_mariokart_mask);
     } else if (app_type == APP_TYPE_FLAPPY) {
@@ -779,15 +840,20 @@ static void draw_app_icon(uint8_t app_type, int cx, int cy, uint16_t accent_col)
         eadk_display_push_rect_uniform(eye_t, 0xFFFF);
         eadk_display_push_rect_uniform(eye_b, 0x0000);
     } else if (app_type == APP_TYPE_NATIVE_EXEC) {
-        /* Puce ARM / Processeur avec broches */
-        eadk_rect_t chip = {(uint16_t)(cx - 7), (uint16_t)(cy - 7), 14, 14};
-        eadk_rect_t pin_l = {(uint16_t)(cx - 10), (uint16_t)(cy - 5), 3, 10};
-        eadk_rect_t pin_r = {(uint16_t)(cx + 7), (uint16_t)(cy - 5), 3, 10};
-        eadk_rect_t core = {(uint16_t)(cx - 3), (uint16_t)(cy - 3), 6, 6};
-        eadk_display_push_rect_uniform(chip, 0x2124);
-        eadk_display_push_rect_uniform(pin_l, 0xFDE0);
-        eadk_display_push_rect_uniform(pin_r, 0xFDE0);
-        eadk_display_push_rect_uniform(core, 0x07E0);
+        const np_icon_20x20_t* np_icon = app ? find_numplay_icon((const char*)app->id) : NULL;
+        if (np_icon) {
+            draw_np_icon_20x20(cx, cy, np_icon);
+        } else {
+            /* Puce ARM / Processeur avec broches */
+            eadk_rect_t chip = {(uint16_t)(cx - 7), (uint16_t)(cy - 7), 14, 14};
+            eadk_rect_t pin_l = {(uint16_t)(cx - 10), (uint16_t)(cy - 5), 3, 10};
+            eadk_rect_t pin_r = {(uint16_t)(cx + 7), (uint16_t)(cy - 5), 3, 10};
+            eadk_rect_t core = {(uint16_t)(cx - 3), (uint16_t)(cy - 3), 6, 6};
+            eadk_display_push_rect_uniform(chip, 0x2124);
+            eadk_display_push_rect_uniform(pin_l, 0xFDE0);
+            eadk_display_push_rect_uniform(pin_r, 0xFDE0);
+            eadk_display_push_rect_uniform(core, 0x07E0);
+        }
     } else if (app_type == APP_TYPE_TEXT_VIEWER) {
         /* Document texte */
         eadk_rect_t doc = {(uint16_t)(cx - 7), (uint16_t)(cy - 9), 14, 18};
@@ -849,7 +915,7 @@ static void draw_gallery_card(int app_index, int col, int row, bool is_sel, cons
     int icon_cx = x + card_w / 2;
     int icon_cy = y + 26;
     const equalib_manifest_app_t* app = &g_equalib_manifest.apps[app_index];
-    draw_app_icon(app->app_type, icon_cx, icon_cy, theme->accent);
+    draw_app_icon(app, icon_cx, icon_cy, theme->accent);
 
     /* Nom court de l'application sous l'icône : retire uniquement le numéro d'ordre '1. ', '2. ', etc. */
     const char* p = (const char*)app->name;
@@ -909,7 +975,7 @@ static void draw_list_card(int app_index, int v_slot, bool is_sel, const theme_t
     const equalib_manifest_app_t* cur_app = &g_equalib_manifest.apps[app_index];
 
     /* Petite icône sur la gauche */
-    draw_app_icon(cur_app->app_type, 22, y + 17, theme->accent);
+    draw_app_icon(cur_app, 22, y + 17, theme->accent);
 
     eadk_color_t text_bg = base_card_col;
     if (g_glass_mode) {

@@ -553,17 +553,19 @@ describe('6. Intégrité des Binaires Natifs & Manifeste (N0120 & N0110)', () =>
     assert(bin.length > 500000, `Binaire N0110 trop petit (${bin.length} octets)`);
     // Vérifier le magic EADK 0xDEC0BEBA en tête
     assert.strictEqual(bin.readUInt32LE(0), 0xdec0beba);
-    // Vérifier l'adresse RAM d'initialisation de data à 0x1748 = 0x20000000 (SRAM N0110)
-    assert.strictEqual(bin.readUInt32LE(0x1748), 0x20000000);
+    const entryOff = bin.readUInt32LE(20);
+    // Vérifier l'adresse RAM d'initialisation de data dans le literal pool de _start = 0x20000000 (SRAM N0110)
+    assert.strictEqual(bin.readUInt32LE(entryOff + 0x30), 0x20000000);
     // Vérifier que les pointeurs Flash pointent dans le slot externe officiel N0110 (0x90200000)
-    const flashPtr = bin.readUInt32LE(0x1750);
+    const flashPtr = bin.readUInt32LE(entryOff + 0x38);
     assert(flashPtr >= 0x90200000 && flashPtr < 0x90400000, `Pointeur Flash N0110 hors du slot 0x90200000 (valeur: 0x${flashPtr.toString(16)})`);
   });
 
   it('equalib_n0120.bin est lié pour le slot officiel N0120 (Flash: 0x90180000, RAM: 0x240118a4)', () => {
     const bin = fs.readFileSync('web/equalib_n0120.bin');
-    assert.strictEqual(bin.readUInt32LE(0x1748), 0x240118a4);
-    const flashPtr = bin.readUInt32LE(0x1750);
+    const entryOff = bin.readUInt32LE(20);
+    assert.strictEqual(bin.readUInt32LE(entryOff + 0x30), 0x240118a4);
+    const flashPtr = bin.readUInt32LE(entryOff + 0x38);
     assert(flashPtr >= 0x90180000 && flashPtr < 0x90400000, `Pointeur Flash N0120 hors du slot 0x90180000 (valeur: 0x${flashPtr.toString(16)})`);
   });
 
@@ -571,8 +573,9 @@ describe('6. Intégrité des Binaires Natifs & Manifeste (N0120 & N0110)', () =>
     const bin = fs.readFileSync('web/equalib_n0120_58.bin');
     assert.strictEqual(bin.readUInt32LE(0), 0xdec0beba);
     assert.strictEqual(bin.readUInt32LE(28), 0xdec0beba);
-    assert.strictEqual(bin.readUInt32LE(0x1748), 0x240118a4);
-    const flashPtr = bin.readUInt32LE(0x1750);
+    const entryOff = bin.readUInt32LE(20);
+    assert.strictEqual(bin.readUInt32LE(entryOff + 0x30), 0x240118a4);
+    const flashPtr = bin.readUInt32LE(entryOff + 0x38);
     assert(flashPtr >= 0x90580000 && flashPtr < 0x90800000, `Pointeur Flash N0120_58 hors du slot 0x90580000 (valeur: 0x${flashPtr.toString(16)})`);
   });
 
@@ -580,8 +583,9 @@ describe('6. Intégrité des Binaires Natifs & Manifeste (N0120 & N0110)', () =>
     const bin = fs.readFileSync('web/equalib_n0115.bin');
     assert.strictEqual(bin.readUInt32LE(0), 0xdec0beba);
     assert.strictEqual(bin.readUInt32LE(28), 0xdec0beba);
-    assert.strictEqual(bin.readUInt32LE(0x1748), 0x200118a4);
-    const flashPtr = bin.readUInt32LE(0x1750);
+    const entryOff = bin.readUInt32LE(20);
+    assert.strictEqual(bin.readUInt32LE(entryOff + 0x30), 0x200118a4);
+    const flashPtr = bin.readUInt32LE(entryOff + 0x38);
     assert(flashPtr >= 0x90600000 && flashPtr < 0x90800000, `Pointeur Flash N0115 hors du slot 0x90600000 (valeur: 0x${flashPtr.toString(16)})`);
   });
 
@@ -1567,6 +1571,86 @@ describe('7. Compilation et Validité Syntaxique des Jeux Python (.NWS)', () => 
         global.window = originalWindow;
         global.fetch = originalFetch;
         delete global.confirm;
+      }
+    });
+  });
+
+  await describe('22. Exécution sécurisée NWA enfant & Icônes NumPlay sur calculatrice', async () => {
+    it('call_app_entry_safe est naked ARM Thumb sans écrasement r4/entry_addr', () => {
+      const { execSync } = require('child_process');
+      const mainC = fs.readFileSync('launcher/src/main.c', 'utf8');
+      assert(mainC.includes('__attribute__((naked, noinline)) static void call_app_entry_safe'), 'call_app_entry_safe doit être naked');
+      assert(mainC.includes('"blx r0\\n"'), 'call_app_entry_safe doit sauter sur r0');
+      const dis = execSync('arm-none-eabi-objdump -d launcher/src/main.o', { encoding: 'utf8' });
+      const m = dis.match(/<call_app_entry_safe>:[\s\S]*?(?=\n\n|$)/);
+      assert(m, 'Symbole call_app_entry_safe introuvable dans launcher/src/main.o');
+      assert(m[0].includes('blx\tr0'), `call_app_entry_safe doit appeler blx r0 :\n${m[0]}`);
+      assert(!m[0].includes('blx\tr4'), `call_app_entry_safe ne doit jamais appeler blx r4 :\n${m[0]}`);
+    });
+
+    it('numplay_icons_data.h couvre les 80 icônes NumPlay et s_np_icon_map est trié pour la recherche binaire', () => {
+      const hdr = fs.readFileSync('launcher/include/numplay_icons_data.h', 'utf8');
+      assert(hdr.includes('s_np_icons[80]'), '80 icônes NumPlay attendues');
+      const keys = [...hdr.matchAll(/\{\s*"([^"]+)",\s*(\d+)\s*\}/g)].map(x => ({ k: x[1], idx: Number(x[2]) }));
+      assert(keys.length >= 120, `Trop peu d'entrées map: ${keys.length}`);
+      for (let i = 1; i < keys.length; i++) {
+        assert(keys[i - 1].k < keys[i].k, `Clés non triées: ${keys[i - 1].k} >= ${keys[i].k}`);
+      }
+      const catalog = JSON.parse(fs.readFileSync('web/catalog.json', 'utf8'));
+      const community = JSON.parse(fs.readFileSync('web/community_apps.json', 'utf8'));
+      const norm = (id) => {
+        let s = (id || '').toLowerCase().slice(0, 15);
+        if (s.startsWith('comm_')) s = s.slice(5);
+        if (s.startsWith('np_')) s = s.slice(3);
+        return s;
+      };
+      const keySet = new Set(keys.map(x => x.k));
+      for (const app of [...catalog, ...community]) {
+        if ((app.icon_url || '').includes('numplay/')) {
+          assert(keySet.has(norm(app.id)), `Icône manquante dans C map pour ${app.id}`);
+        }
+      }
+    });
+
+    await itAsync('Bundler + NWA Linker lient les jeux NumPlay sous la limite SRAM sans chevaucher EquaLib ni la pile', async () => {
+      const prevLinker = global.EquaLibLinker;
+      delete require.cache[require.resolve('../web/nwa_linker.js')];
+      require('../web/nwa_linker.js');
+      if (!global.EquaLibLinker && global.window && global.window.EquaLibLinker) {
+        global.EquaLibLinker = global.window.EquaLibLinker;
+      }
+      try {
+        const EquaLibBundler = require('../web/bundler.js');
+        const bundler = new EquaLibBundler({ targetModel: 'N0120' });
+        const flappyNwa = fs.readFileSync('web/apps/numplay/FlappyBird.nwa');
+        const balatroNwa = fs.readFileSync('web/apps/numplay/Balatro.nwa');
+        for (const modelCfg of [
+          { targetModel: 'N0120', flashAddress: 0x90580000, expectFlashMin: 0x90580000, expectRamMin: 0x24013400, expectRamMax: 0x24035e64 },
+          { targetModel: 'N0115', flashAddress: 0x90600000, expectFlashMin: 0x90600000, expectRamMin: 0x20013400, expectRamMax: 0x20037000 },
+          { targetModel: 'N0110', flashAddress: 0x90200000, expectFlashMin: 0x90200000, expectRamMin: 0x20001c00, expectRamMax: 0x200245c0 }
+        ]) {
+          const res = await bundler.buildBundle([
+            { id: 'comm_flappy', name: 'Flappy Bird', category: 'Arcade', format: 'NWA', data: new Uint8Array(flappyNwa) },
+            { id: 'np_balatro', name: 'Balatro', category: 'Cartes', format: 'NWA', data: new Uint8Array(balatroNwa) }
+          ], 'bin', modelCfg);
+          const buf = Buffer.from(res.arrayBuffer);
+          const off = bundler.findManifestOffset(buf);
+          assert(off !== -1, 'Manifest introuvable');
+          const appsStart = off + 24;
+          for (let i = 0; i < 2; i++) {
+            const dOff = buf.readUInt32LE(appsStart + i * 144 + 136);
+            const dSize = buf.readUInt32LE(appsStart + i * 144 + 140);
+            assert(dOff > 0 && dSize > 1000, `Payload manquant pour app ${i} sur ${modelCfg.targetModel}`);
+            assert.strictEqual(buf.readUInt32LE(dOff), 0xdec0beba, 'Magic EADK enfant invalide');
+            const eOff = buf.readUInt32LE(dOff + 20);
+            const ramStart = buf.readUInt32LE(dOff + eOff + 0x30);
+            const flashPtr = buf.readUInt32LE(dOff + eOff + 0x38);
+            assert(ramStart >= modelCfg.expectRamMin && ramStart < modelCfg.expectRamMax, `RAM enfant invalide sur ${modelCfg.targetModel}: 0x${ramStart.toString(16)}`);
+            assert(flashPtr >= modelCfg.expectFlashMin && flashPtr < 0x90800000, `Flash enfant invalide sur ${modelCfg.targetModel}: 0x${flashPtr.toString(16)}`);
+          }
+        }
+      } finally {
+        global.EquaLibLinker = prevLinker;
       }
     });
   });

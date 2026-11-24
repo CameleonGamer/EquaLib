@@ -4,10 +4,13 @@ const { execSync } = require('child_process');
 
 console.log('=== BUILD EQUALIB NWA & BIN FOR N0120 ===\n');
 
-// 1. Compile all launcher C files
+// 1. Compile all launcher C files (core Hub files first so persistent RAM stays < 0x1B00 bytes)
 const srcFiles = [
   'main.c',
+  'storage.c',
   'manifest.c',
+  'eq_font.c',
+  'mini_libc.c',
   'app_mariokart.c',
   'app_courses.c',
   'app_periodic.c',
@@ -25,10 +28,7 @@ const srcFiles = [
   'app_puissance4.c',
   'app_morpion.c',
   'app_fnaf.c',
-  'app_python.c',
-  'storage.c',
-  'eq_font.c',
-  'mini_libc.c'
+  'app_python.c'
 ];
 
 for (const file of srcFiles) {
