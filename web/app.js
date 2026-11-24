@@ -220,8 +220,11 @@ const APP_DETAILS_MAP = {
 };
 
 document.addEventListener('DOMContentLoaded', async () => {
-  // Constantes
-  const MAX_FLASH_BYTES = 4.0 * 1024 * 1024; // 4.0 Mo alloués aux applications externes
+  // Constantes mémoire Flash QSPI par modèle NumWorks
+  const MAX_FLASH_BYTES_N0110 = 0x903F0000 - 0x90200000; // 1.94 Mo (1984 Ko) N0110 / N0115
+  const MAX_FLASH_BYTES_N0120 = 0x903F0000 - 0x90180000; // 2.44 Mo (2496 Ko) N0120
+  const BASE_LAUNCHER_BYTES = 1105720; // Taille réelle du binaire Hub EquaLib (~1.05 Mo)
+  const BUILTIN_HUB_IDS = new Set(['mariokart', 'periodique', 'fiches', 'math_solver', 'pong', 'settings', 'comm_settings']);
   const DEFAULT_FLASH_ADDR_N0120 = 0x90180000;
   const DEFAULT_FLASH_ADDR_N0120_EPS26 = 0x90580000;
   const DEFAULT_FLASH_ADDR_N0115 = 0x90600000;
@@ -413,6 +416,94 @@ document.addEventListener('DOMContentLoaded', async () => {
     return m === 'N0115' || (m.includes('115') && !m.includes('110'));
   }
 
+  function getMaxFlashBytes() {
+    if (usb && usb.isConnected && usb.maxFlashBytes > 0) {
+      return usb.maxFlashBytes;
+    }
+    const activeModel = (usb && usb.isConnected)
+      ? usb.model
+      : (userSettings.targetModel || userSettings.manualModel || 'N0110');
+    const isN120 = Boolean(activeModel && (String(activeModel).includes('120') || activeModel === 'N0120'));
+    return isN120 ? MAX_FLASH_BYTES_N0120 : MAX_FLASH_BYTES_N0110;
+  }
+
+  function getActiveWallpaperBytes() {
+    if (typeof window !== 'undefined' && window.customWallpaperRGB565 && (userSettings.theme === 'custom' || userSettings.theme === 'default')) {
+      return window.customWallpaperRGB565.byteLength || 0;
+    }
+    return 0;
+  }
+
+  function isBuiltinHubApp(app) {
+    if (!app) return false;
+    if (app.download_url) return false;
+    const idLower = String(app.id || '').toLowerCase();
+    const hasNativeData = Boolean(app.data && app.data.length >= 4 && (
+      (app.data[0] === 0x7F && app.data[1] === 0x45 && app.data[2] === 0x4C && app.data[3] === 0x46) ||
+      (app.data[0] === 0xBA && app.data[1] === 0xBE && app.data[2] === 0xC0 && app.data[3] === 0xDE)
+    ));
+    if (hasNativeData) return false;
+    if (BUILTIN_HUB_IDS.has(idLower)) return true;
+    if (idLower === 'fnaf' && String(app.format || '').toUpperCase() !== 'NWA') return true;
+    return false;
+  }
+
+  function getAppFlashBytes(app) {
+    if (!app || isBuiltinHubApp(app)) return 0;
+    if (typeof app.bin_kb === 'number' && app.bin_kb > 0) {
+      return app.bin_kb * 1024;
+    }
+    if (app.data && app.data.length > 0) {
+      const isElf = app.data[0] === 0x7F && app.data[1] === 0x45 && app.data[2] === 0x4C && app.data[3] === 0x46;
+      if (!isElf) return app.data.length;
+    }
+    return Math.max(0, Math.round((app.size_kb || 0) * 1024));
+  }
+
+  function getAppDisplayKb(app) {
+    if (!app) return 0;
+    if (typeof app.bin_kb === 'number' && app.bin_kb > 0) return app.bin_kb;
+    return app.size_kb || 0;
+  }
+
+  function formatKb(bytes) {
+    return `${Math.max(0, Math.round(bytes / 1024))} Ko`;
+  }
+
+  function getFlashStats() {
+    const maxBytes = getMaxFlashBytes();
+    const baseBytes = BASE_LAUNCHER_BYTES + getActiveWallpaperBytes();
+    const appsBytes = selectedApps.reduce((acc, s) => acc + getAppFlashBytes(s), 0);
+    const usedBytes = baseBytes + appsBytes;
+    const remainingBytes = Math.max(0, maxBytes - usedBytes);
+    return { maxBytes, baseBytes, appsBytes, usedBytes, remainingBytes };
+  }
+
+  function getAddEligibility(app) {
+    if (!app) return { ok: false, reason: 'invalid', tooHeavy: false, packFull: false, appBytes: 0, remainingBytes: 0, maxBytes: getMaxFlashBytes() };
+    if (selectedApps.some(s => s.id === app.id)) {
+      return { ok: false, reason: 'already_selected', tooHeavy: false, packFull: false, appBytes: getAppFlashBytes(app), ...getFlashStats() };
+    }
+    const { maxBytes, baseBytes, remainingBytes } = getFlashStats();
+    const appBytes = getAppFlashBytes(app);
+    if (appBytes > remainingBytes) {
+      return {
+        ok: false,
+        reason: 'too_heavy',
+        tooHeavy: true,
+        packFull: false,
+        standaloneExceeds: (baseBytes + appBytes) > maxBytes,
+        appBytes,
+        remainingBytes,
+        maxBytes
+      };
+    }
+    if (selectedApps.length >= 20) {
+      return { ok: false, reason: 'pack_full', tooHeavy: false, packFull: true, appBytes, remainingBytes, maxBytes };
+    }
+    return { ok: true, reason: 'ok', tooHeavy: false, packFull: false, appBytes, remainingBytes, maxBytes };
+  }
+
   function setTargetModel(model, save = true) {
     const isN120 = Boolean(model && (model.includes('120') || model === 'N0120'));
     const isN115 = Boolean(model && isN0115Model(model));
@@ -476,6 +567,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const modalControls = document.getElementById('modal-controls-model');
     if (modalControls) modalControls.textContent = isN120 ? 'N0120' : (isN115 ? 'N0115' : 'N0110 / N0115');
+
+    if (catalogApps.length > 0) {
+      updateMemoryUsage();
+      renderCatalog();
+      renderCommunitySearch();
+      if (currentActiveDockApp) updateActiveAppDock(currentActiveDockApp);
+    }
   }
   window.setTargetModel = setTargetModel;
 
@@ -868,11 +966,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     const isSelected = selectedApps.some(s => s.id === app.id);
     if (dockActionBtn) {
       if (isSelected) {
+        dockActionBtn.disabled = false;
         dockActionBtn.textContent = '✓ Inclus';
+        dockActionBtn.title = 'Retirer du pack';
         dockActionBtn.className = 'px-4 py-2 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-bold transition-all cursor-pointer';
       } else {
-        dockActionBtn.textContent = '+ Ajouter';
-        dockActionBtn.className = 'px-4 py-2 rounded-xl bg-nw-yellow hover:bg-nw-yellowHover text-black text-xs font-extrabold transition-all shadow-md active:scale-95 cursor-pointer';
+        const elig = getAddEligibility(app);
+        if (!elig.ok) {
+          dockActionBtn.disabled = true;
+          dockActionBtn.textContent = elig.tooHeavy ? '⛔ Trop lourd' : '⛔ Pack plein';
+          dockActionBtn.title = elig.tooHeavy
+            ? `Trop lourd (${formatKb(elig.appBytes)} requis, ${formatKb(elig.remainingBytes)} libres)`
+            : 'Pack plein (20/20 applications maximum)';
+          dockActionBtn.className = 'btn-too-heavy px-4 py-2 rounded-xl text-xs font-extrabold transition-all';
+        } else {
+          dockActionBtn.disabled = false;
+          dockActionBtn.textContent = '+ Ajouter';
+          dockActionBtn.title = 'Ajouter au pack';
+          dockActionBtn.className = 'px-4 py-2 rounded-xl bg-nw-yellow hover:bg-nw-yellowHover text-black text-xs font-extrabold transition-all shadow-md active:scale-95 cursor-pointer';
+        }
       }
     }
   }
@@ -992,17 +1104,33 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     modalAppName.textContent = app.name;
     modalAppCat.textContent = app.category;
-    modalAppMeta.textContent = `v${app.version || '1.0'} • ${app.size_kb} Ko • Par ${app.author || 'Inconnu'}`;
+    modalAppMeta.textContent = `v${app.version || '1.0'} • ${getAppDisplayKb(app)} Ko • Par ${app.author || 'Inconnu'}`;
     modalAppIcon.innerHTML = getAppIconHtml(app, 'w-full h-full object-contain p-1');
     modalAppIcon.style.backgroundColor = app.color || '#F59E0B';
 
     const isSelected = selectedApps.some(s => s.id === app.id);
     if (isSelected) {
+      modalTogglePackBtn.disabled = false;
+      modalTogglePackBtn.title = 'Retirer du pack';
       modalTogglePackBtn.innerHTML = `<span>✕ Retirer du Pack</span>`;
       modalTogglePackBtn.className = 'flex-1 py-3 px-4 rounded-xl bg-red-500 hover:bg-red-400 text-white font-extrabold text-xs transition-all shadow-md active:scale-95 flex items-center justify-center gap-2 cursor-pointer';
     } else {
-      modalTogglePackBtn.innerHTML = `<span>+ Ajouter à mon Pack</span>`;
-      modalTogglePackBtn.className = 'flex-1 py-3 px-4 rounded-xl bg-nw-yellow hover:bg-nw-yellowHover text-black font-extrabold text-xs transition-all shadow-md active:scale-95 flex items-center justify-center gap-2 cursor-pointer';
+      const elig = getAddEligibility(app);
+      if (!elig.ok) {
+        modalTogglePackBtn.disabled = true;
+        modalTogglePackBtn.title = elig.tooHeavy
+          ? `Espace Flash insuffisant : ${formatKb(elig.appBytes)} requis (${formatKb(elig.remainingBytes)} libres)`
+          : 'Pack plein (20/20 applications)';
+        modalTogglePackBtn.innerHTML = elig.tooHeavy
+          ? `<span>⛔ Trop lourd (${formatKb(elig.appBytes)} &gt; ${formatKb(elig.remainingBytes)} libres)</span>`
+          : `<span>⛔ Pack plein (20 / 20)</span>`;
+        modalTogglePackBtn.className = 'btn-too-heavy flex-1 py-3 px-4 rounded-xl font-extrabold text-xs flex items-center justify-center gap-2';
+      } else {
+        modalTogglePackBtn.disabled = false;
+        modalTogglePackBtn.title = 'Ajouter à mon Pack';
+        modalTogglePackBtn.innerHTML = `<span>+ Ajouter à mon Pack</span>`;
+        modalTogglePackBtn.className = 'flex-1 py-3 px-4 rounded-xl bg-nw-yellow hover:bg-nw-yellowHover text-black font-extrabold text-xs transition-all shadow-md active:scale-95 flex items-center justify-center gap-2 cursor-pointer';
+      }
     }
 
     const keyDetails = APP_DETAILS_MAP[app.id] || {
@@ -1069,16 +1197,23 @@ document.addEventListener('DOMContentLoaded', async () => {
         window.soundFx?.playHit();
         showToast(`"${appTarget.name}" retiré du pack`, 'info');
       }
-    } else if (appTarget.download_url && (!appTarget.data || appTarget.data.length === 0)) {
-      modalTogglePackBtn.disabled = true;
-      modalTogglePackBtn.textContent = '⏳ Téléchargement...';
-      try {
-        await downloadAndAddCommunityApp(appTarget);
-      } finally {
-        modalTogglePackBtn.disabled = false;
-      }
     } else {
-      addAppToSelection(appTarget);
+      const elig = getAddEligibility(appTarget);
+      if (!elig.ok) {
+        addAppToSelection(appTarget);
+        return;
+      }
+      if (appTarget.download_url && (!appTarget.data || appTarget.data.length === 0)) {
+        modalTogglePackBtn.disabled = true;
+        modalTogglePackBtn.textContent = '⏳ Téléchargement...';
+        try {
+          await downloadAndAddCommunityApp(appTarget);
+        } finally {
+          modalTogglePackBtn.disabled = false;
+        }
+      } else {
+        addAppToSelection(appTarget);
+      }
     }
     updateUI();
     renderCatalog();
@@ -1503,16 +1638,23 @@ document.addEventListener('DOMContentLoaded', async () => {
           window.soundFx?.playHit();
           showToast(`"${appTarget.name}" retiré du pack`, 'info');
         }
-      } else if (appTarget.download_url && (!appTarget.data || appTarget.data.length === 0)) {
-        dockActionBtn.disabled = true;
-        dockActionBtn.textContent = '⏳...';
-        try {
-          await downloadAndAddCommunityApp(appTarget);
-        } finally {
-          dockActionBtn.disabled = false;
-        }
       } else {
-        addAppToSelection(appTarget);
+        const elig = getAddEligibility(appTarget);
+        if (!elig.ok) {
+          addAppToSelection(appTarget);
+          return;
+        }
+        if (appTarget.download_url && (!appTarget.data || appTarget.data.length === 0)) {
+          dockActionBtn.disabled = true;
+          dockActionBtn.textContent = '⏳...';
+          try {
+            await downloadAndAddCommunityApp(appTarget);
+          } finally {
+            dockActionBtn.disabled = false;
+          }
+        } else {
+          addAppToSelection(appTarget);
+        }
       }
       updateUI();
       renderCatalog();
@@ -1677,8 +1819,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   // ==================== RESTAURATION DU PACK & VIDAGE ====================
   if (btnPackDefaults) {
     btnPackDefaults.addEventListener('click', () => {
+      selectedApps = [];
       const defaults = catalogApps.filter(a => a.recommended);
-      selectedApps = defaults.map(a => ({...a}));
+      defaults.forEach(a => addAppToSelection(a, { silent: true }));
       window.soundFx?.playSuccess();
       updateUI();
       renderCatalog();
@@ -1717,20 +1860,22 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   if (presetArcadeBtn) {
     presetArcadeBtn.addEventListener('click', () => {
-      const arcadeIds = ['mariokart', 'flappy', '2048', 'snake'];
-      selectedApps = catalogApps.filter(a => arcadeIds.includes(a.id)).map(a => ({...a}));
+      const arcadeIds = ['mariokart', 'flappy', '2048', 'snake', 'comm_flappy', 'comm_2048', 'comm_snake'];
+      selectedApps = [];
+      catalogApps.filter(a => arcadeIds.includes(a.id)).forEach(a => addAppToSelection(a, { silent: true }));
       window.soundFx?.playSuccess();
       updateUI();
       renderCatalog();
       renderCommunitySearch();
-      showToast('🎮 Pack Arcade appliqué (Mario Kart, Flappy, 2048, Snake) !', 'success');
+      showToast('🎮 Pack Arcade appliqué !', 'success');
     });
   }
 
   if (presetBacBtn) {
     presetBacBtn.addEventListener('click', () => {
       const bacIds = ['periodique', 'fiches', 'math_solver'];
-      selectedApps = catalogApps.filter(a => bacIds.includes(a.id)).map(a => ({...a}));
+      selectedApps = [];
+      catalogApps.filter(a => bacIds.includes(a.id)).forEach(a => addAppToSelection(a, { silent: true }));
       window.soundFx?.playSuccess();
       updateUI();
       renderCatalog();
@@ -1741,7 +1886,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   if (presetAllBtn) {
     presetAllBtn.addEventListener('click', () => {
-      selectedApps = catalogApps.filter(a => a.recommended).map(a => ({...a}));
+      selectedApps = [];
+      catalogApps.filter(a => a.recommended).forEach(a => addAppToSelection(a, { silent: true }));
       window.soundFx?.playSuccess();
       updateUI();
       renderCatalog();
@@ -1802,17 +1948,23 @@ document.addEventListener('DOMContentLoaded', async () => {
           throw new Error('Format de configuration JSON invalide');
         }
         selectedApps = [];
+        let skippedHeavy = 0;
         config.apps.forEach(cfgApp => {
           const match = catalogApps.find(a => a.id === cfgApp.id) || communityApps.find(a => a.id === cfgApp.id);
-          if (match && selectedApps.length < 20 && !selectedApps.some(s => s.id === match.id)) {
-            selectedApps.push({...match});
+          if (match && !addAppToSelection(match, { silent: true })) {
+            skippedHeavy++;
           }
         });
         window.soundFx?.playSuccess();
         updateUI();
         renderCatalog();
         renderCommunitySearch();
-        showToast(`✓ Pack restauré : ${selectedApps.length} application(s) configurée(s) !`, 'success');
+        showToast(
+          skippedHeavy > 0
+            ? `✓ Pack restauré (${selectedApps.length} apps) — ${skippedHeavy} app(s) ignorée(s) faute de place Flash.`
+            : `✓ Pack restauré : ${selectedApps.length} application(s) configurée(s) !`,
+          skippedHeavy > 0 ? 'warning' : 'success'
+        );
       } catch (err) {
         window.soundFx?.playHit();
         showToast(`Erreur importation pack : ${err.message}`, 'error');
@@ -1864,12 +2016,13 @@ document.addEventListener('DOMContentLoaded', async () => {
       communityApps = [];
     }
 
-    renderCatalog();
-    renderCommunitySearch();
-
     // Présélection par défaut (les apps natives recommandées)
     const defaults = catalogApps.filter(a => a.recommended);
-    defaults.forEach(a => addAppToSelection(a));
+    defaults.forEach(a => addAppToSelection(a, { silent: true }));
+
+    updateUI();
+    renderCatalog();
+    renderCommunitySearch();
 
     if (catalogApps.length > 0) {
       updateActiveAppDock(catalogApps[0]);
@@ -1971,12 +2124,21 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     filtered.forEach(app => {
       const isSelected = selectedApps.some(s => s.id === app.id);
+      const elig = getAddEligibility(app);
+      const tooHeavy = !isSelected && elig.tooHeavy;
+      const packFull = !isSelected && elig.packFull;
+      const isDisabled = tooHeavy || packFull;
+      const displayKb = isBuiltinHubApp(app) ? 'Hub' : `${getAppDisplayKb(app)} Ko`;
+      const blockedReason = tooHeavy
+        ? `Trop lourd (${formatKb(elig.appBytes)} requis, ${formatKb(elig.remainingBytes)} libres)`
+        : (packFull ? 'Pack plein (20/20)' : '');
 
       if (isGallery) {
         const card = document.createElement('div');
-        card.className = `gallery-card ${isSelected ? 'is-selected' : ''}`;
+        card.className = `gallery-card ${isSelected ? 'is-selected' : (isDisabled ? 'is-too-heavy' : '')}`;
         card.setAttribute('data-app-id', app.id);
         card.setAttribute('tabindex', '0');
+        if (blockedReason) card.title = blockedReason;
 
         card.innerHTML = `
           <div class="w-full flex items-center justify-between text-[10px] pointer-events-none">
@@ -1990,19 +2152,21 @@ document.addEventListener('DOMContentLoaded', async () => {
 
           <div class="w-full text-center space-y-0.5 px-1 pointer-events-none">
             <h4 class="font-extrabold text-[#F8FAFC] text-xs font-mono truncate" title="${app.name}">${app.name}</h4>
-            <p class="text-[10px] text-[#94A3B8] truncate font-mono">${app.size_kb} Ko • ${app.source && app.source.includes('NumPlay') ? 'GitHub NumPlay' : (app.author || 'EquaLib')}</p>
+            <p class="text-[10px] ${tooHeavy ? 'text-red-400 font-semibold' : 'text-[#94A3B8]'} truncate font-mono">${displayKb} • ${app.source && app.source.includes('NumPlay') ? 'GitHub NumPlay' : (app.author || 'EquaLib')}</p>
           </div>
 
           <div class="w-full pt-1.5 border-t border-[#1E3A68] flex items-center justify-between gap-1">
             <button class="gallery-info-btn p-1 rounded-lg bg-[#050B14] hover:bg-[#162E56] text-[#94A3B8] hover:text-[#FFD700] border border-[#1E3A68] text-[11px] transition-all cursor-pointer font-mono" title="Détails & Touches">
               ℹ️
             </button>
-            <button class="gallery-add-btn flex-1 py-1 px-2 rounded-lg text-[10px] font-mono font-bold transition-all cursor-pointer ${
+            <button class="gallery-add-btn flex-1 py-1 px-2 rounded-lg text-[10px] font-mono font-bold transition-all ${
               isSelected 
-                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' 
-                : 'btn-cyber-gold shadow-[0_0_8px_rgba(255,215,0,0.25)]'
-            }">
-              ${isSelected ? '✓ Inclus' : '+ Ajouter'}
+                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 cursor-pointer' 
+                : (isDisabled
+                    ? 'btn-too-heavy'
+                    : 'btn-cyber-gold shadow-[0_0_8px_rgba(255,215,0,0.25)] cursor-pointer')
+            }" ${isDisabled ? 'disabled' : ''} ${blockedReason ? `title="${blockedReason}"` : ''}>
+              ${isSelected ? '✓ Inclus' : (tooHeavy ? '⛔ Trop lourd' : (packFull ? '⛔ Plein' : '+ Ajouter'))}
             </button>
           </div>
         `;
@@ -2031,12 +2195,23 @@ document.addEventListener('DOMContentLoaded', async () => {
               window.soundFx?.playHit();
               showToast(`"${app.name}" retiré du pack`, 'info');
             }
-          } else if (app.download_url && !app.data) {
-            btn.textContent = '⏳...';
-            btn.disabled = true;
-            await downloadAndAddCommunityApp(app);
           } else {
-            addAppToSelection(app);
+            const curElig = getAddEligibility(app);
+            if (!curElig.ok) {
+              addAppToSelection(app);
+              return;
+            }
+            if (app.download_url && !app.data) {
+              btn.textContent = '⏳...';
+              btn.disabled = true;
+              try {
+                await downloadAndAddCommunityApp(app);
+              } catch (err) {
+                showToast(`Erreur : ${err.message}`, 'error');
+              }
+            } else {
+              addAppToSelection(app);
+            }
           }
           updateUI();
           renderCatalog();
@@ -2047,11 +2222,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         catalogList.appendChild(card);
       } else {
         const card = document.createElement('div');
-        card.className = `hover-lift p-3 rounded-none border-2 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-[4px_4px_0px_#01040A] ${
+        card.className = `p-3 rounded-none border-2 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-[4px_4px_0px_#01040A] ${
           isSelected 
-            ? 'bg-[#09152B] border-[#FFD700] ring-2 ring-[#FFD700]/50' 
-            : 'bg-[#09152B] border-[#1B3B6F] hover:border-[#FFD700]'
+            ? 'hover-lift bg-[#09152B] border-[#FFD700] ring-2 ring-[#FFD700]/50' 
+            : (isDisabled
+                ? 'is-too-heavy bg-[#09152B] border-slate-700'
+                : 'hover-lift bg-[#09152B] border-[#1B3B6F] hover:border-[#FFD700]')
         }`;
+        card.setAttribute('data-app-id', app.id);
+        if (blockedReason) card.title = blockedReason;
 
         card.innerHTML = `
           <div class="flex items-center gap-3.5 min-w-0 cursor-pointer app-info-trigger flex-1" title="Cliquez pour afficher les commandes et détails">
@@ -2066,7 +2245,7 @@ document.addEventListener('DOMContentLoaded', async () => {
               </div>
               <p class="text-xs text-[#8EA5C8] line-clamp-1 leading-normal">&gt;_ ${app.description}</p>
               <div class="text-[11px] text-[#8EA5C8] flex items-center gap-2">
-                <span>${app.size_kb} Ko</span>
+                <span class="${tooHeavy ? 'text-red-400 font-bold' : ''}">${displayKb}</span>
                 <span>•</span>
                 <span>v${app.version}</span>
                 <span>•</span>
@@ -2080,10 +2259,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             </button>
             <button class="add-btn px-3 py-1.5 rounded-none text-xs font-mono font-bold uppercase transition-all shrink-0 ${
               isSelected 
-                ? 'bg-emerald-500/20 text-emerald-400 border-2 border-emerald-500/40 cursor-default' 
-                : 'btn-cyber-gold shadow-[3px_3px_0px_#01040A] cursor-pointer'
-            }">
-              ${isSelected ? '✓ Inclus' : '+ Ajouter'}
+                ? 'bg-emerald-500/20 text-emerald-400 border-2 border-emerald-500/40 cursor-pointer' 
+                : (isDisabled
+                    ? 'btn-too-heavy'
+                    : 'btn-cyber-gold shadow-[3px_3px_0px_#01040A] cursor-pointer')
+            }" ${isDisabled ? 'disabled' : ''} ${blockedReason ? `title="${blockedReason}"` : ''}>
+              ${isSelected ? '✓ Inclus' : (tooHeavy ? '⛔ Trop lourd' : (packFull ? '⛔ Plein' : '+ Ajouter'))}
             </button>
           </div>
         `;
@@ -2110,12 +2291,23 @@ document.addEventListener('DOMContentLoaded', async () => {
               window.soundFx?.playHit();
               showToast(`"${app.name}" retiré du pack`, 'info');
             }
-          } else if (app.download_url && !app.data) {
-            btn.textContent = '⏳...';
-            btn.disabled = true;
-            await downloadAndAddCommunityApp(app);
           } else {
-            addAppToSelection(app);
+            const curElig = getAddEligibility(app);
+            if (!curElig.ok) {
+              addAppToSelection(app);
+              return;
+            }
+            if (app.download_url && !app.data) {
+              btn.textContent = '⏳...';
+              btn.disabled = true;
+              try {
+                await downloadAndAddCommunityApp(app);
+              } catch (err) {
+                showToast(`Erreur : ${err.message}`, 'error');
+              }
+            } else {
+              addAppToSelection(app);
+            }
           }
           updateUI();
           renderCatalog();
@@ -2163,12 +2355,21 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     filtered.forEach(app => {
       const isSelected = selectedApps.some(s => s.id === app.id);
+      const elig = getAddEligibility(app);
+      const tooHeavy = !isSelected && elig.tooHeavy;
+      const packFull = !isSelected && elig.packFull;
+      const isDisabled = tooHeavy || packFull;
+      const displayKb = isBuiltinHubApp(app) ? 'Hub' : `${getAppDisplayKb(app)} Ko`;
+      const blockedReason = tooHeavy
+        ? `Trop lourd (${formatKb(elig.appBytes)} requis, ${formatKb(elig.remainingBytes)} libres)`
+        : (packFull ? 'Pack plein (20/20)' : '');
 
       if (isGallery) {
         const card = document.createElement('div');
-        card.className = `gallery-card ${isSelected ? 'is-selected' : ''}`;
+        card.className = `gallery-card ${isSelected ? 'is-selected' : (isDisabled ? 'is-too-heavy' : '')}`;
         card.setAttribute('data-app-id', app.id);
         card.setAttribute('tabindex', '0');
+        if (blockedReason) card.title = blockedReason;
 
         card.innerHTML = `
           <div class="w-full flex items-center justify-between text-[10px] pointer-events-none">
@@ -2182,19 +2383,21 @@ document.addEventListener('DOMContentLoaded', async () => {
 
           <div class="w-full text-center space-y-0.5 px-1 pointer-events-none">
             <h4 class="font-heading font-extrabold text-[#F8FAFC] text-xs uppercase tracking-wide truncate" title="${app.name}">${app.name}</h4>
-            <p class="text-[10px] text-[#8EA5C8] truncate font-mono">&gt;_ ${app.size_kb} Ko • ${app.author || 'Communauté'}</p>
+            <p class="text-[10px] ${tooHeavy ? 'text-red-400 font-semibold' : 'text-[#8EA5C8]'} truncate font-mono">&gt;_ ${displayKb} • ${app.author || 'Communauté'}</p>
           </div>
 
           <div class="w-full pt-1.5 border-t-2 border-[#1B3B6F] flex items-center justify-between gap-1">
             <button class="gallery-info-btn p-1 rounded-none bg-[#030814] hover:bg-[#11264B] text-[#8EA5C8] hover:text-[#FFD700] border-2 border-[#1B3B6F] text-[11px] transition-all cursor-pointer font-mono font-bold shadow-[1px_1px_0px_#01040A]" title="Détails">
               ℹ️
             </button>
-            <button class="gallery-dl-btn flex-1 py-1 px-2 rounded-none text-[10px] font-heading font-extrabold uppercase tracking-wide transition-all cursor-pointer ${
+            <button class="gallery-dl-btn flex-1 py-1 px-2 rounded-none text-[10px] font-heading font-extrabold uppercase tracking-wide transition-all ${
               isSelected 
                 ? 'bg-emerald-500/20 text-emerald-400 border-2 border-emerald-500/40 cursor-default' 
-                : 'btn-cyber-blue shadow-[2px_2px_0px_#01040A]'
-            }">
-              ${isSelected ? '✓ Inclus' : '+ Pack'}
+                : (isDisabled
+                    ? 'btn-too-heavy'
+                    : 'btn-cyber-blue shadow-[2px_2px_0px_#01040A] cursor-pointer')
+            }" ${isDisabled ? 'disabled' : ''} ${blockedReason ? `title="${blockedReason}"` : ''}>
+              ${isSelected ? '✓ Inclus' : (tooHeavy ? '⛔ Trop lourd' : (packFull ? '⛔ Plein' : '+ Pack'))}
             </button>
           </div>
         `;
@@ -2213,9 +2416,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
 
         const btn = card.querySelector('.gallery-dl-btn');
-        if (!isSelected) {
+        if (!isSelected && !isDisabled) {
           btn?.addEventListener('click', async (e) => {
             e.stopPropagation();
+            const curElig = getAddEligibility(app);
+            if (!curElig.ok) {
+              addAppToSelection(app);
+              return;
+            }
             btn.innerHTML = `<span class="inline-block animate-spin mr-1">⏳</span>...`;
             btn.disabled = true;
             try {
@@ -2237,8 +2445,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         card.className = `p-3 rounded-none border-2 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-[4px_4px_0px_#01040A] ${
           isSelected 
             ? 'bg-[#09152B] border-[#FFD700] ring-2 ring-[#FFD700]/50' 
-            : 'bg-[#09152B] border-[#1B3B6F] hover:border-[#FFD700]'
+            : (isDisabled
+                ? 'is-too-heavy bg-[#09152B] border-slate-700'
+                : 'bg-[#09152B] border-[#1B3B6F] hover:border-[#FFD700]')
         }`;
+        card.setAttribute('data-app-id', app.id);
+        if (blockedReason) card.title = blockedReason;
 
         card.innerHTML = `
           <div class="flex items-center gap-3.5 flex-1 min-w-0 cursor-pointer app-info-trigger">
@@ -2257,7 +2469,7 @@ document.addEventListener('DOMContentLoaded', async () => {
               </div>
               <p class="text-xs text-[#8EA5C8] line-clamp-1 leading-normal">&gt;_ ${app.description}</p>
               <div class="text-[11px] text-[#8EA5C8] flex items-center gap-2">
-                <span>${app.size_kb} Ko</span>
+                <span class="${tooHeavy ? 'text-red-400 font-bold' : ''}">${displayKb}</span>
                 <span>•</span>
                 <span>${app.category}</span>
                 <span>•</span>
@@ -2268,9 +2480,11 @@ document.addEventListener('DOMContentLoaded', async () => {
           <button class="dl-app-btn px-3 py-1.5 rounded-none text-xs font-heading font-bold uppercase tracking-wide transition-all shrink-0 ${
             isSelected 
               ? 'bg-emerald-500/20 text-emerald-400 border-2 border-emerald-500/40 cursor-default' 
-              : 'btn-cyber-blue shadow-[3px_3px_0px_#01040A] cursor-pointer'
-          }">
-            ${isSelected ? '✓ Dans le Pack' : '⬇️ Ajouter au Pack'}
+              : (isDisabled
+                  ? 'btn-too-heavy'
+                  : 'btn-cyber-blue shadow-[3px_3px_0px_#01040A] cursor-pointer')
+          }" ${isDisabled ? 'disabled' : ''} ${blockedReason ? `title="${blockedReason}"` : ''}>
+            ${isSelected ? '✓ Dans le Pack' : (tooHeavy ? '⛔ Trop lourd' : (packFull ? '⛔ Plein' : '⬇️ Ajouter au Pack'))}
           </button>
         `;
 
@@ -2282,8 +2496,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
 
         const btn = card.querySelector('.dl-app-btn');
-        if (!isSelected) {
+        if (!isSelected && !isDisabled) {
           btn?.addEventListener('click', async () => {
+            const curElig = getAddEligibility(app);
+            if (!curElig.ok) {
+              addAppToSelection(app);
+              return;
+            }
             btn.innerHTML = `<span class="inline-block animate-spin mr-1">⏳</span> Téléchargement...`;
             btn.disabled = true;
 
@@ -2307,6 +2526,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Téléchargement effectif du fichier .nws depuis le web
   async function downloadAndAddCommunityApp(app) {
+    const preElig = getAddEligibility(app);
+    if (!preElig.ok) {
+      window.soundFx?.playHit();
+      const msg = preElig.tooHeavy
+        ? `"${app.name}" est trop lourd (${formatKb(preElig.appBytes)} requis, ${formatKb(preElig.remainingBytes)} libres).`
+        : 'Limite atteinte (maximum 20 applications par bundle)';
+      showToast(msg, 'warning');
+      return false;
+    }
+
     let fileBuffer;
     try {
       const res = await fetch(app.download_url);
@@ -2333,6 +2562,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       author: app.author,
       version: app.version,
       size_kb: app.size_kb || Math.max(1, Math.round(fileBuffer.byteLength / 1024)),
+      bin_kb: app.bin_kb,
       category: app.category,
       format: app.format || 'NWS',
       description: app.description,
@@ -2345,8 +2575,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       data: new Uint8Array(fileBuffer)
     };
 
-    addAppToSelection(appObj);
+    if (!addAppToSelection(appObj)) return false;
     showToast(`✓ "${app.name}" téléchargé et ajouté à votre Pack EquaLib !`, 'success');
+    return true;
   }
 
   // Écouteur de saisie dans la barre de recherche
@@ -2419,10 +2650,13 @@ document.addEventListener('DOMContentLoaded', async () => {
           data: new Uint8Array(buffer)
         };
 
-        addAppToSelection(customApp);
-        showToast(`✓ "${customApp.name}" téléchargé et ajouté au pack !`, 'success');
-        importUrlInput.value = '';
-        switchTab('catalog');
+        if (addAppToSelection(customApp)) {
+          showToast(`✓ "${customApp.name}" téléchargé et ajouté au pack !`, 'success');
+          importUrlInput.value = '';
+          switchTab('catalog');
+          renderCatalog();
+          renderCommunitySearch();
+        }
       } catch (err) {
         showToast(`Échec du téléchargement : ${err.message}`, 'error');
       } finally {
@@ -2433,17 +2667,25 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // ==================== GESTION DE LA SÉLECTION (LE PACK) ====================
-  function addAppToSelection(app) {
-    if (selectedApps.length >= 20) {
-      window.soundFx?.playHit();
-      showToast('Limite atteinte (maximum 20 applications par bundle)', 'warning');
-      return;
+  function addAppToSelection(app, opts = {}) {
+    const elig = getAddEligibility(app);
+    if (elig.reason === 'already_selected' || elig.reason === 'invalid') return false;
+    if (!elig.ok) {
+      if (!opts.silent) {
+        window.soundFx?.playHit();
+        if (elig.tooHeavy) {
+          showToast(`"${app.name}" est trop lourd (${formatKb(elig.appBytes)} requis, ${formatKb(elig.remainingBytes)} libres).`, 'warning');
+        } else {
+          showToast('Limite atteinte (maximum 20 applications par bundle)', 'warning');
+        }
+      }
+      return false;
     }
-    if (selectedApps.some(s => s.id === app.id)) return;
 
     selectedApps.push({...app});
-    window.soundFx?.playScore();
+    if (!opts.silent) window.soundFx?.playScore();
     updateUI();
+    return true;
   }
 
   function renderSelection() {
@@ -2568,10 +2810,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   function updateMemoryUsage() {
-    const totalBytes = selectedApps.reduce((acc, app) => acc + (app.size_kb * 1024), 0);
+    const { maxBytes, usedBytes } = getFlashStats();
+    const totalBytes = usedBytes;
     const mbUsed = (totalBytes / (1024 * 1024)).toFixed(2);
-    const mbTotal = (MAX_FLASH_BYTES / (1024 * 1024)).toFixed(2);
-    const percent = Math.min(100, Math.round((totalBytes / MAX_FLASH_BYTES) * 100));
+    const mbTotal = (maxBytes / (1024 * 1024)).toFixed(2);
+    const percent = Math.min(100, Math.round((totalBytes / maxBytes) * 100));
 
     memoryText.textContent = `${mbUsed} Mo / ${mbTotal} Mo`;
     memoryPercent.textContent = `${percent}%`;
@@ -2580,17 +2823,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     const slotsRemainingText = document.getElementById('slots-remaining-text');
     if (slotsRemainingText) {
       const freeSlots = Math.max(0, 20 - selectedApps.length);
-      slotsRemainingText.textContent = `${freeSlots} slot${freeSlots > 1 ? 's' : ''} libre${freeSlots > 1 ? 's' : ''}`;
-      if (freeSlots === 0) {
+      if (totalBytes > maxBytes) {
+        slotsRemainingText.textContent = `Dépassement Flash (+${formatKb(totalBytes - maxBytes)})`;
         slotsRemainingText.className = 'text-red-400 font-bold';
-      } else if (freeSlots <= 2) {
-        slotsRemainingText.className = 'text-amber-400 font-bold';
       } else {
-        slotsRemainingText.className = 'text-emerald-400';
+        slotsRemainingText.textContent = `${freeSlots} slot${freeSlots > 1 ? 's' : ''} libre${freeSlots > 1 ? 's' : ''}`;
+        if (freeSlots === 0) {
+          slotsRemainingText.className = 'text-red-400 font-bold';
+        } else if (freeSlots <= 2) {
+          slotsRemainingText.className = 'text-amber-400 font-bold';
+        } else {
+          slotsRemainingText.className = 'text-emerald-400';
+        }
       }
     }
 
-    if (percent > 90) {
+    if (totalBytes > maxBytes || percent > 90) {
       memoryProgressBar.className = 'h-full transition-all rounded bg-[#f85149]';
     } else if (percent > 70) {
       memoryProgressBar.className = 'h-full transition-all rounded bg-[#FFBB00]';
@@ -2669,15 +2917,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         customApp.category = 'Jeu / Arcade';
       }
 
-      addAppToSelection(customApp);
-      if (format === 'BIN') {
-        showToast(`⚠️ "${file.name}" (.bin) ajouté. Note : pour le multi-pack, importez plutôt le .nwa d'origine pour éviter une erreur d'adresse !`, 'warning');
-      } else if (format === 'NWA') {
-        showToast(`✓ "${file.name}" (.nwa) ajouté ! Liaison mémoire automatique activée.`, 'success');
-      } else {
-        showToast(`✓ "${file.name}" ajouté avec succès à votre Pack !`, 'success');
+      if (addAppToSelection(customApp)) {
+        if (format === 'BIN') {
+          showToast(`⚠️ "${file.name}" (.bin) ajouté. Note : pour le multi-pack, importez plutôt le .nwa d'origine pour éviter une erreur d'adresse !`, 'warning');
+        } else if (format === 'NWA') {
+          showToast(`✓ "${file.name}" (.nwa) ajouté ! Liaison mémoire automatique activée.`, 'success');
+        } else {
+          showToast(`✓ "${file.name}" ajouté avec succès à votre Pack !`, 'success');
+        }
+        renderCatalog();
+        renderCommunitySearch();
+        switchTab('catalog');
       }
-      switchTab('catalog');
     }
   }
 
@@ -2745,6 +2996,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   downloadBtn.addEventListener('click', async () => {
+    const { usedBytes, maxBytes } = getFlashStats();
+    if (usedBytes > maxBytes) {
+      window.soundFx?.playHit();
+      showToast(`Pack trop lourd pour la Flash (${(usedBytes / 1048576).toFixed(2)} Mo > ${(maxBytes / 1048576).toFixed(2)} Mo). Retirez une application.`, 'error');
+      return;
+    }
     try {
       await ensurePackPayloads(selectedApps);
     } catch (err) {
@@ -2908,6 +3165,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         animateWallpaper: userSettings.animateWallpaper !== false,
         customWallpaper: wpBytes
       });
+
+      const slotLimit = getMaxFlashBytes();
+      if (bundle.totalBytes > slotLimit) {
+        throw new Error(`Le pack généré (${(bundle.totalBytes / 1048576).toFixed(2)} Mo) dépasse la mémoire Flash disponible (${(slotLimit / 1048576).toFixed(2)} Mo). Retirez une application.`);
+      }
 
       progressText.textContent = 'Préparation du flash USB...';
 

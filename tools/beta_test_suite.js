@@ -1566,6 +1566,38 @@ describe('7. Compilation et Validité Syntaxique des Jeux Python (.NWS)', () => 
         global.window.userSettings.manualModel = 'N0110';
         await flashHandler();
         assert.strictEqual(flashedSlot, 0x90600000, 'Flash direct d une N0115 doit cibler le slot 0x90600000 sans être écrasé vers N0110');
+
+        // 6. Test limitation mémoire Flash & grisement des apps trop lourdes
+        global.window.usb.isConnected = false;
+        global.window.usb.maxFlashBytes = 0;
+        global.window.setTargetModel('N0120', false);
+        const memText = getOrCreateElement('memory-text');
+        assert(memText.textContent.includes('2.44 Mo'), `Jauge N0120 doit afficher 2.44 Mo (reçu: ${memText.textContent})`);
+        const cardFnafWorld = catalogList.children.find(c => c.getAttribute('data-app-id') === 'np_fnafworld');
+        assert(cardFnafWorld && cardFnafWorld.className.includes('is-too-heavy'), 'np_fnafworld doit être grisé (is-too-heavy)');
+        assert(cardFnafWorld.innerHTML.includes('⛔ Trop lourd') && cardFnafWorld.innerHTML.includes('disabled'), 'Bouton np_fnafworld doit être désactivé');
+
+        const badgeCount = getOrCreateElement('app-count-badge');
+        const beforeCountText = badgeCount.textContent;
+        cardFnafWorld.listeners['mouseenter']?.forEach(fn => fn());
+        const dockActionBtn = getOrCreateElement('dock-action-btn');
+        assert.strictEqual(dockActionBtn.disabled, true, 'dock-action-btn doit être désactivé pour app trop lourde');
+        await (dockActionBtn.listeners['click']?.[0] || (() => {}))();
+        assert.strictEqual(badgeCount.textContent, beforeCountText, 'App trop lourde ne doit pas être ajoutée au pack');
+
+        const searchResultsList = getOrCreateElement('search-results-list');
+        const searchHeavyCard = searchResultsList.children.find(c => c.className.includes('is-too-heavy'));
+        assert(searchHeavyCard && searchHeavyCard.innerHTML.includes('Trop lourd'), 'Onglet communauté doit griser les apps trop lourdes');
+
+        // Vider le pack libère la place pour np_fnaf3 sur N0120, puis passer sur N0110 grise np_deltarune
+        getOrCreateElement('btn-pack-clear').click();
+        const cardFnaf3AfterClear = catalogList.children.find(c => c.getAttribute('data-app-id') === 'np_fnaf3');
+        assert(cardFnaf3AfterClear && !cardFnaf3AfterClear.className.includes('is-too-heavy'), 'np_fnaf3 doit redevenir ajoutable pack vide sur N0120');
+
+        global.window.setTargetModel('N0110', false);
+        assert(memText.textContent.includes('1.94 Mo'), `Jauge N0110 doit afficher 1.94 Mo (reçu: ${memText.textContent})`);
+        const cardDeltarune110 = catalogList.children.find(c => c.getAttribute('data-app-id') === 'np_deltarune');
+        assert(cardDeltarune110 && cardDeltarune110.className.includes('is-too-heavy'), 'np_deltarune (1074 Ko > 904 Ko) doit être grisé sur N0110');
       } finally {
         global.document = originalDocument;
         global.window = originalWindow;

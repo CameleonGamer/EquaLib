@@ -256,7 +256,8 @@
       "nwa",
       "sandbox"
     ],
-    "icon_url": "assets/icons/numplay/numblocks.png"
+    "icon_url": "assets/icons/numplay/numblocks.png",
+    "bin_kb": 553
   },
   {
     "id": "comm_np_hollowknight",
@@ -281,7 +282,8 @@
       "nwa",
       "plateforme"
     ],
-    "icon_url": "assets/icons/numplay/hollowknight.png"
+    "icon_url": "assets/icons/numplay/hollowknight.png",
+    "bin_kb": 1975
   },
   {
     "id": "comm_np_numdrive",
@@ -305,7 +307,8 @@
       "nwa",
       "course"
     ],
-    "icon_url": "assets/icons/numplay/numdrive.png"
+    "icon_url": "assets/icons/numplay/numdrive.png",
+    "bin_kb": 222
   },
   {
     "id": "comm_np_celeste",
@@ -329,7 +332,8 @@
       "nwa",
       "plateforme"
     ],
-    "icon_url": "assets/icons/numplay/celeste.png"
+    "icon_url": "assets/icons/numplay/celeste.png",
+    "bin_kb": 1969
   },
   {
     "id": "comm_np_balatro",
@@ -353,7 +357,8 @@
       "nwa",
       "stratégie"
     ],
-    "icon_url": "assets/icons/numplay/balatro.png"
+    "icon_url": "assets/icons/numplay/balatro.png",
+    "bin_kb": 256
   },
   {
     "id": "comm_np_undertale",
@@ -377,7 +382,8 @@
       "nwa",
       "rpg"
     ],
-    "icon_url": "assets/icons/numplay/undertale.png"
+    "icon_url": "assets/icons/numplay/undertale.png",
+    "bin_kb": 1651
   },
   {
     "id": "comm_np_numdash",
@@ -401,7 +407,8 @@
       "nwa",
       "plateforme"
     ],
-    "icon_url": "assets/icons/numplay/numdash.png"
+    "icon_url": "assets/icons/numplay/numdash.png",
+    "bin_kb": 689
   },
   {
     "id": "comm_np_fnf",
@@ -426,7 +433,8 @@
       "nwa",
       "arcade"
     ],
-    "icon_url": "assets/icons/numplay/fnf.png"
+    "icon_url": "assets/icons/numplay/fnf.png",
+    "bin_kb": 1813
   },
   {
     "id": "comm_np_buckshot",
@@ -451,7 +459,8 @@
       "nwa",
       "horreur"
     ],
-    "icon_url": "assets/icons/numplay/buckshot.png"
+    "icon_url": "assets/icons/numplay/buckshot.png",
+    "bin_kb": 251
   },
   {
     "id": "comm_np_angrybirds",
@@ -476,7 +485,8 @@
       "nwa",
       "arcade"
     ],
-    "icon_url": "assets/icons/numplay/angrybirds.png"
+    "icon_url": "assets/icons/numplay/angrybirds.png",
+    "bin_kb": 1688
   },
   {
     "id": "comm_np_crossyroad",
@@ -501,7 +511,8 @@
       "nwa",
       "arcade"
     ],
-    "icon_url": "assets/icons/numplay/crossyroad.png"
+    "icon_url": "assets/icons/numplay/crossyroad.png",
+    "bin_kb": 22
   },
   {
     "id": "comm_np_subway",
@@ -526,7 +537,8 @@
       "nwa",
       "arcade"
     ],
-    "icon_url": "assets/icons/numplay/subway.png"
+    "icon_url": "assets/icons/numplay/subway.png",
+    "bin_kb": 1609
   },
   {
     "id": "comm_np_portal",
@@ -551,7 +563,8 @@
       "nwa",
       "puzzle"
     ],
-    "icon_url": "assets/icons/numplay/portal.png"
+    "icon_url": "assets/icons/numplay/portal.png",
+    "bin_kb": 36
   },
   {
     "id": "comm_np_jetpackjoyride",
@@ -576,7 +589,8 @@
       "nwa",
       "arcade"
     ],
-    "icon_url": "assets/icons/numplay/jetpackjoyride.png"
+    "icon_url": "assets/icons/numplay/jetpackjoyride.png",
+    "bin_kb": 633
   },
   {
     "id": "comm_np_blockblast",
@@ -601,7 +615,8 @@
       "nwa",
       "puzzle"
     ],
-    "icon_url": "assets/icons/numplay/blockblast.png"
+    "icon_url": "assets/icons/numplay/blockblast.png",
+    "bin_kb": 29
   },
   {
     "id": "comm_np_monkeymart",
@@ -626,7 +641,8 @@
       "nwa",
       "stratégie"
     ],
-    "icon_url": "assets/icons/numplay/monkeymart.png"
+    "icon_url": "assets/icons/numplay/monkeymart.png",
+    "bin_kb": 587
   },
   {
     "id": "comm_np_suika",
@@ -651,7 +667,8 @@
       "nwa",
       "puzzle"
     ],
-    "icon_url": "assets/icons/numplay/suika.png"
+    "icon_url": "assets/icons/numplay/suika.png",
+    "bin_kb": 32
   },
   {
     "id": "comm_np_pvz",
@@ -676,7 +693,8 @@
       "nwa",
       "stratégie"
     ],
-    "icon_url": "assets/icons/numplay/pvz.png"
+    "icon_url": "assets/icons/numplay/pvz.png",
+    "bin_kb": 1668
   },
   {
     "id": "comm_tetris",
@@ -700,7 +718,8 @@
       "nwa",
       "puzzle"
     ],
-    "icon_url": "assets/icons/numplay/tetris.png"
+    "icon_url": "assets/icons/numplay/tetris.png",
+    "bin_kb": 36
   },
   {
     "id": "comm_np_tombofthemask",
@@ -725,7 +744,8 @@
       "nwa",
       "arcade"
     ],
-    "icon_url": "assets/icons/numplay/tombofthemask.png"
+    "icon_url": "assets/icons/numplay/tombofthemask.png",
+    "bin_kb": 193
   },
   {
     "id": "comm_np_doodlejump",
@@ -750,7 +770,8 @@
       "nwa",
       "arcade"
     ],
-    "icon_url": "assets/icons/numplay/doodlejump.png"
+    "icon_url": "assets/icons/numplay/doodlejump.png",
+    "bin_kb": 123
   },
   {
     "id": "comm_np_stickmanhook",
@@ -775,7 +796,8 @@
       "nwa",
       "arcade"
     ],
-    "icon_url": "assets/icons/numplay/stickmanhook.png"
+    "icon_url": "assets/icons/numplay/stickmanhook.png",
+    "bin_kb": 186
   },
   {
     "id": "comm_np_pacman",
@@ -800,7 +822,8 @@
       "nwa",
       "arcade"
     ],
-    "icon_url": "assets/icons/numplay/pacman.png"
+    "icon_url": "assets/icons/numplay/pacman.png",
+    "bin_kb": 20
   },
   {
     "id": "comm_np_dune",
@@ -824,7 +847,8 @@
       "nwa",
       "course"
     ],
-    "icon_url": "assets/icons/numplay/dune.png"
+    "icon_url": "assets/icons/numplay/dune.png",
+    "bin_kb": 308
   },
   {
     "id": "comm_flappy",
@@ -849,7 +873,8 @@
       "nwa",
       "arcade"
     ],
-    "icon_url": "assets/icons/numplay/flappybird.png"
+    "icon_url": "assets/icons/numplay/flappybird.png",
+    "bin_kb": 22
   },
   {
     "id": "comm_np_doom",
@@ -873,7 +898,8 @@
       "nwa",
       "arcade"
     ],
-    "icon_url": "assets/icons/numplay/doom.png"
+    "icon_url": "assets/icons/numplay/doom.png",
+    "bin_kb": 1722
   },
   {
     "id": "comm_np_twoplayer",
@@ -898,7 +924,8 @@
       "nwa",
       "multijoueur"
     ],
-    "icon_url": "assets/icons/numplay/twoplayer.png"
+    "icon_url": "assets/icons/numplay/twoplayer.png",
+    "bin_kb": 36
   },
   {
     "id": "comm_np_uno",
@@ -922,7 +949,8 @@
       "nwa",
       "stratégie"
     ],
-    "icon_url": "assets/icons/numplay/uno.png"
+    "icon_url": "assets/icons/numplay/uno.png",
+    "bin_kb": 51
   },
   {
     "id": "comm_np_chess",
@@ -947,7 +975,8 @@
       "nwa",
       "stratégie"
     ],
-    "icon_url": "assets/icons/numplay/chess.png"
+    "icon_url": "assets/icons/numplay/chess.png",
+    "bin_kb": 24
   },
   {
     "id": "comm_np_mahjong",
@@ -971,7 +1000,8 @@
       "nwa",
       "puzzle"
     ],
-    "icon_url": "assets/icons/numplay/mahjong.png"
+    "icon_url": "assets/icons/numplay/mahjong.png",
+    "bin_kb": 32
   },
   {
     "id": "comm_np_flappydunk",
@@ -996,7 +1026,8 @@
       "nwa",
       "arcade"
     ],
-    "icon_url": "assets/icons/numplay/flappydunk.png"
+    "icon_url": "assets/icons/numplay/flappydunk.png",
+    "bin_kb": 327
   },
   {
     "id": "comm_fnaf",
@@ -1021,7 +1052,8 @@
       "nwa",
       "horreur"
     ],
-    "icon_url": "assets/icons/numplay/fnaf.png"
+    "icon_url": "assets/icons/numplay/fnaf.png",
+    "bin_kb": 1045
   },
   {
     "id": "comm_dino",
@@ -1046,7 +1078,8 @@
       "nwa",
       "arcade"
     ],
-    "icon_url": "assets/icons/numplay/dinorun.png"
+    "icon_url": "assets/icons/numplay/dinorun.png",
+    "bin_kb": 22
   },
   {
     "id": "comm_np_donkeykong",
@@ -1071,7 +1104,8 @@
       "nwa",
       "plateforme"
     ],
-    "icon_url": "assets/icons/numplay/donkeykong.png"
+    "icon_url": "assets/icons/numplay/donkeykong.png",
+    "bin_kb": 57
   },
   {
     "id": "comm_np_coreball",
@@ -1096,7 +1130,8 @@
       "nwa",
       "arcade"
     ],
-    "icon_url": "assets/icons/numplay/coreball.png"
+    "icon_url": "assets/icons/numplay/coreball.png",
+    "bin_kb": 23
   },
   {
     "id": "comm_np_numpowder",
@@ -1120,7 +1155,8 @@
       "nwa",
       "sandbox"
     ],
-    "icon_url": "assets/icons/numplay/numpowder.png"
+    "icon_url": "assets/icons/numplay/numpowder.png",
+    "bin_kb": 400
   },
   {
     "id": "comm_snake",
@@ -1144,7 +1180,8 @@
       "nwa",
       "arcade"
     ],
-    "icon_url": "assets/icons/numplay/snake.png"
+    "icon_url": "assets/icons/numplay/snake.png",
+    "bin_kb": 25
   },
   {
     "id": "comm_np_sonic",
@@ -1169,7 +1206,8 @@
       "nwa",
       "plateforme"
     ],
-    "icon_url": "assets/icons/numplay/sonic.png"
+    "icon_url": "assets/icons/numplay/sonic.png",
+    "bin_kb": 858
   },
   {
     "id": "comm_np_towerblock",
@@ -1194,7 +1232,8 @@
       "nwa",
       "arcade"
     ],
-    "icon_url": "assets/icons/numplay/towerblock.png"
+    "icon_url": "assets/icons/numplay/towerblock.png",
+    "bin_kb": 26
   },
   {
     "id": "comm_np_isaac",
@@ -1219,7 +1258,8 @@
       "nwa",
       "rpg"
     ],
-    "icon_url": "assets/icons/numplay/isaac.png"
+    "icon_url": "assets/icons/numplay/isaac.png",
+    "bin_kb": 1143
   },
   {
     "id": "comm_space_invaders",
@@ -1244,7 +1284,8 @@
       "nwa",
       "arcade"
     ],
-    "icon_url": "assets/icons/numplay/invaders.png"
+    "icon_url": "assets/icons/numplay/invaders.png",
+    "bin_kb": 15
   },
   {
     "id": "comm_np_hillclimb",
@@ -1269,7 +1310,8 @@
       "nwa",
       "course"
     ],
-    "icon_url": "assets/icons/numplay/hillclimb.png"
+    "icon_url": "assets/icons/numplay/hillclimb.png",
+    "bin_kb": 1296
   },
   {
     "id": "comm_breakout",
@@ -1294,7 +1336,8 @@
       "nwa",
       "arcade"
     ],
-    "icon_url": "assets/icons/numplay/breakout.png"
+    "icon_url": "assets/icons/numplay/breakout.png",
+    "bin_kb": 17
   },
   {
     "id": "comm_2048",
@@ -1319,7 +1362,8 @@
       "nwa",
       "puzzle"
     ],
-    "icon_url": "assets/icons/numplay/g2048.png"
+    "icon_url": "assets/icons/numplay/g2048.png",
+    "bin_kb": 16
   },
   {
     "id": "comm_np_polytrack",
@@ -1343,7 +1387,8 @@
       "nwa",
       "course"
     ],
-    "icon_url": "assets/icons/numplay/polytrack.png"
+    "icon_url": "assets/icons/numplay/polytrack.png",
+    "bin_kb": 1264
   },
   {
     "id": "comm_puissance4",
@@ -1368,7 +1413,8 @@
       "nwa",
       "stratégie"
     ],
-    "icon_url": "assets/icons/numplay/connectfour.png"
+    "icon_url": "assets/icons/numplay/connectfour.png",
+    "bin_kb": 20
   },
   {
     "id": "comm_np_championisland",
@@ -1393,7 +1439,8 @@
       "nwa",
       "arcade"
     ],
-    "icon_url": "assets/icons/numplay/championisland.png"
+    "icon_url": "assets/icons/numplay/championisland.png",
+    "bin_kb": 1977
   },
   {
     "id": "comm_np_uttt",
@@ -1418,7 +1465,8 @@
       "nwa",
       "stratégie"
     ],
-    "icon_url": "assets/icons/numplay/uttt.png"
+    "icon_url": "assets/icons/numplay/uttt.png",
+    "bin_kb": 27
   },
   {
     "id": "comm_np_finalearth2",
@@ -1443,7 +1491,8 @@
       "nwa",
       "stratégie"
     ],
-    "icon_url": "assets/icons/numplay/finalearth2.png"
+    "icon_url": "assets/icons/numplay/finalearth2.png",
+    "bin_kb": 759
   },
   {
     "id": "comm_np_sokoban",
@@ -1467,7 +1516,8 @@
       "nwa",
       "puzzle"
     ],
-    "icon_url": "assets/icons/numplay/sokoban.png"
+    "icon_url": "assets/icons/numplay/sokoban.png",
+    "bin_kb": 31
   },
   {
     "id": "comm_np_leveldevil",
@@ -1492,7 +1542,8 @@
       "nwa",
       "plateforme"
     ],
-    "icon_url": "assets/icons/numplay/leveldevil.png"
+    "icon_url": "assets/icons/numplay/leveldevil.png",
+    "bin_kb": 74
   },
   {
     "id": "comm_np_sudoku",
@@ -1516,7 +1567,8 @@
       "nwa",
       "puzzle"
     ],
-    "icon_url": "assets/icons/numplay/sudoku.png"
+    "icon_url": "assets/icons/numplay/sudoku.png",
+    "bin_kb": 27
   },
   {
     "id": "comm_np_cookieclicker",
@@ -1541,7 +1593,8 @@
       "nwa",
       "stratégie"
     ],
-    "icon_url": "assets/icons/numplay/cookieclicker.png"
+    "icon_url": "assets/icons/numplay/cookieclicker.png",
+    "bin_kb": 1151
   },
   {
     "id": "comm_minesweeper",
@@ -1566,7 +1619,8 @@
       "nwa",
       "puzzle"
     ],
-    "icon_url": "assets/icons/numplay/minesweeper.png"
+    "icon_url": "assets/icons/numplay/minesweeper.png",
+    "bin_kb": 20
   },
   {
     "id": "comm_np_meowdoku",
@@ -1590,7 +1644,8 @@
       "nwa",
       "puzzle"
     ],
-    "icon_url": "assets/icons/numplay/meowdoku.png"
+    "icon_url": "assets/icons/numplay/meowdoku.png",
+    "bin_kb": 47
   },
   {
     "id": "comm_np_paperclips",
@@ -1615,7 +1670,8 @@
       "nwa",
       "stratégie"
     ],
-    "icon_url": "assets/icons/numplay/paperclips.png"
+    "icon_url": "assets/icons/numplay/paperclips.png",
+    "bin_kb": 114
   },
   {
     "id": "comm_np_solitaire",
@@ -1639,7 +1695,8 @@
       "nwa",
       "stratégie"
     ],
-    "icon_url": "assets/icons/numplay/solitaire.png"
+    "icon_url": "assets/icons/numplay/solitaire.png",
+    "bin_kb": 22
   },
   {
     "id": "comm_np_badtime",
@@ -1664,7 +1721,8 @@
       "nwa",
       "rpg"
     ],
-    "icon_url": "assets/icons/numplay/badtime.png"
+    "icon_url": "assets/icons/numplay/badtime.png",
+    "bin_kb": 144
   },
   {
     "id": "comm_np_rider",
@@ -1688,7 +1746,8 @@
       "nwa",
       "course"
     ],
-    "icon_url": "assets/icons/numplay/rider.png"
+    "icon_url": "assets/icons/numplay/rider.png",
+    "bin_kb": 362
   },
   {
     "id": "comm_np_numvisuals",
@@ -1712,7 +1771,8 @@
       "nwa",
       "outils"
     ],
-    "icon_url": "assets/icons/numplay/numvisuals.png"
+    "icon_url": "assets/icons/numplay/numvisuals.png",
+    "bin_kb": 87
   },
   {
     "id": "comm_np_snowrider",
@@ -1737,7 +1797,8 @@
       "nwa",
       "course"
     ],
-    "icon_url": "assets/icons/numplay/snowrider.png"
+    "icon_url": "assets/icons/numplay/snowrider.png",
+    "bin_kb": 409
   },
   {
     "id": "comm_np_templerun",
@@ -1762,7 +1823,8 @@
       "nwa",
       "arcade"
     ],
-    "icon_url": "assets/icons/numplay/templerun.png"
+    "icon_url": "assets/icons/numplay/templerun.png",
+    "bin_kb": 1785
   },
   {
     "id": "comm_np_fnaf2",
@@ -1787,7 +1849,8 @@
       "nwa",
       "horreur"
     ],
-    "icon_url": "assets/icons/numplay/fnaf2.png"
+    "icon_url": "assets/icons/numplay/fnaf2.png",
+    "bin_kb": 1746
   },
   {
     "id": "comm_np_famidash",
@@ -1811,7 +1874,8 @@
       "nwa",
       "plateforme"
     ],
-    "icon_url": "assets/icons/numplay/famidash.png"
+    "icon_url": "assets/icons/numplay/famidash.png",
+    "bin_kb": 1577
   },
   {
     "id": "comm_np_fnaf3",
@@ -1836,7 +1900,8 @@
       "nwa",
       "horreur"
     ],
-    "icon_url": "assets/icons/numplay/fnaf3.png"
+    "icon_url": "assets/icons/numplay/fnaf3.png",
+    "bin_kb": 1313
   },
   {
     "id": "comm_np_fnaf4",
@@ -1861,7 +1926,8 @@
       "nwa",
       "horreur"
     ],
-    "icon_url": "assets/icons/numplay/fnaf4.png"
+    "icon_url": "assets/icons/numplay/fnaf4.png",
+    "bin_kb": 1234
   },
   {
     "id": "comm_np_clashroyale",
@@ -1886,7 +1952,8 @@
       "nwa",
       "stratégie"
     ],
-    "icon_url": "assets/icons/numplay/clashroyale.png"
+    "icon_url": "assets/icons/numplay/clashroyale.png",
+    "bin_kb": 1282
   },
   {
     "id": "comm_np_catninja",
@@ -1911,7 +1978,8 @@
       "nwa",
       "plateforme"
     ],
-    "icon_url": "assets/icons/numplay/catninja.png"
+    "icon_url": "assets/icons/numplay/catninja.png",
+    "bin_kb": 156
   },
   {
     "id": "comm_np_kingdomrush",
@@ -1936,7 +2004,8 @@
       "nwa",
       "stratégie"
     ],
-    "icon_url": "assets/icons/numplay/kingdomrush.png"
+    "icon_url": "assets/icons/numplay/kingdomrush.png",
+    "bin_kb": 1642
   },
   {
     "id": "comm_np_deltarune",
@@ -1960,7 +2029,8 @@
       "nwa",
       "rpg"
     ],
-    "icon_url": "assets/icons/numplay/deltarune.png"
+    "icon_url": "assets/icons/numplay/deltarune.png",
+    "bin_kb": 1074
   },
   {
     "id": "comm_np_fnafworld",
@@ -1985,7 +2055,8 @@
       "nwa",
       "rpg"
     ],
-    "icon_url": "assets/icons/numplay/fnafworld.png"
+    "icon_url": "assets/icons/numplay/fnafworld.png",
+    "bin_kb": 4718
   },
   {
     "id": "comm_np_mrbullet",
@@ -2010,7 +2081,8 @@
       "nwa",
       "puzzle"
     ],
-    "icon_url": "assets/icons/numplay/mrbullet.png"
+    "icon_url": "assets/icons/numplay/mrbullet.png",
+    "bin_kb": 419
   },
   {
     "id": "comm_np_numpico",
@@ -2034,7 +2106,8 @@
       "nwa",
       "émulateurs"
     ],
-    "icon_url": "assets/icons/numplay/numpico.png"
+    "icon_url": "assets/icons/numplay/numpico.png",
+    "bin_kb": 156
   },
   {
     "id": "comm_np_motox3m",
@@ -2059,7 +2132,8 @@
       "nwa",
       "course"
     ],
-    "icon_url": "assets/icons/numplay/motox3m.png"
+    "icon_url": "assets/icons/numplay/motox3m.png",
+    "bin_kb": 1824
   },
   {
     "id": "comm_np_amongus",
@@ -2084,7 +2158,8 @@
       "nwa",
       "multijoueur"
     ],
-    "icon_url": "assets/icons/numplay/amongus.png"
+    "icon_url": "assets/icons/numplay/amongus.png",
+    "bin_kb": 1563
   },
   {
     "id": "comm_np_imposter",
@@ -2108,7 +2183,8 @@
       "nwa",
       "multijoueur"
     ],
-    "icon_url": "assets/icons/numplay/imposter.png"
+    "icon_url": "assets/icons/numplay/imposter.png",
+    "bin_kb": 50
   },
   {
     "id": "comm_np_fourplayer",
@@ -2133,7 +2209,8 @@
       "nwa",
       "multijoueur"
     ],
-    "icon_url": "assets/icons/numplay/fourplayer.png"
+    "icon_url": "assets/icons/numplay/fourplayer.png",
+    "bin_kb": 75
   },
   {
     "id": "comm_np_hkfungal",
@@ -2158,7 +2235,8 @@
       "nwa",
       "plateforme"
     ],
-    "icon_url": "assets/icons/numplay/hkfungal.png"
+    "icon_url": "assets/icons/numplay/hkfungal.png",
+    "bin_kb": 1440
   },
   {
     "id": "comm_np_circloo",
@@ -2182,6 +2260,7 @@
       "nwa",
       "puzzle"
     ],
-    "icon_url": "assets/icons/numplay/circloo.png"
+    "icon_url": "assets/icons/numplay/circloo.png",
+    "bin_kb": 102
   }
 ]

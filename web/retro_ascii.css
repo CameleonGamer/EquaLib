@@ -752,6 +752,39 @@ body.hide-tooltips [data-shortcut-hint] {
   box-shadow: 4px 4px 0px #01040A, 0 0 20px rgba(255, 215, 0, 0.4) !important;
 }
 
+.gallery-card.is-too-heavy,
+.is-too-heavy {
+  opacity: 0.48 !important;
+  filter: grayscale(0.92) !important;
+  border-color: #334155 !important;
+  border-top-color: #475569 !important;
+}
+
+.gallery-card.is-too-heavy:hover,
+.gallery-card.is-too-heavy.active-hover,
+.is-too-heavy:hover {
+  transform: none !important;
+  border-color: #475569 !important;
+  border-top-color: #475569 !important;
+  box-shadow: var(--shadow-hard-md) !important;
+}
+
+.gallery-card.is-too-heavy:hover .gallery-icon-wrapper {
+  transform: none !important;
+  filter: none !important;
+}
+
+.btn-too-heavy,
+button.btn-too-heavy:disabled {
+  background: #1E293B !important;
+  color: #94A3B8 !important;
+  border: 1px solid #475569 !important;
+  box-shadow: none !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+  opacity: 0.85 !important;
+}
+
 .gallery-icon-wrapper {
   width: 3.25rem;
   height: 3.25rem;

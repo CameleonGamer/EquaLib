@@ -88,7 +88,8 @@
     "icon_initial": "🧱",
     "icon_url": "assets/icons/numplay/tetris.png",
     "color": "#8A4DFF",
-    "recommended": true
+    "recommended": true,
+    "bin_kb": 36
   },
   {
     "id": "comm_flappy",
@@ -105,7 +106,8 @@
     "icon_initial": "🐦",
     "icon_url": "assets/icons/numplay/flappybird.png",
     "color": "#4EC0CA",
-    "recommended": true
+    "recommended": true,
+    "bin_kb": 22
   },
   {
     "id": "fnaf",
@@ -122,7 +124,8 @@
     "icon_initial": "🐻",
     "icon_url": "assets/icons/numplay/fnaf.png",
     "color": "#4A3A30",
-    "recommended": false
+    "recommended": false,
+    "bin_kb": 1045
   },
   {
     "id": "dino",
@@ -139,7 +142,8 @@
     "icon_initial": "🦖",
     "icon_url": "assets/icons/numplay/dinorun.png",
     "color": "#E5E5E5",
-    "recommended": true
+    "recommended": true,
+    "bin_kb": 22
   },
   {
     "id": "comm_snake",
@@ -156,7 +160,8 @@
     "icon_initial": "🐍",
     "icon_url": "assets/icons/numplay/snake.png",
     "color": "#5B9A36",
-    "recommended": true
+    "recommended": true,
+    "bin_kb": 25
   },
   {
     "id": "space_invaders",
@@ -173,7 +178,8 @@
     "icon_initial": "👾",
     "icon_url": "assets/icons/numplay/invaders.png",
     "color": "#2B2F4A",
-    "recommended": true
+    "recommended": true,
+    "bin_kb": 15
   },
   {
     "id": "breakout",
@@ -190,7 +196,8 @@
     "icon_initial": "🧱",
     "icon_url": "assets/icons/numplay/breakout.png",
     "color": "#3A3440",
-    "recommended": true
+    "recommended": true,
+    "bin_kb": 17
   },
   {
     "id": "comm_2048",
@@ -207,7 +214,8 @@
     "icon_initial": "🔢",
     "icon_url": "assets/icons/numplay/g2048.png",
     "color": "#C9A26B",
-    "recommended": true
+    "recommended": true,
+    "bin_kb": 16
   },
   {
     "id": "puissance4",
@@ -224,7 +232,8 @@
     "icon_initial": "🟡",
     "icon_url": "assets/icons/numplay/connectfour.png",
     "color": "#2A66D0",
-    "recommended": true
+    "recommended": true,
+    "bin_kb": 20
   },
   {
     "id": "comm_minesweeper",
@@ -241,7 +250,8 @@
     "icon_initial": "💣",
     "icon_url": "assets/icons/numplay/minesweeper.png",
     "color": "#6F7C8C",
-    "recommended": true
+    "recommended": true,
+    "bin_kb": 20
   },
   {
     "id": "np_numblocks",
@@ -258,7 +268,8 @@
     "icon_initial": "⛏️",
     "icon_url": "assets/icons/numplay/numblocks.png",
     "color": "#5D9C3A",
-    "recommended": false
+    "recommended": false,
+    "bin_kb": 553
   },
   {
     "id": "np_hollowknight",
@@ -275,7 +286,8 @@
     "icon_initial": "🪲",
     "icon_url": "assets/icons/numplay/hollowknight.png",
     "color": "#4C5E7E",
-    "recommended": false
+    "recommended": false,
+    "bin_kb": 1975
   },
   {
     "id": "np_numdrive",
@@ -292,7 +304,8 @@
     "icon_initial": "🚙",
     "icon_url": "assets/icons/numplay/numdrive.png",
     "color": "#35A8F0",
-    "recommended": false
+    "recommended": false,
+    "bin_kb": 222
   },
   {
     "id": "np_celeste",
@@ -309,7 +322,8 @@
     "icon_initial": "🍓",
     "icon_url": "assets/icons/numplay/celeste.png",
     "color": "#5865C8",
-    "recommended": false
+    "recommended": false,
+    "bin_kb": 1969
   },
   {
     "id": "np_balatro",
@@ -326,7 +340,8 @@
     "icon_initial": "🃏",
     "icon_url": "assets/icons/numplay/balatro.png",
     "color": "#FE5F55",
-    "recommended": false
+    "recommended": false,
+    "bin_kb": 256
   },
   {
     "id": "np_undertale",
@@ -343,7 +358,8 @@
     "icon_initial": "❤️",
     "icon_url": "assets/icons/numplay/undertale.png",
     "color": "#3A3A46",
-    "recommended": false
+    "recommended": false,
+    "bin_kb": 1651
   },
   {
     "id": "np_numdash",
@@ -360,7 +376,8 @@
     "icon_initial": "🟦",
     "icon_url": "assets/icons/numplay/numdash.png",
     "color": "#3D6BFF",
-    "recommended": false
+    "recommended": false,
+    "bin_kb": 689
   },
   {
     "id": "np_fnf",
@@ -377,7 +394,8 @@
     "icon_initial": "🎤",
     "icon_url": "assets/icons/numplay/fnf.png",
     "color": "#3A1F5D",
-    "recommended": false
+    "recommended": false,
+    "bin_kb": 1813
   },
   {
     "id": "np_buckshot",
@@ -394,7 +412,8 @@
     "icon_initial": "🔫",
     "icon_url": "assets/icons/numplay/buckshot.png",
     "color": "#4A2A26",
-    "recommended": false
+    "recommended": false,
+    "bin_kb": 251
   },
   {
     "id": "np_angrybirds",
@@ -411,7 +430,8 @@
     "icon_initial": "🐦",
     "icon_url": "assets/icons/numplay/angrybirds.png",
     "color": "#8FD3F4",
-    "recommended": false
+    "recommended": false,
+    "bin_kb": 1688
   },
   {
     "id": "np_crossyroad",
@@ -428,7 +448,8 @@
     "icon_initial": "🐔",
     "icon_url": "assets/icons/numplay/crossyroad.png",
     "color": "#45B649",
-    "recommended": false
+    "recommended": false,
+    "bin_kb": 22
   },
   {
     "id": "np_subway",
@@ -445,7 +466,8 @@
     "icon_initial": "🏃",
     "icon_url": "assets/icons/numplay/subway.png",
     "color": "#3A8FD8",
-    "recommended": false
+    "recommended": false,
+    "bin_kb": 1609
   },
   {
     "id": "np_portal",
@@ -462,7 +484,8 @@
     "icon_initial": "🌀",
     "icon_url": "assets/icons/numplay/portal.png",
     "color": "#4A4952",
-    "recommended": false
+    "recommended": false,
+    "bin_kb": 36
   },
   {
     "id": "np_jetpackjoyride",
@@ -479,7 +502,8 @@
     "icon_initial": "🚀",
     "icon_url": "assets/icons/numplay/jetpackjoyride.png",
     "color": "#2C4A6E",
-    "recommended": false
+    "recommended": false,
+    "bin_kb": 633
   },
   {
     "id": "np_blockblast",
@@ -496,7 +520,8 @@
     "icon_initial": "🟪",
     "icon_url": "assets/icons/numplay/blockblast.png",
     "color": "#516FC5",
-    "recommended": false
+    "recommended": false,
+    "bin_kb": 29
   },
   {
     "id": "np_monkeymart",
@@ -513,7 +538,8 @@
     "icon_initial": "🐒",
     "icon_url": "assets/icons/numplay/monkeymart.png",
     "color": "#7DD86A",
-    "recommended": false
+    "recommended": false,
+    "bin_kb": 587
   },
   {
     "id": "np_suika",
@@ -530,7 +556,8 @@
     "icon_initial": "🍉",
     "icon_url": "assets/icons/numplay/suika.png",
     "color": "#F2C46A",
-    "recommended": false
+    "recommended": false,
+    "bin_kb": 32
   },
   {
     "id": "np_pvz",
@@ -547,7 +574,8 @@
     "icon_initial": "🌻",
     "icon_url": "assets/icons/numplay/pvz.png",
     "color": "#6CC04A",
-    "recommended": false
+    "recommended": false,
+    "bin_kb": 1668
   },
   {
     "id": "np_tombofthemask",
@@ -564,7 +592,8 @@
     "icon_initial": "👺",
     "icon_url": "assets/icons/numplay/tombofthemask.png",
     "color": "#3A1A78",
-    "recommended": false
+    "recommended": false,
+    "bin_kb": 193
   },
   {
     "id": "np_doodlejump",
@@ -581,7 +610,8 @@
     "icon_initial": "🦘",
     "icon_url": "assets/icons/numplay/doodlejump.png",
     "color": "#C8D84A",
-    "recommended": false
+    "recommended": false,
+    "bin_kb": 123
   },
   {
     "id": "np_stickmanhook",
@@ -598,7 +628,8 @@
     "icon_initial": "🕸️",
     "icon_url": "assets/icons/numplay/stickmanhook.png",
     "color": "#8A5CC8",
-    "recommended": false
+    "recommended": false,
+    "bin_kb": 186
   },
   {
     "id": "np_pacman",
@@ -615,7 +646,8 @@
     "icon_initial": "🟡",
     "icon_url": "assets/icons/numplay/pacman.png",
     "color": "#2A2AE0",
-    "recommended": false
+    "recommended": false,
+    "bin_kb": 20
   },
   {
     "id": "np_dune",
@@ -632,7 +664,8 @@
     "icon_initial": "🏜️",
     "icon_url": "assets/icons/numplay/dune.png",
     "color": "#8FC8E8",
-    "recommended": false
+    "recommended": false,
+    "bin_kb": 308
   },
   {
     "id": "np_doom",
@@ -649,7 +682,8 @@
     "icon_initial": "👹",
     "icon_url": "assets/icons/numplay/doom.png",
     "color": "#6B4A2E",
-    "recommended": false
+    "recommended": false,
+    "bin_kb": 1722
   },
   {
     "id": "np_twoplayer",
@@ -666,7 +700,8 @@
     "icon_initial": "👥",
     "icon_url": "assets/icons/numplay/twoplayer.png",
     "color": "#D33B3B",
-    "recommended": false
+    "recommended": false,
+    "bin_kb": 36
   },
   {
     "id": "np_uno",
@@ -683,7 +718,8 @@
     "icon_initial": "🃏",
     "icon_url": "assets/icons/numplay/uno.png",
     "color": "#1F6B4A",
-    "recommended": false
+    "recommended": false,
+    "bin_kb": 51
   },
   {
     "id": "np_chess",
@@ -700,7 +736,8 @@
     "icon_initial": "♟️",
     "icon_url": "assets/icons/numplay/chess.png",
     "color": "#7FA650",
-    "recommended": false
+    "recommended": false,
+    "bin_kb": 24
   },
   {
     "id": "np_mahjong",
@@ -717,7 +754,8 @@
     "icon_initial": "🀄",
     "icon_url": "assets/icons/numplay/mahjong.png",
     "color": "#23774D",
-    "recommended": false
+    "recommended": false,
+    "bin_kb": 32
   },
   {
     "id": "np_flappydunk",
@@ -734,7 +772,8 @@
     "icon_initial": "🏀",
     "icon_url": "assets/icons/numplay/flappydunk.png",
     "color": "#FFA53D",
-    "recommended": false
+    "recommended": false,
+    "bin_kb": 327
   },
   {
     "id": "np_donkeykong",
@@ -751,7 +790,8 @@
     "icon_initial": "🦍",
     "icon_url": "assets/icons/numplay/donkeykong.png",
     "color": "#2A1018",
-    "recommended": false
+    "recommended": false,
+    "bin_kb": 57
   },
   {
     "id": "np_coreball",
@@ -768,7 +808,8 @@
     "icon_initial": "🎯",
     "icon_url": "assets/icons/numplay/coreball.png",
     "color": "#5A5A5A",
-    "recommended": false
+    "recommended": false,
+    "bin_kb": 23
   },
   {
     "id": "np_numpowder",
@@ -785,7 +826,8 @@
     "icon_initial": "⏳",
     "icon_url": "assets/icons/numplay/numpowder.png",
     "color": "#C9A15A",
-    "recommended": false
+    "recommended": false,
+    "bin_kb": 400
   },
   {
     "id": "np_sonic",
@@ -802,7 +844,8 @@
     "icon_initial": "🦔",
     "icon_url": "assets/icons/numplay/sonic.png",
     "color": "#2E6FE0",
-    "recommended": false
+    "recommended": false,
+    "bin_kb": 858
   },
   {
     "id": "np_towerblock",
@@ -819,7 +862,8 @@
     "icon_initial": "🏗️",
     "icon_url": "assets/icons/numplay/towerblock.png",
     "color": "#D8C7E8",
-    "recommended": false
+    "recommended": false,
+    "bin_kb": 26
   },
   {
     "id": "np_isaac",
@@ -836,7 +880,8 @@
     "icon_initial": "😭",
     "icon_url": "assets/icons/numplay/isaac.png",
     "color": "#7A5A44",
-    "recommended": false
+    "recommended": false,
+    "bin_kb": 1143
   },
   {
     "id": "np_hillclimb",
@@ -853,7 +898,8 @@
     "icon_initial": "🚗",
     "icon_url": "assets/icons/numplay/hillclimb.png",
     "color": "#5BBEF0",
-    "recommended": false
+    "recommended": false,
+    "bin_kb": 1296
   },
   {
     "id": "np_polytrack",
@@ -870,7 +916,8 @@
     "icon_initial": "🏎️",
     "icon_url": "assets/icons/numplay/polytrack.png",
     "color": "#28346A",
-    "recommended": false
+    "recommended": false,
+    "bin_kb": 1264
   },
   {
     "id": "np_championisland",
@@ -887,7 +934,8 @@
     "icon_initial": "🏅",
     "icon_url": "assets/icons/numplay/championisland.png",
     "color": "#3FA9F5",
-    "recommended": false
+    "recommended": false,
+    "bin_kb": 1977
   },
   {
     "id": "np_uttt",
@@ -904,7 +952,8 @@
     "icon_initial": "❌",
     "icon_url": "assets/icons/numplay/uttt.png",
     "color": "#2B3470",
-    "recommended": false
+    "recommended": false,
+    "bin_kb": 27
   },
   {
     "id": "np_finalearth2",
@@ -921,7 +970,8 @@
     "icon_initial": "🌍",
     "icon_url": "assets/icons/numplay/finalearth2.png",
     "color": "#4B3B8F",
-    "recommended": false
+    "recommended": false,
+    "bin_kb": 759
   },
   {
     "id": "np_sokoban",
@@ -938,7 +988,8 @@
     "icon_initial": "📦",
     "icon_url": "assets/icons/numplay/sokoban.png",
     "color": "#A19555",
-    "recommended": false
+    "recommended": false,
+    "bin_kb": 31
   },
   {
     "id": "np_leveldevil",
@@ -955,7 +1006,8 @@
     "icon_initial": "😈",
     "icon_url": "assets/icons/numplay/leveldevil.png",
     "color": "#F2A33C",
-    "recommended": false
+    "recommended": false,
+    "bin_kb": 74
   },
   {
     "id": "np_sudoku",
@@ -972,7 +1024,8 @@
     "icon_initial": "9️⃣",
     "icon_url": "assets/icons/numplay/sudoku.png",
     "color": "#3F67B5",
-    "recommended": false
+    "recommended": false,
+    "bin_kb": 27
   },
   {
     "id": "np_cookieclicker",
@@ -989,7 +1042,8 @@
     "icon_initial": "🍪",
     "icon_url": "assets/icons/numplay/cookieclicker.png",
     "color": "#4E6E9E",
-    "recommended": false
+    "recommended": false,
+    "bin_kb": 1151
   },
   {
     "id": "np_meowdoku",
@@ -1006,7 +1060,8 @@
     "icon_initial": "🐱",
     "icon_url": "assets/icons/numplay/meowdoku.png",
     "color": "#F7A23B",
-    "recommended": false
+    "recommended": false,
+    "bin_kb": 47
   },
   {
     "id": "np_paperclips",
@@ -1023,7 +1078,8 @@
     "icon_initial": "📎",
     "icon_url": "assets/icons/numplay/paperclips.png",
     "color": "#8E96A3",
-    "recommended": false
+    "recommended": false,
+    "bin_kb": 114
   },
   {
     "id": "np_solitaire",
@@ -1040,7 +1096,8 @@
     "icon_initial": "♠️",
     "icon_url": "assets/icons/numplay/solitaire.png",
     "color": "#34A249",
-    "recommended": false
+    "recommended": false,
+    "bin_kb": 22
   },
   {
     "id": "np_badtime",
@@ -1057,7 +1114,8 @@
     "icon_initial": "💀",
     "icon_url": "assets/icons/numplay/badtime.png",
     "color": "#2A1018",
-    "recommended": false
+    "recommended": false,
+    "bin_kb": 144
   },
   {
     "id": "np_rider",
@@ -1074,7 +1132,8 @@
     "icon_initial": "🏍️",
     "icon_url": "assets/icons/numplay/rider.png",
     "color": "#1E3436",
-    "recommended": false
+    "recommended": false,
+    "bin_kb": 362
   },
   {
     "id": "np_numvisuals",
@@ -1091,7 +1150,8 @@
     "icon_initial": "🎨",
     "icon_url": "assets/icons/numplay/numvisuals.png",
     "color": "#7A2BFF",
-    "recommended": false
+    "recommended": false,
+    "bin_kb": 87
   },
   {
     "id": "np_snowrider",
@@ -1108,7 +1168,8 @@
     "icon_initial": "🛷",
     "icon_url": "assets/icons/numplay/snowrider.png",
     "color": "#8CC8F0",
-    "recommended": false
+    "recommended": false,
+    "bin_kb": 409
   },
   {
     "id": "np_templerun",
@@ -1125,7 +1186,8 @@
     "icon_initial": "🗿",
     "icon_url": "assets/icons/numplay/templerun.png",
     "color": "#6FA6D2",
-    "recommended": false
+    "recommended": false,
+    "bin_kb": 1785
   },
   {
     "id": "np_fnaf2",
@@ -1142,7 +1204,8 @@
     "icon_initial": "🐰",
     "icon_url": "assets/icons/numplay/fnaf2.png",
     "color": "#3A2C46",
-    "recommended": false
+    "recommended": false,
+    "bin_kb": 1746
   },
   {
     "id": "np_famidash",
@@ -1159,7 +1222,8 @@
     "icon_initial": "🔺",
     "icon_url": "assets/icons/numplay/famidash.png",
     "color": "#3032EC",
-    "recommended": false
+    "recommended": false,
+    "bin_kb": 1577
   },
   {
     "id": "np_fnaf3",
@@ -1176,7 +1240,8 @@
     "icon_initial": "🐇",
     "icon_url": "assets/icons/numplay/fnaf3.png",
     "color": "#2E3A22",
-    "recommended": false
+    "recommended": false,
+    "bin_kb": 1313
   },
   {
     "id": "np_fnaf4",
@@ -1193,7 +1258,8 @@
     "icon_initial": "🧸",
     "icon_url": "assets/icons/numplay/fnaf4.png",
     "color": "#1E2638",
-    "recommended": false
+    "recommended": false,
+    "bin_kb": 1234
   },
   {
     "id": "np_clashroyale",
@@ -1210,7 +1276,8 @@
     "icon_initial": "👑",
     "icon_url": "assets/icons/numplay/clashroyale.png",
     "color": "#2E5CB8",
-    "recommended": false
+    "recommended": false,
+    "bin_kb": 1282
   },
   {
     "id": "np_catninja",
@@ -1227,7 +1294,8 @@
     "icon_initial": "🐈",
     "icon_url": "assets/icons/numplay/catninja.png",
     "color": "#7B3FC4",
-    "recommended": false
+    "recommended": false,
+    "bin_kb": 156
   },
   {
     "id": "np_kingdomrush",
@@ -1244,7 +1312,8 @@
     "icon_initial": "🏰",
     "icon_url": "assets/icons/numplay/kingdomrush.png",
     "color": "#4E7A22",
-    "recommended": false
+    "recommended": false,
+    "bin_kb": 1642
   },
   {
     "id": "np_deltarune",
@@ -1261,7 +1330,8 @@
     "icon_initial": "💜",
     "icon_url": "assets/icons/numplay/deltarune.png",
     "color": "#2A1E46",
-    "recommended": false
+    "recommended": false,
+    "bin_kb": 1074
   },
   {
     "id": "np_fnafworld",
@@ -1278,7 +1348,8 @@
     "icon_initial": "🌟",
     "icon_url": "assets/icons/numplay/fnafworld.png",
     "color": "#2A6AC8",
-    "recommended": false
+    "recommended": false,
+    "bin_kb": 4718
   },
   {
     "id": "np_mrbullet",
@@ -1295,7 +1366,8 @@
     "icon_initial": "🕵️",
     "icon_url": "assets/icons/numplay/mrbullet.png",
     "color": "#2AD4FF",
-    "recommended": false
+    "recommended": false,
+    "bin_kb": 419
   },
   {
     "id": "np_numpico",
@@ -1312,7 +1384,8 @@
     "icon_initial": "👾",
     "icon_url": "assets/icons/numplay/numpico.png",
     "color": "#29ADFF",
-    "recommended": false
+    "recommended": false,
+    "bin_kb": 156
   },
   {
     "id": "np_motox3m",
@@ -1329,7 +1402,8 @@
     "icon_initial": "🏍️",
     "icon_url": "assets/icons/numplay/motox3m.png",
     "color": "#F0B040",
-    "recommended": false
+    "recommended": false,
+    "bin_kb": 1824
   },
   {
     "id": "np_amongus",
@@ -1346,7 +1420,8 @@
     "icon_initial": "🚀",
     "icon_url": "assets/icons/numplay/amongus.png",
     "color": "#1E2C4A",
-    "recommended": false
+    "recommended": false,
+    "bin_kb": 1563
   },
   {
     "id": "np_imposter",
@@ -1363,7 +1438,8 @@
     "icon_initial": "🎭",
     "icon_url": "assets/icons/numplay/imposter.png",
     "color": "#292C62",
-    "recommended": false
+    "recommended": false,
+    "bin_kb": 50
   },
   {
     "id": "np_fourplayer",
@@ -1380,7 +1456,8 @@
     "icon_initial": "🎮",
     "icon_url": "assets/icons/numplay/fourplayer.png",
     "color": "#2B2452",
-    "recommended": false
+    "recommended": false,
+    "bin_kb": 75
   },
   {
     "id": "np_hkfungal",
@@ -1397,7 +1474,8 @@
     "icon_initial": "🍄",
     "icon_url": "assets/icons/numplay/hkfungal.png",
     "color": "#35606B",
-    "recommended": false
+    "recommended": false,
+    "bin_kb": 1440
   },
   {
     "id": "np_circloo",
@@ -1414,6 +1492,7 @@
     "icon_initial": "⭕",
     "icon_url": "assets/icons/numplay/circloo.png",
     "color": "#D89645",
-    "recommended": false
+    "recommended": false,
+    "bin_kb": 102
   }
 ]

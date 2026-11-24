@@ -66,6 +66,8 @@ class NumWorksWebUSB {
     this.model = 'NumWorks N0110 / N0115';
     this.mode = 'Inconnu';
     this.flashAddress = DEFAULT_FLASH_ADDR_N0110;
+    this.flashEnd = 0x903F0000;
+    this.maxFlashBytes = this.flashEnd - this.flashAddress;
     this.ramAddress = DEFAULT_RAM_ADDR_N0110;
     this.interfaceNumber = 0;
     this.alternateSetting = 0;
@@ -169,9 +171,14 @@ class NumWorksWebUSB {
               if (isFeedCode) {
                 const udv = new DataView(userlandBuf.buffer, userlandBuf.byteOffset);
                 const extFlashStart = udv.getUint32(20, true);
+                const extFlashEnd = udv.getUint32(24, true);
                 const extRamStart = udv.getUint32(28, true);
                 if (extFlashStart >= 0x90000000 && extFlashStart < 0x90800000) {
                   this.flashAddress = extFlashStart;
+                  if (extFlashEnd > extFlashStart && extFlashEnd <= 0x90800000) {
+                    this.flashEnd = extFlashEnd;
+                    this.maxFlashBytes = extFlashEnd - extFlashStart;
+                  }
                 }
                 if (extRamStart >= 0x20000000 && extRamStart < 0x30000000) {
                   this.ramAddress = extRamStart;
@@ -204,16 +211,20 @@ class NumWorksWebUSB {
     if (isN120) {
       this.model = 'NumWorks N0120';
       this.flashAddress = DEFAULT_FLASH_ADDR_N0120;
+      this.flashEnd = 0x903F0000;
       this.ramAddress = DEFAULT_RAM_ADDR_N0120;
     } else if (isN115) {
       this.model = 'NumWorks N0115';
       this.flashAddress = DEFAULT_FLASH_ADDR_N0115;
+      this.flashEnd = 0x907F0000;
       this.ramAddress = DEFAULT_RAM_ADDR_N0115;
     } else {
       this.model = 'NumWorks N0110';
       this.flashAddress = DEFAULT_FLASH_ADDR_N0110;
+      this.flashEnd = 0x903F0000;
       this.ramAddress = DEFAULT_RAM_ADDR_N0110;
     }
+    this.maxFlashBytes = this.flashEnd - this.flashAddress;
     console.log(`[WebUSB] Modèle synchronisé : ${this.model} (Flash: 0x${this.flashAddress.toString(16)}, RAM: 0x${this.ramAddress.toString(16)})`);
   }
 
