@@ -1058,18 +1058,27 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (e.target === appDetailsModal) closeAppDetails();
   });
 
-  modalTogglePackBtn?.addEventListener('click', () => {
+  modalTogglePackBtn?.addEventListener('click', async () => {
     if (!currentModalApp) return;
-    const isSelected = selectedApps.some(s => s.id === currentModalApp.id);
+    const appTarget = currentModalApp;
+    const isSelected = selectedApps.some(s => s.id === appTarget.id);
     if (isSelected) {
-      const idx = selectedApps.findIndex(s => s.id === currentModalApp.id);
+      const idx = selectedApps.findIndex(s => s.id === appTarget.id);
       if (idx !== -1) {
         selectedApps.splice(idx, 1);
         window.soundFx?.playHit();
-        showToast(`"${currentModalApp.name}" retiré du pack`, 'info');
+        showToast(`"${appTarget.name}" retiré du pack`, 'info');
+      }
+    } else if (appTarget.download_url && (!appTarget.data || appTarget.data.length === 0)) {
+      modalTogglePackBtn.disabled = true;
+      modalTogglePackBtn.textContent = '⏳ Téléchargement...';
+      try {
+        await downloadAndAddCommunityApp(appTarget);
+      } finally {
+        modalTogglePackBtn.disabled = false;
       }
     } else {
-      addAppToSelection(currentModalApp);
+      addAppToSelection(appTarget);
     }
     updateUI();
     renderCatalog();
@@ -1483,23 +1492,32 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Boutons du Dock d'Application Active
   if (dockActionBtn) {
-    dockActionBtn.addEventListener('click', () => {
+    dockActionBtn.addEventListener('click', async () => {
       if (!currentActiveDockApp) return;
-      const isSelected = selectedApps.some(s => s.id === currentActiveDockApp.id);
+      const appTarget = currentActiveDockApp;
+      const isSelected = selectedApps.some(s => s.id === appTarget.id);
       if (isSelected) {
-        const idx = selectedApps.findIndex(s => s.id === currentActiveDockApp.id);
+        const idx = selectedApps.findIndex(s => s.id === appTarget.id);
         if (idx !== -1) {
           selectedApps.splice(idx, 1);
           window.soundFx?.playHit();
-          showToast(`"${currentActiveDockApp.name}" retiré du pack`, 'info');
+          showToast(`"${appTarget.name}" retiré du pack`, 'info');
+        }
+      } else if (appTarget.download_url && (!appTarget.data || appTarget.data.length === 0)) {
+        dockActionBtn.disabled = true;
+        dockActionBtn.textContent = '⏳...';
+        try {
+          await downloadAndAddCommunityApp(appTarget);
+        } finally {
+          dockActionBtn.disabled = false;
         }
       } else {
-        addAppToSelection(currentActiveDockApp);
+        addAppToSelection(appTarget);
       }
       updateUI();
       renderCatalog();
       renderCommunitySearch();
-      updateActiveAppDock(currentActiveDockApp);
+      updateActiveAppDock(appTarget);
     });
   }
 
@@ -2295,6 +2313,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (!res.ok) throw new Error("Fichier introuvable sur le dépôt");
       fileBuffer = await res.arrayBuffer();
     } catch (e) {
+      if (String(app.format || '').toUpperCase() === 'NWA') {
+        throw e;
+      }
       console.warn("Utilisation de secours pour", app.name, e);
       // Génération de secours en cas d'erreur de réseau
       const fakeNws = JSON.stringify({
@@ -2714,21 +2735,23 @@ document.addEventListener('DOMContentLoaded', async () => {
   async function ensurePackPayloads(apps) {
     for (const a of apps) {
       if (a.download_url && (!a.data || a.data.length === 0)) {
-        try {
-          const res = await fetch(a.download_url);
-          if (res && res.ok) {
-            a.data = new Uint8Array(await res.arrayBuffer());
-          }
-        } catch (err) {
-          console.warn('Impossible de précharger', a.name, err);
+        const res = await fetch(a.download_url);
+        if (!res || !res.ok) {
+          throw new Error(`Impossible de télécharger le binaire "${a.name}" (${a.download_url}).`);
         }
+        a.data = new Uint8Array(await res.arrayBuffer());
       }
     }
   }
 
   downloadBtn.addEventListener('click', async () => {
-    await ensurePackPayloads(selectedApps);
-    const hasCustomApps = selectedApps.some(a => a.data && a.data.length > 0 && !a.recommended);
+    try {
+      await ensurePackPayloads(selectedApps);
+    } catch (err) {
+      showToast(err.message, 'error');
+      return;
+    }
+    const hasCustomApps = selectedApps.some(a => a.data && a.data.length > 0);
     if (hasCustomApps) {
       const proceed = confirm(
         "⚠️ Attention Importante :\n\n" +

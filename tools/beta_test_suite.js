@@ -1435,11 +1435,12 @@ describe('7. Compilation et Validité Syntaxique des Jeux Python (.NWS)', () => 
           const filename = url.split('?')[0];
           const filepath = path.resolve('web', filename);
           if (fs.existsSync(filepath)) {
-            const data = fs.readFileSync(filepath, 'utf8');
+            const buf = fs.readFileSync(filepath);
+            const data = filepath.endsWith('.json') ? buf.toString('utf8') : null;
             return {
               ok: true,
-              json: async () => JSON.parse(data),
-              arrayBuffer: async () => fs.readFileSync(filepath).buffer
+              json: async () => JSON.parse(data !== null ? data : buf.toString('utf8')),
+              arrayBuffer: async () => new Uint8Array(buf).slice().buffer
             };
           }
           return { ok: false, status: 404 };

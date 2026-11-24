@@ -294,6 +294,19 @@ class EquaLibBundler {
 
       // 6. Gestion du payload binaire (type 13) vs texte/script (type 6 ou 12)
       if (appType === 13) {
+        if ((!app.data || app.data.length === 0) && app.download_url && typeof window !== 'undefined' && typeof window.fetch === 'function') {
+          try {
+            const resp = await window.fetch(app.download_url);
+            if (resp && resp.ok) {
+              app.data = new Uint8Array(await resp.arrayBuffer());
+            }
+          } catch (e) {
+            console.warn('[EquaLib Bundler] Échec fetch payload pour ' + app.name + ':', e);
+          }
+        }
+        if (!app.data || app.data.length === 0) {
+          throw new Error('Binaire .nwa introuvable pour "' + app.name + '". Rechargez la page (Ctrl+F5) et réessayez.');
+        }
         if (app.data && app.data.length > 0) {
           let binBytes = (app.data instanceof Uint8Array) ? app.data : new Uint8Array(app.data);
 

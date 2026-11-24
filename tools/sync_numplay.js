@@ -346,7 +346,7 @@ async function main() {
       icon_initial: replCat ? replCat.iconEmoji : iconEmoji,
       icon_url: iconUrl,
       color: color,
-      recommended: !!replCat
+      recommended: !!(replCat && g.id !== 'fnaf')
     };
 
     if (replCat) {

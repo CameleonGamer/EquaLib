@@ -122,7 +122,7 @@
     "icon_initial": "🐻",
     "icon_url": "assets/icons/numplay/fnaf.png",
     "color": "#4A3A30",
-    "recommended": true
+    "recommended": false
   },
   {
     "id": "dino",
