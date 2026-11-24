@@ -323,6 +323,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const modalCloseBtn = document.getElementById('modal-close-btn');
   const modalCancelBtn = document.getElementById('modal-cancel-btn');
   const modalTogglePackBtn = document.getElementById('modal-toggle-pack-btn');
+  const modalStandaloneBtn = document.getElementById('modal-standalone-btn');
   const modalAppName = document.getElementById('modal-app-name');
   const modalAppCat = document.getElementById('modal-app-cat');
   const modalAppMeta = document.getElementById('modal-app-meta');
@@ -339,6 +340,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const dockAppCat = document.getElementById('dock-app-cat');
   const dockAppDesc = document.getElementById('dock-app-desc');
   const dockActionBtn = document.getElementById('dock-action-btn');
+  const dockStandaloneBtn = document.getElementById('dock-standalone-btn');
   const dockTestBtn = document.getElementById('dock-test-btn');
   let currentActiveDockApp = null;
 
@@ -517,28 +519,82 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   function getAddEligibility(app) {
-    if (!app) return { ok: false, reason: 'invalid', tooHeavy: false, packFull: false, appBytes: 0, remainingBytes: 0, maxBytes: getMaxFlashBytes() };
+    const modelInfo = getActiveModelFlashInfo();
+    if (!app) return { ok: false, reason: 'invalid', tooHeavy: false, packFull: false, fitsOnN0120Pack: false, standaloneFits: false, exceedsDeviceFlash: false, appBytes: 0, remainingBytes: 0, maxBytes: modelInfo.maxBytes };
     if (selectedApps.some(s => s.id === app.id)) {
-      return { ok: false, reason: 'already_selected', tooHeavy: false, packFull: false, appBytes: getAppFlashBytes(app), ...getFlashStats() };
+      return { ok: false, reason: 'already_selected', tooHeavy: false, packFull: false, fitsOnN0120Pack: false, standaloneFits: false, exceedsDeviceFlash: false, appBytes: getAppFlashBytes(app), ...getFlashStats() };
     }
-    const { maxBytes, baseBytes, remainingBytes } = getFlashStats();
+    const { maxBytes, baseBytes, appsBytes, remainingBytes } = getFlashStats();
     const appBytes = getAppFlashBytes(app);
     if (appBytes > remainingBytes) {
+      const standaloneExceeds = (baseBytes + appBytes) > maxBytes;
+      const fitsOnN0120Pack = !modelInfo.isN120 && ((baseBytes + appsBytes + appBytes) <= MAX_FLASH_BYTES_N0120);
+      const canRunStandalone = Boolean(app.download_url || (app.data && app.data.length > 0));
+      const standaloneFits = standaloneExceeds && canRunStandalone && (appBytes <= maxBytes);
+      const exceedsDeviceFlash = standaloneExceeds && (appBytes > maxBytes);
       return {
         ok: false,
         reason: 'too_heavy',
         tooHeavy: true,
         packFull: false,
-        standaloneExceeds: (baseBytes + appBytes) > maxBytes,
+        standaloneExceeds,
+        fitsOnN0120Pack,
+        standaloneFits,
+        exceedsDeviceFlash,
         appBytes,
         remainingBytes,
         maxBytes
       };
     }
     if (selectedApps.length >= 20) {
-      return { ok: false, reason: 'pack_full', tooHeavy: false, packFull: true, appBytes, remainingBytes, maxBytes };
+      return { ok: false, reason: 'pack_full', tooHeavy: false, packFull: true, fitsOnN0120Pack: false, standaloneFits: false, exceedsDeviceFlash: false, appBytes, remainingBytes, maxBytes };
     }
-    return { ok: true, reason: 'ok', tooHeavy: false, packFull: false, appBytes, remainingBytes, maxBytes };
+    return { ok: true, reason: 'ok', tooHeavy: false, packFull: false, fitsOnN0120Pack: false, standaloneFits: false, exceedsDeviceFlash: false, appBytes, remainingBytes, maxBytes };
+  }
+
+  function getBlockedReasonUi(app, elig, isSelected = false) {
+    if (isSelected || !elig || elig.ok) {
+      return { title: '', cardHint: '', buttonLabel: isSelected ? '✓ Inclus' : '+ Ajouter', standaloneOk: false };
+    }
+    if (elig.packFull) {
+      return { title: 'Pack plein (20/20)', cardHint: 'Pack plein (20/20)', buttonLabel: '⛔ Plein', standaloneOk: false };
+    }
+    if (!elig.tooHeavy) {
+      return { title: '', cardHint: '', buttonLabel: '+ Ajouter', standaloneOk: false };
+    }
+    const reqKb = formatKb(elig.appBytes);
+    const freeKb = formatKb(elig.remainingBytes);
+    const maxKb = formatKb(elig.maxBytes);
+    if (elig.fitsOnN0120Pack) {
+      return {
+        title: `Trop lourd avec Hub sur N0110 (${reqKb} > ${freeKb} libres) — Passe en pack sur N0120 ou seul sans Hub`,
+        cardHint: 'N0120 OK • ou seul',
+        buttonLabel: '⛔ Trop lourd',
+        standaloneOk: Boolean(app && (app.download_url || app.data))
+      };
+    }
+    if (elig.standaloneFits) {
+      return {
+        title: `Trop grand avec le Hub EquaLib (${reqKb} > ${freeKb} libres), mais installable seul sans Hub (<= ${maxKb})`,
+        cardHint: 'Trop grand Hub • OK seul',
+        buttonLabel: '⛔ Trop lourd',
+        standaloneOk: true
+      };
+    }
+    if (elig.exceedsDeviceFlash) {
+      return {
+        title: `Dépasse la capacité Flash totale (${reqKb} > ${maxKb}), même sans Hub`,
+        cardHint: `> Flash (${maxKb})`,
+        buttonLabel: '⛔ Trop lourd',
+        standaloneOk: false
+      };
+    }
+    return {
+      title: `Trop lourd pour la place restante (${reqKb} requis, ${freeKb} libres)`,
+      cardHint: `Libre : ${freeKb}`,
+      buttonLabel: '⛔ Trop lourd',
+      standaloneOk: false
+    };
   }
 
   function setTargetModel(model, save = true) {
@@ -1001,27 +1057,33 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (dockAppDesc) dockAppDesc.textContent = app.description || 'Application optimisée pour NumWorks N0120.';
 
     const isSelected = selectedApps.some(s => s.id === app.id);
+    const elig = isSelected ? null : getAddEligibility(app);
+    const blockedUi = getBlockedReasonUi(app, elig, isSelected);
     if (dockActionBtn) {
       if (isSelected) {
         dockActionBtn.disabled = false;
         dockActionBtn.textContent = '✓ Inclus';
         dockActionBtn.title = 'Retirer du pack';
         dockActionBtn.className = 'px-4 py-2 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-bold transition-all cursor-pointer';
+      } else if (!elig.ok) {
+        dockActionBtn.disabled = true;
+        dockActionBtn.textContent = elig.tooHeavy ? '⛔ Trop lourd' : '⛔ Pack plein';
+        dockActionBtn.title = blockedUi.title;
+        dockActionBtn.className = 'btn-too-heavy px-4 py-2 rounded-xl text-xs font-extrabold transition-all';
       } else {
-        const elig = getAddEligibility(app);
-        if (!elig.ok) {
-          dockActionBtn.disabled = true;
-          dockActionBtn.textContent = elig.tooHeavy ? '⛔ Trop lourd' : '⛔ Pack plein';
-          dockActionBtn.title = elig.tooHeavy
-            ? `Trop lourd (${formatKb(elig.appBytes)} requis, ${formatKb(elig.remainingBytes)} libres)`
-            : 'Pack plein (20/20 applications maximum)';
-          dockActionBtn.className = 'btn-too-heavy px-4 py-2 rounded-xl text-xs font-extrabold transition-all';
-        } else {
-          dockActionBtn.disabled = false;
-          dockActionBtn.textContent = '+ Ajouter';
-          dockActionBtn.title = 'Ajouter au pack';
-          dockActionBtn.className = 'px-4 py-2 rounded-xl bg-nw-yellow hover:bg-nw-yellowHover text-black text-xs font-extrabold transition-all shadow-md active:scale-95 cursor-pointer';
-        }
+        dockActionBtn.disabled = false;
+        dockActionBtn.textContent = '+ Ajouter';
+        dockActionBtn.title = 'Ajouter au pack';
+        dockActionBtn.className = 'px-4 py-2 rounded-xl bg-nw-yellow hover:bg-nw-yellowHover text-black text-xs font-extrabold transition-all shadow-md active:scale-95 cursor-pointer';
+      }
+    }
+    if (dockStandaloneBtn) {
+      if (!isSelected && blockedUi.standaloneOk) {
+        dockStandaloneBtn.classList.remove('hidden');
+        dockStandaloneBtn.disabled = false;
+        dockStandaloneBtn.title = blockedUi.title;
+      } else {
+        dockStandaloneBtn.classList.add('hidden');
       }
     }
   }
@@ -1146,27 +1208,33 @@ document.addEventListener('DOMContentLoaded', async () => {
     modalAppIcon.style.backgroundColor = app.color || '#F59E0B';
 
     const isSelected = selectedApps.some(s => s.id === app.id);
+    const elig = isSelected ? null : getAddEligibility(app);
+    const blockedUi = getBlockedReasonUi(app, elig, isSelected);
     if (isSelected) {
       modalTogglePackBtn.disabled = false;
       modalTogglePackBtn.title = 'Retirer du pack';
       modalTogglePackBtn.innerHTML = `<span>✕ Retirer du Pack</span>`;
       modalTogglePackBtn.className = 'flex-1 py-3 px-4 rounded-xl bg-red-500 hover:bg-red-400 text-white font-extrabold text-xs transition-all shadow-md active:scale-95 flex items-center justify-center gap-2 cursor-pointer';
+    } else if (!elig.ok) {
+      modalTogglePackBtn.disabled = true;
+      modalTogglePackBtn.title = blockedUi.title;
+      modalTogglePackBtn.innerHTML = elig.tooHeavy
+        ? `<span>⛔ Trop lourd (${formatKb(elig.appBytes)} &gt; ${formatKb(elig.remainingBytes)} libres)</span>`
+        : `<span>⛔ Pack plein (20 / 20)</span>`;
+      modalTogglePackBtn.className = 'btn-too-heavy flex-1 py-3 px-4 rounded-xl font-extrabold text-xs flex items-center justify-center gap-2';
     } else {
-      const elig = getAddEligibility(app);
-      if (!elig.ok) {
-        modalTogglePackBtn.disabled = true;
-        modalTogglePackBtn.title = elig.tooHeavy
-          ? `Espace Flash insuffisant : ${formatKb(elig.appBytes)} requis (${formatKb(elig.remainingBytes)} libres)`
-          : 'Pack plein (20/20 applications)';
-        modalTogglePackBtn.innerHTML = elig.tooHeavy
-          ? `<span>⛔ Trop lourd (${formatKb(elig.appBytes)} &gt; ${formatKb(elig.remainingBytes)} libres)</span>`
-          : `<span>⛔ Pack plein (20 / 20)</span>`;
-        modalTogglePackBtn.className = 'btn-too-heavy flex-1 py-3 px-4 rounded-xl font-extrabold text-xs flex items-center justify-center gap-2';
+      modalTogglePackBtn.disabled = false;
+      modalTogglePackBtn.title = 'Ajouter à mon Pack';
+      modalTogglePackBtn.innerHTML = `<span>+ Ajouter à mon Pack</span>`;
+      modalTogglePackBtn.className = 'flex-1 py-3 px-4 rounded-xl bg-nw-yellow hover:bg-nw-yellowHover text-black font-extrabold text-xs transition-all shadow-md active:scale-95 flex items-center justify-center gap-2 cursor-pointer';
+    }
+    if (modalStandaloneBtn) {
+      if (!isSelected && blockedUi.standaloneOk) {
+        modalStandaloneBtn.classList.remove('hidden');
+        modalStandaloneBtn.disabled = false;
+        modalStandaloneBtn.title = blockedUi.title;
       } else {
-        modalTogglePackBtn.disabled = false;
-        modalTogglePackBtn.title = 'Ajouter à mon Pack';
-        modalTogglePackBtn.innerHTML = `<span>+ Ajouter à mon Pack</span>`;
-        modalTogglePackBtn.className = 'flex-1 py-3 px-4 rounded-xl bg-nw-yellow hover:bg-nw-yellowHover text-black font-extrabold text-xs transition-all shadow-md active:scale-95 flex items-center justify-center gap-2 cursor-pointer';
+        modalStandaloneBtn.classList.add('hidden');
       }
     }
 
@@ -1256,6 +1324,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderCatalog();
     renderCommunitySearch();
     closeAppDetails();
+  });
+
+  modalStandaloneBtn?.addEventListener('click', async () => {
+    if (!currentModalApp) return;
+    const appTarget = currentModalApp;
+    await installStandaloneApp(appTarget, modalStandaloneBtn);
   });
 
   // ==================== CONTRÔLES DU MENU PARAMÈTRES & COULEUR ====================
@@ -1664,6 +1738,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderCommunitySearch();
     showToast('Paramètres réinitialisés aux valeurs d\'origine (#FFD700).', 'info');
   });
+
+    if (dockStandaloneBtn) {
+      dockStandaloneBtn.addEventListener('click', async () => {
+        if (!currentActiveDockApp) return;
+        await installStandaloneApp(currentActiveDockApp, dockStandaloneBtn);
+      });
+    }
 
   // Boutons du Dock d'Application Active
   if (dockActionBtn) {
@@ -2169,9 +2250,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       const packFull = !isSelected && elig.packFull;
       const isDisabled = tooHeavy || packFull;
       const displayKb = isBuiltinHubApp(app) ? 'Hub' : `${getAppDisplayKb(app)} Ko`;
-      const blockedReason = tooHeavy
-        ? `Trop lourd (${formatKb(elig.appBytes)} requis, ${formatKb(elig.remainingBytes)} libres)`
-        : (packFull ? 'Pack plein (20/20)' : '');
+      const blockedUi = getBlockedReasonUi(app, elig, isSelected);
+      const blockedReason = blockedUi.title;
 
       if (isGallery) {
         const card = document.createElement('div');
@@ -2192,7 +2272,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
           <div class="w-full text-center space-y-0.5 px-1 pointer-events-none">
             <h4 class="font-extrabold text-[#F8FAFC] text-xs font-mono truncate" title="${app.name}">${app.name}</h4>
-            <p class="text-[10px] ${tooHeavy ? 'text-red-400 font-semibold' : 'text-[#94A3B8]'} truncate font-mono">${displayKb} • ${app.source && app.source.includes('NumPlay') ? 'GitHub NumPlay' : (app.author || 'EquaLib')}</p>
+            <p class="text-[10px] ${tooHeavy ? 'text-amber-300 font-semibold' : 'text-[#94A3B8]'} truncate font-mono">${displayKb} • ${tooHeavy ? blockedUi.cardHint : (app.source && app.source.includes('NumPlay') ? 'GitHub NumPlay' : (app.author || 'EquaLib'))}</p>
           </div>
 
           <div class="w-full pt-1.5 border-t border-[#1E3A68] flex items-center justify-between gap-1">
@@ -2285,7 +2365,7 @@ document.addEventListener('DOMContentLoaded', async () => {
               </div>
               <p class="text-xs text-[#8EA5C8] line-clamp-1 leading-normal">&gt;_ ${app.description}</p>
               <div class="text-[11px] text-[#8EA5C8] flex items-center gap-2">
-                <span class="${tooHeavy ? 'text-red-400 font-bold' : ''}">${displayKb}</span>
+                <span class="${tooHeavy ? 'text-amber-300 font-bold' : ''}">${displayKb}${tooHeavy && blockedUi.cardHint ? ` (${blockedUi.cardHint})` : ''}</span>
                 <span>•</span>
                 <span>v${app.version}</span>
                 <span>•</span>
@@ -2400,9 +2480,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       const packFull = !isSelected && elig.packFull;
       const isDisabled = tooHeavy || packFull;
       const displayKb = isBuiltinHubApp(app) ? 'Hub' : `${getAppDisplayKb(app)} Ko`;
-      const blockedReason = tooHeavy
-        ? `Trop lourd (${formatKb(elig.appBytes)} requis, ${formatKb(elig.remainingBytes)} libres)`
-        : (packFull ? 'Pack plein (20/20)' : '');
+      const blockedUi = getBlockedReasonUi(app, elig, isSelected);
+      const blockedReason = blockedUi.title;
 
       if (isGallery) {
         const card = document.createElement('div');
@@ -2423,7 +2502,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
           <div class="w-full text-center space-y-0.5 px-1 pointer-events-none">
             <h4 class="font-heading font-extrabold text-[#F8FAFC] text-xs uppercase tracking-wide truncate" title="${app.name}">${app.name}</h4>
-            <p class="text-[10px] ${tooHeavy ? 'text-red-400 font-semibold' : 'text-[#8EA5C8]'} truncate font-mono">&gt;_ ${displayKb} • ${app.author || 'Communauté'}</p>
+            <p class="text-[10px] ${tooHeavy ? 'text-amber-300 font-semibold' : 'text-[#8EA5C8]'} truncate font-mono">&gt;_ ${displayKb} • ${tooHeavy ? blockedUi.cardHint : (app.author || 'Communauté')}</p>
           </div>
 
           <div class="w-full pt-1.5 border-t-2 border-[#1B3B6F] flex items-center justify-between gap-1">
@@ -2509,7 +2588,7 @@ document.addEventListener('DOMContentLoaded', async () => {
               </div>
               <p class="text-xs text-[#8EA5C8] line-clamp-1 leading-normal">&gt;_ ${app.description}</p>
               <div class="text-[11px] text-[#8EA5C8] flex items-center gap-2">
-                <span class="${tooHeavy ? 'text-red-400 font-bold' : ''}">${displayKb}</span>
+                <span class="${tooHeavy ? 'text-amber-300 font-bold' : ''}">${displayKb}${tooHeavy && blockedUi.cardHint ? ` (${blockedUi.cardHint})` : ''}</span>
                 <span>•</span>
                 <span>${app.category}</span>
                 <span>•</span>
@@ -2850,7 +2929,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   function updateMemoryUsage() {
-    const { maxBytes, usedBytes } = getFlashStats();
+    const { maxBytes, baseBytes, appsBytes, usedBytes, remainingBytes, wpFrames } = getFlashStats();
+    const modelInfo = getActiveModelFlashInfo();
     const totalBytes = usedBytes;
     const mbUsed = (totalBytes / (1024 * 1024)).toFixed(2);
     const mbTotal = (maxBytes / (1024 * 1024)).toFixed(2);
@@ -2859,6 +2939,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     memoryText.textContent = `${mbUsed} Mo / ${mbTotal} Mo`;
     memoryPercent.textContent = `${percent}%`;
     memoryProgressBar.style.width = `${percent}%`;
+
+    const memoryBreakdown = document.getElementById('memory-breakdown');
+    if (memoryBreakdown) {
+      const wpPart = wpFrames > 0 ? ` + Fond (${formatKb(wpFrames * WP_FRAME_BYTES)})` : '';
+      const n120Hint = !modelInfo.isN120
+        ? ` • N0120 : ${formatKb(Math.max(0, MAX_FLASH_BYTES_N0120 - baseBytes - appsBytes))} libres`
+        : '';
+      memoryBreakdown.textContent = `Hub EquaLib : ${formatKb(BASE_LAUNCHER_BYTES)}${wpPart} • Jeux pack : ${formatKb(appsBytes)} • Libre pack : ${formatKb(remainingBytes)}${n120Hint}`;
+    }
 
     const slotsRemainingText = document.getElementById('slots-remaining-text');
     if (slotsRemainingText) {
@@ -3130,41 +3219,148 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  flashBtn.addEventListener('click', async () => {
-    // Si l'utilisateur a choisi N0110 / N0115 dans l'interface, on préserve impérativement son choix
+  async function ensureUsbReadyForFlash() {
     const isUserChoiceN110 = isN110orN115(userSettings.manualModel || userSettings.targetModel);
-
-    // Vérifier si la calculatrice est connectée ET que son interface est toujours ouverte
     if (!usb.isConnected || !usb.device || !usb.device.opened) {
       usb.isConnected = false;
       usb.device = null;
       showToast('Ouverture du sélecteur USB...', 'info');
-      try {
-        const preferred = (userSettings.manualModel && userSettings.manualModel.includes('120')) ? 'N0120' : (isUserChoiceN110 ? 'N0110' : 'N0120');
-        const res = await usb.connect(preferred);
-        connectionDot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse';
-        connectionText.textContent = 'Connectée';
-        const slotText = res.flashAddress ? ` - Slot 0x${res.flashAddress.toString(16)}` : '';
-        modelText.textContent = `${res.model} (${res.mode})${slotText}`;
-        connectBtn.innerHTML = '<span>✕</span> <span class="hidden sm:inline">Déconnecter</span>';
-        
-        let detectedModel = 'N0110';
-        if (res.model && (res.model.includes('120') || res.flashAddress === 0x90180000 || res.flashAddress === 0x90580000)) {
-          detectedModel = 'N0120';
-        } else if (res.model && isN0115Model(res.model, res.flashAddress)) {
-          detectedModel = 'N0115';
-        } else {
-          detectedModel = (userSettings.manualModel && isN0115Model(userSettings.manualModel)) ? 'N0115' : 'N0110';
-        }
-        userSettings.manualModel = detectedModel;
-        setTargetModel(detectedModel, true);
-        window.soundFx?.playClick();
-        showToast(`NumWorks détectée (${res.model} - ${res.mode}) !`, 'success');
-      } catch (e) {
-        window.soundFx?.playHit();
-        showToast(e.message || 'Échec de connexion USB', 'error');
-        return;
+      const preferred = (userSettings.manualModel && userSettings.manualModel.includes('120')) ? 'N0120' : (isUserChoiceN110 ? 'N0110' : 'N0120');
+      const res = await usb.connect(preferred);
+      connectionDot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse';
+      connectionText.textContent = 'Connectée';
+      const slotText = res.flashAddress ? ` - Slot 0x${res.flashAddress.toString(16)}` : '';
+      modelText.textContent = `${res.model} (${res.mode})${slotText}`;
+      connectBtn.innerHTML = '<span>✕</span> <span class="hidden sm:inline">Déconnecter</span>';
+
+      let detectedModel = 'N0110';
+      if (res.model && (res.model.includes('120') || res.flashAddress === 0x90180000 || res.flashAddress === 0x90580000)) {
+        detectedModel = 'N0120';
+      } else if (res.model && isN0115Model(res.model, res.flashAddress)) {
+        detectedModel = 'N0115';
+      } else {
+        detectedModel = (userSettings.manualModel && isN0115Model(userSettings.manualModel)) ? 'N0115' : 'N0110';
       }
+      userSettings.manualModel = detectedModel;
+      setTargetModel(detectedModel, true);
+      window.soundFx?.playClick();
+      showToast(`NumWorks détectée (${res.model} - ${res.mode}) !`, 'success');
+    }
+
+    let targetModel = 'N0110';
+    if (usb && usb.isConnected) {
+      if (usb.model.includes('120') || usb.flashAddress === 0x90180000 || usb.flashAddress === 0x90580000) {
+        targetModel = 'N0120';
+      } else if (isN0115Model(usb.model, usb.flashAddress)) {
+        targetModel = 'N0115';
+      } else {
+        targetModel = 'N0110';
+      }
+    } else {
+      const pref = (userSettings.manualModel || userSettings.targetModel || 'N0110');
+      targetModel = pref.includes('120') ? 'N0120' : (isN0115Model(pref) ? 'N0115' : 'N0110');
+      if (usb && typeof usb.setTargetModel === 'function') {
+        usb.setTargetModel(targetModel);
+      }
+    }
+
+    const defaultForModel = (targetModel === 'N0120')
+      ? ((usb && usb.flashAddress === 0x90180000) ? DEFAULT_FLASH_ADDR_N0120 : DEFAULT_FLASH_ADDR_N0120_EPS26)
+      : ((targetModel === 'N0115') ? DEFAULT_FLASH_ADDR_N0115 : DEFAULT_FLASH_ADDR_N0110);
+    const targetFlashAddr = (usb && usb.flashAddress && usb.flashAddress !== 0x90000000)
+      ? usb.flashAddress
+      : defaultForModel;
+    return { targetModel, targetFlashAddr };
+  }
+
+  async function installStandaloneApp(app, triggerBtn = null) {
+    if (!app) return;
+    const prevHtml = triggerBtn ? triggerBtn.innerHTML : '';
+    let usbTarget = null;
+    try {
+      usbTarget = await ensureUsbReadyForFlash();
+    } catch (e) {
+      window.soundFx?.playHit();
+      showToast(e.message || 'Échec de connexion USB', 'error');
+      return;
+    }
+
+    try {
+      if (triggerBtn) {
+        triggerBtn.disabled = true;
+        triggerBtn.textContent = '⏳ Liaison...';
+      }
+      progressContainer?.classList.remove('hidden');
+      if (flashProgress) flashProgress.style.width = '0%';
+      if (progressText) progressText.textContent = `Préparation standalone de "${app.name}" (sans Hub EquaLib)...`;
+
+      const { targetModel, targetFlashAddr } = usbTarget;
+      await ensurePackPayloads([app]);
+      if (!app.data || app.data.length === 0) {
+        throw new Error(`Binaire introuvable pour "${app.name}".`);
+      }
+
+      let payload = (app.data instanceof Uint8Array) ? app.data : new Uint8Array(app.data);
+      const isElf = payload.length >= 4 && payload[0] === 0x7F && payload[1] === 0x45 && payload[2] === 0x4C && payload[3] === 0x46;
+      if (isElf && typeof EquaLibLinker !== 'undefined' && EquaLibLinker.convertNwaToBin) {
+        const isN110 = targetModel === 'N0110';
+        const isN115 = targetModel === 'N0115' || targetFlashAddr === DEFAULT_FLASH_ADDR_N0115;
+        const ramAddrHex = (usb && usb.ramAddress)
+          ? ('0x' + usb.ramAddress.toString(16))
+          : (isN110 ? '0x20000000' : (isN115 ? '0x200118a4' : '0x240118a4'));
+        payload = await EquaLibLinker.convertNwaToBin(payload, {
+          flashStart: '0x' + targetFlashAddr.toString(16),
+          ramStart: ramAddrHex,
+          ramLength: isN110 ? '64K' : '138K',
+          ldWasmUrl: 'toolchain/ld.wasm',
+          objcopyWasmUrl: 'toolchain/objcopy.wasm'
+        });
+      }
+
+      const slotLimit = getMaxFlashBytes();
+      if (payload.byteLength > slotLimit) {
+        throw new Error(`"${app.name}" (${(payload.byteLength / 1048576).toFixed(2)} Mo) dépasse même la Flash totale (${(slotLimit / 1048576).toFixed(2)} Mo).`);
+      }
+
+      await usb.flashBinary(payload, (progress) => {
+        const percent = (typeof progress === 'number') ? progress : progress.percent;
+        const msg = (typeof progress === 'object' && progress.message) ? progress.message : `Progression : ${percent}%`;
+        if (flashProgress) flashProgress.style.width = `${percent}%`;
+        if (progressText) progressText.textContent = msg;
+      }, targetFlashAddr);
+
+      connectionDot.className = 'w-2.5 h-2.5 rounded-full bg-slate-500';
+      connectionText.textContent = 'Installé ✓';
+      connectBtn.innerHTML = '<span>🔌</span> <span class="hidden sm:inline">Connecter</span>';
+      window.soundFx?.playSuccess();
+      showToast(`🎉 "${app.name}" installé directement sans le Hub EquaLib ! Ouvrez-le via [Home] sur votre NumWorks.`, 'success');
+    } catch (err) {
+      console.error('[Standalone Flash] Erreur :', err);
+      if (!usb.device || !usb.device.opened || err.message?.includes('déconnect') || err.message?.includes('disconnect')) {
+        usb.isConnected = false;
+        usb.device = null;
+        if (connectionDot) connectionDot.className = 'w-2.5 h-2.5 rounded-full bg-slate-500';
+        if (connectionText) connectionText.textContent = 'Non connectée';
+        if (connectBtn) connectBtn.innerHTML = '<span>🔌</span> <span class="hidden sm:inline">Connecter</span>';
+      }
+      window.soundFx?.playHit();
+      showToast(err.message || `Échec installation standalone de "${app.name}"`, 'error');
+    } finally {
+      if (triggerBtn) {
+        triggerBtn.disabled = false;
+        triggerBtn.innerHTML = prevHtml;
+      }
+    }
+  }
+
+  flashBtn.addEventListener('click', async () => {
+    let usbTarget = null;
+    try {
+      usbTarget = await ensureUsbReadyForFlash();
+    } catch (e) {
+      window.soundFx?.playHit();
+      showToast(e.message || 'Échec de connexion USB', 'error');
+      return;
     }
 
     try {
@@ -3173,30 +3369,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       flashProgress.style.width = '0%';
       progressText.textContent = `Génération du pack personnalisé (${selectedApps.length} application${selectedApps.length > 1 ? 's' : ''})...`;
 
-      // 1. Détermination STRICTE du modèle cible :
-      let targetModel = 'N0110';
-      if (usb && usb.isConnected) {
-        if (usb.model.includes('120') || usb.flashAddress === 0x90180000 || usb.flashAddress === 0x90580000) {
-          targetModel = 'N0120';
-        } else if (isN0115Model(usb.model, usb.flashAddress)) {
-          targetModel = 'N0115';
-        } else {
-          targetModel = 'N0110';
-        }
-      } else {
-        const pref = (userSettings.manualModel || userSettings.targetModel || 'N0110');
-        targetModel = pref.includes('120') ? 'N0120' : (isN0115Model(pref) ? 'N0115' : 'N0110');
-        if (usb && typeof usb.setTargetModel === 'function') {
-          usb.setTargetModel(targetModel);
-        }
-      }
-
-      const defaultForModel = (targetModel === 'N0120') 
-        ? ((usb && usb.flashAddress === 0x90180000) ? DEFAULT_FLASH_ADDR_N0120 : DEFAULT_FLASH_ADDR_N0120_EPS26) 
-        : ((targetModel === 'N0115') ? DEFAULT_FLASH_ADDR_N0115 : DEFAULT_FLASH_ADDR_N0110);
-      const targetFlashAddr = (usb && usb.flashAddress && usb.flashAddress !== 0x90000000) 
-        ? usb.flashAddress 
-        : defaultForModel;
+      const { targetModel, targetFlashAddr } = usbTarget;
 
       await ensurePackPayloads(selectedApps);
       const wpBytes = getCustomWallpaperBuffer();

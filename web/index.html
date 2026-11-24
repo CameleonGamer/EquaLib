@@ -683,6 +683,7 @@
               <span id="memory-text">0.00 Mo / 4.00 Mo</span>
               <span id="slots-remaining-text" class="text-[#8EA5C8]">12 slots libres</span>
             </div>
+            <p id="memory-breakdown" class="text-[10px] text-[#94A3B8] font-mono leading-snug pt-1 border-t border-[#1B3B6F]/60">Hub EquaLib : 1080 Ko • Vos jeux : 0 Ko • Libre : 904 Ko</p>
           </div>
 
           <!-- Sauvegarde et Partage du Pack -->
@@ -891,9 +892,12 @@
       </div>
 
       <!-- Boutons d'action -->
-      <div class="pt-2 flex gap-3">
+      <div class="pt-2 flex flex-wrap gap-2.5">
         <button id="modal-toggle-pack-btn" class="flex-1 py-3 px-4 rounded-none btn-cyber-gold text-xs font-heading font-extrabold uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer transition-all border-2 border-black shadow-[3px_3px_0px_#01040A]">
           <span>+ Ajouter au Pack</span>
+        </button>
+        <button id="modal-standalone-btn" class="hidden py-3 px-3.5 rounded-none bg-cyan-400 hover:bg-cyan-300 text-black font-heading font-extrabold text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 cursor-pointer transition-all border-2 border-black shadow-[3px_3px_0px_#01040A]" title="Installer cette application seule sans le Hub EquaLib">
+          <span>⚡</span> <span>Flasher seul</span>
         </button>
         <button id="modal-cancel-btn" class="py-3 px-4 rounded-none bg-[#11264B] hover:bg-[#1B3B6F] text-[#F8FAFC] font-mono font-bold text-xs uppercase tracking-wider border-2 border-[#1B3B6F] shadow-[3px_3px_0px_#01040A] cursor-pointer transition-all">
           Fermer
@@ -970,6 +974,9 @@
       </button>
       <button id="dock-action-btn" class="px-3.5 py-1.5 rounded-none bg-[#FFD700] hover:bg-[#FF9100] text-black text-xs font-mono font-extrabold border-2 border-black shadow-[2px_2px_0px_#01040A] cursor-pointer transition-all uppercase tracking-wide">
         + Ajouter
+      </button>
+      <button id="dock-standalone-btn" class="hidden px-3 py-1.5 rounded-none bg-cyan-400 hover:bg-cyan-300 text-black text-xs font-mono font-extrabold border-2 border-black shadow-[2px_2px_0px_#01040A] cursor-pointer transition-all uppercase tracking-wide" title="Installer cette app seule sans le Hub EquaLib">
+        ⚡ Seul
       </button>
       <button id="dock-close-btn" class="w-6 h-6 rounded-none bg-[#030814] hover:bg-[#11264B] text-[#8EA5C8] hover:text-white border-2 border-[#1B3B6F] text-xs font-mono flex items-center justify-center cursor-pointer ml-1 font-bold" title="Masquer ce dock" aria-label="Fermer le dock">✕</button>
     </div>
@@ -1303,10 +1310,10 @@
   <script src="sim_engine.js?v=113"></script>
   <script src="nwa_linker.js?v=113"></script>
   <script src="bundler.js?v=114"></script>
-  <script src="webusb.js?v=114"></script>
+  <script src="webusb.js?v=115"></script>
   <script src="crt_math.js?v=114"></script>
   <script src="wallpaper_studio.js?v=115"></script>
   <script src="walkthrough_guide.js?v=114"></script>
-  <script src="app.js?v=115"></script>
+  <script src="app.js?v=116"></script>
 </body>
 </html>

@@ -691,10 +691,13 @@ class NumWorksWebUSB {
       console.warn("[WebUSB] Détection d'un fichier ELF .nwa. Liaison automatique vers binaire exécutable .bin...");
       if (typeof EquaLibLinker !== 'undefined' && EquaLibLinker.convertNwaToBin) {
         const isN0110 = this.isN110Model();
-        const defaultForModel = isN0110 ? DEFAULT_FLASH_ADDR_N0110 : DEFAULT_FLASH_ADDR_N0120;
+        const isN0115 = this.flashAddress === DEFAULT_FLASH_ADDR_N0115;
+        const defaultForModel = isN0110 ? (isN0115 ? DEFAULT_FLASH_ADDR_N0115 : DEFAULT_FLASH_ADDR_N0110) : DEFAULT_FLASH_ADDR_N0120;
+        const ramAddrHex = this.ramAddress ? ('0x' + this.ramAddress.toString(16)) : (isN0110 ? '0x20000000' : '0x240118a4');
         const converted = await EquaLibLinker.convertNwaToBin(uint8, {
           flashStart: '0x' + (targetFlashAddr || this.flashAddress || defaultForModel).toString(16),
-          ramStart: isN0110 ? '0x20000000' : '0x24020000',
+          ramStart: ramAddrHex,
+          ramLength: (isN0110 && !isN0115) ? '64K' : '138K',
           ldWasmUrl: 'toolchain/ld.wasm',
           objcopyWasmUrl: 'toolchain/objcopy.wasm'
         });

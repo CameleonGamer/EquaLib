@@ -1626,6 +1626,26 @@ describe('7. Compilation et Validité Syntaxique des Jeux Python (.NWS)', () => 
           customWallpaper: new Uint8Array(12 * 153600)
         });
         assert(patchedGif.length <= (0x903F0000 - 0x90180000), `Le binaire patché avec GIF + app (${patchedGif.length} B) ne doit pas dépasser le slot N0120`);
+
+        // Clarté pack vide + installation standalone pour gros jeux NumPlay
+        global.window.setAppTheme('default');
+        global.window.setTargetModel('N0110', false);
+        getOrCreateElement('btn-pack-clear').click();
+        const memBreakdown = getOrCreateElement('memory-breakdown');
+        assert(memBreakdown.textContent.includes('Hub EquaLib : 1080 Ko') && memBreakdown.textContent.includes('Libre pack : 904 Ko'), `Détail mémoire doit expliquer Hub + Libre (reçu: ${memBreakdown.textContent})`);
+        const cardFnaf3110 = catalogList.children.find(c => c.getAttribute('data-app-id') === 'np_fnaf3');
+        assert(cardFnaf3110 && cardFnaf3110.innerHTML.includes('N0120 OK'), 'np_fnaf3 sur N0110 vide doit indiquer N0120 OK');
+        cardFnaf3110.listeners['mouseenter']?.forEach(fn => fn());
+        const dockStandaloneBtn = getOrCreateElement('dock-standalone-btn');
+        assert(!dockStandaloneBtn.classList.contains('hidden'), 'dock-standalone-btn doit apparaître pour un jeu installable seul sans Hub');
+
+        global.window.setTargetModel('N0120', false);
+        const cardDoom120 = catalogList.children.find(c => c.getAttribute('data-app-id') === 'np_doom');
+        assert(cardDoom120 && cardDoom120.innerHTML.includes('OK seul'), 'np_doom (1722 Ko) sur N0120 vide doit expliquer Trop grand Hub • OK seul');
+        const cardFnafWorld120 = catalogList.children.find(c => c.getAttribute('data-app-id') === 'np_fnafworld');
+        assert(cardFnafWorld120 && cardFnafWorld120.innerHTML.includes('> Flash'), 'np_fnafworld (4718 Ko) doit indiquer qu il dépasse toute la Flash');
+        cardFnafWorld120.listeners['mouseenter']?.forEach(fn => fn());
+        assert(dockStandaloneBtn.classList.contains('hidden'), 'dock-standalone-btn doit rester caché quand app > Flash totale');
       } finally {
         global.document = originalDocument;
         global.window = originalWindow;
