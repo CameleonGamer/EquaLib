@@ -47,6 +47,17 @@ void* memmove(void* dest, const void* src, size_t n) {
     return dest;
 }
 
+__attribute__((weak, optimize("no-tree-loop-distribute-patterns")))
+void* memset(void* dest, int c, size_t n) {
+    unsigned char* d = (unsigned char*)dest;
+    unsigned char val = (unsigned char)c;
+    while (n--) {
+        __asm__ volatile("" : "+r"(d));
+        *d++ = val;
+    }
+    return dest;
+}
+
 static int append_int(char* buf, size_t max, size_t* pos, int val, int width, int zero_pad) {
     char tmp[16];
     int i = 0;

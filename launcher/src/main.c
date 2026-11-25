@@ -1435,8 +1435,14 @@ int main(int argc, char* argv[]) {
             const equalib_manifest_app_t* app = &g_equalib_manifest.apps[selected];
             uint8_t type = app->app_type;
 
+#ifndef EQUALIB_SLIM
             if (type == APP_TYPE_MARIOKART) run_mariokart_app();
-            else if (type == APP_TYPE_PERIODIC) run_periodic_table_app();
+            else
+#else
+            if (0) {}
+            else
+#endif
+            if (type == APP_TYPE_PERIODIC) run_periodic_table_app();
             else if (type == APP_TYPE_COURSES) run_courses_app();
             else if (type == APP_TYPE_MATH_TOOLS) run_math_tools_app();
             else if (type == APP_TYPE_FLAPPY) run_flappy_app();
@@ -1450,7 +1456,9 @@ int main(int argc, char* argv[]) {
             else if (type == APP_TYPE_BREAKOUT) run_breakout_app();
             else if (type == APP_TYPE_PUISSANCE4) run_puissance4_app();
             else if (type == APP_TYPE_MORPION) run_morpion_app();
+#ifndef EQUALIB_SLIM
             else if (type == APP_TYPE_FNAF) run_fnaf_app();
+#endif
             else if (type == APP_TYPE_SETTINGS) run_settings_screen();
             else if (type == APP_TYPE_NATIVE_EXEC) {
                 uintptr_t flash_base = get_app_flash_base();

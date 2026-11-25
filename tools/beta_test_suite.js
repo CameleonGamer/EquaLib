@@ -1589,15 +1589,27 @@ describe('7. Compilation et Validité Syntaxique des Jeux Python (.NWS)', () => 
         const searchHeavyCard = searchResultsList.children.find(c => c.className.includes('is-too-heavy'));
         assert(searchHeavyCard && searchHeavyCard.innerHTML.includes('Trop lourd'), 'Onglet communauté doit griser les apps trop lourdes');
 
-        // Vider le pack libère la place pour np_fnaf3 sur N0120, puis passer sur N0110 grise np_deltarune
+        // Vider le pack bascule vers le Hub allégé (~99 Ko) et débloque Angry Birds, Among Us, FNAF et Clash Royale même sur N0110
         getOrCreateElement('btn-pack-clear').click();
-        const cardFnaf3AfterClear = catalogList.children.find(c => c.getAttribute('data-app-id') === 'np_fnaf3');
-        assert(cardFnaf3AfterClear && !cardFnaf3AfterClear.className.includes('is-too-heavy'), 'np_fnaf3 doit redevenir ajoutable pack vide sur N0120');
+        const memBreakdown = getOrCreateElement('memory-breakdown');
+        assert(memBreakdown.textContent.includes('Hub EquaLib : 99 Ko') && memBreakdown.textContent.includes('Libre pack : 2397 Ko'), `Détail mémoire N0120 vide doit afficher Hub 99 Ko + 2397 Ko libres (reçu: ${memBreakdown.textContent})`);
+        for (const id of ['np_angrybirds', 'np_amongus', 'fnaf', 'np_clashroyale', 'np_fnaf3', 'np_celeste']) {
+          const card120 = catalogList.children.find(c => c.getAttribute('data-app-id') === id);
+          assert(card120 && !card120.className.includes('is-too-heavy'), `${id} doit être sélectionnable pack vide sur N0120`);
+        }
 
         global.window.setTargetModel('N0110', false);
         assert(memText.textContent.includes('1.94 Mo'), `Jauge N0110 doit afficher 1.94 Mo (reçu: ${memText.textContent})`);
-        const cardDeltarune110 = catalogList.children.find(c => c.getAttribute('data-app-id') === 'np_deltarune');
-        assert(cardDeltarune110 && cardDeltarune110.className.includes('is-too-heavy'), 'np_deltarune (1074 Ko > 904 Ko) doit être grisé sur N0110');
+        assert(memBreakdown.textContent.includes('Hub EquaLib : 99 Ko') && memBreakdown.textContent.includes('Libre pack : 1885 Ko'), `Détail mémoire N0110 vide doit afficher Hub 99 Ko + 1885 Ko libres (reçu: ${memBreakdown.textContent})`);
+        for (const id of ['np_angrybirds', 'np_amongus', 'fnaf', 'np_clashroyale']) {
+          const card110 = catalogList.children.find(c => c.getAttribute('data-app-id') === id);
+          assert(card110 && !card110.className.includes('is-too-heavy'), `${id} doit être sélectionnable pack vide sur N0110`);
+        }
+        const cardCeleste110 = catalogList.children.find(c => c.getAttribute('data-app-id') === 'np_celeste');
+        assert(cardCeleste110 && cardCeleste110.className.includes('is-too-heavy') && cardCeleste110.innerHTML.includes('N0120 OK'), 'np_celeste (1969 Ko > 1885 Ko) doit indiquer N0120 OK sur N0110 vide');
+        cardCeleste110.listeners['mouseenter']?.forEach(fn => fn());
+        const dockStandaloneBtn = getOrCreateElement('dock-standalone-btn');
+        assert(!dockStandaloneBtn.classList.contains('hidden'), 'dock-standalone-btn doit apparaître pour np_celeste');
 
         // Régression: Un fond GIF multi-frames stocké ne doit pas tout griser après vidage du pack
         global.window.customWallpaperRGB565 = new Uint8Array(12 * 153600);
@@ -1607,17 +1619,14 @@ describe('7. Compilation et Validité Syntaxique des Jeux Python (.NWS)', () => 
         assert(cardTetrisDefault && !cardTetrisDefault.className.includes('is-too-heavy'), 'Thème default ne doit pas compter customWallpaperRGB565 ni griser les apps');
         global.window.setAppTheme('custom');
         const selectableInCustom = catalogList.children.filter(c => !c.className.includes('is-too-heavy'));
-        assert(selectableInCustom.length >= 50, `Avec GIF 12 frames en thème custom sur N0110 vide, au moins 50 apps doivent rester sélectionnables (reçu: ${selectableInCustom.length})`);
+        assert(selectableInCustom.length >= 65, `Avec GIF 12 frames en thème custom sur N0110 vide, au moins 65 apps doivent rester sélectionnables (reçu: ${selectableInCustom.length})`);
         global.window.setTargetModel('N0120', false);
-        const cardDeltaruneCustom = catalogList.children.find(c => c.getAttribute('data-app-id') === 'np_deltarune');
-        assert(cardDeltaruneCustom && !cardDeltaruneCustom.className.includes('is-too-heavy'), 'Sur N0120 vide avec thème custom GIF, np_deltarune (1074 Ko <= 1266 Ko) doit être sélectionnable');
-        global.window.setAppTheme('default');
-        const cardFnaf3Default = catalogList.children.find(c => c.getAttribute('data-app-id') === 'np_fnaf3');
-        assert(cardFnaf3Default && !cardFnaf3Default.className.includes('is-too-heavy'), 'Sur N0120 vide avec thème default (sans wallpaper custom), np_fnaf3 (1313 Ko) doit être sélectionnable');
+        const cardFnaf3Custom = catalogList.children.find(c => c.getAttribute('data-app-id') === 'np_fnaf3');
+        assert(cardFnaf3Custom && !cardFnaf3Custom.className.includes('is-too-heavy'), 'Sur N0120 vide avec thème custom GIF, np_fnaf3 (1313 Ko) doit être sélectionnable');
 
         // Bundler doit adapter le nombre de frames GIF sans dépasser le slot quand des apps sont présentes
         const gifBundler = new EquaLibBundler();
-        const patchedGif = await gifBundler.patchManifest(fs.readFileSync('web/equalib_n0120.bin'), [
+        const patchedGif = await gifBundler.patchManifest(fs.readFileSync('web/equalib_slim_n0120.bin'), [
           { id: 'fake_nwa', name: 'Test App', format: 'NWA', data: new Uint8Array(700 * 1024).fill(0xDE).map((v, i) => i === 0 ? 0xBA : (i === 1 ? 0xBE : (i === 2 ? 0xC0 : (i === 3 ? 0xDE : 1)))) }
         ], {
           targetModel: 'N0120',
@@ -1627,21 +1636,11 @@ describe('7. Compilation et Validité Syntaxique des Jeux Python (.NWS)', () => 
         });
         assert(patchedGif.length <= (0x903F0000 - 0x90180000), `Le binaire patché avec GIF + app (${patchedGif.length} B) ne doit pas dépasser le slot N0120`);
 
-        // Clarté pack vide + installation standalone pour gros jeux NumPlay
-        global.window.setAppTheme('default');
-        global.window.setTargetModel('N0110', false);
-        getOrCreateElement('btn-pack-clear').click();
-        const memBreakdown = getOrCreateElement('memory-breakdown');
-        assert(memBreakdown.textContent.includes('Hub EquaLib : 1080 Ko') && memBreakdown.textContent.includes('Libre pack : 904 Ko'), `Détail mémoire doit expliquer Hub + Libre (reçu: ${memBreakdown.textContent})`);
-        const cardFnaf3110 = catalogList.children.find(c => c.getAttribute('data-app-id') === 'np_fnaf3');
-        assert(cardFnaf3110 && cardFnaf3110.innerHTML.includes('N0120 OK'), 'np_fnaf3 sur N0110 vide doit indiquer N0120 OK');
-        cardFnaf3110.listeners['mouseenter']?.forEach(fn => fn());
-        const dockStandaloneBtn = getOrCreateElement('dock-standalone-btn');
-        assert(!dockStandaloneBtn.classList.contains('hidden'), 'dock-standalone-btn doit apparaître pour un jeu installable seul sans Hub');
+        const slimBundle = await gifBundler.buildBundle([], 'bin', { targetModel: 'N0110', theme: 'default' });
+        assert(slimBundle.totalBytes < 150000, `Le pack vide doit utiliser le Hub allégé < 150 Ko (reçu: ${slimBundle.totalBytes})`);
 
+        global.window.setAppTheme('default');
         global.window.setTargetModel('N0120', false);
-        const cardDoom120 = catalogList.children.find(c => c.getAttribute('data-app-id') === 'np_doom');
-        assert(cardDoom120 && cardDoom120.innerHTML.includes('OK seul'), 'np_doom (1722 Ko) sur N0120 vide doit expliquer Trop grand Hub • OK seul');
         const cardFnafWorld120 = catalogList.children.find(c => c.getAttribute('data-app-id') === 'np_fnafworld');
         assert(cardFnafWorld120 && cardFnafWorld120.innerHTML.includes('> Flash'), 'np_fnafworld (4718 Ko) doit indiquer qu il dépasse toute la Flash');
         cardFnafWorld120.listeners['mouseenter']?.forEach(fn => fn());

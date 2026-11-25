@@ -223,9 +223,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Constantes mémoire Flash QSPI par modèle NumWorks
   const MAX_FLASH_BYTES_N0110 = 0x903F0000 - 0x90200000; // 1.94 Mo (1984 Ko) N0110 / N0115
   const MAX_FLASH_BYTES_N0120 = 0x903F0000 - 0x90180000; // 2.44 Mo (2496 Ko) N0120
-  const BASE_LAUNCHER_BYTES = 1105720; // Taille réelle du binaire Hub EquaLib (~1.05 Mo)
+  const BASE_SLIM_LAUNCHER_BYTES = 101496; // Hub EquaLib allégé (~99 Ko sans Mario Kart / FNAF C)
+  const BASE_FULL_LAUNCHER_BYTES = 1105720; // Hub Complet avec Mario Kart 3D + FNAF C (~1080 Ko)
+  const FULL_HUB_DELTA_BYTES = BASE_FULL_LAUNCHER_BYTES - BASE_SLIM_LAUNCHER_BYTES; // ~981 Ko
+  const BASE_LAUNCHER_BYTES = BASE_SLIM_LAUNCHER_BYTES;
   const WP_FRAME_BYTES = 153600;
-  const BUILTIN_HUB_IDS = new Set(['mariokart', 'periodique', 'fiches', 'math_solver', 'pong', 'morpion', 'settings', 'comm_settings']);
+  const BUILTIN_HUB_IDS = new Set(['periodique', 'fiches', 'math_solver', 'pong', 'morpion', 'settings', 'comm_settings']);
   const DEFAULT_FLASH_ADDR_N0120 = 0x90180000;
   const DEFAULT_FLASH_ADDR_N0120_EPS26 = 0x90580000;
   const DEFAULT_FLASH_ADDR_N0115 = 0x90600000;
@@ -467,9 +470,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
   }
 
-  function getActiveWallpaperBytes() {
-    const appsBytes = selectedApps.reduce((acc, s) => acc + getAppFlashBytes(s), 0);
-    return getWallpaperFlashBreakdown(appsBytes).fittedBytes;
+  function isFullHubRequiredApp(app) {
+    if (!app) return false;
+    const idLower = String(app.id || '').toLowerCase();
+    const nameLower = String(app.name || '').toLowerCase();
+    const hasNativeData = Boolean(app.data && app.data.length >= 4 && (
+      (app.data[0] === 0x7F && app.data[1] === 0x45 && app.data[2] === 0x4C && app.data[3] === 0x46) ||
+      (app.data[0] === 0xBA && app.data[1] === 0xBE && app.data[2] === 0xC0 && app.data[3] === 0xDE)
+    ));
+    if (hasNativeData) return false;
+    if (idLower === 'mariokart' || idLower.includes('mario') || nameLower.includes('mario')) return true;
+    if ((idLower === 'fnaf' || idLower === 'comm_fnaf') && !app.download_url) return true;
+    return false;
   }
 
   function isBuiltinHubApp(app) {
@@ -482,12 +494,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     ));
     if (hasNativeData) return false;
     if (BUILTIN_HUB_IDS.has(idLower)) return true;
-    if (idLower === 'fnaf' && String(app.format || '').toUpperCase() !== 'NWA') return true;
     return false;
   }
 
   function getAppFlashBytes(app) {
     if (!app || isBuiltinHubApp(app)) return 0;
+    if (isFullHubRequiredApp(app)) return FULL_HUB_DELTA_BYTES;
     if (typeof app.bin_kb === 'number' && app.bin_kb > 0) {
       return app.bin_kb * 1024;
     }
@@ -500,6 +512,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   function getAppDisplayKb(app) {
     if (!app) return 0;
+    if (isFullHubRequiredApp(app)) return Math.round(FULL_HUB_DELTA_BYTES / 1024);
     if (typeof app.bin_kb === 'number' && app.bin_kb > 0) return app.bin_kb;
     return app.size_kb || 0;
   }
@@ -508,14 +521,35 @@ document.addEventListener('DOMContentLoaded', async () => {
     return `${Math.max(0, Math.round(bytes / 1024))} Ko`;
   }
 
+  function getSelectedAppsFlashBytes() {
+    let fullHubCounted = false;
+    let total = 0;
+    for (const s of selectedApps) {
+      if (isFullHubRequiredApp(s)) {
+        if (!fullHubCounted) {
+          total += FULL_HUB_DELTA_BYTES;
+          fullHubCounted = true;
+        }
+      } else {
+        total += getAppFlashBytes(s);
+      }
+    }
+    return total;
+  }
+
+  function getActiveWallpaperBytes() {
+    return getWallpaperFlashBreakdown(getSelectedAppsFlashBytes()).fittedBytes;
+  }
+
   function getFlashStats() {
     const maxBytes = getMaxFlashBytes();
-    const appsBytes = selectedApps.reduce((acc, s) => acc + getAppFlashBytes(s), 0);
+    const appsBytes = getSelectedAppsFlashBytes();
     const wp = getWallpaperFlashBreakdown(appsBytes);
     const baseBytes = BASE_LAUNCHER_BYTES + wp.minBytes;
     const usedBytes = BASE_LAUNCHER_BYTES + wp.fittedBytes + appsBytes;
     const remainingBytes = Math.max(0, maxBytes - (baseBytes + appsBytes));
-    return { maxBytes, baseBytes, appsBytes, usedBytes, remainingBytes, wpFrames: wp.fittedFrames, wpTotalFrames: wp.totalFrames };
+    const hasFullHubModule = selectedApps.some(isFullHubRequiredApp);
+    return { maxBytes, baseBytes, appsBytes, usedBytes, remainingBytes, wpFrames: wp.fittedFrames, wpTotalFrames: wp.totalFrames, hasFullHubModule };
   }
 
   function getAddEligibility(app) {
@@ -524,8 +558,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (selectedApps.some(s => s.id === app.id)) {
       return { ok: false, reason: 'already_selected', tooHeavy: false, packFull: false, fitsOnN0120Pack: false, standaloneFits: false, exceedsDeviceFlash: false, appBytes: getAppFlashBytes(app), ...getFlashStats() };
     }
-    const { maxBytes, baseBytes, appsBytes, remainingBytes } = getFlashStats();
-    const appBytes = getAppFlashBytes(app);
+    const { maxBytes, baseBytes, appsBytes, remainingBytes, hasFullHubModule } = getFlashStats();
+    const appBytes = (isFullHubRequiredApp(app) && hasFullHubModule) ? 0 : getAppFlashBytes(app);
     if (appBytes > remainingBytes) {
       const standaloneExceeds = (baseBytes + appBytes) > maxBytes;
       const fitsOnN0120Pack = !modelInfo.isN120 && ((baseBytes + appsBytes + appBytes) <= MAX_FLASH_BYTES_N0120);
@@ -2929,7 +2963,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   function updateMemoryUsage() {
-    const { maxBytes, baseBytes, appsBytes, usedBytes, remainingBytes, wpFrames } = getFlashStats();
+    const { maxBytes, baseBytes, appsBytes, usedBytes, remainingBytes, wpFrames, hasFullHubModule } = getFlashStats();
     const modelInfo = getActiveModelFlashInfo();
     const totalBytes = usedBytes;
     const mbUsed = (totalBytes / (1024 * 1024)).toFixed(2);
@@ -2942,11 +2976,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const memoryBreakdown = document.getElementById('memory-breakdown');
     if (memoryBreakdown) {
+      const hubBytes = hasFullHubModule ? BASE_FULL_LAUNCHER_BYTES : BASE_SLIM_LAUNCHER_BYTES;
+      const otherAppsBytes = Math.max(0, hasFullHubModule ? (appsBytes - FULL_HUB_DELTA_BYTES) : appsBytes);
+      const hubLabel = hasFullHubModule ? 'Hub + Mario Kart' : 'Hub EquaLib';
       const wpPart = wpFrames > 0 ? ` + Fond (${formatKb(wpFrames * WP_FRAME_BYTES)})` : '';
       const n120Hint = !modelInfo.isN120
         ? ` • N0120 : ${formatKb(Math.max(0, MAX_FLASH_BYTES_N0120 - baseBytes - appsBytes))} libres`
         : '';
-      memoryBreakdown.textContent = `Hub EquaLib : ${formatKb(BASE_LAUNCHER_BYTES)}${wpPart} • Jeux pack : ${formatKb(appsBytes)} • Libre pack : ${formatKb(remainingBytes)}${n120Hint}`;
+      memoryBreakdown.textContent = `${hubLabel} : ${formatKb(hubBytes)}${wpPart} • Jeux pack : ${formatKb(otherAppsBytes)} • Libre pack : ${formatKb(remainingBytes)}${n120Hint}`;
     }
 
     const slotsRemainingText = document.getElementById('slots-remaining-text');

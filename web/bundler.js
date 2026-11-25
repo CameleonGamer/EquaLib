@@ -455,6 +455,26 @@ class EquaLibBundler {
   }
 
   /**
+   * Indique si le pack requiert le binaire complet (Mario Kart ou FNAF C interne) au lieu du Hub allégé (~99 Ko).
+   */
+  requiresFullHub(apps = []) {
+    if (!Array.isArray(apps) || apps.length === 0) return false;
+    return apps.some(app => {
+      if (!app) return false;
+      const idLower = String(app.id || '').toLowerCase();
+      const nameLower = String(app.name || '').toLowerCase();
+      const hasNativeBytes = Boolean(app.data && app.data.length >= 4 && (
+        (app.data[0] === 0xBA && app.data[1] === 0xBE && app.data[2] === 0xC0 && app.data[3] === 0xDE) ||
+        (app.data[0] === 0x7F && app.data[1] === 0x45 && app.data[2] === 0x4C && app.data[3] === 0x46)
+      ));
+      if (hasNativeBytes) return false;
+      if (idLower === 'mariokart' || idLower.includes('mario') || nameLower.includes('mario')) return true;
+      if ((idLower === 'fnaf' || idLower === 'comm_fnaf') && !app.download_url) return true;
+      return false;
+    });
+  }
+
+  /**
    * Construit et retourne le fichier (.bin ou .nwa) personnalisé pour l'installation
    * @param {Array} apps Liste des applications sélectionnées
    * @param {string} format 'bin' pour le flash direct WebUSB, 'nwa' pour le téléversement manuel
@@ -469,9 +489,11 @@ class EquaLibBundler {
     const isN0115 = modelOption.includes('115') || options.flashAddress === 0x90600000;
     const n0120Suffix = isSlot18 ? 'n0120' : 'n0120_58';
     const modelSuffix = isN0120 ? n0120Suffix : (isN0115 ? 'n0115' : 'n0110');
-    const targetFile = isBin ? `equalib_${modelSuffix}.bin` : (isN0120 ? 'equalib_n0120.nwa' : (isN0115 ? 'equalib_n0115.nwa' : 'equalib_n0110.nwa'));
-    const fallbackFile = isBin ? 'equalib_n0110.bin' : 'equalib_n0110.nwa';
-    console.log(`[EquaLib] Génération du pack personnalisé (${apps.length} apps, format: ${format}, modèle: ${modelSuffix.toUpperCase()})...`);
+    const useFullHub = this.requiresFullHub(apps);
+    const prefix = useFullHub ? 'equalib_' : 'equalib_slim_';
+    const targetFile = isBin ? `${prefix}${modelSuffix}.bin` : (isN0120 ? `${prefix}n0120.nwa` : (isN0115 ? `${prefix}n0115.nwa` : `${prefix}n0110.nwa`));
+    const fallbackFile = isBin ? `${prefix}n0110.bin` : `${prefix}n0110.nwa`;
+    console.log(`[EquaLib] Génération du pack personnalisé (${apps.length} apps, format: ${format}, modèle: ${modelSuffix.toUpperCase()}, hub: ${useFullHub ? 'complet' : 'allégé'})...`);
 
     let rawData = null;
 
