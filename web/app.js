@@ -616,9 +616,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       };
     }
     if (elig.exceedsDeviceFlash) {
+      const requiresNwagra = elig.appBytes > MAX_FLASH_BYTES_N0120;
       return {
-        title: `Dépasse la capacité Flash totale (${reqKb} > ${maxKb}), même sans Hub`,
-        cardHint: `> Flash (${maxKb})`,
+        title: requiresNwagra
+          ? `Incompatible slot officiel (${reqKb} > 2496 Ko max N0120) — ce portage requiert un firmware modifié 6 Mo (Nwagra)`
+          : `Dépasse la capacité Flash totale (${reqKb} > ${maxKb}), même sans Hub`,
+        cardHint: requiresNwagra ? 'Nwagra 6 Mo requis' : `> Flash (${maxKb})`,
         buttonLabel: '⛔ Trop lourd',
         standaloneOk: false
       };
@@ -695,8 +698,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const modalControls = document.getElementById('modal-controls-model');
     if (modalControls) modalControls.textContent = isN120 ? 'N0120' : (isN115 ? 'N0115' : 'N0110 / N0115');
 
+    updateMemoryUsage();
     if (catalogApps.length > 0) {
-      updateMemoryUsage();
       renderCatalog();
       renderCommunitySearch();
       if (currentActiveDockApp) updateActiveAppDock(currentActiveDockApp);
@@ -789,7 +792,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         color: ${hex} !important;
       }
       [class*="bg-[#FFD700]"],
-      [class*="bg-[#FFBB00]"],
+      [class*="bg-[#FFBB00]"]:not(#memory-progress-bar),
       [class*="bg-nw-yellow"],
       [class*="bg-nw-gold"],
       [class*="bg-nw-yellowHover"] {
@@ -861,9 +864,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       #active-app-dock {
         border-color: ${hex} !important;
         box-shadow: 6px 6px 0px #01040A, 0 0 28px rgba(${r}, ${g}, ${b}, 0.45) !important;
-      }
-      #memory-progress-bar {
-        background: linear-gradient(90deg, ${hoverHex}, ${hex}) !important;
       }
       #flash-progress {
         background: linear-gradient(90deg, ${hoverHex}, ${hex}) !important;
@@ -1237,7 +1237,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     modalAppName.textContent = app.name;
     modalAppCat.textContent = app.category;
-    modalAppMeta.textContent = `v${app.version || '1.0'} • ${getAppDisplayKb(app)} Ko • Par ${app.author || 'Inconnu'}`;
+    const modalSizeStr = isBuiltinHubApp(app) ? 'Hub intégré' : `${getAppDisplayKb(app)} Ko`;
+    modalAppMeta.textContent = `v${app.version || '1.0'} • ${modalSizeStr} • Par ${app.author || 'Inconnu'}`;
+    if (modalAppDesc) modalAppDesc.textContent = app.description || '';
     modalAppIcon.innerHTML = getAppIconHtml(app, 'w-full h-full object-contain p-1');
     modalAppIcon.style.backgroundColor = app.color || '#F59E0B';
 
@@ -1299,7 +1301,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         </div>
       `;
     }
-    if (keyDetails.tips) {
+    const isNwagraBlocked = Boolean(!isSelected && elig && elig.exceedsDeviceFlash && elig.appBytes > MAX_FLASH_BYTES_N0120);
+    if (isNwagraBlocked) {
+      controlsHtml += `
+        <div class="mt-2 pt-2 border-t border-red-800/70 text-[11px] text-red-300 font-semibold">
+          ⚠️ Incompatible avec les slots officiels NumWorks (${formatKb(elig.appBytes)} &gt; 2496 Ko max N0120). Ce portage NumPlay requiert un firmware modifié à slot élargi 6 Mo (Nwagra).
+        </div>
+      `;
+    } else if (keyDetails.tips) {
       controlsHtml += `
         <div class="mt-2 pt-2 border-t border-slate-800 text-[10px] text-slate-400 italic">
           💡 ${keyDetails.tips}
@@ -1768,6 +1777,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (preview) preview.style.backgroundColor = '#FFD700';
     applyUserSettings();
     saveUserSettings();
+    updateUI();
     renderCatalog();
     renderCommunitySearch();
     showToast('Paramètres réinitialisés aux valeurs d\'origine (#FFD700).', 'info');
@@ -1823,7 +1833,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (!currentActiveDockApp) return;
       window.soundFx?.playClick();
       if (simulator && typeof simulator.launchApp === 'function') {
-        simulator.launchApp(currentActiveDockApp.id);
+        simulator.launchApp(currentActiveDockApp.id, currentActiveDockApp);
         showToast(`🎮 Lancement de "${currentActiveDockApp.name}" dans le simulateur`, 'info');
       } else {
         openAppDetails(currentActiveDockApp);
@@ -2862,7 +2872,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             </div>
             <div class="min-w-0 flex-1">
               <p class="text-xs font-heading font-bold text-[#F8FAFC] truncate hover:text-[#FFD700] transition-colors uppercase tracking-wide">${app.name}</p>
-              <p class="text-[10px] font-mono text-[#8EA5C8]">&gt;_ ${app.size_kb} Ko • ${app.category}</p>
+              <p class="text-[10px] font-mono text-[#8EA5C8]">&gt;_ ${isBuiltinHubApp(app) ? 'Hub' : `${getAppDisplayKb(app)} Ko`} • ${app.category}</p>
             </div>
           </div>
           <div class="flex items-center gap-1 shrink-0 ml-2 font-mono">
@@ -3006,10 +3016,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (totalBytes > maxBytes || percent > 90) {
       memoryProgressBar.className = 'h-full transition-all rounded bg-[#f85149]';
+      if (memoryProgressBar.style) memoryProgressBar.style.backgroundColor = '#f85149';
     } else if (percent > 70) {
       memoryProgressBar.className = 'h-full transition-all rounded bg-[#FFBB00]';
+      if (memoryProgressBar.style) memoryProgressBar.style.backgroundColor = '#FFBB00';
     } else {
       memoryProgressBar.className = 'h-full transition-all rounded bg-[#3fb950]';
+      if (memoryProgressBar.style) memoryProgressBar.style.backgroundColor = '#3fb950';
     }
   }
 
@@ -3113,8 +3126,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       usb.device = null;
       if (connectionDot) connectionDot.className = 'w-2.5 h-2.5 rounded-full bg-slate-500';
       if (connectionText) connectionText.textContent = 'Non connectée';
-      if (modelText) modelText.textContent = `${userSettings.targetModel || 'N0120'}`;
       if (connectBtn) connectBtn.innerHTML = '<span>🔌</span> <span class="hidden sm:inline">Connecter</span>';
+      setTargetModel(userSettings.targetModel || 'N0110', false);
       showToast('Calculatrice débranchée. Rebranchez votre calculatrice pour installer.', 'info');
     });
   }
@@ -3124,8 +3137,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       await usb.disconnect();
       connectionDot.className = 'w-2.5 h-2.5 rounded-full bg-slate-500';
       connectionText.textContent = 'Non connectée';
-      modelText.textContent = `${userSettings.targetModel || 'N0120'}`;
       connectBtn.innerHTML = '<span>🔌</span> <span class="hidden sm:inline">Connecter</span>';
+      setTargetModel(userSettings.targetModel || 'N0110', false);
       showToast('Calculatrice déconnectée', 'info');
     } else {
       try {

@@ -576,10 +576,10 @@ class NumWorksSimulator {
   launchSelected() {
     window.soundFx?.playClick();
     const app = this.apps[this.selectedIndex];
-    this.launchApp(app.type || app.id);
+    this.launchApp(app.type || app.id, app);
   }
 
-  launchApp(type) {
+  launchApp(type, appMeta = null) {
     if (this.gameLoopId) {
       cancelAnimationFrame(this.gameLoopId);
       this.gameLoopId = null;
@@ -615,7 +615,7 @@ class NumWorksSimulator {
     } else if (t === 'MORPION' || t.includes('MORPION') || t.includes('TICTAC')) {
       this.currentView = 'MORPION';
       this.startMorpionGame();
-    } else if (t === 'FNAF' || t.includes('FNAF') || t.includes('FREDDY')) {
+    } else if (t === 'FNAF' || t === 'COMM_FNAF' || t === 'FNAF1' || (t.includes('FNAF') && !t.includes('2') && !t.includes('3') && !t.includes('4') && !t.includes('WORLD')) || t.includes('FREDDY')) {
       this.currentView = 'FNAF';
       this.startFnafGame();
     } else if (t === 'COURSES' || t.includes('FICHE') || t.includes('COURS')) {
@@ -629,7 +629,7 @@ class NumWorksSimulator {
       this.startMarioKartPreview();
     } else {
       this.currentView = type;
-      this.startGenericPreview(type);
+      this.startGenericPreview(type, appMeta);
     }
   }
 
@@ -5495,12 +5495,16 @@ class NumWorksSimulator {
   }
 
 
-  startGenericPreview(type) {
-    const appObj = (this.apps || []).find(a => a.type === type || a.id === type) || (this.apps || [])[this.selectedIndex];
+  startGenericPreview(type, appMeta = null) {
+    const appObj = (this.apps || []).find(a => a.type === type || a.id === type) || appMeta || (this.apps || [])[this.selectedIndex];
     const title = appObj ? appObj.name.replace(/^[0-9]+\.\s*/, '') : type;
     const iconHtml = appObj?.icon_url
       ? `<img src="${appObj.icon_url}" alt="${title}" class="w-12 h-12 rounded-lg object-contain mb-1.5 shadow">`
       : `<div class="text-2xl mb-1">${appObj?.icon || '🎮'}</div>`;
+    const binKb = appObj?.bin_kb || appObj?.size_kb || 0;
+    const footerHtml = binKb > 2496
+      ? `<div class="text-[8px] text-red-600 mt-2 font-bold">Binaire ${binKb} Ko (&gt; 2496 Ko) — Nécessite un bootloader Nwagra 6 Mo sur calculatrice réelle • [Back] Menu.</div>`
+      : `<div class="text-[8px] text-amber-600 mt-2 font-bold">Installez sur votre NumWorks via Flash USB pour jouer en plein écran • [Back] Menu.</div>`;
     this.title.textContent = title || 'EquaLib Application';
     this.topbar.style.backgroundColor = '#FFBB00';
     this.content.innerHTML = `
@@ -5508,7 +5512,7 @@ class NumWorksSimulator {
         ${iconHtml}
         <div class="font-bold text-xs text-slate-900">${title}</div>
         <div class="text-[9px] text-slate-500 mt-1">Application native C/NWA — Source : GitHub Mason363/NumPlay &amp; EquaLib.</div>
-        <div class="text-[8px] text-amber-600 mt-2 font-bold">Installez sur votre NumWorks via Flash USB pour jouer en plein écran • [Back] Menu.</div>
+        ${footerHtml}
       </div>
     `;
   }

@@ -1642,9 +1642,18 @@ describe('7. Compilation et Validité Syntaxique des Jeux Python (.NWS)', () => 
         global.window.setAppTheme('default');
         global.window.setTargetModel('N0120', false);
         const cardFnafWorld120 = catalogList.children.find(c => c.getAttribute('data-app-id') === 'np_fnafworld');
-        assert(cardFnafWorld120 && cardFnafWorld120.innerHTML.includes('> Flash'), 'np_fnafworld (4718 Ko) doit indiquer qu il dépasse toute la Flash');
+        assert(cardFnafWorld120 && cardFnafWorld120.innerHTML.includes('Nwagra 6 Mo requis'), 'np_fnafworld (4718 Ko) doit indiquer Nwagra 6 Mo requis');
         cardFnafWorld120.listeners['mouseenter']?.forEach(fn => fn());
         assert(dockStandaloneBtn.classList.contains('hidden'), 'dock-standalone-btn doit rester caché quand app > Flash totale');
+        assert(memText.textContent.includes('2.44 Mo') && memText.textContent.includes('0.10 Mo'), `Barre Flash vide sur N0120 doit afficher 0.10 Mo / 2.44 Mo (reçu: ${memText.textContent})`);
+
+        const SimClass = originalWindow.NumWorksSimulator;
+        assert(SimClass, 'NumWorksSimulator doit être disponible pour vérifier la preview FNAF World');
+        const simPreview = new SimClass('sim-screen');
+        simPreview.launchApp('np_fnafworld', { id: 'np_fnafworld', name: 'FNAF World', bin_kb: 4718, icon: '🐻' });
+        assert.strictEqual(simPreview.currentView, 'np_fnafworld', 'np_fnafworld doit ouvrir sa preview et non FNAF 1');
+        assert.strictEqual(simPreview.title.textContent, 'FNAF World', 'Preview np_fnafworld doit afficher FNAF World (et non Angry Birds)');
+        assert(simPreview.content.innerHTML.includes('Nwagra 6 Mo'), 'Preview np_fnafworld doit mentionner le bootloader Nwagra 6 Mo');
       } finally {
         global.document = originalDocument;
         global.window = originalWindow;
